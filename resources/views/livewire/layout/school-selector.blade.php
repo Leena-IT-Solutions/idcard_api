@@ -2,27 +2,57 @@
 
 use Livewire\Volt\Component;
 use App\Models\School;
+use App\Models\SchoolUserRole;
 
 new class extends Component {
     public $activeSchoolId;
 
     public function mount()
     {
+        $user = auth()->user();
+        if (!$user) {
+            session()->forget('active_school_id');
+            $this->activeSchoolId = null;
+            return;
+        }
+
+        $accessibleSchoolIds = $this->getAccessibleSchoolIds($user);
+
         $this->activeSchoolId = session('active_school_id');
 
-        // If no active school in session, default to first school
-        if (!$this->activeSchoolId) {
-            $firstSchool = School::first();
-            if ($firstSchool) {
-                $this->activeSchoolId = $firstSchool->id;
-                session(['active_school_id' => $firstSchool->id]);
+        // If active school is not in the accessible list, try to default to the first accessible school
+        if (!$this->activeSchoolId || !in_array($this->activeSchoolId, $accessibleSchoolIds)) {
+            if (count($accessibleSchoolIds) > 0) {
+                $this->activeSchoolId = $accessibleSchoolIds[0];
+                session(['active_school_id' => $this->activeSchoolId]);
+            } else {
+                session()->forget('active_school_id');
+                $this->activeSchoolId = null;
             }
         }
     }
 
+    protected function getAccessibleSchoolIds($user)
+    {
+        if ($user->hasRole('saas_admin')) {
+            return School::orderBy('name', 'asc')->pluck('id')->toArray();
+        }
+
+        return SchoolUserRole::where('user_id', $user->id)
+            ->pluck('school_id')
+            ->unique()
+            ->toArray();
+    }
+
     public function updatedActiveSchoolId($value)
     {
-        session(['active_school_id' => $value]);
+        $user = auth()->user();
+        if ($user) {
+            $accessibleSchoolIds = $this->getAccessibleSchoolIds($user);
+            if (in_array($value, $accessibleSchoolIds)) {
+                session(['active_school_id' => $value]);
+            }
+        }
         
         // Refresh the current page to reload context-aware listings
         $this->redirect(request()->header('Referer'), navigate: true);
@@ -33,7 +63,16 @@ new class extends Component {
 
 <div class="w-full sm:w-72">
     @php
-        $schools = \App\Models\School::orderBy('name', 'asc')->get();
+        $user = auth()->user();
+        if ($user) {
+            if ($user->hasRole('saas_admin')) {
+                $schools = \App\Models\School::orderBy('name', 'asc')->get();
+            } else {
+                $schools = \App\Models\School::whereIn('id', \App\Models\SchoolUserRole::where('user_id', $user->id)->pluck('school_id'))->orderBy('name', 'asc')->get();
+            }
+        } else {
+            $schools = collect();
+        }
     @endphp
 
     @if ($schools->isNotEmpty())

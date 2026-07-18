@@ -53,6 +53,22 @@ new class extends Component
             <!-- Top Links -->
             <div class="px-3 py-6 space-y-1">
                 @php
+                    $user = auth()->user();
+                    $activeSchoolId = session('active_school_id');
+                    $isSaasAdmin = $user->hasRole('saas_admin');
+                    
+                    // Context-specific school_admin assignment in active school
+                    $isSchoolAdmin = $activeSchoolId && \App\Models\SchoolUserRole::where('user_id', $user->id)
+                        ->where('school_id', $activeSchoolId)
+                        ->whereHas('role', function($q) { $q->where('slug', 'school_admin'); })
+                        ->exists();
+
+                    // Context-specific teacher assignment in active school
+                    $isTeacher = $activeSchoolId && \App\Models\SchoolUserRole::where('user_id', $user->id)
+                        ->where('school_id', $activeSchoolId)
+                        ->whereHas('role', function($q) { $q->where('slug', 'teacher'); })
+                        ->exists();
+
                     $isDashboard = request()->routeIs('dashboard');
                 @endphp
                 <a href="{{ route('dashboard') }}" wire:navigate class="group w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 {{ $isDashboard ? 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/40 hover:text-gray-900 dark:hover:text-gray-200' }}">
@@ -62,7 +78,7 @@ new class extends Component
                     <span>{{ __('Dashboard') }}</span>
                 </a>
 
-                @if(auth()->user()->hasAnyRole(['saas_admin', 'school_admin']))
+                @if($isSaasAdmin)
                     @php
                         $isUsers = request()->routeIs('users.index');
                     @endphp
@@ -74,7 +90,7 @@ new class extends Component
                     </a>
                 @endif
 
-                @if(auth()->user()->hasAnyRole(['saas_admin', 'school_admin']))
+                @if($isSaasAdmin || $isSchoolAdmin)
                     @php
                         $isSchools = request()->routeIs('schools');
                     @endphp
@@ -86,7 +102,7 @@ new class extends Component
                     </a>
                 @endif
 
-                @if(auth()->user()->hasAnyRole(['saas_admin', 'school_admin']))
+                @if($isSaasAdmin || $isSchoolAdmin)
                     @php
                         $isUserRoles = request()->routeIs('user-roles');
                     @endphp
@@ -98,7 +114,7 @@ new class extends Component
                     </a>
                 @endif
 
-                @if(auth()->user()->hasAnyRole(['saas_admin', 'school_admin']))
+                @if($isSaasAdmin || $isSchoolAdmin || $isTeacher)
                     @php
                         $isGradesDivisions = request()->routeIs('grades-divisions');
                     @endphp
@@ -110,7 +126,7 @@ new class extends Component
                     </a>
                 @endif
 
-                @if(auth()->user()->hasAnyRole(['saas_admin', 'school_admin', 'teacher']))
+                @if($isSaasAdmin || $isSchoolAdmin || $isTeacher)
                     @php
                         $isStudents = request()->routeIs('students');
                     @endphp
