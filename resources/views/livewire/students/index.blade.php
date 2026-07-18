@@ -5,6 +5,7 @@ use App\Models\Division;
 use App\Models\CampaignStudent;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
+use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 
@@ -73,7 +74,8 @@ new class extends Component
         $this->perPage = 12;
     }
 
-    public function getStudentsProperty()
+    #[Computed]
+    public function students()
     {
         $activeSchoolId = session('active_school_id');
         if (!$activeSchoolId) {
@@ -112,7 +114,8 @@ new class extends Component
         }])->orderBy('created_at', 'desc')->take($this->perPage)->get();
     }
 
-    public function getHasMoreProperty()
+    #[Computed]
+    public function hasMore()
     {
         $activeSchoolId = session('active_school_id');
         if (!$activeSchoolId) {
