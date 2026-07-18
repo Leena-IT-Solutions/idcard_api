@@ -334,45 +334,53 @@ new class extends Component {
             </div>
         </div>
 
-        <!-- Parent Access Grid Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            @forelse ($accesses as $access)
-                <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 p-6 flex flex-col justify-between shadow-sm relative overflow-hidden group hover:border-indigo-100 dark:hover:border-indigo-900/50 hover:shadow-md transition duration-300">
-                    <div>
-                        <div class="flex items-start justify-between mb-4">
-                            <div>
-                                <span class="text-[9px] uppercase font-black tracking-widest text-indigo-600 dark:text-indigo-400 block mb-0.5">{{ __('Authorized Mobile') }}</span>
-                                <h4 class="font-bold text-gray-900 dark:text-gray-100 text-base leading-tight select-all">
-                                    {{ $access->mobile }}
-                                </h4>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Footer Actions -->
-                    <div class="pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between mt-4">
-                        <span class="text-[9px] uppercase font-black tracking-widest text-gray-400 dark:text-gray-500">
-                            {{ __('ID:') }} #{{ $access->id }}
-                        </span>
-                        <div class="flex items-center gap-1">
-                            <button wire:click="openEditModal({{ $access->id }})" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-900 rounded-xl text-gray-400 hover:text-indigo-600 dark:text-gray-500 dark:hover:text-indigo-400 transition-colors cursor-pointer">
-                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                                </svg>
-                            </button>
-                            <button wire:click="confirmDeletion({{ $access->id }})" class="p-2 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400 transition-colors cursor-pointer">
-                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            @empty
-                <div class="col-span-full bg-white dark:bg-gray-800 rounded-3xl p-12 text-center text-gray-400 dark:text-gray-500 border border-gray-100 dark:border-gray-700">
-                    {{ __('No authorized parent mobile numbers configured.') }}
-                </div>
-            @endforelse
+        <!-- Parent Access Table -->
+        <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-900/50">
+                    <tr>
+                        <th scope="col" class="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{{ __('ID') }}</th>
+                        <th scope="col" class="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{{ __('Authorized Mobile Number') }}</th>
+                        <th scope="col" class="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{{ __('Authorized Date') }}</th>
+                        <th scope="col" class="px-6 py-4 text-right text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{{ __('Actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
+                    @forelse ($accesses as $access)
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-750/30 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-xs font-black text-gray-400 dark:text-gray-500">
+                                #{{ $access->id }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-gray-100 select-all">
+                                {{ $access->mobile }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400">
+                                {{ $access->created_at->format('d M, Y h:i A') }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <button wire:click="openEditModal({{ $access->id }})" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-xl text-gray-400 hover:text-indigo-600 dark:text-gray-500 dark:hover:text-indigo-400 transition-colors cursor-pointer">
+                                        <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                        </svg>
+                                    </button>
+                                    <button wire:click="confirmDeletion({{ $access->id }})" class="p-2 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400 transition-colors cursor-pointer">
+                                        <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="px-6 py-12 text-center text-gray-400 dark:text-gray-550">
+                                {{ __('No authorized parent mobile numbers configured.') }}
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
 
         @if ($hasMore)
