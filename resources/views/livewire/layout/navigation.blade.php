@@ -61,6 +61,18 @@ new class extends Component
                     </svg>
                     <span>{{ __('Dashboard') }}</span>
                 </a>
+
+                @if(auth()->user()->hasAnyRole(['saas_admin', 'school_admin']))
+                    @php
+                        $isUsers = request()->routeIs('users.index');
+                    @endphp
+                    <a href="{{ route('users.index') }}" wire:navigate class="group w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 {{ $isUsers ? 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/40 hover:text-gray-900 dark:hover:text-gray-200' }}">
+                        <svg class="h-5 w-5 transition-colors duration-200 {{ $isUsers ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                        <span>{{ __('User Manager') }}</span>
+                    </a>
+                @endif
             </div>
         </div>
 
