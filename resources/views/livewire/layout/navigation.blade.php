@@ -90,7 +90,7 @@ new class extends Component
                     </a>
                 @endif
 
-                @if($isSaasAdmin || $user->hasRole('school_admin'))
+                @if($isSaasAdmin || $isSchoolAdmin || (!$activeSchoolId && $user->hasRole('school_admin')))
                     @php
                         $isSchools = request()->routeIs('schools');
                     @endphp

@@ -17,7 +17,18 @@ Route::get('users', function () {
 
 Route::get('schools', function () {
     $user = auth()->user();
-    if (!$user->hasRole('saas_admin') && !$user->hasRole('school_admin')) {
+    $activeSchoolId = session('active_school_id');
+    
+    $isSaasAdmin = $user->hasRole('saas_admin');
+    
+    $isSchoolAdmin = $activeSchoolId && \App\Models\SchoolUserRole::where('user_id', $user->id)
+        ->where('school_id', $activeSchoolId)
+        ->whereHas('role', function($q) { $q->where('slug', 'school_admin'); })
+        ->exists();
+
+    $hasAccess = $isSaasAdmin || $isSchoolAdmin || (!$activeSchoolId && $user->hasRole('school_admin'));
+
+    if (!$hasAccess) {
         abort(403);
     }
     return view('schools');
