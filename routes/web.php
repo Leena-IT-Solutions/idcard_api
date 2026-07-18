@@ -8,25 +8,66 @@ Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-Route::view('users', 'users')
-    ->middleware(['auth'])
-    ->name('users.index');
+Route::get('users', function () {
+    if (! auth()->user()->hasRole('saas_admin')) {
+        abort(403);
+    }
+    return view('users');
+})->middleware(['auth'])->name('users.index');
 
-Route::view('schools', 'schools')
-    ->middleware(['auth'])
-    ->name('schools');
+Route::get('schools', function () {
+    $user = auth()->user();
+    $isSchoolAdmin = \App\Models\SchoolUserRole::where('user_id', $user->id)
+        ->whereHas('role', function($q) { $q->where('slug', 'school_admin'); })
+        ->exists();
 
-Route::view('user-roles', 'user-roles')
-    ->middleware(['auth'])
-    ->name('user-roles');
+    if (!$user->hasRole('saas_admin') && !$isSchoolAdmin) {
+        abort(403);
+    }
+    return view('schools');
+})->middleware(['auth'])->name('schools');
 
-Route::view('grades-divisions', 'grades-divisions')
-    ->middleware(['auth'])
-    ->name('grades-divisions');
+Route::get('user-roles', function () {
+    $user = auth()->user();
+    $activeSchoolId = session('active_school_id');
+    $isSchoolAdmin = $activeSchoolId && \App\Models\SchoolUserRole::where('user_id', $user->id)
+        ->where('school_id', $activeSchoolId)
+        ->whereHas('role', function($q) { $q->where('slug', 'school_admin'); })
+        ->exists();
 
-Route::view('students', 'students')
-    ->middleware(['auth'])
-    ->name('students');
+    if (!$user->hasRole('saas_admin') && !$isSchoolAdmin) {
+        abort(403);
+    }
+    return view('user-roles');
+})->middleware(['auth'])->name('user-roles');
+
+Route::get('grades-divisions', function () {
+    $user = auth()->user();
+    $activeSchoolId = session('active_school_id');
+    $hasAccess = $activeSchoolId && \App\Models\SchoolUserRole::where('user_id', $user->id)
+        ->where('school_id', $activeSchoolId)
+        ->whereHas('role', function($q) { $q->whereIn('slug', ['school_admin', 'teacher']); })
+        ->exists();
+
+    if (!$user->hasRole('saas_admin') && !$hasAccess) {
+        abort(403);
+    }
+    return view('grades-divisions');
+})->middleware(['auth'])->name('grades-divisions');
+
+Route::get('students', function () {
+    $user = auth()->user();
+    $activeSchoolId = session('active_school_id');
+    $hasAccess = $activeSchoolId && \App\Models\SchoolUserRole::where('user_id', $user->id)
+        ->where('school_id', $activeSchoolId)
+        ->whereHas('role', function($q) { $q->whereIn('slug', ['school_admin', 'teacher']); })
+        ->exists();
+
+    if (!$user->hasRole('saas_admin') && !$hasAccess) {
+        abort(403);
+    }
+    return view('students');
+})->middleware(['auth'])->name('students');
 
 Route::view('profile', 'profile')
     ->middleware(['auth'])
