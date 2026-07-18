@@ -13,7 +13,6 @@ new #[Layout('layouts.guest')] class extends Component
     public string $name = '';
     public string $email = '';
     public string $mobile = '';
-    public array $selectedRoles = [];
     public string $password = '';
     public string $password_confirmation = '';
 
@@ -26,8 +25,6 @@ new #[Layout('layouts.guest')] class extends Component
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'mobile' => ['required', 'string', 'max:255', 'unique:'.User::class],
-            'selectedRoles' => ['required', 'array', 'min:1'],
-            'selectedRoles.*' => ['string', 'exists:roles,slug'],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
         ]);
 
@@ -38,9 +35,7 @@ new #[Layout('layouts.guest')] class extends Component
             'password' => Hash::make($this->password),
         ]);
 
-        foreach ($this->selectedRoles as $roleSlug) {
-            $user->assignRole($roleSlug);
-        }
+        $user->assignRole('parent');
 
         event(new Registered($user));
 
@@ -71,30 +66,6 @@ new #[Layout('layouts.guest')] class extends Component
             <x-input-label for="mobile" :value="__('Mobile Number')" />
             <x-text-input wire:model="mobile" id="mobile" class="block mt-1 w-full" type="text" name="mobile" required autocomplete="mobile" />
             <x-input-error :messages="$errors->get('mobile')" class="mt-2" />
-        </div>
-
-        <!-- Role -->
-        <div class="mt-4">
-            <x-input-label :value="__('Roles')" />
-            <div class="mt-2 grid grid-cols-2 gap-4">
-                <label class="inline-flex items-center">
-                    <input type="checkbox" wire:model="selectedRoles" value="saas_admin" class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500">
-                    <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">SaaS Admin</span>
-                </label>
-                <label class="inline-flex items-center">
-                    <input type="checkbox" wire:model="selectedRoles" value="school_admin" class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500">
-                    <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">School Admin</span>
-                </label>
-                <label class="inline-flex items-center">
-                    <input type="checkbox" wire:model="selectedRoles" value="teacher" class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500">
-                    <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">Teacher</span>
-                </label>
-                <label class="inline-flex items-center">
-                    <input type="checkbox" wire:model="selectedRoles" value="parent" class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500">
-                    <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">Parent</span>
-                </label>
-            </div>
-            <x-input-error :messages="$errors->get('selectedRoles')" class="mt-2" />
         </div>
 
         <!-- Password -->
