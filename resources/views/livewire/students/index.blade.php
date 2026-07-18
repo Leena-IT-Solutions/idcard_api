@@ -11,6 +11,12 @@ new class extends Component
 
     public $students = [];
 
+    // Filter fields
+    public $filterCampaign = '';
+    public $filterGrade = '';
+    public $filterDivision = '';
+    public $filterBloodGroup = '';
+
     // Form fields
     public $studentId = null;
     public string $first_name = '';
@@ -47,6 +53,31 @@ new class extends Component
         $this->loadStudents();
     }
 
+    public function updatedFilterCampaign()
+    {
+        $this->perPage = 12;
+        $this->loadStudents();
+    }
+
+    public function updatedFilterGrade()
+    {
+        $this->filterDivision = '';
+        $this->perPage = 12;
+        $this->loadStudents();
+    }
+
+    public function updatedFilterDivision()
+    {
+        $this->perPage = 12;
+        $this->loadStudents();
+    }
+
+    public function updatedFilterBloodGroup()
+    {
+        $this->perPage = 12;
+        $this->loadStudents();
+    }
+
     public function loadStudents()
     {
         if (! auth()->user()->hasAnyRole(['saas_admin', 'school_admin', 'teacher'])) {
@@ -60,9 +91,32 @@ new class extends Component
             return;
         }
 
-        $query = Student::whereHas('campaignStudents.campaign', function($q) use ($activeSchoolId) {
+        $query = Student::query();
+
+        // Join campaign students for active school filtering & selection
+        $query->whereHas('campaignStudents.campaign', function($q) use ($activeSchoolId) {
             $q->where('school_id', $activeSchoolId);
-        })->with(['campaignStudents' => function($q) use ($activeSchoolId) {
+            if ($this->filterCampaign) {
+                $q->where('id', $this->filterCampaign);
+            }
+        });
+
+        if ($this->filterGrade || $this->filterDivision) {
+            $query->whereHas('campaignStudents', function($q) {
+                if ($this->filterGrade) {
+                    $q->where('grade_id', $this->filterGrade);
+                }
+                if ($this->filterDivision) {
+                    $q->where('division_id', $this->filterDivision);
+                }
+            });
+        }
+
+        if ($this->filterBloodGroup) {
+            $query->where('blood_group', $this->filterBloodGroup);
+        }
+
+        $query->with(['campaignStudents' => function($q) use ($activeSchoolId) {
             $q->whereHas('campaign', function($inner) use ($activeSchoolId) {
                 $inner->where('school_id', $activeSchoolId);
             })->with(['grade', 'division', 'campaign']);
@@ -266,6 +320,60 @@ new class extends Component
                 </svg>
                 <span>{{ __('Add Student') }}</span>
             </button>
+        </div>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-white dark:bg-gray-800 p-5 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none">
+        <!-- Campaign Filter -->
+        <div>
+            <label class="text-[9px] uppercase font-black text-gray-405 dark:text-gray-500 tracking-wider block mb-1.5">{{ __('Campaign') }}</label>
+            <select wire:model.live="filterCampaign" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-xl text-xs focus:ring-indigo-500 focus:border-indigo-500">
+                <option value="">{{ __('All Campaigns') }}</option>
+                @foreach (\App\Models\Campaign::where('school_id', session('active_school_id'))->orderBy('created_at', 'desc')->get() as $camp)
+                    <option value="{{ $camp->id }}">{{ $camp->name }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <!-- Grade Filter -->
+        <div>
+            <label class="text-[9px] uppercase font-black text-gray-405 dark:text-gray-500 tracking-wider block mb-1.5">{{ __('Standard / Class') }}</label>
+            <select wire:model.live="filterGrade" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-xl text-xs focus:ring-indigo-500 focus:border-indigo-500">
+                <option value="">{{ __('All Standards') }}</option>
+                @foreach (\App\Models\Grade::where('school_id', session('active_school_id'))->orderBy('name', 'asc')->get() as $grade)
+                    <option value="{{ $grade->id }}">{{ $grade->name }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <!-- Division Filter -->
+        <div>
+            <label class="text-[9px] uppercase font-black text-gray-405 dark:text-gray-500 tracking-wider block mb-1.5">{{ __('Division') }}</label>
+            <select wire:model.live="filterDivision" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-xl text-xs focus:ring-indigo-500 focus:border-indigo-500">
+                <option value="">{{ __('All Divisions') }}</option>
+                @if ($filterGrade)
+                    @foreach (\App\Models\Division::where('grade_id', $filterGrade)->orderBy('name', 'asc')->get() as $div)
+                        <option value="{{ $div->id }}">{{ $div->name }}</option>
+                    @endforeach
+                @endif
+            </select>
+        </div>
+
+        <!-- Blood Group Filter -->
+        <div>
+            <label class="text-[9px] uppercase font-black text-gray-405 dark:text-gray-500 tracking-wider block mb-1.5">{{ __('Blood Group') }}</label>
+            <select wire:model.live="filterBloodGroup" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-xl text-xs focus:ring-indigo-500 focus:border-indigo-500">
+                <option value="">{{ __('All Blood Groups') }}</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+            </select>
         </div>
     </div>
 
