@@ -248,8 +248,8 @@ new class extends Component {
         <div class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
             <div class="fixed inset-0 bg-gray-950/65 backdrop-blur-sm transition-opacity" wire:click="$set('isModalOpen', false)"></div>
 
-            <div class="bg-white dark:bg-gray-850 rounded-3xl overflow-hidden shadow-2xl transform transition-all max-w-md w-full border border-gray-100 dark:border-gray-750 z-10 p-6 sm:p-8">
-                <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-750 mb-6">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-2xl transform transition-all max-w-md w-full border border-gray-100 dark:border-gray-700 z-10 p-6 sm:p-8">
+                <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-700 mb-6">
                     <h3 class="text-lg font-black text-gray-900 dark:text-gray-100">
                         {{ $campaignId ? __('Edit Campaign') : __('Add New Campaign') }}
                     </h3>
@@ -283,8 +283,8 @@ new class extends Component {
                     </div>
 
                     <!-- Actions -->
-                    <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-750 mt-6">
-                        <button type="button" wire:click="$set('isModalOpen', false)" class="px-5 py-2.5 border border-gray-200 dark:border-gray-700 hover:bg-gray-55 dark:hover:bg-gray-700/60 rounded-xl font-bold text-xs uppercase text-gray-700 dark:text-gray-300 transition">
+                    <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700 mt-6">
+                        <button type="button" wire:click="$set('isModalOpen', false)" class="px-5 py-2.5 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/60 rounded-xl font-bold text-xs uppercase text-gray-700 dark:text-gray-300 transition">
                             {{ __('Cancel') }}
                         </button>
                         <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs uppercase shadow transition">
@@ -301,7 +301,7 @@ new class extends Component {
         <div class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
             <div class="fixed inset-0 bg-gray-950/65 backdrop-blur-sm transition-opacity" wire:click="$set('confirmingDeletion', false)"></div>
 
-            <div class="bg-white dark:bg-gray-850 rounded-3xl overflow-hidden shadow-2xl transform transition-all max-w-sm w-full border border-gray-100 dark:border-gray-750 z-10 p-6">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-2xl transform transition-all max-w-sm w-full border border-gray-100 dark:border-gray-700 z-10 p-6">
                 <div class="text-center">
                     <div class="w-12 h-12 bg-red-50 dark:bg-red-950/20 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -309,12 +309,12 @@ new class extends Component {
                         </svg>
                     </div>
                     <h3 class="text-base font-extrabold text-gray-900 dark:text-gray-100">{{ __('Delete Campaign') }}</h3>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">
+                    <p class="text-xs text-gray-550 dark:text-gray-400 mt-2 leading-relaxed">
                         {{ __('Are you sure you want to permanently delete this registration campaign? This action cannot be undone.') }}
                     </p>
                 </div>
 
-                <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-750 mt-6">
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700 mt-6">
                     <button type="button" wire:click="$set('confirmingDeletion', false)" class="px-4 py-2 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/60 rounded-xl font-bold text-xs uppercase text-gray-700 dark:text-gray-300 transition">
                         {{ __('Cancel') }}
                     </button>
