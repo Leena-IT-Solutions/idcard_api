@@ -222,6 +222,11 @@ Route::middleware(['auth'])->group(function () {
                         \Illuminate\Support\Facades\File::cleanDirectory($livewireCachePath);
                         $output .= "\nLivewire/Volt cache directory cleared successfully.";
                     }
+
+                    if (function_exists('opcache_reset')) {
+                        opcache_reset();
+                        $output .= "\nOPcache memory reset successfully.";
+                    }
                     break;
                 case 'optimize':
                     \Illuminate\Support\Facades\Artisan::call('optimize');
