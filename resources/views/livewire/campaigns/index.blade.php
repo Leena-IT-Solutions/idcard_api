@@ -270,7 +270,6 @@ new class extends Component {
                 </button>
             </div>
         @endif
-        </div>
     @endif
 
     <!-- Create/Edit Modal -->
