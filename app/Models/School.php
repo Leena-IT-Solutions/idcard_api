@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Role;
+use App\Models\SchoolUserRole;
 
 class School extends Model
 {
@@ -28,5 +30,18 @@ class School extends Model
     public function students()
     {
         return $this->hasMany(Student::class);
+    }
+
+    public function getOwnerAttribute()
+    {
+        $schoolAdminRole = Role::where('slug', 'school_admin')->first();
+        if (!$schoolAdminRole) return null;
+        
+        $roleMapping = SchoolUserRole::where('school_id', $this->id)
+            ->where('role_id', $schoolAdminRole->id)
+            ->orderBy('id', 'asc')
+            ->first();
+            
+        return $roleMapping ? $roleMapping->user : null;
     }
 }

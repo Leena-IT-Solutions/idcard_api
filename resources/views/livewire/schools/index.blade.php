@@ -296,6 +296,10 @@ new class extends Component {
                                 <span class="text-[9px] uppercase font-black text-gray-400 dark:text-gray-500 tracking-wider">{{ __('Principal') }}</span>
                                 <span class="text-gray-800 dark:text-gray-200 font-semibold">{{ $school->principal_name ?? 'N/A' }}</span>
                             </div>
+                            <div class="flex flex-col gap-1">
+                                <span class="text-[9px] uppercase font-black text-gray-400 dark:text-gray-500 tracking-wider">{{ __('Owner / Creator') }}</span>
+                                <span class="text-gray-800 dark:text-gray-200 font-semibold">{{ $school->owner->name ?? 'N/A' }}</span>
+                            </div>
                             <div class="sm:col-span-2 flex flex-col gap-1">
                                 <span class="text-[9px] uppercase font-black text-gray-400 dark:text-gray-500 tracking-wider">{{ __('Address') }}</span>
                                 <span class="text-gray-700 dark:text-gray-300 font-medium leading-relaxed">{{ $school->address }}</span>
