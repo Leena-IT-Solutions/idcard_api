@@ -207,11 +207,11 @@ new class extends Component
     </div>
 
     <!-- Grid of Student Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div class="flex flex-col gap-6">
         @forelse ($students as $student)
-            <div class="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 hover:border-indigo-500/30 dark:hover:border-indigo-400/20 transition-all duration-300 flex flex-col justify-between group">
-                <!-- Card Header Picture -->
-                <div class="relative h-48 bg-gray-100 dark:bg-gray-900 overflow-hidden">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 hover:border-indigo-500/30 dark:hover:border-indigo-400/20 transition-all duration-300 flex flex-col md:flex-row group">
+                <!-- Left Side Square Photo -->
+                <div class="relative w-full md:w-56 h-56 md:h-auto md:aspect-square bg-gray-100 dark:bg-gray-900 overflow-hidden shrink-0">
                     @if ($student->photo_path)
                         <img src="{{ asset('storage/' . $student->photo_path) }}" alt="{{ $student->first_name }}" class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
                     @else
@@ -221,7 +221,7 @@ new class extends Component
                     @endif
 
                     <!-- Float badges -->
-                    <div class="absolute top-4 left-4 flex gap-2">
+                    <div class="absolute top-4 left-4 flex flex-col gap-1.5">
                         <span class="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider bg-white/90 dark:bg-gray-950/90 text-gray-800 dark:text-gray-200 shadow-sm backdrop-blur-sm">
                             Std: {{ $student->standard }}
                         </span>
@@ -242,58 +242,62 @@ new class extends Component
                     @endif
                 </div>
 
-                <!-- Card Body -->
-                <div class="p-6 flex-1 space-y-4">
-                    <div>
-                        <h4 class="font-bold text-gray-900 dark:text-gray-100 text-lg leading-tight truncate">
-                            {{ $student->first_name }} {{ $student->middle_name ? $student->middle_name . ' ' : '' }}{{ $student->last_name }}
-                        </h4>
-                        <p class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mt-1 flex items-center gap-1">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                            </svg>
-                            <span class="select-all">{{ $student->contact_number }}</span>
-                        </p>
+                <!-- Right Side Card Body & Actions -->
+                <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                        <div>
+                            <h4 class="font-bold text-gray-900 dark:text-gray-100 text-xl leading-tight">
+                                {{ $student->first_name }} {{ $student->middle_name ? $student->middle_name . ' ' : '' }}{{ $student->last_name }}
+                            </h4>
+                            <p class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mt-1 flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                </svg>
+                                <span class="select-all">{{ $student->contact_number }}</span>
+                            </p>
+                        </div>
                     </div>
 
                     <!-- Details Box -->
                     <div class="bg-gray-50 dark:bg-gray-900/40 rounded-2xl p-4 text-xs space-y-2 border border-gray-100 dark:border-gray-850">
-                        <div class="flex justify-between">
-                            <span class="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider text-[8px]">{{ __('Date of Birth') }}</span>
-                            <span class="text-gray-700 dark:text-gray-300 font-medium">{{ \Carbon\Carbon::parse($student->dob)->format('M d, Y') }}</span>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
+                            <div class="flex justify-between sm:justify-start sm:gap-4">
+                                <span class="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider text-[8px] sm:w-20">{{ __('DOB') }}</span>
+                                <span class="text-gray-700 dark:text-gray-300 font-medium">{{ \Carbon\Carbon::parse($student->dob)->format('M d, Y') }}</span>
+                            </div>
+                            <div class="flex justify-between sm:justify-start sm:gap-4">
+                                <span class="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider text-[8px] sm:w-20">{{ __('Pincode') }}</span>
+                                <span class="text-gray-700 dark:text-gray-300 font-medium font-mono">{{ $student->pincode }}</span>
+                            </div>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider text-[8px]">{{ __('Pincode') }}</span>
-                            <span class="text-gray-700 dark:text-gray-300 font-medium font-mono">{{ $student->pincode }}</span>
-                        </div>
-                        <div class="flex flex-col gap-1 pt-1.5 border-t border-gray-200/50 dark:border-gray-800">
-                            <span class="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider text-[8px]">{{ __('Address') }}</span>
-                            <p class="text-gray-650 dark:text-gray-400 leading-relaxed truncate-2-lines">{{ $student->address }}</p>
+                        <div class="flex flex-col sm:flex-row gap-1 sm:gap-4 pt-2 border-t border-gray-200/50 dark:border-gray-800">
+                            <span class="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider text-[8px] sm:w-20 shrink-0">{{ __('Address') }}</span>
+                            <p class="text-gray-650 dark:text-gray-400 leading-relaxed">{{ $student->address }}</p>
                         </div>
                     </div>
-                </div>
 
-                <!-- Card Footer Actions -->
-                <div class="px-6 py-4 bg-gray-50/70 dark:bg-gray-900/10 border-t border-gray-100 dark:border-gray-850 flex items-center justify-between">
-                    <span class="text-[9px] uppercase font-black tracking-widest text-gray-400 dark:text-gray-500">
-                        ST-ID: #{{ $student->id }}
-                    </span>
-                    <div class="flex items-center gap-1">
-                        <button wire:click="openEditModal({{ $student->id }})" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-xl text-gray-400 hover:text-indigo-600 dark:text-gray-500 dark:hover:text-indigo-400 transition-colors">
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                            </svg>
-                        </button>
-                        <button wire:click="confirmDelete({{ $student->id }})" class="p-2 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl text-gray-400 hover:text-red-650 dark:text-gray-500 dark:hover:text-red-400 transition-colors">
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                            </svg>
-                        </button>
+                    <!-- Card Actions -->
+                    <div class="pt-4 border-t border-gray-100 dark:border-gray-850 flex items-center justify-between">
+                        <span class="text-[9px] uppercase font-black tracking-widest text-gray-400 dark:text-gray-500">
+                            ST-ID: #{{ $student->id }}
+                        </span>
+                        <div class="flex items-center gap-1">
+                            <button wire:click="openEditModal({{ $student->id }})" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-xl text-gray-400 hover:text-indigo-600 dark:text-gray-500 dark:hover:text-indigo-400 transition-colors">
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                              </button>
+                              <button wire:click="confirmDelete({{ $student->id }})" class="p-2 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl text-gray-400 hover:text-red-650 dark:text-gray-500 dark:hover:text-red-400 transition-colors">
+                                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                  </svg>
+                              </button>
+                        </div>
                     </div>
                 </div>
             </div>
         @empty
-            <div class="col-span-full bg-white dark:bg-gray-800 rounded-3xl p-12 text-center text-gray-400 dark:text-gray-500 border border-gray-100 dark:border-gray-700">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl p-12 text-center text-gray-400 dark:text-gray-500 border border-gray-100 dark:border-gray-700">
                 {{ __('No students found.') }}
             </div>
         @endforelse
