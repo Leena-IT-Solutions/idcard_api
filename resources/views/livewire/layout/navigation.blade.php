@@ -114,18 +114,6 @@ new class extends Component
                     </a>
                 @endif
 
-                @if($isSaasAdmin || $isSchoolAdmin)
-                    @php
-                        $isCampaigns = request()->routeIs('campaigns');
-                    @endphp
-                    <a href="{{ route('campaigns') }}" wire:navigate class="group w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 {{ $isCampaigns ? 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/40 hover:text-gray-900 dark:hover:text-gray-200' }}">
-                        <svg class="h-5 w-5 transition-colors duration-200 {{ $isCampaigns ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                        <span>{{ __('Campaigns') }}</span>
-                    </a>
-                @endif
-
                 @if($isSaasAdmin || $isSchoolAdmin || $isTeacher)
                     @php
                         $isGradesDivisions = request()->routeIs('grades-divisions');
@@ -135,6 +123,18 @@ new class extends Component
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                         </svg>
                         <span>{{ __('Grade & Division') }}</span>
+                    </a>
+                @endif
+
+                @if($isSaasAdmin || $isSchoolAdmin)
+                    @php
+                        $isCampaigns = request()->routeIs('campaigns');
+                    @endphp
+                    <a href="{{ route('campaigns') }}" wire:navigate class="group w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 {{ $isCampaigns ? 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/40 hover:text-gray-900 dark:hover:text-gray-200' }}">
+                        <svg class="h-5 w-5 transition-colors duration-200 {{ $isCampaigns ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <span>{{ __('Campaigns') }}</span>
                     </a>
                 @endif
 
