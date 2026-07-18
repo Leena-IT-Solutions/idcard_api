@@ -42,15 +42,11 @@ new class extends Component {
     public function loadCampaigns()
     {
         $activeSchoolId = session('active_school_id');
-        if (!$activeSchoolId && !auth()->user()->hasRole('saas_admin')) {
+        if (!$activeSchoolId) {
             return collect();
         }
 
-        $query = Campaign::query();
-
-        if (!auth()->user()->hasRole('saas_admin')) {
-            $query->where('school_id', $activeSchoolId);
-        }
+        $query = Campaign::query()->where('school_id', $activeSchoolId);
 
         if ($this->search) {
             $query->where('name', 'like', '%' . $this->search . '%');
@@ -72,8 +68,8 @@ new class extends Component {
         $this->resetValidation();
         $campaign = Campaign::findOrFail($id);
 
-        // Security check
-        if (!auth()->user()->hasRole('saas_admin') && $campaign->school_id != session('active_school_id')) {
+        // Context check
+        if ($campaign->school_id != session('active_school_id')) {
             abort(403);
         }
 
@@ -88,6 +84,10 @@ new class extends Component {
     {
         $this->checkAuthorization();
         $activeSchoolId = session('active_school_id');
+
+        if (!$activeSchoolId) {
+            return;
+        }
 
         $validated = $this->validate([
             'name' => 'required|string|max:255',
@@ -114,8 +114,8 @@ new class extends Component {
     {
         $campaign = Campaign::findOrFail($id);
 
-        // Security check
-        if (!auth()->user()->hasRole('saas_admin') && $campaign->school_id != session('active_school_id')) {
+        // Context check
+        if ($campaign->school_id != session('active_school_id')) {
             abort(403);
         }
 
@@ -128,8 +128,8 @@ new class extends Component {
         if ($this->campaignToDelete) {
             $campaign = Campaign::findOrFail($this->campaignToDelete);
 
-            // Security check
-            if (!auth()->user()->hasRole('saas_admin') && $campaign->school_id != session('active_school_id')) {
+            // Context check
+            if ($campaign->school_id != session('active_school_id')) {
                 abort(403);
             }
 
@@ -152,7 +152,7 @@ new class extends Component {
         </div>
     @endif
 
-    @if (!session('active_school_id') && !auth()->user()->hasRole('saas_admin'))
+    @if (!session('active_school_id'))
         <!-- Warning Card for Empty Context -->
         <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-100 dark:border-gray-700 text-center">
             <div class="w-16 h-16 bg-amber-50 dark:bg-amber-950/20 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
