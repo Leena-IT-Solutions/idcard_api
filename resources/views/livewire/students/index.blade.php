@@ -211,7 +211,7 @@ new class extends Component
         @forelse ($students as $student)
             <div class="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 hover:border-indigo-500/30 dark:hover:border-indigo-400/20 transition-all duration-300 flex flex-col md:flex-row group">
                 <!-- Left Side Square Photo -->
-                <div class="relative w-full md:w-56 h-56 md:h-auto md:aspect-square bg-gray-100 dark:bg-gray-900 overflow-hidden shrink-0">
+                <div class="relative w-full md:w-56 h-56 md:h-auto md:aspect-square bg-gray-100 dark:bg-gray-900 overflow-hidden shrink-0 border-r border-gray-50 dark:border-gray-850">
                     @if ($student->photo_path)
                         <img src="{{ asset('storage/' . $student->photo_path) }}" alt="{{ $student->first_name }}" class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
                     @else
@@ -219,60 +219,55 @@ new class extends Component
                             {{ strtoupper(substr($student->first_name, 0, 1) . substr($student->last_name, 0, 1)) }}
                         </div>
                     @endif
-
-                    <!-- Float badges -->
-                    <div class="absolute top-4 left-4 flex flex-col gap-1.5">
-                        <span class="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider bg-white/90 dark:bg-gray-950/90 text-gray-800 dark:text-gray-200 shadow-sm backdrop-blur-sm">
-                            Std: {{ $student->standard }}
-                        </span>
-                        <span class="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider bg-white/90 dark:bg-gray-950/90 text-gray-800 dark:text-gray-200 shadow-sm backdrop-blur-sm">
-                            Div: {{ $student->division }}
-                        </span>
-                    </div>
-
-                    @if ($student->blood_group)
-                        <div class="absolute top-4 right-4">
-                            <span class="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider bg-rose-500 text-white shadow-sm flex items-center gap-1">
-                                <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
-                                </svg>
-                                {{ $student->blood_group }}
-                            </span>
-                        </div>
-                    @endif
                 </div>
 
                 <!-- Right Side Card Body & Actions -->
-                <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
-                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                        <div>
-                            <h4 class="font-bold text-gray-900 dark:text-gray-100 text-xl leading-tight">
-                                {{ $student->first_name }} {{ $student->middle_name ? $student->middle_name . ' ' : '' }}{{ $student->last_name }}
-                            </h4>
-                            <p class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mt-1 flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                                </svg>
-                                <span class="select-all">{{ $student->contact_number }}</span>
-                            </p>
+                <div class="p-6 flex-1 flex flex-col justify-between space-y-5">
+                    <div>
+                        <!-- Header Line: Name, Contact & Badges -->
+                        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                            <div class="space-y-1">
+                                <h4 class="font-extrabold text-gray-905 dark:text-gray-100 text-2xl leading-none">
+                                    {{ $student->first_name }} {{ $student->middle_name ? $student->middle_name . ' ' : '' }}{{ $student->last_name }}
+                                </h4>
+                                <p class="text-xs font-semibold text-indigo-650 dark:text-indigo-400 flex items-center gap-1.5 pt-1 select-all">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                    </svg>
+                                    <span>{{ $student->contact_number }}</span>
+                                </p>
+                            </div>
+                            
+                            <!-- Badges -->
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100/50 dark:border-indigo-900/30">
+                                    Std: {{ $student->standard }}
+                                </span>
+                                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-100/50 dark:border-teal-900/30">
+                                    Div: {{ $student->division }}
+                                </span>
+                                @if ($student->blood_group)
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-100/50 dark:border-rose-900/30">
+                                        Blood: {{ $student->blood_group }}
+                                    </span>
+                                @endif
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Details Box -->
-                    <div class="bg-gray-50 dark:bg-gray-900/40 rounded-2xl p-4 text-xs space-y-2 border border-gray-100 dark:border-gray-850">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
-                            <div class="flex justify-between sm:justify-start sm:gap-4">
-                                <span class="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider text-[8px] sm:w-20">{{ __('DOB') }}</span>
-                                <span class="text-gray-700 dark:text-gray-300 font-medium">{{ \Carbon\Carbon::parse($student->dob)->format('M d, Y') }}</span>
+                        <!-- Info Grid (Clean layout, no sub-card) -->
+                        <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm border-t border-gray-100 dark:border-gray-850 pt-5">
+                            <div class="flex flex-col gap-1">
+                                <span class="text-[9px] uppercase font-black text-gray-405 dark:text-gray-500 tracking-wider">{{ __('Date of Birth') }}</span>
+                                <span class="text-gray-800 dark:text-gray-200 font-semibold">{{ \Carbon\Carbon::parse($student->dob)->format('M d, Y') }}</span>
                             </div>
-                            <div class="flex justify-between sm:justify-start sm:gap-4">
-                                <span class="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider text-[8px] sm:w-20">{{ __('Pincode') }}</span>
-                                <span class="text-gray-700 dark:text-gray-300 font-medium font-mono">{{ $student->pincode }}</span>
+                            <div class="flex flex-col gap-1">
+                                <span class="text-[9px] uppercase font-black text-gray-405 dark:text-gray-500 tracking-wider">{{ __('Pincode') }}</span>
+                                <span class="text-gray-800 dark:text-gray-200 font-semibold font-mono">{{ $student->pincode }}</span>
                             </div>
-                        </div>
-                        <div class="flex flex-col sm:flex-row gap-1 sm:gap-4 pt-2 border-t border-gray-200/50 dark:border-gray-800">
-                            <span class="text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider text-[8px] sm:w-20 shrink-0">{{ __('Address') }}</span>
-                            <p class="text-gray-650 dark:text-gray-400 leading-relaxed">{{ $student->address }}</p>
+                            <div class="sm:col-span-2 flex flex-col gap-1">
+                                <span class="text-[9px] uppercase font-black text-gray-405 dark:text-gray-500 tracking-wider">{{ __('Address') }}</span>
+                                <span class="text-gray-700 dark:text-gray-300 font-medium leading-relaxed">{{ $student->address }}</span>
+                            </div>
                         </div>
                     </div>
 
@@ -281,17 +276,17 @@ new class extends Component
                         <span class="text-[9px] uppercase font-black tracking-widest text-gray-400 dark:text-gray-500">
                             ST-ID: #{{ $student->id }}
                         </span>
-                        <div class="flex items-center gap-1">
+                        <div class="flex items-center gap-1.5">
                             <button wire:click="openEditModal({{ $student->id }})" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-xl text-gray-400 hover:text-indigo-600 dark:text-gray-500 dark:hover:text-indigo-400 transition-colors">
                                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
-                              </button>
-                              <button wire:click="confirmDelete({{ $student->id }})" class="p-2 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl text-gray-400 hover:text-red-650 dark:text-gray-500 dark:hover:text-red-400 transition-colors">
-                                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                  </svg>
-                              </button>
+                            </button>
+                            <button wire:click="confirmDelete({{ $student->id }})" class="p-2 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl text-gray-400 hover:text-red-650 dark:text-gray-500 dark:hover:text-red-400 transition-colors">
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
                         </div>
                     </div>
                 </div>
