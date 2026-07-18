@@ -20,4 +20,17 @@ class Campaign extends Model
     {
         return $this->belongsTo(School::class);
     }
+
+    public function campaignStudents()
+    {
+        return $this->hasMany(CampaignStudent::class);
+    }
+
+    public function students()
+    {
+        return $this->belongsToMany(Student::class, 'campaign_student')
+            ->using(CampaignStudent::class)
+            ->withPivot(['grade_id', 'division_id'])
+            ->withTimestamps();
+    }
 }

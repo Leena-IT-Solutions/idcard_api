@@ -19,6 +19,9 @@
                     {{ __("Welcome back, ") . auth()->user()->name . "!" }}
                 </div>
             </div>
+
+            <!-- Parent Portal CRUD & Enrollment Panel -->
+            <livewire:dashboard.parent-portal />
         </div>
     </div>
 </x-app-layout>

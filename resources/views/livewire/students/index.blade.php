@@ -16,8 +16,9 @@ new class extends Component
     public string $first_name = '';
     public string $middle_name = '';
     public string $last_name = '';
-    public string $standard = '';
-    public string $division = '';
+    public $campaignId = '';
+    public $gradeId = '';
+    public $divisionId = '';
     public string $blood_group = '';
     public string $dob = '';
     public string $address = '';
@@ -59,15 +60,22 @@ new class extends Component
             return;
         }
 
-        $query = Student::where('school_id', $activeSchoolId);
+        $query = Student::whereHas('campaignStudents.campaign', function($q) use ($activeSchoolId) {
+            $q->where('school_id', $activeSchoolId);
+        })->with(['campaignStudents' => function($q) use ($activeSchoolId) {
+            $q->whereHas('campaign', function($inner) use ($activeSchoolId) {
+                $inner->where('school_id', $activeSchoolId);
+            })->with(['grade', 'division', 'campaign']);
+        }]);
+
         $totalCount = $query->count();
         $this->students = $query->orderBy('created_at', 'desc')->take($this->perPage)->get();
         $this->hasMore = $totalCount > $this->perPage;
     }
 
-    public function updatedStandard($value)
+    public function updatedGradeId($value)
     {
-        $this->division = '';
+        $this->divisionId = '';
     }
 
     public function openCreateModal()
@@ -84,14 +92,26 @@ new class extends Component
         $this->first_name = $student->first_name;
         $this->middle_name = $student->middle_name ?? '';
         $this->last_name = $student->last_name;
-        $this->standard = $student->standard;
-        $this->division = $student->division;
         $this->blood_group = $student->blood_group ?? '';
         $this->dob = $student->dob;
         $this->address = $student->address;
         $this->pincode = $student->pincode;
         $this->contact_number = $student->contact_number;
         $this->currentPhotoPath = $student->photo_path;
+
+        // Load enrollment details for this school
+        $activeSchoolId = session('active_school_id');
+        $enrollment = \App\Models\CampaignStudent::where('student_id', $student->id)
+            ->whereHas('campaign', function($q) use ($activeSchoolId) {
+                $q->where('school_id', $activeSchoolId);
+            })->first();
+
+        if ($enrollment) {
+            $this->campaignId = $enrollment->campaign_id;
+            $this->gradeId = $enrollment->grade_id;
+            $this->divisionId = $enrollment->division_id;
+        }
+
         $this->isModalOpen = true;
     }
 
@@ -101,8 +121,9 @@ new class extends Component
         $this->first_name = '';
         $this->middle_name = '';
         $this->last_name = '';
-        $this->standard = '';
-        $this->division = '';
+        $this->campaignId = '';
+        $this->gradeId = '';
+        $this->divisionId = '';
         $this->blood_group = '';
         $this->dob = '';
         $this->address = '';
@@ -129,8 +150,9 @@ new class extends Component
             'first_name' => ['required', 'string', 'max:255'],
             'middle_name' => ['nullable', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'standard' => ['required', 'string', 'max:255'],
-            'division' => ['required', 'string', 'max:255'],
+            'campaignId' => ['required', 'exists:campaigns,id'],
+            'gradeId' => ['required', 'exists:grades,id'],
+            'divisionId' => ['required', 'exists:divisions,id'],
             'blood_group' => ['nullable', 'string', 'max:10'],
             'dob' => ['required', 'date'],
             'address' => ['required', 'string'],
@@ -143,20 +165,16 @@ new class extends Component
 
         $photoPath = $this->currentPhotoPath;
         if ($this->photo) {
-            // Delete old photo if editing and exists
             if ($this->currentPhotoPath && Storage::disk('public')->exists($this->currentPhotoPath)) {
                 Storage::disk('public')->delete($this->currentPhotoPath);
             }
             $photoPath = $this->photo->store('photos', 'public');
         }
 
-        $data = [
-            'school_id' => $activeSchoolId,
+        $studentData = [
             'first_name' => $this->first_name,
             'middle_name' => $this->middle_name ?: null,
             'last_name' => $this->last_name,
-            'standard' => $this->standard,
-            'division' => $this->division,
             'blood_group' => $this->blood_group ?: null,
             'dob' => $this->dob,
             'address' => $this->address,
@@ -167,10 +185,22 @@ new class extends Component
 
         if ($this->studentId) {
             $student = Student::findOrFail($this->studentId);
-            $student->update($data);
+            $student->update($studentData);
         } else {
-            Student::create($data);
+            $student = Student::create($studentData);
         }
+
+        // Sync Campaign Student enrollment
+        \App\Models\CampaignStudent::updateOrCreate(
+            [
+                'campaign_id' => $this->campaignId,
+                'student_id' => $student->id,
+            ],
+            [
+                'grade_id' => $this->gradeId,
+                'division_id' => $this->divisionId,
+            ]
+        );
 
         $this->isModalOpen = false;
         $this->resetForm();
@@ -273,12 +303,17 @@ new class extends Component
                             
                             <!-- Badges -->
                             <div class="flex flex-wrap items-center gap-2">
-                                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100/50 dark:border-indigo-900/30">
-                                    Std: {{ $student->standard }}
-                                </span>
-                                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-100/50 dark:border-teal-900/30">
-                                    Div: {{ $student->division }}
-                                </span>
+                                @php
+                                    $enrollment = $student->campaignStudents->first();
+                                @endphp
+                                @if ($enrollment && $enrollment->grade && $enrollment->division)
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100/50 dark:border-indigo-900/30">
+                                        Std: {{ $enrollment->grade->name }}
+                                    </span>
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-100/50 dark:border-teal-900/30">
+                                        Div: {{ $enrollment->division->name }}
+                                    </span>
+                                @endif
                                 @if ($student->blood_group)
                                     <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-100/50 dark:border-rose-900/30">
                                         Blood: {{ $student->blood_group }}
@@ -384,32 +419,43 @@ new class extends Component
                             <x-input-error :messages="$errors->get('last_name')" class="mt-2" />
                         </div>
 
-                        <!-- Standard -->
+                        <!-- Campaign -->
                         <div>
-                            <x-input-label for="standard" :value="__('Standard / Class')" />
-                            <select wire:model.live="standard" id="standard" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm" required>
-                                <option value="">Select Standard</option>
-                                @foreach (\App\Models\Grade::where('school_id', session('active_school_id'))->orderBy('name', 'asc')->get() as $grade)
-                                    <option value="{{ $grade->name }}">{{ $grade->name }}</option>
+                            <x-input-label for="campaignId" :value="__('Campaign')" />
+                            <select wire:model.live="campaignId" id="campaignId" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm" required>
+                                <option value="">Select Campaign</option>
+                                @foreach (\App\Models\Campaign::where('school_id', session('active_school_id'))->orderBy('created_at', 'desc')->get() as $camp)
+                                    <option value="{{ $camp->id }}">{{ $camp->name }}</option>
                                 @endforeach
                             </select>
-                            <x-input-error :messages="$errors->get('standard')" class="mt-2" />
+                            <x-input-error :messages="$errors->get('campaignId')" class="mt-2" />
+                        </div>
+
+                        <!-- Standard / Grade -->
+                        <div>
+                            <x-input-label for="gradeId" :value="__('Standard / Class')" />
+                            <select wire:model.live="gradeId" id="gradeId" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm" required>
+                                <option value="">Select Standard</option>
+                                @foreach (\App\Models\Grade::where('school_id', session('active_school_id'))->orderBy('name', 'asc')->get() as $grade)
+                                    <option value="{{ $grade->id }}">{{ $grade->name }}</option>
+                                @endforeach
+                            </select>
+                            <x-input-error :messages="$errors->get('gradeId')" class="mt-2" />
                         </div>
 
                         <!-- Division -->
                         <div>
-                            <x-input-label for="division" :value="__('Division / Section')" />
-                            <select wire:model="division" id="division" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm" required>
+                            <x-input-label for="divisionId" :value="__('Division / Section')" />
+                            <select wire:model="divisionId" id="divisionId" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm" required>
                                 <option value="">Select Division</option>
                                 @php
-                                    $selectedGrade = \App\Models\Grade::where('school_id', session('active_school_id'))->where('name', $standard)->first();
-                                    $divisions = $selectedGrade ? $selectedGrade->divisions : collect();
+                                    $divisions = $gradeId ? \App\Models\Division::where('grade_id', $gradeId)->get() : collect();
                                 @endphp
                                 @foreach ($divisions as $div)
-                                    <option value="{{ $div->name }}">{{ $div->name }}</option>
+                                    <option value="{{ $div->id }}">{{ $div->name }}</option>
                                 @endforeach
                             </select>
-                            <x-input-error :messages="$errors->get('division')" class="mt-2" />
+                            <x-input-error :messages="$errors->get('divisionId')" class="mt-2" />
                         </div>
 
                         <!-- Blood Group -->
