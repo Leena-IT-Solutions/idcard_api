@@ -253,7 +253,7 @@ new class extends Component
                 </div>
 
                 <!-- Divider & Actions -->
-                <div class="mt-6 pt-4 border-t border-gray-100 dark:border-gray-850 flex items-center justify-between">
+                <div class="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700/50 flex items-center justify-between">
                     <span class="text-[9px] uppercase font-black tracking-widest text-gray-400 dark:text-gray-500">
                         ID: #{{ $user->id }}
                     </span>

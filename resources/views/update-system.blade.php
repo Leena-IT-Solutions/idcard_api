@@ -33,7 +33,7 @@
                 </div>
 
                 <!-- Git Info Box (Full Width on Top) -->
-                <div class="bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-850 rounded-2xl p-5 text-xs font-mono text-gray-600 dark:text-gray-400 flex flex-col gap-3 mb-6">
+                <div class="bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700/50 rounded-2xl p-5 text-xs font-mono text-gray-600 dark:text-gray-400 flex flex-col gap-3 mb-6">
                     <div class="flex items-center">
                         <span class="text-[9px] uppercase font-black text-gray-400 dark:text-gray-500 w-24 tracking-widest">Branch:</span>
                         <span class="text-indigo-600 dark:text-indigo-400 truncate" x-text="gitInfo.branch + ' @ ' + gitInfo.commit_hash">Loading...</span>

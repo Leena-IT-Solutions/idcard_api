@@ -274,7 +274,7 @@ new class extends Component
         @forelse ($students as $student)
             <div class="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 hover:border-indigo-500/30 dark:hover:border-indigo-400/20 transition-all duration-300 flex flex-col md:flex-row group">
                 <!-- Left Side Square Photo -->
-                <div class="relative w-full md:w-56 h-56 md:h-auto md:aspect-square bg-gray-100 dark:bg-gray-900 overflow-hidden shrink-0 border-r border-gray-50 dark:border-gray-850">
+                <div class="relative w-full md:w-56 h-56 md:h-auto md:aspect-square bg-gray-100 dark:bg-gray-900 overflow-hidden shrink-0 border-r border-gray-50 dark:border-gray-700/50">
                     @if ($student->photo_path)
                         <img src="{{ asset('storage/' . $student->photo_path) }}" alt="{{ $student->first_name }}" class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
                     @else
@@ -323,7 +323,7 @@ new class extends Component
                         </div>
 
                         <!-- Info Grid (Clean layout, no sub-card) -->
-                        <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm border-t border-gray-100 dark:border-gray-850 pt-5">
+                        <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm border-t border-gray-100 dark:border-gray-700/50 pt-5">
                             <div class="flex flex-col gap-1">
                                 <span class="text-[9px] uppercase font-black text-gray-405 dark:text-gray-500 tracking-wider">{{ __('Date of Birth') }}</span>
                                 <span class="text-gray-800 dark:text-gray-200 font-semibold">{{ \Carbon\Carbon::parse($student->dob)->format('M d, Y') }}</span>
@@ -340,7 +340,7 @@ new class extends Component
                     </div>
 
                     <!-- Card Actions -->
-                    <div class="pt-4 border-t border-gray-100 dark:border-gray-850 flex items-center justify-between">
+                    <div class="pt-4 border-t border-gray-100 dark:border-gray-700/50 flex items-center justify-between">
                         <span class="text-[9px] uppercase font-black tracking-widest text-gray-400 dark:text-gray-500">
                             ST-ID: #{{ $student->id }}
                         </span>
