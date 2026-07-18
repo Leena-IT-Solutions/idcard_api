@@ -42,11 +42,26 @@ new class extends Component {
 
     public function loadSchools()
     {
+        $user = auth()->user();
+        if (!$user) {
+            $this->schools = [];
+            return;
+        }
+
         $query = School::query();
+
+        // If not a saas_admin, scope by school user roles mapping
+        if (!$user->hasRole('saas_admin')) {
+            $assignedSchoolIds = \App\Models\SchoolUserRole::where('user_id', $user->id)->pluck('school_id');
+            $query->whereIn('id', $assignedSchoolIds);
+        }
+
         if ($this->search) {
-            $query->where('name', 'like', '%' . $this->search . '%')
+            $query->where(function($q) {
+                $q->where('name', 'like', '%' . $this->search . '%')
                   ->orWhere('school_code', 'like', '%' . $this->search . '%')
                   ->orWhere('address', 'like', '%' . $this->search . '%');
+            });
         }
         $this->schools = $query->orderBy('name', 'asc')->get();
     }
@@ -64,6 +79,14 @@ new class extends Component {
 
     public function openEditModal($id)
     {
+        $user = auth()->user();
+        if (!$user->hasRole('saas_admin')) {
+            $assignedSchoolIds = \App\Models\SchoolUserRole::where('user_id', $user->id)->pluck('school_id')->toArray();
+            if (!in_array($id, $assignedSchoolIds)) {
+                abort(403);
+            }
+        }
+
         $this->resetValidation();
         $school = School::findOrFail($id);
         
@@ -105,6 +128,8 @@ new class extends Component {
             $logoPath = $this->logo->store('logos', 'public');
         }
 
+        $isNew = !$this->schoolId;
+
         $school = School::updateOrCreate(
             ['id' => $this->schoolId],
             [
@@ -119,6 +144,17 @@ new class extends Component {
             ]
         );
 
+        if ($isNew) {
+            $schoolAdminRole = \App\Models\Role::where('slug', 'school_admin')->first();
+            if ($schoolAdminRole) {
+                \App\Models\SchoolUserRole::create([
+                    'school_id' => $school->id,
+                    'user_id' => auth()->id(),
+                    'role_id' => $schoolAdminRole->id,
+                ]);
+            }
+        }
+
         // If active school is not set, set this as active school
         if (!session('active_school_id')) {
             session(['active_school_id' => $school->id]);
@@ -132,6 +168,14 @@ new class extends Component {
 
     public function confirmDeletion($id)
     {
+        $user = auth()->user();
+        if (!$user->hasRole('saas_admin')) {
+            $assignedSchoolIds = \App\Models\SchoolUserRole::where('user_id', $user->id)->pluck('school_id')->toArray();
+            if (!in_array($id, $assignedSchoolIds)) {
+                abort(403);
+            }
+        }
+
         $this->schoolToDelete = $id;
         $this->confirmingDeletion = true;
     }
