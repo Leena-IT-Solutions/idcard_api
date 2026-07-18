@@ -8,6 +8,8 @@ use App\Models\Grade;
 use App\Models\Division;
 use App\Models\SchoolUserRole;
 use App\Models\SchoolInvitation;
+use App\Models\SchoolUserRoleAssignment;
+use App\Models\SchoolInvitationAssignment;
 use Illuminate\Validation\Rule;
 
 new class extends Component {
@@ -25,6 +27,7 @@ new class extends Component {
     public $roleSlug = '';
     public $gradeId = null;
     public $divisionId = null;
+    public array $tempAssignments = [];
 
     // Modal state
     public $isModalOpen = false;
@@ -60,12 +63,55 @@ new class extends Component {
         if ($value !== 'teacher') {
             $this->gradeId = null;
             $this->divisionId = null;
+            $this->tempAssignments = [];
         }
     }
 
     public function updatedGradeId($value)
     {
         $this->divisionId = null;
+    }
+
+    public function addAssignment()
+    {
+        $this->validate([
+            'gradeId' => 'required|exists:grades,id',
+            'divisionId' => 'required|exists:divisions,id',
+        ], [
+            'gradeId.required' => 'Please select a grade.',
+            'divisionId.required' => 'Please select a division.',
+        ]);
+
+        $grade = Grade::find($this->gradeId);
+        $division = Division::find($this->divisionId);
+
+        // Check duplicates in temp list
+        foreach ($this->tempAssignments as $assign) {
+            if ($assign['grade_id'] == $this->gradeId && $assign['division_id'] == $this->divisionId) {
+                $this->addError('divisionId', 'This assignment is already added.');
+                return;
+            }
+        }
+
+        $this->tempAssignments[] = [
+            'grade_id' => $grade->id,
+            'grade_name' => $grade->name,
+            'division_id' => $division->id,
+            'division_name' => $division->name,
+        ];
+
+        // Reset dropdown inputs for next assignment
+        $this->gradeId = null;
+        $this->divisionId = null;
+        $this->resetErrorBag(['gradeId', 'divisionId']);
+    }
+
+    public function removeAssignment($index)
+    {
+        if (isset($this->tempAssignments[$index])) {
+            unset($this->tempAssignments[$index]);
+            $this->tempAssignments = array_values($this->tempAssignments);
+        }
     }
 
     public function loadData()
@@ -78,7 +124,7 @@ new class extends Component {
         }
 
         // 1. Load active members
-        $memberQuery = SchoolUserRole::with(['user', 'role', 'grade', 'division'])
+        $memberQuery = SchoolUserRole::with(['user', 'role', 'assignments.grade', 'assignments.division'])
             ->where('school_id', $activeSchoolId);
 
         if ($this->search) {
@@ -94,7 +140,7 @@ new class extends Component {
         $this->hasMore = $totalCount > $this->perPage;
 
         // 2. Load pending invites
-        $inviteQuery = SchoolInvitation::with(['role', 'grade', 'division', 'user'])
+        $inviteQuery = SchoolInvitation::with(['role', 'assignments.grade', 'assignments.division', 'user'])
             ->where('school_id', $activeSchoolId)
             ->where('status', 'pending');
 
@@ -119,7 +165,7 @@ new class extends Component {
 
         $this->resetValidation();
         $this->reset([
-            'inviteEmail', 'inviteMobile', 'roleSlug', 'gradeId', 'divisionId'
+            'inviteEmail', 'inviteMobile', 'roleSlug', 'gradeId', 'divisionId', 'tempAssignments'
         ]);
         $this->isModalOpen = true;
     }
@@ -151,13 +197,10 @@ new class extends Component {
         ]);
 
         if ($this->roleSlug === 'teacher') {
-            $this->validate([
-                'gradeId' => 'required|exists:grades,id',
-                'divisionId' => 'required|exists:divisions,id',
-            ], [
-                'gradeId.required' => 'Grade assignment is required for teachers.',
-                'divisionId.required' => 'Division assignment is required for teachers.',
-            ]);
+            if (empty($this->tempAssignments)) {
+                $this->addError('roleSlug', 'At least one Grade and Division assignment is required for teachers.');
+                return;
+            }
         }
 
         // Check if user already exists
@@ -170,16 +213,14 @@ new class extends Component {
         }
 
         if ($user) {
-            // Check if user is already an active member of this school with this role & grade & division
+            // Check if user is already an active member of this school with this role
             $alreadyActive = SchoolUserRole::where('school_id', $activeSchoolId)
                 ->where('user_id', $user->id)
                 ->where('role_id', $role->id)
-                ->where('grade_id', $this->gradeId)
-                ->where('division_id', $this->divisionId)
                 ->exists();
 
             if ($alreadyActive) {
-                $this->addError('roleSlug', 'This user is already an active member with this role/scope in this school.');
+                $this->addError('roleSlug', 'This user is already an active member with this role in this school.');
                 return;
             }
         }
@@ -187,8 +228,6 @@ new class extends Component {
         // Check for duplicate pending invitation
         $pendingQuery = SchoolInvitation::where('school_id', $activeSchoolId)
             ->where('role_id', $role->id)
-            ->where('grade_id', $this->gradeId)
-            ->where('division_id', $this->divisionId)
             ->where('status', 'pending');
 
         if (!empty($this->inviteEmail)) {
@@ -201,21 +240,31 @@ new class extends Component {
         }
 
         if ($pendingQuery->exists()) {
-            $this->addError('roleSlug', 'A pending invitation already exists for this contact with the same role/scope.');
+            $this->addError('roleSlug', 'A pending invitation already exists for this contact with the same role.');
             return;
         }
 
         // Create Invitation
-        SchoolInvitation::create([
+        $invitation = SchoolInvitation::create([
             'school_id' => $activeSchoolId,
             'role_id' => $role->id,
-            'grade_id' => $this->gradeId,
-            'division_id' => $this->divisionId,
+            'grade_id' => ($this->roleSlug === 'teacher' && !empty($this->tempAssignments)) ? $this->tempAssignments[0]['grade_id'] : null,
+            'division_id' => ($this->roleSlug === 'teacher' && !empty($this->tempAssignments)) ? $this->tempAssignments[0]['division_id'] : null,
             'email' => !empty($this->inviteEmail) ? trim($this->inviteEmail) : null,
             'mobile' => !empty($this->inviteMobile) ? trim($this->inviteMobile) : null,
             'user_id' => $user ? $user->id : null,
             'status' => 'pending',
         ]);
+
+        if ($this->roleSlug === 'teacher') {
+            foreach ($this->tempAssignments as $assign) {
+                SchoolInvitationAssignment::create([
+                    'school_invitation_id' => $invitation->id,
+                    'grade_id' => $assign['grade_id'],
+                    'division_id' => $assign['division_id'],
+                ]);
+            }
+        }
 
         $this->isModalOpen = false;
         $this->loadData();
@@ -330,7 +379,16 @@ new class extends Component {
                     </div>
 
                     <div class="flex-1 flex flex-wrap items-center gap-2 sm:px-6">
-                        @if ($assign->role->slug === 'teacher' && $assign->grade && $assign->division)
+                        @if ($assign->role->slug === 'teacher' && count($assign->assignments) > 0)
+                            @foreach ($assign->assignments as $asg)
+                                <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 border border-indigo-100/40 dark:border-indigo-900/20 shadow-sm">
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                                    </svg>
+                                    <span>{{ $asg->grade->name }} - {{ $asg->division->name }}</span>
+                                </div>
+                            @endforeach
+                        @elseif ($assign->role->slug === 'teacher' && $assign->grade && $assign->division)
                             <div class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 border border-indigo-100/40 dark:border-indigo-900/20 shadow-sm">
                                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
@@ -408,7 +466,16 @@ new class extends Component {
                     </div>
 
                     <div class="flex-1 flex flex-wrap items-center gap-2 sm:px-6">
-                        @if ($invite->role->slug === 'teacher' && $invite->grade && $invite->division)
+                        @if ($invite->role->slug === 'teacher' && count($invite->assignments) > 0)
+                            @foreach ($invite->assignments as $asg)
+                                <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 border border-indigo-100/40 dark:border-indigo-900/20 shadow-sm">
+                                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                                    </svg>
+                                    <span>{{ $asg->grade->name }} - {{ $asg->division->name }}</span>
+                                </div>
+                            @endforeach
+                        @elseif ($invite->role->slug === 'teacher' && $invite->grade && $invite->division)
                             <div class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 border border-indigo-100/40 dark:border-indigo-900/20 shadow-sm">
                                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
@@ -491,34 +558,64 @@ new class extends Component {
 
                     <!-- Teacher Grade & Division Scopes -->
                     @if ($roleSlug === 'teacher')
-                        <div class="grid grid-cols-2 gap-4 bg-indigo-50/20 dark:bg-indigo-950/10 p-4 rounded-2xl border border-indigo-100/30 dark:border-indigo-900/10">
-                            <!-- Grade -->
-                            <div>
-                                <x-input-label for="gradeId" :value="__('Assign Grade')" />
-                                <select wire:model.live="gradeId" id="gradeId" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm" required>
-                                    <option value="">Select Grade</option>
-                                    @foreach (Grade::where('school_id', session('active_school_id'))->orderBy('name', 'asc')->get() as $g)
-                                        <option value="{{ $g->id }}">{{ $g->name }}</option>
-                                    @endforeach
-                                </select>
-                                <x-input-error :messages="$errors->get('gradeId')" class="mt-1" />
+                        <div class="space-y-4 bg-indigo-50/20 dark:bg-indigo-950/10 p-4 rounded-2xl border border-indigo-100/30 dark:border-indigo-900/10">
+                            <div class="grid grid-cols-2 gap-4">
+                                <!-- Grade -->
+                                <div>
+                                    <x-input-label for="gradeId" :value="__('Assign Grade')" />
+                                    <select wire:model.live="gradeId" id="gradeId" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm">
+                                        <option value="">Select Grade</option>
+                                        @foreach (Grade::where('school_id', session('active_school_id'))->orderBy('name', 'asc')->get() as $g)
+                                            <option value="{{ $g->id }}">{{ $g->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <x-input-error :messages="$errors->get('gradeId')" class="mt-1" />
+                                </div>
+
+                                <!-- Division -->
+                                <div>
+                                    <x-input-label for="divisionId" :value="__('Assign Division')" />
+                                    <select wire:model="divisionId" id="divisionId" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm">
+                                        <option value="">Select Division</option>
+                                        @php
+                                            $selectedGrade = Grade::find($gradeId);
+                                            $divs = $selectedGrade ? $selectedGrade->divisions : collect();
+                                        @endphp
+                                        @foreach ($divs as $d)
+                                            <option value="{{ $d->id }}">{{ $d->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <x-input-error :messages="$errors->get('divisionId')" class="mt-1" />
+                                </div>
                             </div>
 
-                            <!-- Division -->
-                            <div>
-                                <x-input-label for="divisionId" :value="__('Assign Division')" />
-                                <select wire:model="divisionId" id="divisionId" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm" required>
-                                    <option value="">Select Division</option>
-                                    @php
-                                        $selectedGrade = Grade::find($gradeId);
-                                        $divs = $selectedGrade ? $selectedGrade->divisions : collect();
-                                    @endphp
-                                    @foreach ($divs as $d)
-                                        <option value="{{ $d->id }}">{{ $d->name }}</option>
-                                    @endforeach
-                                </select>
-                                <x-input-error :messages="$errors->get('divisionId')" class="mt-1" />
+                            <div class="flex justify-end">
+                                <button type="button" wire:click="addAssignment" class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-xs font-bold uppercase tracking-wider rounded-xl transition cursor-pointer">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                    <span>{{ __('Add Class Assignment') }}</span>
+                                </button>
                             </div>
+
+                            <!-- List of Added Assignments -->
+                            @if (!empty($tempAssignments))
+                                <div class="border-t border-indigo-100/50 dark:border-indigo-900/20 pt-3">
+                                    <span class="text-[10px] font-black uppercase text-gray-400 dark:text-gray-500 tracking-wider block mb-2">{{ __('Class Assignments') }}</span>
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach ($tempAssignments as $idx => $assign)
+                                            <div class="flex items-center gap-1.5 pl-3 pr-1.5 py-1 rounded-xl text-xs font-semibold bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-700 shadow-sm text-gray-800 dark:text-gray-250">
+                                                <span>{{ $assign['grade_name'] }} - {{ $assign['division_name'] }}</span>
+                                                <button type="button" wire:click="removeAssignment({{ $idx }})" class="p-1 text-gray-400 hover:text-red-500 rounded-lg transition-colors cursor-pointer">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     @endif
 

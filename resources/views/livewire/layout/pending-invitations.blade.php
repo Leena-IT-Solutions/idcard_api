@@ -3,6 +3,7 @@
 use Livewire\Volt\Component;
 use App\Models\SchoolInvitation;
 use App\Models\SchoolUserRole;
+use App\Models\SchoolUserRoleAssignment;
 use App\Models\User;
 
 new class extends Component {
@@ -21,7 +22,7 @@ new class extends Component {
             return;
         }
 
-        $this->invitations = SchoolInvitation::with(['school', 'role', 'grade', 'division'])
+        $this->invitations = SchoolInvitation::with(['school', 'role', 'assignments.grade', 'assignments.division'])
             ->where('status', 'pending')
             ->where(function ($q) use ($user) {
                 $q->where('user_id', $user->id);
@@ -38,16 +39,24 @@ new class extends Component {
     public function acceptInvite($id)
     {
         $user = auth()->user();
-        $invite = SchoolInvitation::findOrFail($id);
+        $invite = SchoolInvitation::with('assignments')->findOrFail($id);
 
         // 1. Create mapping under school user roles
-        SchoolUserRole::create([
+        $userRole = SchoolUserRole::create([
             'user_id' => $user->id,
             'school_id' => $invite->school_id,
             'role_id' => $invite->role_id,
             'grade_id' => $invite->grade_id,
             'division_id' => $invite->division_id,
         ]);
+
+        foreach ($invite->assignments as $asg) {
+            SchoolUserRoleAssignment::create([
+                'school_user_role_id' => $userRole->id,
+                'grade_id' => $asg->grade_id,
+                'division_id' => $asg->division_id,
+            ]);
+        }
 
         // 2. Sync to user's standard roles pivot table
         $user->roles()->syncWithoutDetaching([$invite->role_id]);
@@ -104,8 +113,15 @@ new class extends Component {
                             <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
                                 {{ __('You are invited to join as a') }} 
                                 <span class="font-bold text-gray-800 dark:text-gray-300">{{ $invite->role->name }}</span>
-                                @if ($invite->role->slug === 'teacher' && $invite->grade && $invite->division)
-                                    {{ __('for') }} <span class="font-bold text-indigo-600 dark:text-indigo-400">{{ $invite->grade->name }} - {{ $invite->division->name }}</span>
+                                @if ($invite->role->slug === 'teacher')
+                                    @if (count($invite->assignments) > 0)
+                                        {{ __('for') }}
+                                        @foreach ($invite->assignments as $asg)
+                                            <span class="font-bold text-indigo-600 dark:text-indigo-400">{{ $asg->grade->name }} - {{ $asg->division->name }}</span>{{ !$loop->last ? ', ' : '' }}
+                                        @endforeach
+                                    @elseif ($invite->grade && $invite->division)
+                                        {{ __('for') }} <span class="font-bold text-indigo-600 dark:text-indigo-400">{{ $invite->grade->name }} - {{ $invite->division->name }}</span>
+                                    @endif
                                 @endif.
                             </p>
                         </div>

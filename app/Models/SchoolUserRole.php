@@ -41,4 +41,9 @@ class SchoolUserRole extends Model
     {
         return $this->belongsTo(Division::class);
     }
+
+    public function assignments()
+    {
+        return $this->hasMany(SchoolUserRoleAssignment::class);
+    }
 }
