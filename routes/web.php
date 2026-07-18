@@ -14,7 +14,7 @@ Route::view('users', 'users')
 
 Route::view('students', 'students')
     ->middleware(['auth'])
-    ->name('students.index');
+    ->name('students');
 
 Route::view('profile', 'profile')
     ->middleware(['auth'])
