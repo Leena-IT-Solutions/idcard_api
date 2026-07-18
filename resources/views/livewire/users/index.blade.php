@@ -168,98 +168,103 @@ new class extends Component
         </div>
     @endif
 
-    <!-- Users Full-Width List Card -->
-    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl shadow-gray-200/50 dark:shadow-none sm:rounded-3xl border border-gray-100 dark:border-gray-700">
-        <!-- Header Section -->
-        <div class="px-6 py-5 border-b border-gray-150 dark:border-gray-700 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ __('System Users') }}</h3>
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
-                    {{ count($users) }} {{ __('Total') }}
-                </span>
+    <!-- Header & Action Row -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
             </div>
-            <button wire:click="openCreateModal" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow">
+            <div>
+                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ __('System Users') }}</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    {{ count($users) }} {{ __('registered users on the database') }}
+                </p>
+            </div>
+        </div>
+        <div>
+            <button wire:click="openCreateModal" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
                 </svg>
                 <span>{{ __('Add User') }}</span>
             </button>
         </div>
+    </div>
 
-        <!-- Table Section -->
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-gray-50/70 dark:bg-gray-900/40 text-[10px] uppercase font-black tracking-widest text-gray-400 dark:text-gray-500 border-b border-gray-100 dark:border-gray-850">
-                        <th class="px-6 py-4">{{ __('User') }}</th>
-                        <th class="px-6 py-4">{{ __('Contact') }}</th>
-                        <th class="px-6 py-4">{{ __('Roles') }}</th>
-                        <th class="px-6 py-4 text-right">{{ __('Actions') }}</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-850 text-sm">
-                    @forelse ($users as $user)
-                        <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-900/10 transition">
-                            <td class="px-6 py-4 flex items-center gap-3">
-                                @php
-                                    $initials = collect(explode(' ', $user->name))->map(fn($n) => substr($n, 0, 1))->take(2)->join('');
-                                @endphp
-                                <div class="h-9 w-9 rounded-full bg-indigo-50 dark:bg-indigo-950 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold shrink-0">
-                                    {{ strtoupper($initials) }}
-                                </div>
-                                <div class="font-semibold text-gray-850 dark:text-gray-250">
-                                    {{ $user->name }}
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 text-gray-500 dark:text-gray-400">
-                                <div class="font-mono text-xs">{{ $user->email }}</div>
-                                <div class="text-xs mt-0.5">{{ $user->mobile }}</div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex flex-wrap gap-1.5">
-                                    @foreach ($user->roles as $role)
-                                        @php
-                                            $badgeClass = match($role->slug) {
-                                                'saas_admin' => 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100/50 dark:border-indigo-900/30',
-                                                'school_admin' => 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-100/50 dark:border-amber-900/30',
-                                                'teacher' => 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-100/50 dark:border-emerald-900/30',
-                                                'parent' => 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-100/50 dark:border-purple-900/30',
-                                                default => 'bg-gray-50 dark:bg-gray-950 text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-gray-900',
-                                            };
-                                        @endphp
-                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider {{ $badgeClass }}">
-                                            {{ $role->name }}
-                                        </span>
-                                    @endforeach
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 text-right">
-                                <div class="flex items-center justify-end gap-2">
-                                    <button wire:click="openEditModal({{ $user->id }})" class="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition">
-                                        <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                        </svg>
-                                    </button>
-                                    @if ($user->id !== auth()->id())
-                                        <button wire:click="confirmDelete({{ $user->id }})" class="p-1.5 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg text-gray-550 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition">
-                                            <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                            </svg>
-                                        </button>
-                                    @endif
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="4" class="px-6 py-12 text-center text-gray-400 dark:text-gray-500">
-                                {{ __('No users found.') }}
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+    <!-- Grid of User Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        @forelse ($users as $user)
+            <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 hover:border-indigo-500/30 dark:hover:border-indigo-400/20 transition-all duration-300 flex flex-col justify-between relative group">
+                <!-- User Profile Header -->
+                <div>
+                    <div class="flex items-start gap-4">
+                        @php
+                            $initials = collect(explode(' ', $user->name))->map(fn($n) => substr($n, 0, 1))->take(2)->join('');
+                            // Deterministic color class based on user ID or name hash
+                            $avatarColors = match($user->id % 4) {
+                                0 => 'bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300',
+                                1 => 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300',
+                                2 => 'bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300',
+                                default => 'bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300',
+                            };
+                        @endphp
+                        <div class="h-12 w-12 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0 {{ $avatarColors }} shadow-sm group-hover:scale-105 transition-transform duration-200">
+                            {{ strtoupper($initials) }}
+                        </div>
+                        <div class="space-y-0.5 min-w-0">
+                            <h4 class="font-bold text-gray-900 dark:text-gray-100 truncate text-base">{{ $user->name }}</h4>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 font-mono truncate select-all">{{ $user->email }}</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 font-medium select-all">{{ $user->mobile }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Roles List -->
+                    <div class="mt-5 flex flex-wrap gap-1.5">
+                        @foreach ($user->roles as $role)
+                            @php
+                                $badgeClass = match($role->slug) {
+                                    'saas_admin' => 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100/50 dark:border-indigo-900/30',
+                                    'school_admin' => 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-100/50 dark:border-amber-900/30',
+                                    'teacher' => 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-100/50 dark:border-emerald-900/30',
+                                    'parent' => 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-100/50 dark:border-purple-900/30',
+                                    default => 'bg-gray-50 dark:bg-gray-950 text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-gray-900',
+                                };
+                            @endphp
+                            <span class="px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider {{ $badgeClass }}">
+                                {{ $role->name }}
+                            </span>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Divider & Actions -->
+                <div class="mt-6 pt-4 border-t border-gray-100 dark:border-gray-850 flex items-center justify-between">
+                    <span class="text-[9px] uppercase font-black tracking-widest text-gray-400 dark:text-gray-500">
+                        ID: #{{ $user->id }}
+                    </span>
+                    <div class="flex items-center gap-1">
+                        <button wire:click="openEditModal({{ $user->id }})" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-xl text-gray-500 dark:text-gray-400 hover:text-indigo-650 dark:hover:text-indigo-400 transition-colors">
+                            <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                        </button>
+                        @if ($user->id !== auth()->id())
+                            <button wire:click="confirmDelete({{ $user->id }})" class="p-2 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl text-gray-550 dark:text-gray-400 hover:text-red-650 dark:hover:text-red-400 transition-colors">
+                                <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @empty
+            <div class="col-span-full bg-white dark:bg-gray-800 rounded-3xl p-12 text-center text-gray-400 dark:text-gray-500 border border-gray-100 dark:border-gray-700">
+                {{ __('No users found.') }}
+            </div>
+        @endforelse
     </div>
 
     <!-- Create/Edit Modal -->
