@@ -101,11 +101,11 @@ new class extends Component {
                             <h4 class="font-extrabold text-gray-900 dark:text-gray-100 text-base leading-tight">
                                 {{ __('Invitation from') }} <span class="text-indigo-600 dark:text-indigo-400">{{ $invite->school->name }}</span>
                             </h4>
-                            <p class="text-xs text-gray-550 dark:text-gray-400 mt-1">
+                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
                                 {{ __('You are invited to join as a') }} 
                                 <span class="font-bold text-gray-800 dark:text-gray-300">{{ $invite->role->name }}</span>
                                 @if ($invite->role->slug === 'teacher' && $invite->grade && $invite->division)
-                                    {{ __('for') }} <span class="font-bold text-indigo-605 dark:text-indigo-400">{{ $invite->grade->name }} - {{ $invite->division->name }}</span>
+                                    {{ __('for') }} <span class="font-bold text-indigo-600 dark:text-indigo-400">{{ $invite->grade->name }} - {{ $invite->division->name }}</span>
                                 @endif.
                             </p>
                         </div>

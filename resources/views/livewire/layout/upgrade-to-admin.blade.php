@@ -30,7 +30,7 @@ new class extends Component {
                     <h4 class="font-extrabold text-gray-900 dark:text-gray-100 text-base leading-tight">
                         {{ __('Want to manage a School?') }}
                     </h4>
-                    <p class="text-xs text-gray-550 dark:text-gray-405 mt-1.5 leading-relaxed max-w-xl">
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1.5 leading-relaxed max-w-xl">
                         {{ __('Upgrade your account to a School Admin to register a new school profile, invite teachers, manage classes, and generate student ID cards.') }}
                     </p>
                 </div>
