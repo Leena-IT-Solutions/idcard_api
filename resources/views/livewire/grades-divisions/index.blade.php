@@ -160,7 +160,7 @@ new class extends Component {
 
 <div class="space-y-8">
     <!-- Top Header Overview Card -->
-    <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-8 shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-150/40 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-8 shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
         <div class="flex items-center space-x-4">
             <div class="p-3.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-2xl">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -168,7 +168,7 @@ new class extends Component {
                 </svg>
             </div>
             <div>
-                <h3 class="text-xl font-extrabold text-gray-900 dark:text-gray-150">{{ __('Grade & Division Management') }}</h3>
+                <h3 class="text-xl font-extrabold text-gray-900 dark:text-gray-100">{{ __('Grade & Division Management') }}</h3>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     {{ __('Manage school standards and their associated division sections') }}
                 </p>
@@ -187,7 +187,7 @@ new class extends Component {
     <!-- Search bar -->
     <div class="relative w-full">
         <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-            <svg class="h-5 w-5 text-gray-450 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
         </span>
@@ -213,7 +213,7 @@ new class extends Component {
                 <!-- Divisions Badges section -->
                 <div class="flex-1 flex flex-wrap items-center gap-2 sm:px-6">
                     @foreach ($grade->divisions as $division)
-                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-100/50 dark:border-teal-900/30 shadow-sm">
+                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 border border-teal-100 dark:border-teal-500/20 shadow-sm">
                             {{ $division->name }}
                         </span>
                     @endforeach
@@ -226,7 +226,7 @@ new class extends Component {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
                     </button>
-                    <button wire:click="confirmDeletion({{ $grade->id }})" class="p-2.5 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl text-gray-400 hover:text-red-655 dark:text-gray-500 dark:hover:text-red-450 transition-colors">
+                    <button wire:click="confirmDeletion({{ $grade->id }})" class="p-2.5 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl text-gray-400 hover:text-red-605 dark:text-gray-500 dark:hover:text-red-400 transition-colors">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                         </svg>
@@ -270,7 +270,7 @@ new class extends Component {
                     </div>
 
                     <!-- Add Divisions Section -->
-                    <div class="space-y-3 pt-2 border-t border-gray-100 dark:border-gray-750">
+                    <div class="space-y-3 pt-2 border-t border-gray-100 dark:border-gray-700">
                         <x-input-label :value="__('Add Divisions')" />
                         <div class="flex gap-2">
                             <x-text-input wire:model="newDivisionName" wire:keydown.enter.prevent="addDivision" type="text" class="block w-full" placeholder="e.g. Div A" />
@@ -284,11 +284,11 @@ new class extends Component {
                         <!-- List of Temporary Divisions -->
                         <div class="pt-2">
                             @if (count($tempDivisions) > 0)
-                                <div class="flex flex-wrap gap-2 max-h-36 overflow-y-auto p-2 bg-gray-50 dark:bg-gray-900/60 rounded-2xl border border-gray-100 dark:border-gray-850">
+                                <div class="flex flex-wrap gap-2 max-h-36 overflow-y-auto p-2 bg-gray-50 dark:bg-gray-900/60 rounded-2xl border border-gray-100 dark:border-gray-700">
                                     @foreach ($tempDivisions as $index => $div)
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-100/50 dark:border-teal-900/30">
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 border border-teal-100 dark:border-teal-500/20">
                                             {{ $div }}
-                                            <button type="button" wire:click="removeTempDivision({{ $index }})" class="text-teal-400 hover:text-teal-600 dark:text-teal-500 dark:hover:text-teal-300 font-extrabold focus:outline-none">
+                                            <button type="button" wire:click="removeTempDivision({{ $index }})" class="text-teal-400 hover:text-teal-650 dark:text-teal-500 dark:hover:text-teal-300 font-extrabold focus:outline-none">
                                                 &times;
                                             </button>
                                         </span>
