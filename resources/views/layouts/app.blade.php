@@ -24,8 +24,13 @@
                 <!-- Page Heading -->
                 @if (isset($header))
                     <header class="bg-white dark:bg-gray-800 shadow">
-                        <div class="w-full py-6 px-4 sm:px-6 lg:px-8">
-                            {{ $header }}
+                        <div class="w-full py-4 px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div>
+                                {{ $header }}
+                            </div>
+                            <div class="flex items-center shrink-0">
+                                <livewire:layout.school-selector />
+                            </div>
                         </div>
                     </header>
                 @endif

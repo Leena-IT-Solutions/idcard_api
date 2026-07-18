@@ -41,7 +41,19 @@ new class extends Component
         if (! auth()->user()->hasAnyRole(['saas_admin', 'school_admin', 'teacher'])) {
             abort(403);
         }
-        $this->students = Student::orderBy('created_at', 'desc')->get();
+
+        $activeSchoolId = session('active_school_id');
+        if (!$activeSchoolId) {
+            $this->students = [];
+            return;
+        }
+
+        $this->students = Student::where('school_id', $activeSchoolId)->orderBy('created_at', 'desc')->get();
+    }
+
+    public function updatedStandard($value)
+    {
+        $this->division = '';
     }
 
     public function openCreateModal()
@@ -93,6 +105,12 @@ new class extends Component
             abort(403);
         }
 
+        $activeSchoolId = session('active_school_id');
+        if (!$activeSchoolId) {
+            $this->addError('first_name', 'Please select a school first.');
+            return;
+        }
+
         $rules = [
             'first_name' => ['required', 'string', 'max:255'],
             'middle_name' => ['nullable', 'string', 'max:255'],
@@ -119,6 +137,7 @@ new class extends Component
         }
 
         $data = [
+            'school_id' => $activeSchoolId,
             'first_name' => $this->first_name,
             'middle_name' => $this->middle_name ?: null,
             'last_name' => $this->last_name,
@@ -343,14 +362,28 @@ new class extends Component
                         <!-- Standard -->
                         <div>
                             <x-input-label for="standard" :value="__('Standard / Class')" />
-                            <x-text-input wire:model="standard" id="standard" type="text" class="mt-1 block w-full" required />
+                            <select wire:model.live="standard" id="standard" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm" required>
+                                <option value="">Select Standard</option>
+                                @foreach (\App\Models\Grade::where('school_id', session('active_school_id'))->orderBy('name', 'asc')->get() as $grade)
+                                    <option value="{{ $grade->name }}">{{ $grade->name }}</option>
+                                @endforeach
+                            </select>
                             <x-input-error :messages="$errors->get('standard')" class="mt-2" />
                         </div>
 
                         <!-- Division -->
                         <div>
                             <x-input-label for="division" :value="__('Division / Section')" />
-                            <x-text-input wire:model="division" id="division" type="text" class="mt-1 block w-full" required />
+                            <select wire:model="division" id="division" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm" required>
+                                <option value="">Select Division</option>
+                                @php
+                                    $selectedGrade = \App\Models\Grade::where('school_id', session('active_school_id'))->where('name', $standard)->first();
+                                    $divisions = $selectedGrade ? $selectedGrade->divisions : collect();
+                                @endphp
+                                @foreach ($divisions as $div)
+                                    <option value="{{ $div->name }}">{{ $div->name }}</option>
+                                @endforeach
+                            </select>
                             <x-input-error :messages="$errors->get('division')" class="mt-2" />
                         </div>
 

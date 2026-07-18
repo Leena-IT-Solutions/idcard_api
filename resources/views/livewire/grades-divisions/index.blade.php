@@ -35,12 +35,20 @@ new class extends Component {
 
     public function loadGrades()
     {
-        $query = Grade::with('divisions');
+        $activeSchoolId = session('active_school_id');
+        if (!$activeSchoolId) {
+            $this->grades = [];
+            return;
+        }
+
+        $query = Grade::with('divisions')->where('school_id', $activeSchoolId);
         if ($this->search) {
-            $query->where('name', 'like', '%' . $this->search . '%')
-                  ->orWhereHas('divisions', function ($q) {
-                      $q->where('name', 'like', '%' . $this->search . '%');
+            $query->where(function ($q) {
+                $q->where('name', 'like', '%' . $this->search . '%')
+                  ->orWhereHas('divisions', function ($sub) {
+                      $sub->where('name', 'like', '%' . $this->search . '%');
                   });
+            });
         }
         $this->grades = $query->orderBy('name', 'asc')->get();
     }
@@ -75,6 +83,10 @@ new class extends Component {
     // --- CRUD ---
     public function openCreateModal()
     {
+        if (!session('active_school_id')) {
+            $this->addError('gradeName', 'Please select a school first.');
+            return;
+        }
         $this->resetValidation();
         $this->resetErrorBag();
         $this->gradeId = null;
@@ -98,6 +110,12 @@ new class extends Component {
 
     public function saveGrade()
     {
+        $activeSchoolId = session('active_school_id');
+        if (!$activeSchoolId) {
+            $this->addError('gradeName', 'Please select a school first.');
+            return;
+        }
+
         $this->resetErrorBag('newDivisionName');
 
         $this->validate([
@@ -105,13 +123,15 @@ new class extends Component {
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('grades', 'name')->ignore($this->gradeId),
+                Rule::unique('grades', 'name')
+                    ->where('school_id', $activeSchoolId)
+                    ->ignore($this->gradeId),
             ],
             'tempDivisions' => 'required|array|min:1',
             'tempDivisions.*' => 'required|string|max:50',
         ], [
             'gradeName.required' => 'The grade name is required.',
-            'gradeName.unique' => 'This grade name already exists.',
+            'gradeName.unique' => 'This grade name already exists under this school.',
             'tempDivisions.required' => 'You must add at least one division.',
             'tempDivisions.min' => 'You must add at least one division.',
         ]);
@@ -119,7 +139,10 @@ new class extends Component {
         // Save Grade
         $grade = Grade::updateOrCreate(
             ['id' => $this->gradeId],
-            ['name' => $this->gradeName]
+            [
+                'name' => $this->gradeName,
+                'school_id' => $activeSchoolId,
+            ]
         );
 
         // Sync Divisions

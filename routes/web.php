@@ -12,6 +12,10 @@ Route::view('users', 'users')
     ->middleware(['auth'])
     ->name('users.index');
 
+Route::view('schools', 'schools')
+    ->middleware(['auth'])
+    ->name('schools');
+
 Route::view('grades-divisions', 'grades-divisions')
     ->middleware(['auth'])
     ->name('grades-divisions');
