@@ -1,15 +1,23 @@
-<?php
-
 use App\Models\Student;
+use App\Models\Campaign;
+use App\Models\Grade;
+use App\Models\Division;
+use App\Models\CampaignStudent;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
+use ZipArchive;
 
 new class extends Component
 {
     use WithFileUploads;
 
     public $students = [];
+
+    // Bulk upload fields
+    public bool $isBulkModalOpen = false;
+    public $bulkCsv = null;
+    public $bulkZip = null;
 
     // Filter fields
     public $filterCampaign = '';
@@ -285,6 +293,233 @@ new class extends Component
         }
         $this->isConfirmDeleteOpen = false;
     }
+
+    // --- Bulk Import Methods ---
+    public function openBulkModal()
+    {
+        $this->resetValidation();
+        $this->reset(['bulkCsv', 'bulkZip']);
+        $this->isBulkModalOpen = true;
+    }
+
+    public function importBulkStudents()
+    {
+        if (! auth()->user()->hasAnyRole(['saas_admin', 'school_admin', 'teacher'])) {
+            abort(403);
+        }
+
+        $activeSchoolId = session('active_school_id');
+        if (!$activeSchoolId) {
+            $this->addError('bulkCsv', 'Please select a school first.');
+            return;
+        }
+
+        $rules = [
+            'bulkCsv' => ['required', 'file', 'mimes:csv,txt', 'max:2048'], // CSV max 2MB
+            'bulkZip' => ['nullable', 'file', 'mimes:zip', 'max:51200'], // ZIP max 50MB
+        ];
+
+        $this->validate($rules);
+
+        $csvPath = $this->bulkCsv->getRealPath();
+        
+        // Temporary directory to extract ZIP images if present
+        $extractedPath = null;
+        if ($this->bulkZip) {
+            $zip = new ZipArchive();
+            if ($zip->open($this->bulkZip->getRealPath()) === true) {
+                $extractedPath = storage_path('app/temp_zip_' . uniqid());
+                if (!file_exists($extractedPath)) {
+                    mkdir($extractedPath, 0755, true);
+                }
+                $zip->extractTo($extractedPath);
+                $zip->close();
+            } else {
+                $this->addError('bulkZip', 'Unable to open or extract ZIP file.');
+                return;
+            }
+        }
+
+        $insertedCount = 0;
+        $skippedCount = 0;
+        $errorCount = 0;
+        $errorsLog = [];
+
+        if (($handle = fopen($csvPath, 'r')) !== false) {
+            // Read headers
+            $headers = fgetcsv($handle, 1000, ',');
+            if ($headers) {
+                // Trim header whitespace
+                $headers = array_map('trim', $headers);
+                
+                // Map columns to indexes
+                $headerMap = array_flip($headers);
+
+                $requiredColumns = ['first_name', 'last_name', 'dob', 'address', 'pincode', 'contact_number', 'campaign_name', 'grade_name', 'division_name'];
+                $missing = [];
+                foreach ($requiredColumns as $req) {
+                    if (!isset($headerMap[$req])) {
+                        $missing[] = $req;
+                    }
+                }
+
+                if (!empty($missing)) {
+                    $this->addError('bulkCsv', 'Missing required CSV headers: ' . implode(', ', $missing));
+                    if ($extractedPath && file_exists($extractedPath)) {
+                        $this->deleteDir($extractedPath);
+                    }
+                    fclose($handle);
+                    return;
+                }
+
+                $rowNum = 1;
+                while (($row = fgetcsv($handle, 1000, ',')) !== false) {
+                    $rowNum++;
+                    // Build row data
+                    $data = [];
+                    foreach ($headerMap as $col => $idx) {
+                        $data[$col] = isset($row[$idx]) ? trim($row[$idx]) : '';
+                    }
+
+                    // Basic validation
+                    if (empty($data['first_name']) || empty($data['last_name']) || empty($data['dob']) || empty($data['campaign_name']) || empty($data['grade_name']) || empty($data['division_name'])) {
+                        $errorCount++;
+                        $errorsLog[] = "Row {$rowNum}: Missing required fields.";
+                        continue;
+                    }
+
+                    // Find campaign, grade, division
+                    $campaign = Campaign::where('school_id', $activeSchoolId)
+                        ->where('name', $data['campaign_name'])
+                        ->first();
+
+                    $grade = Grade::where('school_id', $activeSchoolId)
+                        ->where('name', $data['grade_name'])
+                        ->first();
+
+                    if (!$campaign || !$grade) {
+                        $errorCount++;
+                        $errorsLog[] = "Row {$rowNum}: Campaign '{$data['campaign_name']}' or Grade '{$data['grade_name']}' not found in active school.";
+                        continue;
+                    }
+
+                    $division = Division::where('grade_id', $grade->id)
+                        ->where('name', $data['division_name'])
+                        ->first();
+
+                    if (!$division) {
+                        $errorCount++;
+                        $errorsLog[] = "Row {$rowNum}: Division '{$data['division_name']}' not found under grade '{$grade->name}'.";
+                        continue;
+                    }
+
+                    // Process photo matching
+                    $photoPath = null;
+                    if (!empty($data['photo_filename']) && $extractedPath) {
+                        $localPhotoFile = $extractedPath . '/' . $data['photo_filename'];
+                        
+                        // Handle potential subdirectory matching inside zip
+                        if (!file_exists($localPhotoFile)) {
+                            $files = new \RecursiveIteratorIterator(
+                                new \RecursiveDirectoryIterator($extractedPath),
+                                \RecursiveIteratorIterator::LEAVES_ONLY
+                            );
+                            foreach ($files as $file) {
+                                if (!$file->isDir() && basename($file->getPathname()) === $data['photo_filename']) {
+                                    $localPhotoFile = $file->getPathname();
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (file_exists($localPhotoFile) && !is_dir($localPhotoFile)) {
+                            $extension = pathinfo($localPhotoFile, PATHINFO_EXTENSION);
+                            $newFileName = 'photos/' . uniqid() . '.' . $extension;
+                            Storage::disk('public')->put($newFileName, file_get_contents($localPhotoFile));
+                            $photoPath = $newFileName;
+                        }
+                    }
+
+                    // Check if student profile matches (e.g. by matching contact number or name/dob in this campaign)
+                    $existingStudent = Student::where('first_name', $data['first_name'])
+                        ->where('last_name', $data['last_name'])
+                        ->where('dob', $data['dob'])
+                        ->first();
+
+                    if ($existingStudent) {
+                        // Check if already enrolled in this campaign
+                        $isEnrolled = CampaignStudent::where('campaign_id', $campaign->id)
+                            ->where('student_id', $existingStudent->id)
+                            ->exists();
+
+                        if ($isEnrolled) {
+                            $skippedCount++;
+                            continue;
+                        }
+                        $student = $existingStudent;
+                    } else {
+                        // Create new student
+                        $student = Student::create([
+                            'first_name' => $data['first_name'],
+                            'middle_name' => $data['middle_name'] ?: null,
+                            'last_name' => $data['last_name'],
+                            'blood_group' => $data['blood_group'] ?: null,
+                            'dob' => $data['dob'],
+                            'address' => $data['address'],
+                            'pincode' => $data['pincode'],
+                            'contact_number' => $data['contact_number'],
+                            'photo_path' => $photoPath,
+                        ]);
+                    }
+
+                    // Create campaign enrollment
+                    CampaignStudent::create([
+                        'campaign_id' => $campaign->id,
+                        'student_id' => $student->id,
+                        'grade_id' => $grade->id,
+                        'division_id' => $division->id,
+                    ]);
+
+                    $insertedCount++;
+                }
+            }
+            fclose($handle);
+        }
+
+        // Cleanup extracted directory
+        if ($extractedPath && file_exists($extractedPath)) {
+            $this->deleteDir($extractedPath);
+        }
+
+        $this->isBulkModalOpen = false;
+        $this->reset(['bulkCsv', 'bulkZip']);
+        $this->loadStudents();
+
+        $message = "Import complete! Added {$insertedCount} student(s) successfully.";
+        if ($skippedCount > 0) {
+            $message .= " Skipped {$skippedCount} duplicate(s).";
+        }
+        if ($errorCount > 0) {
+            $message .= " Failed {$errorCount} row(s). Check format details.";
+        }
+
+        session()->flash('message', $message);
+        if (!empty($errorsLog)) {
+            session()->flash('bulk_errors', $errorsLog);
+        }
+    }
+
+    private function deleteDir($dirPath)
+    {
+        if (!is_dir($dirPath)) {
+            return;
+        }
+        $files = array_diff(scandir($dirPath), ['.', '..']);
+        foreach ($files as $file) {
+            (is_dir("$dirPath/$file")) ? $this->deleteDir("$dirPath/$file") : unlink("$dirPath/$file");
+        }
+        return rmdir($dirPath);
+    }
 }; ?>
 
 <div class="space-y-6">
@@ -295,6 +530,17 @@ new class extends Component
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
             <span>{{ session('message') }}</span>
+        </div>
+    @endif
+
+    @if (session()->has('bulk_errors'))
+        <div class="p-5 mb-4 bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 rounded-2xl text-xs space-y-2 text-red-700 dark:text-red-400">
+            <h4 class="font-extrabold uppercase tracking-wider text-[10px]">{{ __('Import Failures & Log') }}</h4>
+            <ul class="list-disc pl-4 space-y-1">
+                @foreach (session('bulk_errors') as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
         </div>
     @endif
 
@@ -313,8 +559,14 @@ new class extends Component
                 </p>
             </div>
         </div>
-        <div>
-            <button wire:click="openCreateModal" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow">
+        <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+            <button wire:click="openBulkModal" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold text-xs uppercase tracking-wider rounded-xl transition shadow hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                <span>{{ __('Bulk Import') }}</span>
+            </button>
+            <button wire:click="openCreateModal" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow cursor-pointer">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -690,6 +942,63 @@ new class extends Component
                         </button>
                     </div>
                 </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Bulk Import Modal -->
+    @if ($isBulkModalOpen)
+        <div class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
+            <div class="fixed inset-0 bg-gray-950/65 backdrop-blur-sm transition-opacity" wire:click="$set('isBulkModalOpen', false)"></div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-2xl transform transition-all max-w-lg w-full border border-gray-100 dark:border-gray-700 z-10 p-6 sm:p-8">
+                <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-700 mb-6">
+                    <h3 class="text-lg font-black text-gray-900 dark:text-gray-100">
+                        {{ __('Bulk Import Students') }}
+                    </h3>
+                    <button wire:click="$set('isBulkModalOpen', false)" class="text-gray-400 hover:text-gray-650 dark:hover:text-gray-300">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <form wire:submit="importBulkStudents" class="space-y-6">
+                    <!-- CSV File Input -->
+                    <div>
+                        <x-input-label for="bulkCsv" :value="__('1. Upload CSV Data File (Required)')" />
+                        <input wire:model="bulkCsv" id="bulkCsv" type="file" accept=".csv" class="mt-2 block w-full text-xs text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 dark:file:bg-indigo-950/30 file:text-indigo-700 dark:file:text-indigo-400 file:cursor-pointer hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/50 transition" required>
+                        <span class="text-[10px] text-gray-405 dark:text-gray-500 mt-1.5 block leading-normal">
+                            {{ __('Accepts standard .csv containing student fields. CSV columns MUST contain: ') }}
+                            <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-900 rounded text-indigo-650 dark:text-indigo-400 font-mono text-[9px]">first_name, last_name, dob, address, pincode, contact_number, campaign_name, grade_name, division_name</code>.
+                            {{ __('Optional columns: ') }}
+                            <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-900 rounded text-[9px] font-mono">middle_name, blood_group, photo_filename</code>.
+                        </span>
+                        <x-input-error :messages="$errors->get('bulkCsv')" class="mt-2" />
+                    </div>
+
+                    <!-- ZIP Photos Input -->
+                    <div>
+                        <x-input-label for="bulkZip" :value="__('2. Upload Photos Archive ZIP (Optional)')" />
+                        <input wire:model="bulkZip" id="bulkZip" type="file" accept=".zip" class="mt-2 block w-full text-xs text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 dark:file:bg-indigo-950/30 file:text-indigo-700 dark:file:text-indigo-400 file:cursor-pointer hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/50 transition">
+                        <span class="text-[10px] text-gray-405 dark:text-gray-500 mt-1.5 block leading-normal">
+                            {{ __('Upload a .zip file containing all student photos. Ensure filenames match exactly with the ') }}
+                            <code class="px-1 py-0.5 bg-gray-100 dark:bg-gray-900 rounded text-[9px] font-mono">photo_filename</code>
+                            {{ __(' column in the CSV.') }}
+                        </span>
+                        <x-input-error :messages="$errors->get('bulkZip')" class="mt-2" />
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+                        <button type="button" wire:click="$set('isBulkModalOpen', false)" class="px-5 py-2.5 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/60 rounded-xl font-bold text-xs uppercase text-gray-700 dark:text-gray-300 transition cursor-pointer">
+                            {{ __('Cancel') }}
+                        </button>
+                        <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs uppercase shadow transition cursor-pointer">
+                            {{ __('Import Now') }}
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     @endif
