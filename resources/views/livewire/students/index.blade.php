@@ -358,7 +358,7 @@ new class extends Component
                         <!-- Blood Group -->
                         <div>
                             <x-input-label for="blood_group" :value="__('Blood Group')" />
-                            <select wire:model="blood_group" id="blood_group" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-905 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm">
+                            <select wire:model="blood_group" id="blood_group" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm">
                                 <option value="">Select Blood Group</option>
                                 <option value="A+">A+</option>
                                 <option value="A-">A-</option>
@@ -396,7 +396,7 @@ new class extends Component
                         <!-- Address -->
                         <div class="md:col-span-3">
                             <x-input-label for="address" :value="__('Full Address')" />
-                            <textarea wire:model="address" id="address" rows="3" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-905 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm" required></textarea>
+                            <textarea wire:model="address" id="address" rows="3" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm" required></textarea>
                             <x-input-error :messages="$errors->get('address')" class="mt-2" />
                         </div>
 
