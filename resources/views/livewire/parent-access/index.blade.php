@@ -28,9 +28,23 @@ new class extends Component {
     // Feedback messages
     public $bulkFeedback = '';
 
+    // Pagination properties
+    public $perPage = 12;
+    public $hasMore = false;
+
     public function mount()
     {
         $this->checkAuthorization();
+    }
+
+    public function updatedSearch()
+    {
+        $this->perPage = 12;
+    }
+
+    public function loadMore()
+    {
+        $this->perPage += 12;
     }
 
     protected function checkAuthorization()
@@ -52,6 +66,7 @@ new class extends Component {
     {
         $activeSchoolId = session('active_school_id');
         if (!$activeSchoolId) {
+            $this->hasMore = false;
             return collect();
         }
 
@@ -61,7 +76,10 @@ new class extends Component {
             $query->where('mobile', 'like', '%' . $this->search . '%');
         }
 
-        return $query->orderBy('created_at', 'desc')->paginate(12);
+        $totalCount = $query->count();
+        $this->hasMore = $totalCount > $this->perPage;
+
+        return $query->orderBy('created_at', 'desc')->take($this->perPage)->get();
     }
 
     // --- Single Insert Actions ---
@@ -357,9 +375,16 @@ new class extends Component {
             @endforelse
         </div>
 
-        <div class="mt-4">
-            {{ $accesses->links() }}
-        </div>
+        @if ($hasMore)
+            <div class="flex justify-center pt-8">
+                <button wire:click="loadMore" class="px-6 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/60 text-gray-700 dark:text-gray-300 font-extrabold text-xs uppercase tracking-wider rounded-2xl transition shadow-sm flex items-center gap-2 cursor-pointer">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 13l-7 7-7-7m14-6l-7 7-7-7"/>
+                    </svg>
+                    {{ __('Load More') }}
+                </button>
+            </div>
+        @endif
     @endif
 
     <!-- Add/Edit Single Modal -->

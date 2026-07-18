@@ -34,6 +34,10 @@ new class extends Component {
     public $confirmingRevocation = false;
     public $inviteToRevoke = null;
 
+    // Pagination properties
+    public $perPage = 6;
+    public $hasMore = false;
+
     public function mount()
     {
         $this->loadData();
@@ -41,6 +45,13 @@ new class extends Component {
 
     public function updatedSearch()
     {
+        $this->perPage = 6;
+        $this->loadData();
+    }
+
+    public function loadMore()
+    {
+        $this->perPage += 6;
         $this->loadData();
     }
 
@@ -77,7 +88,10 @@ new class extends Component {
                   ->orWhere('mobile', 'like', '%' . $this->search . '%');
             });
         }
-        $this->activeMembers = $memberQuery->latest()->get();
+        
+        $totalCount = $memberQuery->count();
+        $this->activeMembers = $memberQuery->latest()->take($this->perPage)->get();
+        $this->hasMore = $totalCount > $this->perPage;
 
         // 2. Load pending invites
         $inviteQuery = SchoolInvitation::with(['role', 'grade', 'division', 'user'])
@@ -345,8 +359,18 @@ new class extends Component {
                 <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 text-center text-gray-400 dark:text-gray-500 border border-gray-100 dark:border-gray-700">
                     {{ __('No active school members found.') }}
                 </div>
-            @endforelse
         </div>
+
+        @if ($hasMore)
+            <div class="flex justify-center pt-2">
+                <button wire:click="loadMore" class="px-6 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/60 text-gray-700 dark:text-gray-300 font-extrabold text-xs uppercase tracking-wider rounded-2xl transition shadow-sm flex items-center gap-2 cursor-pointer">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 13l-7 7-7-7m14-6l-7 7-7-7"/>
+                    </svg>
+                    {{ __('Load More') }}
+                </button>
+            </div>
+        @endif
     </div>
 
     <!-- Pending Invites Section -->
