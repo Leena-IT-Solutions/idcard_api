@@ -16,6 +16,10 @@ Route::view('schools', 'schools')
     ->middleware(['auth'])
     ->name('schools');
 
+Route::view('user-roles', 'user-roles')
+    ->middleware(['auth'])
+    ->name('user-roles');
+
 Route::view('grades-divisions', 'grades-divisions')
     ->middleware(['auth'])
     ->name('grades-divisions');
