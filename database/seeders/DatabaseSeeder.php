@@ -28,20 +28,24 @@ class DatabaseSeeder extends Seeder
         }
 
         // Seed users
-        $sandeep = User::create([
-            'name' => 'Sandeep Rathod',
-            'email' => 'sandeep198558@gmail.com',
-            'mobile' => '9664588677',
-            'password' => bcrypt('password'),
-        ]);
+        $sandeep = User::firstOrCreate(
+            ['email' => 'sandeep198558@gmail.com'],
+            [
+                'name' => 'Sandeep Rathod',
+                'mobile' => '9664588677',
+                'password' => bcrypt('password'),
+            ]
+        );
         $sandeep->assignRole('saas_admin');
 
-        $leena = User::create([
-            'name' => 'Leena Adam',
-            'email' => 'leenaadam28@gmail.com',
-            'mobile' => '9769409405',
-            'password' => bcrypt('password'),
-        ]);
+        $leena = User::firstOrCreate(
+            ['email' => 'leenaadam28@gmail.com'],
+            [
+                'name' => 'Leena Adam',
+                'mobile' => '9769409405',
+                'password' => bcrypt('password'),
+            ]
+        );
         $leena->assignRole('school_admin');
     }
 }
