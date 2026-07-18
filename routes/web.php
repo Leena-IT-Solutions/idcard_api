@@ -17,11 +17,7 @@ Route::get('users', function () {
 
 Route::get('schools', function () {
     $user = auth()->user();
-    $isSchoolAdmin = \App\Models\SchoolUserRole::where('user_id', $user->id)
-        ->whereHas('role', function($q) { $q->where('slug', 'school_admin'); })
-        ->exists();
-
-    if (!$user->hasRole('saas_admin') && !$isSchoolAdmin) {
+    if (!$user->hasRole('saas_admin') && !$user->hasRole('school_admin')) {
         abort(403);
     }
     return view('schools');
