@@ -32,9 +32,12 @@ Route::view('profile', 'profile')
     ->middleware(['auth'])
     ->name('profile');
 
-Route::view('update-system', 'update-system')
-    ->middleware(['auth'])
-    ->name('update-system');
+Route::get('update-system', function () {
+    if (! auth()->user()->hasRole('saas_admin')) {
+        abort(403);
+    }
+    return view('update-system');
+})->middleware(['auth'])->name('update-system');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/git-info', function () {

@@ -143,15 +143,17 @@ new class extends Component
         <!-- Bottom Section: Profile & User Card -->
         <div>
             <div class="px-3 py-2 space-y-1">
-                @php
-                    $isUpdateSystem = request()->routeIs('update-system');
-                @endphp
-                <a href="{{ route('update-system') }}" wire:navigate class="group w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 {{ $isUpdateSystem ? 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/40 hover:text-gray-900 dark:hover:text-gray-200' }}">
-                    <svg class="h-5 w-5 transition-colors duration-200 {{ $isUpdateSystem ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89H17v4.11"/>
-                    </svg>
-                    <span>{{ __('Update System') }}</span>
-                </a>
+                @if(auth()->user()->hasRole('saas_admin'))
+                    @php
+                        $isUpdateSystem = request()->routeIs('update-system');
+                    @endphp
+                    <a href="{{ route('update-system') }}" wire:navigate class="group w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 {{ $isUpdateSystem ? 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/40 hover:text-gray-900 dark:hover:text-gray-200' }}">
+                        <svg class="h-5 w-5 transition-colors duration-200 {{ $isUpdateSystem ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89H17v4.11"/>
+                        </svg>
+                        <span>{{ __('Update System') }}</span>
+                    </a>
+                @endif
 
                 @php
                     $isProfile = request()->routeIs('profile');
