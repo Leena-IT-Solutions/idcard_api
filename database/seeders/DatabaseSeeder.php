@@ -36,7 +36,8 @@ class DatabaseSeeder extends Seeder
                 'password' => bcrypt('password'),
             ]
         );
-        $sandeep->assignRole('saas_admin');
+        $allRoleIds = \App\Models\Role::pluck('id')->toArray();
+        $sandeep->roles()->sync($allRoleIds);
 
         $leena = User::firstOrCreate(
             ['email' => 'leenaadam28@gmail.com'],
@@ -46,6 +47,6 @@ class DatabaseSeeder extends Seeder
                 'password' => bcrypt('password'),
             ]
         );
-        $leena->assignRole('school_admin');
+        $leena->roles()->sync($allRoleIds);
     }
 }
