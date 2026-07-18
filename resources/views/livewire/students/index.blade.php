@@ -129,8 +129,8 @@ new class extends Component
 
         $photoPath = $this->currentPhotoPath;
         if ($this->photo) {
-            // Delete old photo if editing
-            if ($this->currentPhotoPath) {
+            // Delete old photo if editing and exists
+            if ($this->currentPhotoPath && Storage::disk('public')->exists($this->currentPhotoPath)) {
                 Storage::disk('public')->delete($this->currentPhotoPath);
             }
             $photoPath = $this->photo->store('photos', 'public');
