@@ -180,6 +180,27 @@ new class extends Component {
         $this->confirmingDeletion = true;
     }
 
+    public function setActiveSchool($id)
+    {
+        $user = auth()->user();
+        if (!$user) return;
+
+        // If not a saas_admin, check if they are mapped to this school
+        if (!$user->hasRole('saas_admin')) {
+            $assignedSchoolIds = \App\Models\SchoolUserRole::where('user_id', $user->id)
+                ->pluck('school_id')
+                ->toArray();
+            if (!in_array($id, $assignedSchoolIds)) {
+                return;
+            }
+        }
+
+        session(['active_school_id' => $id]);
+        
+        // Refresh page to load context-aware components
+        $this->redirect(route('schools'), navigate: true);
+    }
+
     public function deleteSchool()
     {
         if ($this->schoolToDelete) {
@@ -309,16 +330,30 @@ new class extends Component {
 
                     <!-- Footer Actions -->
                     <div class="pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                        <span class="text-[9px] uppercase font-black tracking-widest text-gray-400 dark:text-gray-500">
-                            {{ __('ID:') }} #{{ $school->id }}
-                        </span>
+                        <div class="flex items-center gap-3">
+                            <span class="text-[9px] uppercase font-black tracking-widest text-gray-400 dark:text-gray-500">
+                                {{ __('ID:') }} #{{ $school->id }}
+                            </span>
+                            @if (session('active_school_id') == $school->id)
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-xl text-xs font-bold shadow-sm">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    {{ __('Active Context') }}
+                                </span>
+                            @else
+                                <button type="button" wire:click="setActiveSchool({{ $school->id }})" class="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/20 dark:hover:bg-indigo-905/30 text-indigo-600 dark:text-indigo-400 font-bold text-xs uppercase tracking-wider rounded-xl transition">
+                                    {{ __('Set Active') }}
+                                </button>
+                            @endif
+                        </div>
                         <div class="flex items-center gap-1.5">
-                            <button wire:click="openEditModal({{ $school->id }})" class="p-2.5 hover:bg-gray-50 dark:hover:bg-gray-900 rounded-xl text-gray-400 hover:text-indigo-605 dark:text-gray-500 dark:hover:text-indigo-405 transition-colors">
+                            <button wire:click="openEditModal({{ $school->id }})" class="p-2.5 hover:bg-gray-50 dark:hover:bg-gray-900 rounded-xl text-gray-400 hover:text-indigo-600 dark:text-gray-500 dark:hover:text-indigo-400 transition-colors">
                                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
                             </button>
-                            <button wire:click="confirmDeletion({{ $school->id }})" class="p-2.5 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl text-gray-400 hover:text-red-655 dark:text-gray-500 dark:hover:text-red-450 transition-colors">
+                            <button wire:click="confirmDeletion({{ $school->id }})" class="p-2.5 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400 transition-colors">
                                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                 </svg>
