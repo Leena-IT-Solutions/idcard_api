@@ -283,7 +283,7 @@ new class extends Component {
                                 </span>
                             </div>
 
-                            <p class="text-[11px] text-gray-450 dark:text-gray-400 leading-normal mb-5">
+                            <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-normal mb-5">
                                 {{ __('Registration Period:') }} <span class="font-bold text-gray-700 dark:text-gray-300">{{ $camp->registration_start_date->format('d M, Y') }}</span> {{ __('to') }} <span class="font-bold text-gray-700 dark:text-gray-300">{{ $camp->registration_end_date->format('d M, Y') }}</span>
                             </p>
 
@@ -299,10 +299,10 @@ new class extends Component {
                                 @else
                                     <div class="space-y-1.5">
                                         @foreach ($enrolledPivots as $piv)
-                                            <div class="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-750">
+                                            <div class="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700">
                                                 <div class="flex items-center space-x-2">
                                                     <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
-                                                    <span class="text-xs font-bold text-gray-800 dark:text-gray-250">{{ $piv->student->first_name }} {{ $piv->student->last_name }}</span>
+                                                    <span class="text-xs font-bold text-gray-800 dark:text-gray-200">{{ $piv->student->first_name }} {{ $piv->student->last_name }}</span>
                                                 </div>
                                                 <span class="px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 text-[9px] font-bold">
                                                     {{ $piv->grade->name }} - {{ $piv->division->name }}
@@ -322,7 +322,7 @@ new class extends Component {
                             @endphp
 
                             @if ($unenrolledChildren->isEmpty() && !$this->children->isEmpty())
-                                <button disabled class="w-full py-2.5 bg-gray-100 dark:bg-gray-900 text-gray-400 dark:text-gray-650 font-bold text-xs uppercase tracking-wider rounded-xl cursor-not-allowed text-center">
+                                <button disabled class="w-full py-2.5 bg-gray-100 dark:bg-gray-900 text-gray-400 dark:text-gray-500 font-bold text-xs uppercase tracking-wider rounded-xl cursor-not-allowed text-center">
                                     {{ __('All children enrolled') }}
                                 </button>
                             @else
