@@ -469,26 +469,26 @@ new class extends Component
         $query = \App\Models\Student::query();
 
         // Join campaign students for active school filtering & selection
-        $query->whereHas('campaignStudents.campaign', function($q) use ($activeSchoolId) {
+        $query->whereHas('campaignStudents.campaign', function($q) use ($activeSchoolId, $filterCampaign) {
             $q->where('school_id', $activeSchoolId);
-            if ($this->filterCampaign) {
-                $q->where('id', $this->filterCampaign);
+            if ($filterCampaign) {
+                $q->where('id', $filterCampaign);
             }
         });
 
-        if ($this->filterGrade || $this->filterDivision) {
-            $query->whereHas('campaignStudents', function($q) {
-                if ($this->filterGrade) {
-                    $q->where('grade_id', $this->filterGrade);
+        if ($filterGrade || $filterDivision) {
+            $query->whereHas('campaignStudents', function($q) use ($filterGrade, $filterDivision) {
+                if ($filterGrade) {
+                    $q->where('grade_id', $filterGrade);
                 }
-                if ($this->filterDivision) {
-                    $q->where('division_id', $this->filterDivision);
+                if ($filterDivision) {
+                    $q->where('division_id', $filterDivision);
                 }
             });
         }
 
-        if ($this->filterBloodGroup) {
-            $query->where('blood_group', $this->filterBloodGroup);
+        if ($filterBloodGroup) {
+            $query->where('blood_group', $filterBloodGroup);
         }
 
         $totalCount = $query->count();
@@ -497,9 +497,9 @@ new class extends Component
             $q->whereHas('campaign', function($inner) use ($activeSchoolId) {
                 $inner->where('school_id', $activeSchoolId);
             })->with(['grade', 'division', 'campaign']);
-        }])->orderBy('created_at', 'desc')->take($this->perPage)->get()->all();
+        }])->orderBy('created_at', 'desc')->take($perPage)->get()->all();
 
-        $hasMoreStudents = $totalCount > $this->perPage;
+        $hasMoreStudents = $totalCount > $perPage;
     }
 @endphp
 
