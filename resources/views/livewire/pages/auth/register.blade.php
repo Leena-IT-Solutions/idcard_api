@@ -15,6 +15,7 @@ new #[Layout('layouts.guest')] class extends Component
     public string $mobile = '';
     public string $password = '';
     public string $password_confirmation = '';
+    public bool $createSchoolAccount = false;
 
     /**
      * Handle an incoming registration request.
@@ -35,7 +36,11 @@ new #[Layout('layouts.guest')] class extends Component
             'password' => Hash::make($this->password),
         ]);
 
-        $user->assignRole('parent');
+        if ($this->createSchoolAccount) {
+            $user->assignRole('school_admin');
+        } else {
+            $user->assignRole('parent');
+        }
 
         event(new Registered($user));
 
@@ -89,6 +94,14 @@ new #[Layout('layouts.guest')] class extends Component
                             name="password_confirmation" required autocomplete="new-password" />
 
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
+        </div>
+
+        <!-- Create School Account Option -->
+        <div class="mt-4 flex items-center">
+            <label for="createSchoolAccount" class="inline-flex items-center">
+                <input wire:model="createSchoolAccount" id="createSchoolAccount" type="checkbox" class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800" name="createSchoolAccount">
+                <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">{{ __('Do you want to create a school account?') }}</span>
+            </label>
         </div>
 
         <div class="flex items-center justify-end mt-4">
