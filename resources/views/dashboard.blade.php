@@ -10,6 +10,9 @@
             <!-- Pending Invitations -->
             <livewire:layout.pending-invitations />
 
+            <!-- Upgrade to School Admin Option -->
+            <livewire:layout.upgrade-to-admin />
+
             <!-- Welcome Card -->
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow sm:rounded-3xl">
                 <div class="p-6 text-gray-900 dark:text-gray-100 font-medium">
