@@ -12,8 +12,6 @@ new class extends Component
 {
     use WithFileUploads;
 
-    public $students = [];
-
     // Bulk upload fields
     public bool $isBulkModalOpen = false;
     public $bulkCsv = null;
@@ -48,55 +46,38 @@ new class extends Component
 
     // Pagination properties
     public $perPage = 12;
-    public $hasMore = false;
-
-    public function mount()
-    {
-        $this->loadStudents();
-    }
 
     public function loadMore()
     {
         $this->perPage += 12;
-        $this->loadStudents();
     }
 
     public function updatedFilterCampaign()
     {
         $this->perPage = 12;
-        $this->loadStudents();
     }
 
     public function updatedFilterGrade()
     {
         $this->filterDivision = '';
         $this->perPage = 12;
-        $this->loadStudents();
     }
 
     public function updatedFilterDivision()
     {
         $this->perPage = 12;
-        $this->loadStudents();
     }
 
     public function updatedFilterBloodGroup()
     {
         $this->perPage = 12;
-        $this->loadStudents();
     }
 
-    public function loadStudents()
+    public function getStudentsProperty()
     {
-        if (! auth()->user()->hasAnyRole(['saas_admin', 'school_admin', 'teacher'])) {
-            abort(403);
-        }
-
         $activeSchoolId = session('active_school_id');
         if (!$activeSchoolId) {
-            $this->students = [];
-            $this->hasMore = false;
-            return;
+            return collect();
         }
 
         $query = Student::query();
@@ -124,15 +105,44 @@ new class extends Component
             $query->where('blood_group', $this->filterBloodGroup);
         }
 
-        $query->with(['campaignStudents' => function($q) use ($activeSchoolId) {
+        return $query->with(['campaignStudents' => function($q) use ($activeSchoolId) {
             $q->whereHas('campaign', function($inner) use ($activeSchoolId) {
                 $inner->where('school_id', $activeSchoolId);
             })->with(['grade', 'division', 'campaign']);
-        }]);
+        }])->orderBy('created_at', 'desc')->take($this->perPage)->get();
+    }
 
-        $totalCount = $query->count();
-        $this->students = $query->orderBy('created_at', 'desc')->take($this->perPage)->get();
-        $this->hasMore = $totalCount > $this->perPage;
+    public function getHasMoreProperty()
+    {
+        $activeSchoolId = session('active_school_id');
+        if (!$activeSchoolId) {
+            return false;
+        }
+
+        $query = Student::query();
+        $query->whereHas('campaignStudents.campaign', function($q) use ($activeSchoolId) {
+            $q->where('school_id', $activeSchoolId);
+            if ($this->filterCampaign) {
+                $q->where('id', $this->filterCampaign);
+            }
+        });
+
+        if ($this->filterGrade || $this->filterDivision) {
+            $query->whereHas('campaignStudents', function($q) {
+                if ($this->filterGrade) {
+                    $q->where('grade_id', $this->filterGrade);
+                }
+                if ($this->filterDivision) {
+                    $q->where('division_id', $this->filterDivision);
+                }
+            });
+        }
+
+        if ($this->filterBloodGroup) {
+            $query->where('blood_group', $this->filterBloodGroup);
+        }
+
+        return $query->count() > $this->perPage;
     }
 
     public function updatedGradeId($value)
@@ -266,7 +276,6 @@ new class extends Component
 
         $this->isModalOpen = false;
         $this->resetForm();
-        $this->loadStudents();
 
         session()->flash('message', $this->studentId ? 'Student updated successfully.' : 'Student created successfully.');
     }
@@ -288,7 +297,6 @@ new class extends Component
                 Storage::disk('public')->delete($student->photo_path);
             }
             $student->delete();
-            $this->loadStudents();
             session()->flash('message', 'Student deleted successfully.');
         }
         $this->isConfirmDeleteOpen = false;
@@ -493,7 +501,6 @@ new class extends Component
 
         $this->isBulkModalOpen = false;
         $this->reset(['bulkCsv', 'bulkZip']);
-        $this->loadStudents();
 
         $message = "Import complete! Added {$insertedCount} student(s) successfully.";
         if ($skippedCount > 0) {
