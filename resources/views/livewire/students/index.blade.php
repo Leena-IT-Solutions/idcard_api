@@ -328,6 +328,7 @@ new class extends Component
             <div class="bg-white dark:bg-gray-800 rounded-3xl p-12 text-center text-gray-400 dark:text-gray-500 border border-gray-100 dark:border-gray-700">
                 {{ __('No students found.') }}
             </div>
+        @endforelse
     </div>
 
     @if ($hasMore)
