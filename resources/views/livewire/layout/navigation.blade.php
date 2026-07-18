@@ -114,7 +114,7 @@ new class extends Component
                     </a>
                 @endif
 
-                @if($isSaasAdmin || $isSchoolAdmin || $isTeacher)
+                @if($isSaasAdmin || $isSchoolAdmin)
                     @php
                         $isGradesDivisions = request()->routeIs('grades-divisions');
                     @endphp

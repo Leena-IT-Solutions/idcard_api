@@ -76,6 +76,58 @@ new class extends Component
         $this->perPage = 12;
     }
 
+    public function getPermittedScopes()
+    {
+        $user = auth()->user();
+        $activeSchoolId = session('active_school_id');
+        if (!$activeSchoolId || !$user) {
+            return ['restricted' => true, 'grades' => [], 'divisions' => []];
+        }
+
+        $isSaasAdmin = $user->hasRole('saas_admin');
+        $isSchoolAdmin = \App\Models\SchoolUserRole::where('user_id', $user->id)
+            ->where('school_id', $activeSchoolId)
+            ->whereHas('role', function($q) { $q->where('slug', 'school_admin'); })
+            ->exists();
+
+        if ($isSaasAdmin || $isSchoolAdmin) {
+            return [
+                'restricted' => false,
+                'grades' => [],
+                'divisions' => []
+            ];
+        }
+
+        $teacherRole = \App\Models\SchoolUserRole::where('user_id', $user->id)
+            ->where('school_id', $activeSchoolId)
+            ->whereHas('role', function($q) { $q->where('slug', 'teacher'); })
+            ->first();
+
+        if (!$teacherRole) {
+            return [
+                'restricted' => true,
+                'grades' => [],
+                'divisions' => []
+            ];
+        }
+
+        $divisionIds = $teacherRole->assignments()->pluck('division_id')->toArray();
+        $gradeIds = $teacherRole->assignments()->pluck('grade_id')->toArray();
+
+        if ($teacherRole->division_id) {
+            $divisionIds[] = $teacherRole->division_id;
+        }
+        if ($teacherRole->grade_id) {
+            $gradeIds[] = $teacherRole->grade_id;
+        }
+
+        return [
+            'restricted' => true,
+            'grades' => array_unique($gradeIds),
+            'divisions' => array_unique($divisionIds)
+        ];
+    }
+
     public function loadStudents()
     {
         $activeSchoolId = session('active_school_id');
@@ -85,6 +137,14 @@ new class extends Component
         }
 
         $query = Student::query();
+
+        $scopes = $this->getPermittedScopes();
+        if ($scopes['restricted']) {
+            $query->whereHas('campaignStudents', function($q) use ($scopes) {
+                $q->whereIn('grade_id', $scopes['grades'])
+                  ->whereIn('division_id', $scopes['divisions']);
+            });
+        }
 
         // Join campaign students for active school filtering & selection
         $query->whereHas('campaignStudents.campaign', function($q) use ($activeSchoolId) {
@@ -158,6 +218,13 @@ new class extends Component
             $this->campaignId = $enrollment->campaign_id;
             $this->gradeId = $enrollment->grade_id;
             $this->divisionId = $enrollment->division_id;
+
+            $scopes = $this->getPermittedScopes();
+            if ($scopes['restricted']) {
+                if (!in_array($this->gradeId, $scopes['grades']) || !in_array($this->divisionId, $scopes['divisions'])) {
+                    abort(403, 'You do not have permission to edit this student.');
+                }
+            }
         }
 
         $this->isModalOpen = true;
@@ -210,6 +277,14 @@ new class extends Component
         ];
 
         $validated = $this->validate($rules);
+
+        $scopes = $this->getPermittedScopes();
+        if ($scopes['restricted']) {
+            if (!in_array($this->gradeId, $scopes['grades']) || !in_array($this->divisionId, $scopes['divisions'])) {
+                $this->addError('divisionId', 'You do not have permission to assign students to this grade/division.');
+                return;
+            }
+        }
 
         $photoPath = $this->currentPhotoPath;
         if ($this->photo) {
@@ -269,6 +344,22 @@ new class extends Component
         }
         if ($this->studentToDeleteId) {
             $student = Student::findOrFail($this->studentToDeleteId);
+
+            $activeSchoolId = session('active_school_id');
+            $enrollment = \App\Models\CampaignStudent::where('student_id', $student->id)
+                ->whereHas('campaign', function($q) use ($activeSchoolId) {
+                    $q->where('school_id', $activeSchoolId);
+                })->first();
+
+            if ($enrollment) {
+                $scopes = $this->getPermittedScopes();
+                if ($scopes['restricted']) {
+                    if (!in_array($enrollment->grade_id, $scopes['grades']) || !in_array($enrollment->division_id, $scopes['divisions'])) {
+                        abort(403, 'You do not have permission to delete this student.');
+                    }
+                }
+            }
+
             if ($student->photo_path) {
                 Storage::disk('public')->delete($student->photo_path);
             }
@@ -395,6 +486,15 @@ new class extends Component
                         $errorCount++;
                         $errorsLog[] = "Row {$rowNum}: Division '{$data['division_name']}' not found under grade '{$grade->name}'.";
                         continue;
+                    }
+
+                    $scopes = $this->getPermittedScopes();
+                    if ($scopes['restricted']) {
+                        if (!in_array($grade->id, $scopes['grades']) || !in_array($division->id, $scopes['divisions'])) {
+                            $errorCount++;
+                            $errorsLog[] = "Row {$rowNum}: Grade '{$grade->name}' or Division '{$division->name}' is outside your permitted access scope.";
+                            continue;
+                        }
                     }
 
                     // Process photo matching
@@ -580,7 +680,15 @@ new class extends Component
             <label class="text-[9px] uppercase font-black text-gray-405 dark:text-gray-500 tracking-wider block mb-1.5">{{ __('Standard / Class') }}</label>
             <select wire:model.live="filterGrade" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-xl text-xs focus:ring-indigo-500 focus:border-indigo-500">
                 <option value="">{{ __('All Standards') }}</option>
-                @foreach (\App\Models\Grade::where('school_id', session('active_school_id'))->orderBy('name', 'asc')->get() as $grade)
+                @php
+                    $scopes = $this->getPermittedScopes();
+                    $gradesQuery = \App\Models\Grade::where('school_id', session('active_school_id'))->orderBy('name', 'asc');
+                    if ($scopes['restricted']) {
+                        $gradesQuery->whereIn('id', $scopes['grades']);
+                    }
+                    $filterGradesList = $gradesQuery->get();
+                @endphp
+                @foreach ($filterGradesList as $grade)
                     <option value="{{ $grade->id }}">{{ $grade->name }}</option>
                 @endforeach
             </select>
@@ -592,7 +700,14 @@ new class extends Component
             <select wire:model.live="filterDivision" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-xl text-xs focus:ring-indigo-500 focus:border-indigo-500">
                 <option value="">{{ __('All Divisions') }}</option>
                 @if ($filterGrade)
-                    @foreach (\App\Models\Division::where('grade_id', $filterGrade)->orderBy('name', 'asc')->get() as $div)
+                    @php
+                        $divsQuery = \App\Models\Division::where('grade_id', $filterGrade)->orderBy('name', 'asc');
+                        if ($scopes['restricted']) {
+                            $divsQuery->whereIn('id', $scopes['divisions']);
+                        }
+                        $filterDivsList = $divsQuery->get();
+                    @endphp
+                    @foreach ($filterDivsList as $div)
                         <option value="{{ $div->id }}">{{ $div->name }}</option>
                     @endforeach
                 @endif
@@ -783,7 +898,15 @@ new class extends Component
                             <x-input-label for="gradeId" :value="__('Standard / Class')" />
                             <select wire:model.live="gradeId" id="gradeId" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm" required>
                                 <option value="">Select Standard</option>
-                                @foreach (\App\Models\Grade::where('school_id', session('active_school_id'))->orderBy('name', 'asc')->get() as $grade)
+                                @php
+                                    $scopes = $this->getPermittedScopes();
+                                    $gradesQuery = \App\Models\Grade::where('school_id', session('active_school_id'))->orderBy('name', 'asc');
+                                    if ($scopes['restricted']) {
+                                        $gradesQuery->whereIn('id', $scopes['grades']);
+                                    }
+                                    $formGradesList = $gradesQuery->get();
+                                @endphp
+                                @foreach ($formGradesList as $grade)
                                     <option value="{{ $grade->id }}">{{ $grade->name }}</option>
                                 @endforeach
                             </select>
@@ -796,7 +919,15 @@ new class extends Component
                             <select wire:model="divisionId" id="divisionId" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm" required>
                                 <option value="">Select Division</option>
                                 @php
-                                    $divisions = $gradeId ? \App\Models\Division::where('grade_id', $gradeId)->get() : collect();
+                                    if ($gradeId) {
+                                        $divsQuery = \App\Models\Division::where('grade_id', $gradeId);
+                                        if ($scopes['restricted']) {
+                                            $divsQuery->whereIn('id', $scopes['divisions']);
+                                        }
+                                        $divisions = $divsQuery->get();
+                                    } else {
+                                        $divisions = collect();
+                                    }
                                 @endphp
                                 @foreach ($divisions as $div)
                                     <option value="{{ $div->id }}">{{ $div->name }}</option>

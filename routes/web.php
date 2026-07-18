@@ -70,7 +70,7 @@ Route::get('grades-divisions', function () {
     $activeSchoolId = session('active_school_id');
     $hasAccess = $activeSchoolId && \App\Models\SchoolUserRole::where('user_id', $user->id)
         ->where('school_id', $activeSchoolId)
-        ->whereHas('role', function($q) { $q->whereIn('slug', ['school_admin', 'teacher']); })
+        ->whereHas('role', function($q) { $q->where('slug', 'school_admin'); })
         ->exists();
 
     if (!$user->hasRole('saas_admin') && !$hasAccess) {
