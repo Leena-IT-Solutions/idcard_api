@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('mobile')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('role', ['saas_admin', 'school_admin', 'teacher'])->default('teacher');
             $table->rememberToken();
             $table->timestamps();
         });

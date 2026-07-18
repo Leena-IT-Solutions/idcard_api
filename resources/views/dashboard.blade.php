@@ -15,7 +15,7 @@
             </div>
 
             <!-- Git Self Updater Widget -->
-            @if(auth()->user()->role === 'saas_admin' || auth()->user()->role === 'school_admin')
+            @if(auth()->user()->hasAnyRole(['saas_admin', 'school_admin']))
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow sm:rounded-3xl"
                  x-data="{
                     branch: 'Loading...',

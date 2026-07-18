@@ -13,7 +13,7 @@ new #[Layout('layouts.guest')] class extends Component
     public string $name = '';
     public string $email = '';
     public string $mobile = '';
-    public string $role = 'teacher';
+    public array $selectedRoles = [];
     public string $password = '';
     public string $password_confirmation = '';
 
@@ -26,13 +26,23 @@ new #[Layout('layouts.guest')] class extends Component
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'mobile' => ['required', 'string', 'max:255', 'unique:'.User::class],
-            'role' => ['required', 'string', 'in:saas_admin,school_admin,teacher'],
+            'selectedRoles' => ['required', 'array', 'min:1'],
+            'selectedRoles.*' => ['string', 'exists:roles,slug'],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $validated['password'] = Hash::make($validated['password']);
+        $user = User::create([
+            'name' => $this->name,
+            'email' => $this->email,
+            'mobile' => $this->mobile,
+            'password' => Hash::make($this->password),
+        ]);
 
-        event(new Registered($user = User::create($validated)));
+        foreach ($this->selectedRoles as $roleSlug) {
+            $user->assignRole($roleSlug);
+        }
+
+        event(new Registered($user));
 
         Auth::login($user);
 
@@ -65,13 +75,26 @@ new #[Layout('layouts.guest')] class extends Component
 
         <!-- Role -->
         <div class="mt-4">
-            <x-input-label for="role" :value="__('Role')" />
-            <select wire:model="role" id="role" class="block mt-1 w-full rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-gray-700 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800" name="role" required>
-                <option value="teacher">Teacher</option>
-                <option value="school_admin">School Admin</option>
-                <option value="saas_admin">SaaS Admin</option>
-            </select>
-            <x-input-error :messages="$errors->get('role')" class="mt-2" />
+            <x-input-label :value="__('Roles')" />
+            <div class="mt-2 grid grid-cols-2 gap-4">
+                <label class="inline-flex items-center">
+                    <input type="checkbox" wire:model="selectedRoles" value="saas_admin" class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                    <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">SaaS Admin</span>
+                </label>
+                <label class="inline-flex items-center">
+                    <input type="checkbox" wire:model="selectedRoles" value="school_admin" class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                    <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">School Admin</span>
+                </label>
+                <label class="inline-flex items-center">
+                    <input type="checkbox" wire:model="selectedRoles" value="teacher" class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                    <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">Teacher</span>
+                </label>
+                <label class="inline-flex items-center">
+                    <input type="checkbox" wire:model="selectedRoles" value="parent" class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                    <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">Parent</span>
+                </label>
+            </div>
+            <x-input-error :messages="$errors->get('selectedRoles')" class="mt-2" />
         </div>
 
         <!-- Password -->

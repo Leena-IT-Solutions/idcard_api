@@ -15,20 +15,33 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::create([
+        // Seed roles
+        $roles = [
+            'saas_admin' => 'SaaS Admin',
+            'school_admin' => 'School Admin',
+            'teacher' => 'Teacher',
+            'parent' => 'Parent',
+        ];
+
+        foreach ($roles as $slug => $name) {
+            \App\Models\Role::firstOrCreate(['slug' => $slug], ['name' => $name]);
+        }
+
+        // Seed users
+        $sandeep = User::create([
             'name' => 'Sandeep Rathod',
             'email' => 'sandeep198558@gmail.com',
             'mobile' => '9664588677',
             'password' => bcrypt('password'),
-            'role' => 'saas_admin',
         ]);
+        $sandeep->assignRole('saas_admin');
 
-        User::create([
+        $leena = User::create([
             'name' => 'Leena Adam',
             'email' => 'leenaadam28@gmail.com',
             'mobile' => '9769409405',
             'password' => bcrypt('password'),
-            'role' => 'school_admin',
         ]);
+        $leena->assignRole('school_admin');
     }
 }
