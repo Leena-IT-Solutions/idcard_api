@@ -78,9 +78,6 @@ new class extends Component
 
         <!-- Bottom Section: Profile & User Card -->
         <div>
-            <!-- Divider above Update System -->
-            <div class="border-t border-gray-200 dark:border-gray-800"></div>
-
             <div class="px-3 py-2 space-y-1">
                 @php
                     $isUpdateSystem = request()->routeIs('update-system');
