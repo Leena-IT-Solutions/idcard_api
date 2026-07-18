@@ -13,8 +13,11 @@ return new class extends Migration
     {
         Schema::create('divisions', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
+            $table->foreignId('grade_id')->constrained()->cascadeOnDelete();
+            $table->string('name');
             $table->timestamps();
+
+            $table->unique(['grade_id', 'name']);
         });
     }
 

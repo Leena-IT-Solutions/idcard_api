@@ -12,4 +12,9 @@ class Grade extends Model
     protected $fillable = [
         'name',
     ];
+
+    public function divisions()
+    {
+        return $this->hasMany(Division::class);
+    }
 }

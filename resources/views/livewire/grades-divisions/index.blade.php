@@ -20,6 +20,7 @@ new class extends Component {
     public $divisionSearch = '';
     public $divisionId = null;
     public $divisionName = '';
+    public $divisionGradeId = '';
     public $isDivisionModalOpen = false;
     public $confirmingDivisionDeletion = false;
     public $divisionToDelete = null;
@@ -51,9 +52,14 @@ new class extends Component {
 
     public function loadDivisions()
     {
-        $query = Division::query();
+        $query = Division::with('grade');
         if ($this->divisionSearch) {
-            $query->where('name', 'like', '%' . $this->divisionSearch . '%');
+            $query->where(function ($q) {
+                $q->where('name', 'like', '%' . $this->divisionSearch . '%')
+                  ->orWhereHas('grade', function ($g) {
+                      $g->where('name', 'like', '%' . $this->divisionSearch . '%');
+                  });
+            });
         }
         $this->divisions = $query->orderBy('name', 'asc')->get();
     }
@@ -99,6 +105,7 @@ new class extends Component {
 
         $this->isGradeModalOpen = false;
         $this->loadGrades();
+        $this->loadDivisions(); // Reload divisions to update relational data if grade names changed
     }
 
     public function confirmGradeDeletion($id)
@@ -114,6 +121,7 @@ new class extends Component {
             $this->gradeToDelete = null;
             $this->confirmingGradeDeletion = false;
             $this->loadGrades();
+            $this->loadDivisions(); // Reload divisions to reflect cascade delete
         }
     }
 
@@ -123,6 +131,7 @@ new class extends Component {
         $this->resetValidation();
         $this->divisionId = null;
         $this->divisionName = '';
+        $this->divisionGradeId = '';
         $this->isDivisionModalOpen = true;
     }
 
@@ -132,6 +141,7 @@ new class extends Component {
         $division = Division::findOrFail($id);
         $this->divisionId = $division->id;
         $this->divisionName = $division->name;
+        $this->divisionGradeId = $division->grade_id;
         $this->isDivisionModalOpen = true;
     }
 
@@ -142,18 +152,28 @@ new class extends Component {
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('divisions', 'name')->ignore($this->divisionId),
+                Rule::unique('divisions', 'name')
+                    ->where('grade_id', $this->divisionGradeId)
+                    ->ignore($this->divisionId),
             ],
+            'divisionGradeId' => 'required|exists:grades,id',
         ], [
             'divisionName.required' => 'The division name is required.',
-            'divisionName.unique' => 'This division name already exists.',
+            'divisionName.unique' => 'This division name already exists under the selected grade.',
+            'divisionGradeId.required' => 'Please select a grade.',
         ]);
 
         if ($this->divisionId) {
             $division = Division::findOrFail($this->divisionId);
-            $division->update(['name' => $this->divisionName]);
+            $division->update([
+                'name' => $this->divisionName,
+                'grade_id' => $this->divisionGradeId,
+            ]);
         } else {
-            Division::create(['name' => $this->divisionName]);
+            Division::create([
+                'name' => $this->divisionName,
+                'grade_id' => $this->divisionGradeId,
+            ]);
         }
 
         $this->isDivisionModalOpen = false;
@@ -191,7 +211,7 @@ new class extends Component {
             <div>
                 <h3 class="text-xl font-extrabold text-gray-900 dark:text-gray-150">{{ __('Grade & Division Management') }}</h3>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {{ __('Manage school grades, standard classes, and division sections') }}
+                    {{ __('Manage school grades and division sections with relational mapping') }}
                 </p>
             </div>
         </div>
@@ -240,7 +260,7 @@ new class extends Component {
                 @forelse ($grades as $grade)
                     <div class="group flex items-center justify-between p-4 bg-gray-50/50 dark:bg-gray-900/30 border border-gray-100/50 dark:border-gray-850 rounded-2xl hover:border-indigo-500/20 dark:hover:border-indigo-400/20 transition-all">
                         <div class="flex items-center space-x-3">
-                            <span class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-650 dark:text-indigo-400 flex items-center justify-center font-bold text-sm">
+                            <span class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-655 dark:text-indigo-400 flex items-center justify-center font-bold text-sm">
                                 G
                             </span>
                             <div>
@@ -274,7 +294,7 @@ new class extends Component {
             <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-850 pb-4">
                 <div>
                     <h4 class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ __('Divisions') }}</h4>
-                    <p class="text-xs text-gray-400 dark:text-gray-500">{{ __('Class sections and groups') }}</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500">{{ __('Class sections linked to grades') }}</p>
                 </div>
                 <button wire:click="openCreateDivisionModal" class="inline-flex items-center gap-1.5 px-4 py-2 bg-teal-650 hover:bg-teal-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -291,7 +311,7 @@ new class extends Component {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
                 </span>
-                <input type="text" wire:model.live.debounce.150ms="divisionSearch" placeholder="Search divisions..." class="w-full pl-9 pr-4 py-2 text-sm border-gray-200 dark:border-gray-700 dark:bg-gray-900 rounded-xl dark:text-gray-300 focus:border-teal-500 dark:focus:border-teal-600 focus:ring-teal-500 dark:focus:ring-teal-600" />
+                <input type="text" wire:model.live.debounce.150ms="divisionSearch" placeholder="Search divisions or grades..." class="w-full pl-9 pr-4 py-2 text-sm border-gray-200 dark:border-gray-700 dark:bg-gray-900 rounded-xl dark:text-gray-300 focus:border-teal-500 dark:focus:border-teal-600 focus:ring-teal-500 dark:focus:ring-teal-600" />
             </div>
 
             <!-- List Grid -->
@@ -299,11 +319,16 @@ new class extends Component {
                 @forelse ($divisions as $division)
                     <div class="group flex items-center justify-between p-4 bg-gray-50/50 dark:bg-gray-900/30 border border-gray-100/50 dark:border-gray-850 rounded-2xl hover:border-teal-500/20 dark:hover:border-teal-400/20 transition-all">
                         <div class="flex items-center space-x-3">
-                            <span class="w-8 h-8 rounded-lg bg-teal-50 dark:bg-teal-950/40 text-teal-650 dark:text-teal-400 flex items-center justify-center font-bold text-sm">
+                            <span class="w-8 h-8 rounded-lg bg-teal-50 dark:bg-teal-950/40 text-teal-655 dark:text-teal-400 flex items-center justify-center font-bold text-sm">
                                 D
                             </span>
                             <div>
-                                <span class="font-bold text-gray-900 dark:text-gray-150 text-sm select-all">{{ $division->name }}</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-gray-900 dark:text-gray-150 text-sm select-all">{{ $division->name }}</span>
+                                    <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950 text-indigo-750 dark:text-indigo-305 border border-indigo-100/30 dark:border-indigo-900/20">
+                                        {{ $division->grade?->name ?? 'No Grade' }}
+                                    </span>
+                                </div>
                                 <span class="block text-[9px] text-gray-400 dark:text-gray-500 uppercase tracking-wider font-semibold">ID: #{{ $division->id }}</span>
                             </div>
                         </div>
@@ -432,7 +457,19 @@ new class extends Component {
                         </button>
                     </div>
 
-                    <!-- Input -->
+                    <!-- Input: Grade selection -->
+                    <div>
+                        <x-input-label for="divisionGradeId" :value="__('Select Grade')" />
+                        <select wire:model="divisionGradeId" id="divisionGradeId" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-teal-500 dark:focus:border-teal-600 focus:ring-teal-500 dark:focus:ring-teal-600 rounded-xl shadow-sm" required>
+                            <option value="">Choose Grade</option>
+                            @foreach ($grades as $g)
+                                <option value="{{ $g->id }}">{{ $g->name }}</option>
+                            @endforeach
+                        </select>
+                        <x-input-error :messages="$errors->get('divisionGradeId')" class="mt-2" />
+                    </div>
+
+                    <!-- Input: Division name -->
                     <div>
                         <x-input-label for="divisionName" :value="__('Division Name')" />
                         <x-text-input wire:model="divisionName" id="divisionName" type="text" class="mt-1 block w-full" required placeholder="e.g. Division A" />
@@ -444,7 +481,7 @@ new class extends Component {
                         <button type="button" wire:click="$set('isDivisionModalOpen', false)" class="px-5 py-2.5 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold text-xs uppercase tracking-wider rounded-xl transition">
                             {{ __('Cancel') }}
                         </button>
-                        <button type="submit" class="px-5 py-2.5 bg-teal-655 hover:bg-teal-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow">
+                        <button type="submit" class="px-5 py-2.5 bg-teal-655 hover:bg-teal-705 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow">
                             {{ __('Save') }}
                         </button>
                     </div>

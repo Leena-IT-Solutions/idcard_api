@@ -10,6 +10,12 @@ class Division extends Model
     use HasFactory;
 
     protected $fillable = [
+        'grade_id',
         'name',
     ];
+
+    public function grade()
+    {
+        return $this->belongsTo(Grade::class);
+    }
 }
