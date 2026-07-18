@@ -74,18 +74,16 @@ new class extends Component
         $this->perPage = 12;
     }
 
-    protected $cachedStudents = null;
-    protected $cachedHasMore = null;
+    public $studentsList = [];
+    public bool $hasMoreStudents = false;
 
-    public function getStudentsList()
+    public function rendering()
     {
-        if ($this->cachedStudents !== null) {
-            return $this->cachedStudents;
-        }
-
         $activeSchoolId = session('active_school_id');
         if (!$activeSchoolId) {
-            return $this->cachedStudents = collect();
+            $this->studentsList = collect();
+            $this->hasMoreStudents = false;
+            return;
         }
 
         $query = Student::query();
@@ -113,48 +111,17 @@ new class extends Component
             $query->where('blood_group', $this->filterBloodGroup);
         }
 
-        return $this->cachedStudents = $query->with(['campaignStudents' => function($q) use ($activeSchoolId) {
+        // Get total count for pagination check
+        $totalCount = $query->count();
+
+        // Fetch students list
+        $this->studentsList = $query->with(['campaignStudents' => function($q) use ($activeSchoolId) {
             $q->whereHas('campaign', function($inner) use ($activeSchoolId) {
                 $inner->where('school_id', $activeSchoolId);
             })->with(['grade', 'division', 'campaign']);
         }])->orderBy('created_at', 'desc')->take($this->perPage)->get();
-    }
 
-    public function hasMoreStudents()
-    {
-        if ($this->cachedHasMore !== null) {
-            return $this->cachedHasMore;
-        }
-
-        $activeSchoolId = session('active_school_id');
-        if (!$activeSchoolId) {
-            return $this->cachedHasMore = false;
-        }
-
-        $query = Student::query();
-        $query->whereHas('campaignStudents.campaign', function($q) use ($activeSchoolId) {
-            $q->where('school_id', $activeSchoolId);
-            if ($this->filterCampaign) {
-                $q->where('id', $this->filterCampaign);
-            }
-        });
-
-        if ($this->filterGrade || $this->filterDivision) {
-            $query->whereHas('campaignStudents', function($q) {
-                if ($this->filterGrade) {
-                    $q->where('grade_id', $this->filterGrade);
-                }
-                if ($this->filterDivision) {
-                    $q->where('division_id', $this->filterDivision);
-                }
-            });
-        }
-
-        if ($this->filterBloodGroup) {
-            $query->where('blood_group', $this->filterBloodGroup);
-        }
-
-        return $this->cachedHasMore = ($query->count() > $this->perPage);
+        $this->hasMoreStudents = $totalCount > $this->perPage;
     }
 
     public function updatedGradeId($value)
@@ -574,7 +541,7 @@ new class extends Component
             <div>
                 <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ __('Students Directory') }}</h3>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    {{ count($this->getStudentsList()) }} {{ __('students registered in the system') }}
+                    {{ count($studentsList) }} {{ __('students registered in the system') }}
                 </p>
             </div>
         </div>
@@ -650,7 +617,7 @@ new class extends Component
 
     <!-- Grid of Student Cards -->
     <div class="flex flex-col gap-6">
-        @forelse ($this->getStudentsList() as $student)
+        @forelse ($studentsList as $student)
             <div class="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 hover:border-indigo-500/30 dark:hover:border-indigo-400/20 transition-all duration-300 flex flex-col md:flex-row group">
                 <!-- Left Side Square Photo -->
                 <div class="relative w-full md:w-56 h-56 md:h-auto md:aspect-square bg-gray-100 dark:bg-gray-900 overflow-hidden shrink-0 border-r border-gray-200 dark:border-gray-700">
@@ -745,7 +712,7 @@ new class extends Component
         @endforelse
     </div>
 
-    @if ($this->hasMoreStudents())
+    @if ($hasMoreStudents)
         <div class="flex justify-center pt-8">
             <button wire:click="loadMore" class="px-6 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/60 text-gray-700 dark:text-gray-300 font-extrabold text-xs uppercase tracking-wider rounded-2xl transition shadow-sm flex items-center gap-2 cursor-pointer">
                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
