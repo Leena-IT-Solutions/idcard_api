@@ -81,7 +81,7 @@ new class extends Component
     {
         $activeSchoolId = session('active_school_id');
         if (!$activeSchoolId) {
-            $this->studentsList = collect();
+            $this->studentsList = [];
             $this->hasMoreStudents = false;
             return;
         }
@@ -119,7 +119,7 @@ new class extends Component
             $q->whereHas('campaign', function($inner) use ($activeSchoolId) {
                 $inner->where('school_id', $activeSchoolId);
             })->with(['grade', 'division', 'campaign']);
-        }])->orderBy('created_at', 'desc')->take($this->perPage)->get();
+        }])->orderBy('created_at', 'desc')->take($this->perPage)->get()->all();
 
         $this->hasMoreStudents = $totalCount > $this->perPage;
     }
