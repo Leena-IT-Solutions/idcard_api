@@ -8,7 +8,6 @@ use App\Models\CampaignStudent;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
-use ZipArchive;
 
 new class extends Component
 {
@@ -401,7 +400,7 @@ new class extends Component
         // Temporary directory to extract ZIP images if present
         $extractedPath = null;
         if ($this->bulkZip) {
-            $zip = new ZipArchive();
+            $zip = new \ZipArchive();
             if ($zip->open($this->bulkZip->getRealPath()) === true) {
                 $extractedPath = storage_path('app/temp_zip_' . uniqid());
                 if (!file_exists($extractedPath)) {
