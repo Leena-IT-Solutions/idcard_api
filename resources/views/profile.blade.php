@@ -6,7 +6,7 @@
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-8">
+        <div class="mx-auto sm:px-6 lg:px-8 space-y-8">
             <div class="p-6 sm:p-10 bg-white dark:bg-gray-800 shadow-xl shadow-gray-200/50 dark:shadow-none sm:rounded-3xl border border-gray-100 dark:border-gray-700">
                 <div class="max-w-2xl">
                     <livewire:profile.update-profile-information-form />
