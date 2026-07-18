@@ -1,3 +1,5 @@
+<?php
+
 use App\Models\Student;
 use App\Models\Campaign;
 use App\Models\Grade;
