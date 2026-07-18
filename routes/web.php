@@ -215,6 +215,13 @@ Route::middleware(['auth'])->group(function () {
                 case 'clear-cache':
                     \Illuminate\Support\Facades\Artisan::call('optimize:clear');
                     $output = \Illuminate\Support\Facades\Artisan::output();
+                    
+                    // Clear the Livewire Volt compiled classes folder
+                    $livewireCachePath = storage_path('framework/cache/livewire');
+                    if (\Illuminate\Support\Facades\File::exists($livewireCachePath)) {
+                        \Illuminate\Support\Facades\File::cleanDirectory($livewireCachePath);
+                        $output .= "\nLivewire/Volt cache directory cleared successfully.";
+                    }
                     break;
                 case 'optimize':
                     \Illuminate\Support\Facades\Artisan::call('optimize');
