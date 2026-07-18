@@ -32,6 +32,25 @@ class School extends Model
         return $this->hasMany(Student::class);
     }
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($school) {
+            // Delete all student photos from storage
+            foreach ($school->students as $student) {
+                if ($student->photo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($student->photo_path)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($student->photo_path);
+                }
+            }
+
+            // Delete school logo from storage
+            if ($school->logo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($school->logo_path)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($school->logo_path);
+            }
+        });
+    }
+
     public function getOwnerAttribute()
     {
         $schoolAdminRole = Role::where('slug', 'school_admin')->first();
