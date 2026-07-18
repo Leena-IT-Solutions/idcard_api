@@ -50,56 +50,73 @@ new class extends Component
                 </button>
             </div>
 
-            <div class="px-4 py-6 space-y-2">
-                <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate class="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium">
-                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Top Links -->
+            <div class="px-3 py-6 space-y-1">
+                @php
+                    $isDashboard = request()->routeIs('dashboard');
+                @endphp
+                <a href="{{ route('dashboard') }}" wire:navigate class="group w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 {{ $isDashboard ? 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/40 hover:text-gray-900 dark:hover:text-gray-200' }}">
+                    <svg class="h-5 w-5 transition-colors duration-200 {{ $isDashboard ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                     </svg>
                     <span>{{ __('Dashboard') }}</span>
-                </x-nav-link>
-
-                <x-nav-link :href="route('profile')" :active="request()->routeIs('profile')" wire:navigate class="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium">
-                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                    </svg>
-                    <span>{{ __('Profile') }}</span>
-                </x-nav-link>
+                </a>
             </div>
         </div>
 
-        <!-- Bottom Section: User Card -->
-        <div class="p-4 border-t border-gray-200 dark:border-gray-800">
-            <x-dropdown align="bottom" width="48" contentClasses="mb-14">
-                <x-slot name="trigger">
-                    <button class="flex items-center w-full px-3 py-2 space-x-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition text-left">
-                        @php
-                            $initials = collect(explode(' ', auth()->user()->name))->map(fn($n) => substr($n, 0, 1))->take(2)->join('');
-                        @endphp
-                        <div class="h-9 w-9 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold shrink-0">
-                            {{ strtoupper($initials) }}
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate" x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ auth()->user()->email }}</p>
-                        </div>
-                        <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
-                        </svg>
-                    </button>
-                </x-slot>
+        <!-- Bottom Section: Profile & User Card -->
+        <div>
+            <!-- Divider above Profile -->
+            <div class="border-t border-gray-200 dark:border-gray-800"></div>
 
-                <x-slot name="content">
-                    <x-dropdown-link :href="route('profile')" wire:navigate>
-                        {{ __('Profile') }}
-                    </x-dropdown-link>
+            <div class="px-3 py-2 space-y-1">
+                @php
+                    $isProfile = request()->routeIs('profile');
+                @endphp
+                <a href="{{ route('profile') }}" wire:navigate class="group w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 {{ $isProfile ? 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/40 hover:text-gray-900 dark:hover:text-gray-200' }}">
+                    <svg class="h-5 w-5 transition-colors duration-200 {{ $isProfile ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <span>{{ __('Profile') }}</span>
+                </a>
+            </div>
 
-                    <button wire:click="logout" class="w-full text-start">
-                        <x-dropdown-link>
-                            {{ __('Log Out') }}
+            <!-- Divider below Profile / above User Card -->
+            <div class="border-t border-gray-200 dark:border-gray-800"></div>
+
+            <div class="p-3">
+                <x-dropdown align="bottom" width="48" contentClasses="mb-14">
+                    <x-slot name="trigger">
+                        <button class="flex items-center w-full px-3 py-2.5 space-x-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition text-left group">
+                            @php
+                                $initials = collect(explode(' ', auth()->user()->name))->map(fn($n) => substr($n, 0, 1))->take(2)->join('');
+                            @endphp
+                            <div class="h-9 w-9 rounded-full bg-indigo-100 dark:bg-indigo-950 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold shrink-0 shadow-sm group-hover:scale-105 transition-transform duration-200">
+                                {{ strtoupper($initials) }}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate" x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ auth()->user()->email }}</p>
+                            </div>
+                            <svg class="h-4 w-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </x-slot>
+
+                    <x-slot name="content">
+                        <x-dropdown-link :href="route('profile')" wire:navigate>
+                            {{ __('Profile') }}
                         </x-dropdown-link>
-                    </button>
-                </x-slot>
-            </x-dropdown>
+
+                        <button wire:click="logout" class="w-full text-start">
+                            <x-dropdown-link>
+                                {{ __('Log Out') }}
+                            </x-dropdown-link>
+                        </button>
+                    </x-slot>
+                </x-dropdown>
+            </div>
         </div>
     </nav>
 </div>
