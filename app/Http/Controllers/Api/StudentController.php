@@ -71,6 +71,12 @@ class StudentController extends Controller
             'photo_path' => 'nullable|string',
         ]);
 
+        if (array_key_exists('photo_path', $validated) && $validated['photo_path'] !== $student->photo_path) {
+            if ($student->photo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($student->photo_path)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($student->photo_path);
+            }
+        }
+
         $student->update($validated);
         return response()->json($student);
     }
