@@ -301,9 +301,7 @@ class SchoolAdminController extends Controller
             });
         }
  
-        if ($request->filter_blood_group) {
-            $query->where('blood_group', $request->filter_blood_group);
-        }
+
  
         $students = $query->with(['campaignStudents' => function($q) use ($schoolId) {
             $q->whereHas('campaign', function($inner) use ($schoolId) {

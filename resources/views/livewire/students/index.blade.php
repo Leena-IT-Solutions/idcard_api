@@ -22,7 +22,6 @@ new class extends Component
     public $filterCampaign = '';
     public $filterGrade = '';
     public $filterDivision = '';
-    public $filterBloodGroup = '';
 
     // Form fields
     public $studentId = null;
@@ -164,9 +163,7 @@ new class extends Component
             });
         }
 
-        if ($this->filterBloodGroup) {
-            $query->where('blood_group', $this->filterBloodGroup);
-        }
+
 
         $totalCount = $query->count();
         $this->hasMore = $totalCount > $this->perPage;
@@ -713,21 +710,7 @@ new class extends Component
             </select>
         </div>
 
-        <!-- Blood Group Filter -->
-        <div>
-            <label class="text-[9px] uppercase font-black text-gray-405 dark:text-gray-500 tracking-wider block mb-1.5">{{ __('Blood Group') }}</label>
-            <select wire:model.live="filterBloodGroup" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-xl text-xs focus:ring-indigo-500 focus:border-indigo-500">
-                <option value="">{{ __('All Blood Groups') }}</option>
-                <option value="A+">A+</option>
-                <option value="A-">A-</option>
-                <option value="B+">B+</option>
-                <option value="B-">B-</option>
-                <option value="AB+">AB+</option>
-                <option value="AB-">AB-</option>
-                <option value="O+">O+</option>
-                <option value="O-">O-</option>
-            </select>
-        </div>
+
     </div>
 
     <!-- Grid of Student Cards -->
