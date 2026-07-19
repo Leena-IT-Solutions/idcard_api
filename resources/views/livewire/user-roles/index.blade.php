@@ -32,6 +32,10 @@ new class extends Component {
     // Modal state
     public $isModalOpen = false;
     public $confirmingDeletion = false;
+
+    // Edit Member Properties
+    public $editingMemberId = null;
+    public $isEditModalOpen = false;
     public $memberToDelete = null;
 
     public $confirmingRevocation = false;
@@ -305,6 +309,54 @@ new class extends Component {
             $this->loadData();
         }
     }
+
+    public function openEditModal($id)
+    {
+        $member = SchoolUserRole::with(['role', 'assignments.grade', 'assignments.division'])->findOrFail($id);
+        $this->editingMemberId = $id;
+        $this->roleSlug = $member->role->slug;
+        $this->tempAssignments = [];
+        foreach ($member->assignments as $asg) {
+            $this->tempAssignments[] = [
+                'grade_id' => $asg->grade_id,
+                'grade_name' => $asg->grade->name,
+                'division_id' => $asg->division_id,
+                'division_name' => $asg->division->name,
+            ];
+        }
+        $this->resetValidation();
+        $this->isEditModalOpen = true;
+    }
+
+    public function saveEdit()
+    {
+        $member = SchoolUserRole::findOrFail($this->editingMemberId);
+        $role = Role::whereIn('slug', ['school_admin', 'teacher'])->where('slug', $this->roleSlug)->firstOrFail();
+
+        if ($this->roleSlug === 'teacher') {
+            if (empty($this->tempAssignments)) {
+                $this->addError('roleSlug', 'At least one Grade and Division assignment is required for teachers.');
+                return;
+            }
+        }
+
+        $member->update(['role_id' => $role->id]);
+
+        // Sync class assignments
+        $member->assignments()->delete();
+        if ($this->roleSlug === 'teacher') {
+            foreach ($this->tempAssignments as $assign) {
+                SchoolUserRoleAssignment::create([
+                    'school_user_role_id' => $member->id,
+                    'grade_id' => $assign['grade_id'],
+                    'division_id' => $assign['division_id'],
+                ]);
+            }
+        }
+
+        $this->isEditModalOpen = false;
+        $this->loadData();
+    }
 };
 
 ?>
@@ -406,6 +458,11 @@ new class extends Component {
                     </div>
 
                     <div class="flex items-center gap-1.5 shrink-0 self-end sm:self-auto border-t sm:border-t-0 pt-4 sm:pt-0 w-full sm:w-auto justify-end">
+                        <button wire:click="openEditModal({{ $assign->id }})" class="p-2.5 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 rounded-xl text-gray-400 hover:text-indigo-600 dark:text-gray-500 dark:hover:text-indigo-400 transition-colors" title="Edit Member">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                        </button>
                         <button wire:click="confirmDeletion({{ $assign->id }})" class="p-2.5 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl text-gray-400 hover:text-red-605 dark:text-gray-500 dark:hover:text-red-400 transition-colors">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -701,6 +758,117 @@ new class extends Component {
                         {{ __('Revoke') }}
                     </button>
                 </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Edit Modal -->
+    @if ($isEditModalOpen)
+        <div class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
+            <!-- Backdrop -->
+            <div class="fixed inset-0 bg-gray-950/60 backdrop-blur-sm transition-opacity" wire:click="$set('isEditModalOpen', false)"></div>
+
+            <!-- Modal Container -->
+            <div class="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-xl transform transition-all w-full max-w-lg z-50 border border-gray-100 dark:border-gray-700">
+                <form wire:submit="saveEdit" class="p-6 sm:p-8 space-y-5">
+                    <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-700">
+                        <h3 class="text-base font-bold text-gray-900 dark:text-gray-100">
+                            {{ __('Edit Member Role & Assignments') }}
+                        </h3>
+                        <button type="button" wire:click="$set('isEditModalOpen', false)" class="text-gray-400 hover:text-gray-500">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Select Role -->
+                    <div>
+                        <x-input-label for="editRoleSlug" :value="__('Assign Role')" />
+                        <select wire:model.live="roleSlug" id="editRoleSlug" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm" required>
+                            <option value="">Select Role</option>
+                            <option value="school_admin">School Admin</option>
+                            <option value="teacher">Teacher</option>
+                        </select>
+                        <x-input-error :messages="$errors->get('roleSlug')" class="mt-1" />
+                    </div>
+
+                    <!-- Teacher Grade & Division Scopes -->
+                    @if ($roleSlug === 'teacher')
+                        <div class="space-y-4 bg-indigo-50/20 dark:bg-indigo-950/10 p-4 rounded-2xl border border-indigo-100/30 dark:border-indigo-900/10">
+                            <div class="grid grid-cols-2 gap-4">
+                                <!-- Grade -->
+                                <div>
+                                    <x-input-label for="editGradeId" :value="__('Assign Grade')" />
+                                    <select wire:model.live="gradeId" id="editGradeId" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm">
+                                        <option value="">Select Grade</option>
+                                        @foreach (Grade::where('school_id', session('active_school_id'))->orderBy('name', 'asc')->get() as $g)
+                                            <option value="{{ $g->id }}">{{ $g->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <x-input-error :messages="$errors->get('gradeId')" class="mt-1" />
+                                </div>
+
+                                <!-- Division -->
+                                <div>
+                                    <x-input-label for="editDivisionId" :value="__('Assign Division')" />
+                                    <select wire:model.divisionId="divisionId" id="editDivisionId" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm">
+                                        <option value="">Select Division</option>
+                                        @php
+                                            $selectedGrade = Grade::find($gradeId);
+                                            $divs = $selectedGrade ? $selectedGrade->divisions : collect();
+                                        @endphp
+                                        @foreach ($divs as $d)
+                                            <option value="{{ $d->id }}">{{ $d->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <x-input-error :messages="$errors->get('divisionId')" class="mt-1" />
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end">
+                                <button type="button" wire:click="addAssignment" class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-xs font-bold uppercase tracking-wider rounded-xl transition cursor-pointer">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                    <span>{{ __('Add Class Assignment') }}</span>
+                                </button>
+                            </div>
+
+                            <!-- List of Added Assignments -->
+                            @if (!empty($tempAssignments))
+                                <div class="border-t border-indigo-100/50 dark:border-indigo-900/20 pt-3">
+                                    <span class="text-[10px] font-black uppercase text-gray-400 dark:text-gray-500 tracking-wider block mb-2">{{ __('Class Assignments') }}</span>
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach ($tempAssignments as $idx => $assign)
+                                            <div class="flex items-center gap-1.5 pl-3 pr-1.5 py-1 rounded-xl text-xs font-semibold bg-white dark:bg-gray-900 border border-gray-150 dark:border-gray-700 shadow-sm text-gray-800 dark:text-gray-250">
+                                                <span>{{ $assign['grade_name'] }} - {{ $assign['division_name'] }}</span>
+                                                <button type="button" wire:click="removeAssignment({{ $idx }})" class="p-1 text-gray-400 hover:text-red-500 rounded-lg transition-colors cursor-pointer">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+
+                    <!-- Footer Actions -->
+                    <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+                        <button type="button" wire:click="$set('isEditModalOpen', false)" class="px-5 py-2.5 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold text-xs uppercase tracking-wider rounded-xl transition">
+                            {{ __('Cancel') }}
+                        </button>
+                        <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow">
+                            {{ __('Save Changes') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
             </div>
         </div>
     @endif
