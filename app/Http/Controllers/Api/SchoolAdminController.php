@@ -101,14 +101,22 @@ class SchoolAdminController extends Controller
         $request->validate(['school_id' => 'required|exists:schools,id']);
         $schoolId = $request->school_id;
         
-        $this->checkAccess($schoolId);
- 
-        $grades = \App\Models\Grade::where('school_id', $schoolId)
-            ->with(['divisions'])
-            ->get();
+        $scopes = $this->getPermittedScopes($schoolId);
+
+        $gradesQuery = \App\Models\Grade::where('school_id', $schoolId);
+
+        if ($scopes['restricted']) {
+            $gradesQuery->whereIn('id', $scopes['grades']);
+        }
+
+        $grades = $gradesQuery->with(['divisions' => function($q) use ($scopes) {
+            if ($scopes['restricted']) {
+                $q->whereIn('divisions.id', $scopes['divisions']);
+            }
+        }])->get();
             
         $campaigns = \App\Models\Campaign::where('school_id', $schoolId)->get();
- 
+
         return response()->json([
             'grades' => $grades,
             'campaigns' => $campaigns,
