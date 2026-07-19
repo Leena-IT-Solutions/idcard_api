@@ -869,7 +869,4 @@ new class extends Component {
             </div>
         </div>
     @endif
-            </div>
-        </div>
-    @endif
 </div>
