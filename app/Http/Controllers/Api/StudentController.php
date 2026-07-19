@@ -84,7 +84,33 @@ class StudentController extends Controller
             abort(403, 'Unauthorized to delete student record.');
         }
 
+        // Delete photo if it exists
+        if ($student->photo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($student->photo_path)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($student->photo_path);
+        }
+
         $student->delete();
         return response()->json(null, 204);
+    }
+
+    public function uploadPhoto(Request $request)
+    {
+        $request->validate([
+            'photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        if ($request->hasFile('photo')) {
+            $path = $request->file('photo')->store('students/photos', 'public');
+            return response()->json([
+                'success' => true,
+                'photo_path' => $path,
+                'photo_url' => asset('storage/' . $path),
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'No photo file provided.',
+        ], 400);
     }
 }

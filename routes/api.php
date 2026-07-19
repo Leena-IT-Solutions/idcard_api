@@ -18,6 +18,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/user', [AuthController::class, 'deleteAccount']);
     Route::post('/logout', [AuthController::class, 'logout']);
     
+    Route::post('/students/upload-photo', [StudentController::class, 'uploadPhoto']);
     Route::apiResource('students', StudentController::class);
 
     // Campaigns & Enrollments
