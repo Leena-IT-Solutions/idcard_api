@@ -393,8 +393,41 @@ class SchoolAdminController extends Controller
         if ($student->photo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($student->photo_path)) {
             \Illuminate\Support\Facades\Storage::disk('public')->delete($student->photo_path);
         }
- 
+
         $student->delete();
         return response()->json(['success' => true, 'message' => 'Student deleted successfully.']);
+    }
+
+    public function updateMember(Request $request, string $id)
+    {
+        $request->validate([
+            'school_id' => 'required|exists:schools,id',
+            'role_slug' => 'required|in:school_admin,teacher',
+            'assignments' => 'nullable|array',
+            'assignments.*.grade_id' => 'required|exists:grades,id',
+            'assignments.*.division_id' => 'required|exists:divisions,id',
+        ]);
+
+        $schoolId = $request->school_id;
+        $this->checkAccess($schoolId);
+
+        $member = \App\Models\SchoolUserRole::findOrFail($id);
+        $role = \App\Models\Role::where('slug', $request->role_slug)->firstOrFail();
+
+        $member->update(['role_id' => $role->id]);
+
+        // Sync class assignments for teachers
+        $member->assignments()->delete();
+        if ($request->role_slug === 'teacher' && !empty($request->assignments)) {
+            foreach ($request->assignments as $assign) {
+                \App\Models\SchoolUserRoleAssignment::create([
+                    'school_user_role_id' => $member->id,
+                    'grade_id' => $assign['grade_id'],
+                    'division_id' => $assign['division_id'],
+                ]);
+            }
+        }
+
+        return response()->json(['success' => true, 'message' => 'Member updated successfully.']);
     }
 }
