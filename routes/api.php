@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\StudentController;
+use App\Http\Controllers\Api\CampaignController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -18,4 +19,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     
     Route::apiResource('students', StudentController::class);
+
+    // Campaigns & Enrollments
+    Route::get('/campaigns', [CampaignController::class, 'index']);
+    Route::get('/campaigns/{id}/options', [CampaignController::class, 'options']);
+    Route::post('/campaigns/enroll', [CampaignController::class, 'enroll']);
+    Route::get('/enrollments', [CampaignController::class, 'enrollments']);
 });
