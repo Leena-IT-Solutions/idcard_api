@@ -74,10 +74,26 @@ class SchoolAdminController extends Controller
     {
         $user = auth()->user();
         if ($user->hasRole('saas_admin')) {
-            return response()->json(\App\Models\School::all());
+            $schools = \App\Models\School::all()->map(function($school) {
+                $school->setAttribute('role_slug', 'saas_admin');
+                return $school;
+            });
+            return response()->json($schools);
         }
-        $schoolIds = \App\Models\SchoolUserRole::where('user_id', $user->id)->pluck('school_id')->unique();
-        return response()->json(\App\Models\School::whereIn('id', $schoolIds)->get());
+
+        $memberships = \App\Models\SchoolUserRole::where('user_id', $user->id)
+            ->with('role')
+            ->get();
+
+        $schools = \App\Models\School::whereIn('id', $memberships->pluck('school_id')->unique())->get();
+
+        $schools = $schools->map(function($school) use ($memberships) {
+            $member = $memberships->where('school_id', $school->id)->first();
+            $school->setAttribute('role_slug', $member && $member->role ? $member->role->slug : 'parent');
+            return $school;
+        });
+
+        return response()->json($schools);
     }
  
     public function options(Request $request)
