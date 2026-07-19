@@ -27,10 +27,10 @@
                 <div class="absolute -top-12 -left-12 w-64 h-64 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
                 
                 <!-- Logo & Brand Header -->
-                <div class="relative z-10 flex items-center space-x-3">
+                <a href="/" wire:navigate class="relative z-10 flex items-center space-x-3 hover:opacity-90 transition duration-150">
                     <img src="{{ asset('images/logo.png') }}" class="h-10 w-auto" alt="iCard Maker Logo">
                     <span class="text-2xl font-black tracking-tight bg-gradient-to-r from-white via-slate-200 to-amber-400 bg-clip-text text-transparent">iCard Maker</span>
-                </div>
+                </a>
 
                 <!-- Central Illustration & Roster Pitch -->
                 <div class="relative z-10 my-auto max-w-lg space-y-6">
@@ -71,10 +71,10 @@
             <!-- Right Panel: Form Slot -->
             <div class="flex-grow flex items-center justify-center p-6 sm:p-12 lg:w-1/2 relative z-10">
                 <!-- Mobile Branding Header (Visible only on mobile/tablet) -->
-                <div class="absolute top-6 left-6 flex items-center space-x-2 lg:hidden">
+                <a href="/" wire:navigate class="absolute top-6 left-6 flex items-center space-x-2 lg:hidden hover:opacity-90 transition duration-150">
                     <img src="{{ asset('images/logo.png') }}" class="h-8 w-auto" alt="Logo">
                     <span class="text-lg font-bold text-white tracking-tight">iCard Maker</span>
-                </div>
+                </a>
 
                 <!-- Main Glassmorphic Wrapper -->
                 <div class="w-full max-w-md bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-3xl p-8 sm:p-10 shadow-2xl shadow-slate-950/20 mt-12 lg:mt-0">
