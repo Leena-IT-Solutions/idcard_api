@@ -452,4 +452,83 @@ class SchoolAdminController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Member updated successfully.']);
     }
+
+    public function userInvitations()
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return response()->json([]);
+        }
+
+        $invitations = \App\Models\SchoolInvitation::with(['school', 'role', 'assignments.grade', 'assignments.division'])
+            ->where('status', 'pending')
+            ->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+                if ($user->email) {
+                    $q->orWhere('email', $user->email);
+                }
+                if ($user->mobile) {
+                    $q->orWhere('mobile', $user->mobile);
+                }
+            })
+            ->get();
+
+        return response()->json($invitations);
+    }
+
+    public function acceptUserInvitation(string $id)
+    {
+        $user = auth()->user();
+        $invite = \App\Models\SchoolInvitation::with('assignments')->findOrFail($id);
+
+        // Check duplicate mapping
+        $exists = \App\Models\SchoolUserRole::where('user_id', $user->id)
+            ->where('school_id', $invite->school_id)
+            ->where('role_id', $invite->role_id)
+            ->exists();
+
+        if (!$exists) {
+            // 1. Create mapping under school user roles
+            $userRole = \App\Models\SchoolUserRole::create([
+                'user_id' => $user->id,
+                'school_id' => $invite->school_id,
+                'role_id' => $invite->role_id,
+                'grade_id' => $invite->grade_id,
+                'division_id' => $invite->division_id,
+            ]);
+
+            foreach ($invite->assignments as $asg) {
+                \App\Models\SchoolUserRoleAssignment::create([
+                    'school_user_role_id' => $userRole->id,
+                    'grade_id' => $asg->grade_id,
+                    'division_id' => $asg->division_id,
+                ]);
+            }
+
+            // 2. Sync to user's standard roles pivot table
+            $user->roles()->syncWithoutDetaching([$invite->role_id]);
+        }
+
+        // 3. Mark invite as accepted
+        $invite->update([
+            'status' => 'accepted',
+            'user_id' => $user->id,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Invitation accepted successfully.']);
+    }
+
+    public function declineUserInvitation(string $id)
+    {
+        $user = auth()->user();
+        $invite = \App\Models\SchoolInvitation::findOrFail($id);
+
+        // Mark invite as declined
+        $invite->update([
+            'status' => 'declined',
+            'user_id' => $user->id,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Invitation declined successfully.']);
+    }
 }

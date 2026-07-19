@@ -39,4 +39,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/school-admin/students', [\App\Http\Controllers\Api\SchoolAdminController::class, 'students']);
     Route::post('/school-admin/students', [\App\Http\Controllers\Api\SchoolAdminController::class, 'saveStudent']);
     Route::delete('/school-admin/students/{id}', [\App\Http\Controllers\Api\SchoolAdminController::class, 'deleteStudent']);
+
+    // User Invitations API routes
+    Route::get('/user/invitations', [\App\Http\Controllers\Api\SchoolAdminController::class, 'userInvitations']);
+    Route::post('/user/invitations/{id}/accept', [\App\Http\Controllers\Api\SchoolAdminController::class, 'acceptUserInvitation']);
+    Route::post('/user/invitations/{id}/decline', [\App\Http\Controllers\Api\SchoolAdminController::class, 'declineUserInvitation']);
 });
