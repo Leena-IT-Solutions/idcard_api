@@ -51,67 +51,78 @@ new #[Layout('layouts.guest')] class extends Component
 }; ?>
 
 <div>
-    <form wire:submit="register">
+    <div class="mb-6">
+        <h3 class="text-2xl font-black text-white">Create Account</h3>
+        <p class="text-xs text-slate-400 mt-1">Get started with your iCard Maker portal</p>
+    </div>
+
+    <form wire:submit="register" class="space-y-4">
         <!-- Name -->
         <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input wire:model="name" id="name" class="block mt-1 w-full" type="text" name="name" required autofocus autocomplete="name" />
+            <label for="name" class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Full Name</label>
+            <input wire:model="name" id="name" type="text" name="name" required autofocus autocomplete="name" 
+                class="block w-full rounded-xl border border-slate-800 bg-slate-950/70 text-white placeholder-slate-500 focus:border-amber-500 focus:ring-amber-500 shadow-inner px-4 py-2.5 text-sm transition duration-250" 
+                placeholder="e.g. Sandeep Rathod" />
             <x-input-error :messages="$errors->get('name')" class="mt-2" />
         </div>
 
         <!-- Email Address -->
-        <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required autocomplete="username" />
+        <div>
+            <label for="email" class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Email Address</label>
+            <input wire:model="email" id="email" type="email" name="email" required autocomplete="username" 
+                class="block w-full rounded-xl border border-slate-800 bg-slate-950/70 text-white placeholder-slate-500 focus:border-amber-500 focus:ring-amber-500 shadow-inner px-4 py-2.5 text-sm transition duration-250" 
+                placeholder="e.g. sandeep@gmail.com" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
         <!-- Mobile Number -->
-        <div class="mt-4">
-            <x-input-label for="mobile" :value="__('Mobile Number')" />
-            <x-text-input wire:model="mobile" id="mobile" class="block mt-1 w-full" type="text" name="mobile" required autocomplete="mobile" />
+        <div>
+            <label for="mobile" class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Mobile Number</label>
+            <input wire:model="mobile" id="mobile" type="text" name="mobile" required autocomplete="mobile" 
+                class="block w-full rounded-xl border border-slate-800 bg-slate-950/70 text-white placeholder-slate-500 focus:border-amber-500 focus:ring-amber-500 shadow-inner px-4 py-2.5 text-sm transition duration-250" 
+                placeholder="e.g. 9664588677" />
             <x-input-error :messages="$errors->get('mobile')" class="mt-2" />
         </div>
 
         <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-
-            <x-text-input wire:model="password" id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="new-password" />
-
+        <div>
+            <label for="password" class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Password</label>
+            <input wire:model="password" id="password" type="password" name="password" required autocomplete="new-password" 
+                class="block w-full rounded-xl border border-slate-800 bg-slate-950/70 text-white placeholder-slate-500 focus:border-amber-500 focus:ring-amber-500 shadow-inner px-4 py-2.5 text-sm transition duration-250" 
+                placeholder="••••••••" />
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
         <!-- Confirm Password -->
-        <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-
-            <x-text-input wire:model="password_confirmation" id="password_confirmation" class="block mt-1 w-full"
-                            type="password"
-                            name="password_confirmation" required autocomplete="new-password" />
-
+        <div>
+            <label for="password_confirmation" class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Confirm Password</label>
+            <input wire:model="password_confirmation" id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password" 
+                class="block w-full rounded-xl border border-slate-800 bg-slate-950/70 text-white placeholder-slate-500 focus:border-amber-500 focus:ring-amber-500 shadow-inner px-4 py-2.5 text-sm transition duration-250" 
+                placeholder="••••••••" />
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>
 
         <!-- Create School Account Option -->
-        <div class="mt-4 flex items-center">
-            <label for="createSchoolAccount" class="inline-flex items-center">
-                <input wire:model="createSchoolAccount" id="createSchoolAccount" type="checkbox" class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800" name="createSchoolAccount">
-                <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">{{ __('Do you want to create a school account?') }}</span>
+        <div class="pt-1">
+            <label for="createSchoolAccount" class="inline-flex items-center cursor-pointer select-none">
+                <input wire:model="createSchoolAccount" id="createSchoolAccount" type="checkbox" name="createSchoolAccount"
+                    class="rounded border-slate-800 bg-slate-950 text-amber-500 shadow-sm focus:ring-amber-500/20 focus:ring-offset-0 focus:ring-2 h-4 w-4 transition duration-200">
+                <span class="ms-2 text-xs text-slate-400 font-medium">Create a school administrator account</span>
             </label>
         </div>
 
-        <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800" href="{{ route('login') }}" wire:navigate>
-                {{ __('Already registered?') }}
-            </a>
+        <!-- Submit -->
+        <div class="pt-2">
+            <button type="submit" 
+                class="w-full flex justify-center items-center px-6 py-3 text-sm font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 rounded-xl transition duration-200 shadow-lg shadow-amber-500/10 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                Register
+            </button>
+        </div>
 
-            <x-primary-button class="ms-4">
-                {{ __('Register') }}
-            </x-primary-button>
+        <!-- Login Link -->
+        <div class="text-center pt-3 border-t border-slate-900 text-xs text-slate-500">
+            Already registered? 
+            <a href="{{ route('login') }}" class="text-amber-455 hover:text-amber-400 font-bold transition" wire:navigate>Sign in here</a>
         </div>
     </form>
 </div>
