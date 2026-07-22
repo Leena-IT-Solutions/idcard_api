@@ -28,6 +28,7 @@ new class extends Component
     public string $first_name = '';
     public string $middle_name = '';
     public string $last_name = '';
+    public string $roll_no = '';
     public $campaignId = '';
     public $gradeId = '';
     public $divisionId = '';
@@ -196,6 +197,7 @@ new class extends Component
         $this->first_name = $student->first_name;
         $this->middle_name = $student->middle_name ?? '';
         $this->last_name = $student->last_name;
+        $this->roll_no = $student->roll_no ?? '';
         $this->blood_group = $student->blood_group ?? '';
         $this->dob = $student->dob;
         $this->address = $student->address;
@@ -232,6 +234,7 @@ new class extends Component
         $this->first_name = '';
         $this->middle_name = '';
         $this->last_name = '';
+        $this->roll_no = '';
         $this->campaignId = '';
         $this->gradeId = '';
         $this->divisionId = '';
@@ -261,6 +264,7 @@ new class extends Component
             'first_name' => ['required', 'string', 'max:255'],
             'middle_name' => ['nullable', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
+            'roll_no' => ['nullable', 'string', 'max:100'],
             'campaignId' => ['required', 'exists:campaigns,id'],
             'gradeId' => ['required', 'exists:grades,id'],
             'divisionId' => ['required', 'exists:divisions,id'],
@@ -294,6 +298,7 @@ new class extends Component
             'first_name' => $this->first_name,
             'middle_name' => $this->middle_name ?: null,
             'last_name' => $this->last_name,
+            'roll_no' => $this->roll_no ?: null,
             'blood_group' => $this->blood_group ?: null,
             'dob' => $this->dob,
             'address' => $this->address,
@@ -543,6 +548,7 @@ new class extends Component
                             'first_name' => $data['first_name'],
                             'middle_name' => $data['middle_name'] ?: null,
                             'last_name' => $data['last_name'],
+                            'roll_no' => $data['roll_no'] ?? null,
                             'blood_group' => $data['blood_group'] ?: null,
                             'dob' => $data['dob'],
                             'address' => $data['address'],
@@ -747,6 +753,11 @@ new class extends Component
                             
                             <!-- Badges -->
                             <div class="flex flex-wrap items-center gap-2">
+                                @if ($student->roll_no)
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-100/50 dark:border-amber-900/30">
+                                        Roll No: {{ $student->roll_no }}
+                                    </span>
+                                @endif
                                 @php
                                     $enrollment = $student->campaignStudents->first();
                                 @endphp
@@ -841,7 +852,7 @@ new class extends Component
                         </button>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
                         <!-- First Name -->
                         <div>
                             <x-input-label for="first_name" :value="__('First Name')" />
@@ -861,6 +872,13 @@ new class extends Component
                             <x-input-label for="last_name" :value="__('Last Name')" />
                             <x-text-input wire:model="last_name" id="last_name" type="text" class="mt-1 block w-full" required />
                             <x-input-error :messages="$errors->get('last_name')" class="mt-2" />
+                        </div>
+
+                        <!-- Roll No -->
+                        <div>
+                            <x-input-label for="roll_no" :value="__('Roll No')" />
+                            <x-text-input wire:model="roll_no" id="roll_no" type="text" class="mt-1 block w-full" placeholder="e.g. 101" />
+                            <x-input-error :messages="$errors->get('roll_no')" class="mt-2" />
                         </div>
 
                         <!-- Campaign -->
