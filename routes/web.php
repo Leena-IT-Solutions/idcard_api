@@ -49,6 +49,20 @@ Route::get('user-roles', function () {
     return view('user-roles');
 })->middleware(['auth'])->name('user-roles');
 
+Route::get('templates', function () {
+    $user = auth()->user();
+    $activeSchoolId = session('active_school_id');
+    $isSchoolAdmin = $activeSchoolId && \App\Models\SchoolUserRole::where('user_id', $user->id)
+        ->where('school_id', $activeSchoolId)
+        ->whereHas('role', function($q) { $q->where('slug', 'school_admin'); })
+        ->exists();
+
+    if (!$user->hasRole('saas_admin') && !$isSchoolAdmin) {
+        abort(403);
+    }
+    return view('templates');
+})->middleware(['auth'])->name('templates');
+
 Route::get('campaigns', function () {
     $user = auth()->user();
     $activeSchoolId = session('active_school_id');
