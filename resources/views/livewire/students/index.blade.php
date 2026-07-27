@@ -383,6 +383,57 @@ new class extends Component
         $this->isBulkModalOpen = true;
     }
 
+    public function downloadSampleCsv()
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="students_import_sample.csv"',
+        ];
+
+        $columns = [
+            'first_name',
+            'middle_name',
+            'last_name',
+            'roll_no',
+            'serial_number',
+            'dob',
+            'blood_group',
+            'contact_number',
+            'address',
+            'pincode',
+            'campaign_name',
+            'grade_name',
+            'division_name',
+            'photo_filename'
+        ];
+
+        $sampleRow = [
+            'Aarav',
+            'Kumar',
+            'Sharma',
+            '101',
+            'REF-2026-001',
+            '2015-05-15',
+            'O+',
+            '9876543210',
+            '123 Main Street, Sector 4',
+            '400001',
+            'Annual ID Card Campaign 2026',
+            'Class 5',
+            'A',
+            'aarav_sharma.jpg'
+        ];
+
+        $callback = function () use ($columns, $sampleRow) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+            fputcsv($file, $sampleRow);
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
     public function importBulkStudents()
     {
         if (! auth()->user()->hasAnyRole(['saas_admin', 'school_admin', 'teacher'])) {
@@ -1102,13 +1153,22 @@ new class extends Component
                 <form wire:submit="importBulkStudents" class="space-y-6">
                     <!-- CSV File Input -->
                     <div>
-                        <x-input-label for="bulkCsv" :value="__('1. Upload CSV Data File (Required)')" />
+                        <div class="flex items-center justify-between">
+                            <x-input-label for="bulkCsv" :value="__('1. Upload CSV Data File (Required)')" />
+                            <button type="button" wire:click="downloadSampleCsv" class="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline cursor-pointer transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                {{ __('Download Sample CSV') }}
+                            </button>
+                        </div>
                         <input wire:model="bulkCsv" id="bulkCsv" type="file" accept=".csv" class="mt-2 block w-full text-xs text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 dark:file:bg-indigo-950/30 file:text-indigo-700 dark:file:text-indigo-400 file:cursor-pointer hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/50 transition" required>
                         <span class="text-[10px] text-gray-405 dark:text-gray-500 mt-1.5 block leading-normal">
-                            {{ __('Accepts standard .csv containing student fields. CSV columns MUST contain: ') }}
+                            {{ __('Accepts standard .csv containing student fields. Required CSV columns: ') }}
                             <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-900 rounded text-indigo-650 dark:text-indigo-400 font-mono text-[9px]">first_name, last_name, dob, address, pincode, contact_number, campaign_name, grade_name, division_name</code>.
+                            <br>
                             {{ __('Optional columns: ') }}
-                            <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-900 rounded text-[9px] font-mono">middle_name, blood_group, photo_filename</code>.
+                            <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-900 rounded text-[9px] font-mono">middle_name, roll_no, serial_number, blood_group, photo_filename</code>.
                         </span>
                         <x-input-error :messages="$errors->get('bulkCsv')" class="mt-2" />
                     </div>
