@@ -13,6 +13,7 @@ class CampaignStudent extends Pivot
         'student_id',
         'grade_id',
         'division_id',
+        'serial_number',
     ];
 
     public function campaign()

@@ -29,6 +29,7 @@ new class extends Component
     public string $middle_name = '';
     public string $last_name = '';
     public string $roll_no = '';
+    public string $serial_number = '';
     public $campaignId = '';
     public $gradeId = '';
     public $divisionId = '';
@@ -216,6 +217,7 @@ new class extends Component
             $this->campaignId = $enrollment->campaign_id;
             $this->gradeId = $enrollment->grade_id;
             $this->divisionId = $enrollment->division_id;
+            $this->serial_number = $enrollment->serial_number ?? '';
 
             $scopes = $this->getPermittedScopes();
             if ($scopes['restricted']) {
@@ -235,6 +237,7 @@ new class extends Component
         $this->middle_name = '';
         $this->last_name = '';
         $this->roll_no = '';
+        $this->serial_number = '';
         $this->campaignId = '';
         $this->gradeId = '';
         $this->divisionId = '';
@@ -265,6 +268,7 @@ new class extends Component
             'middle_name' => ['nullable', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'roll_no' => ['nullable', 'string', 'max:100'],
+            'serial_number' => ['nullable', 'string', 'max:100'],
             'campaignId' => ['required', 'exists:campaigns,id'],
             'gradeId' => ['required', 'exists:grades,id'],
             'divisionId' => ['required', 'exists:divisions,id'],
@@ -323,6 +327,7 @@ new class extends Component
             [
                 'grade_id' => $this->gradeId,
                 'division_id' => $this->divisionId,
+                'serial_number' => $this->serial_number ?: null,
             ]
         );
 
@@ -564,6 +569,7 @@ new class extends Component
                         'student_id' => $student->id,
                         'grade_id' => $grade->id,
                         'division_id' => $division->id,
+                        'serial_number' => $data['serial_number'] ?? null,
                     ]);
 
                     $insertedCount++;
@@ -761,6 +767,11 @@ new class extends Component
                                 @php
                                     $enrollment = $student->campaignStudents->first();
                                 @endphp
+                                @if ($enrollment && $enrollment->serial_number)
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-100/50 dark:border-blue-900/30">
+                                        Ref No: {{ $enrollment->serial_number }}
+                                    </span>
+                                @endif
                                 @if ($enrollment && $enrollment->grade && $enrollment->division)
                                     <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100/50 dark:border-indigo-900/30">
                                         Std: {{ $enrollment->grade->name }}
@@ -879,6 +890,13 @@ new class extends Component
                             <x-input-label for="roll_no" :value="__('Roll No')" />
                             <x-text-input wire:model="roll_no" id="roll_no" type="text" class="mt-1 block w-full" placeholder="e.g. 101" />
                             <x-input-error :messages="$errors->get('roll_no')" class="mt-2" />
+                        </div>
+
+                        <!-- Serial / Ref No -->
+                        <div>
+                            <x-input-label for="serial_number" :value="__('Serial / Ref No')" />
+                            <x-text-input wire:model="serial_number" id="serial_number" type="text" class="mt-1 block w-full" placeholder="e.g. REF-1001" />
+                            <x-input-error :messages="$errors->get('serial_number')" class="mt-2" />
                         </div>
 
                         <!-- Campaign -->

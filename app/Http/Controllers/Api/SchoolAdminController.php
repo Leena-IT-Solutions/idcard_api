@@ -332,6 +332,7 @@ class SchoolAdminController extends Controller
             'campaign_id' => 'required|exists:campaigns,id',
             'grade_id' => 'required|exists:grades,id',
             'division_id' => 'required|exists:divisions,id',
+            'serial_number' => 'nullable|string|max:100',
             'blood_group' => 'nullable|string|max:10',
             'dob' => 'required|date',
             'address' => 'required|string',
@@ -385,6 +386,7 @@ class SchoolAdminController extends Controller
             [
                 'grade_id' => $request->grade_id,
                 'division_id' => $request->division_id,
+                'serial_number' => $request->serial_number ?: null,
             ]
         );
  

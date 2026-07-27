@@ -62,6 +62,7 @@ class CampaignController extends Controller
             'student_id' => 'required|exists:students,id',
             'grade_id' => 'required|exists:grades,id',
             'division_id' => 'required|exists:divisions,id',
+            'serial_number' => 'nullable|string|max:100',
         ]);
 
         $campaign = Campaign::findOrFail($request->campaign_id);
@@ -79,6 +80,7 @@ class CampaignController extends Controller
             [
                 'grade_id' => $grade->id,
                 'division_id' => $division->id,
+                'serial_number' => $request->serial_number ?: null,
             ]
         );
 
