@@ -46,9 +46,8 @@ class User extends Authenticatable
                         }
                     } else {
                         // Remove parent role from the IDs to detach
-                        $ids = collect($this->parseIds($ids))->reject(function ($id) use ($parentRoleId) {
-                            return $id == $parentRoleId;
-                        })->all();
+                        $parsedIds = array_keys($this->parseIds($ids));
+                        $ids = array_diff($parsedIds, [$parentRoleId]);
                     }
                 }
                 return parent::detach($ids, $touch);
@@ -60,18 +59,11 @@ class User extends Authenticatable
                 if ($parentRoleId) {
                     $hasParent = $this->parent->roles()->where('slug', 'parent')->exists();
                     if ($hasParent) {
-                        $parsedIds = $this->parseIds($ids);
-                        // Determine if input is associative or flat
-                        $isAssociative = count(array_filter(array_keys($ids), 'is_string')) > 0 || (count($ids) > 0 && is_array(reset($ids)));
-                        if ($isAssociative) {
-                            if (!isset($ids[$parentRoleId])) {
-                                $ids[$parentRoleId] = [];
-                            }
-                        } else {
-                            if (!in_array($parentRoleId, $ids)) {
-                                $ids[] = $parentRoleId;
-                            }
+                        $parsed = $this->parseIds($ids);
+                        if (!isset($parsed[$parentRoleId])) {
+                            $parsed[$parentRoleId] = [];
                         }
+                        $ids = $parsed;
                     }
                 }
                 return parent::sync($ids, $detaching);
