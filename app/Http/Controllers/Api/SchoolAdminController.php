@@ -311,13 +311,25 @@ class SchoolAdminController extends Controller
  
 
  
-        $students = $query->with(['campaignStudents' => function($q) use ($schoolId) {
-            $q->whereHas('campaign', function($inner) use ($schoolId) {
-                $inner->where('school_id', $schoolId);
-            })->with(['grade', 'division', 'campaign']);
-        }])->orderBy('created_at', 'desc')->get();
- 
-        return response()->json($students);
+        $perPage = $request->input('per_page', 15);
+        
+        if ($request->has('page')) {
+            $studentsPaginator = $query->with(['campaignStudents' => function($q) use ($schoolId) {
+                $q->whereHas('campaign', function($inner) use ($schoolId) {
+                    $inner->where('school_id', $schoolId);
+                })->with(['grade', 'division', 'campaign']);
+            }])->orderBy('created_at', 'desc')->simplePaginate($perPage);
+            
+            return response()->json($studentsPaginator->items());
+        } else {
+            $students = $query->with(['campaignStudents' => function($q) use ($schoolId) {
+                $q->whereHas('campaign', function($inner) use ($schoolId) {
+                    $inner->where('school_id', $schoolId);
+                })->with(['grade', 'division', 'campaign']);
+            }])->orderBy('created_at', 'desc')->get();
+            
+            return response()->json($students);
+        }
     }
  
     public function saveStudent(Request $request)
