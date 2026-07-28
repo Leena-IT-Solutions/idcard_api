@@ -903,25 +903,25 @@ new class extends Component
                                     $enrollment = $student->campaignStudents->first();
                                 @endphp
                                 @if ($enrollment && $enrollment->roll_no)
-                                    <span class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-amber-950/60 text-amber-300 border border-amber-500/40">
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-amber-900/40 text-amber-200 border border-amber-700/50">
                                         Roll No: {{ $enrollment->roll_no }}
                                     </span>
                                 @endif
                                 @if ($enrollment && $enrollment->serial_number)
-                                    <span class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-cyan-950/60 text-cyan-300 border border-cyan-500/40">
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-blue-900/40 text-blue-200 border border-blue-700/50">
                                         Ref No: {{ $enrollment->serial_number }}
                                     </span>
                                 @endif
                                 @if ($enrollment && $enrollment->grade && $enrollment->division)
-                                    <span class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-indigo-950/60 text-indigo-300 border border-indigo-500/40">
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-indigo-900/40 text-indigo-200 border border-indigo-700/50">
                                         Std: {{ $enrollment->grade->name }}
                                     </span>
-                                    <span class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-950/60 text-emerald-300 border border-emerald-500/40">
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-900/40 text-emerald-200 border border-emerald-700/50">
                                         Div: {{ $enrollment->division->name }}
                                     </span>
                                 @endif
                                 @if ($student->blood_group)
-                                    <span class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-rose-950/60 text-rose-300 border border-rose-500/40">
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-rose-900/40 text-rose-200 border border-rose-700/50">
                                         Blood: {{ $student->blood_group }}
                                     </span>
                                 @endif
