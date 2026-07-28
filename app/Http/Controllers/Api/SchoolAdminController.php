@@ -321,8 +321,8 @@ class SchoolAdminController extends Controller
             $nullSortSubquery = \App\Models\CampaignStudent::selectRaw('CASE WHEN serial_number IS NULL OR serial_number = "" THEN 1 ELSE 0 END')
                 ->whereColumn('student_id', 'students.id');
             
-            // Subquery to get the actual serial number for sorting
-            $orderSubquery = \App\Models\CampaignStudent::select('serial_number')
+            // Subquery to get the actual serial number for sorting (cast to unsigned for numeric sorting)
+            $orderSubquery = \App\Models\CampaignStudent::selectRaw('CAST(serial_number AS UNSIGNED)')
                 ->whereColumn('student_id', 'students.id');
 
             if ($campaignId) {
