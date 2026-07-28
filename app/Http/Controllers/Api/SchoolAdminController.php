@@ -316,18 +316,34 @@ class SchoolAdminController extends Controller
         
         if ($sortBy === 'serial_number') {
             $campaignId = $request->filter_campaign;
+            
+            // Subquery to check if serial number is null or empty (1 if null/empty, 0 if present)
+            $nullSortSubquery = \App\Models\CampaignStudent::selectRaw('CASE WHEN serial_number IS NULL OR serial_number = "" THEN 1 ELSE 0 END')
+                ->whereColumn('student_id', 'students.id');
+            
+            // Subquery to get the actual serial number for sorting
             $orderSubquery = \App\Models\CampaignStudent::select('serial_number')
                 ->whereColumn('student_id', 'students.id');
+
             if ($campaignId) {
+                $nullSortSubquery->where('campaign_id', $campaignId);
                 $orderSubquery->where('campaign_id', $campaignId);
             } else {
+                $nullSortSubquery->join('campaigns', 'campaigns.id', '=', 'campaign_student.campaign_id')
+                    ->where('campaigns.school_id', $schoolId)
+                    ->orderBy('campaign_student.created_at', 'desc');
+                
                 $orderSubquery->join('campaigns', 'campaigns.id', '=', 'campaign_student.campaign_id')
                     ->where('campaigns.school_id', $schoolId)
                     ->orderBy('campaign_student.created_at', 'desc');
             }
+            $nullSortSubquery->limit(1);
             $orderSubquery->limit(1);
 
-            $query->orderBy($orderSubquery, 'asc');
+            $query->orderBy($nullSortSubquery, 'asc')
+                ->orderBy($orderSubquery, 'asc')
+                ->orderBy('first_name', 'asc')
+                ->orderBy('last_name', 'asc');
         } else {
             $query->orderBy('first_name', 'asc')
                 ->orderBy('last_name', 'asc');
