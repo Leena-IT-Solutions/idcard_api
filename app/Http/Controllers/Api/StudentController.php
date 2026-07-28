@@ -9,13 +9,22 @@ use App\Models\Student;
 
 class StudentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
+        $query = Student::query();
         if ($user && $user->hasRole('parent')) {
-            return response()->json(Student::where('user_id', $user->id)->get());
+            $query->where('user_id', $user->id);
         }
-        return response()->json(Student::all());
+        
+        $perPage = $request->input('per_page', 15);
+        
+        if ($request->has('page')) {
+            $studentsPaginator = $query->simplePaginate($perPage);
+            return response()->json($studentsPaginator->items());
+        } else {
+            return response()->json($query->get());
+        }
     }
 
     public function store(Request $request)
