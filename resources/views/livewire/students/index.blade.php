@@ -198,7 +198,6 @@ new class extends Component
         $this->first_name = $student->first_name;
         $this->middle_name = $student->middle_name ?? '';
         $this->last_name = $student->last_name;
-        $this->roll_no = $student->roll_no ?? '';
         $this->blood_group = $student->blood_group ?? '';
         $this->dob = $student->dob;
         $this->address = $student->address;
@@ -217,6 +216,7 @@ new class extends Component
             $this->campaignId = $enrollment->campaign_id;
             $this->gradeId = $enrollment->grade_id;
             $this->divisionId = $enrollment->division_id;
+            $this->roll_no = $enrollment->roll_no ?? '';
             $this->serial_number = $enrollment->serial_number ?? '';
 
             $scopes = $this->getPermittedScopes();
@@ -302,7 +302,6 @@ new class extends Component
             'first_name' => $this->first_name,
             'middle_name' => $this->middle_name ?: null,
             'last_name' => $this->last_name,
-            'roll_no' => $this->roll_no ?: null,
             'blood_group' => $this->blood_group ?: null,
             'dob' => $this->dob,
             'address' => $this->address,
@@ -327,6 +326,7 @@ new class extends Component
             [
                 'grade_id' => $this->gradeId,
                 'division_id' => $this->divisionId,
+                'roll_no' => $this->roll_no ?: null,
                 'serial_number' => $this->serial_number ?: null,
             ]
         );
@@ -604,7 +604,6 @@ new class extends Component
                             'first_name' => $data['first_name'],
                             'middle_name' => $data['middle_name'] ?: null,
                             'last_name' => $data['last_name'],
-                            'roll_no' => $data['roll_no'] ?? null,
                             'blood_group' => $data['blood_group'] ?: null,
                             'dob' => $data['dob'],
                             'address' => $data['address'],
@@ -620,6 +619,7 @@ new class extends Component
                         'student_id' => $student->id,
                         'grade_id' => $grade->id,
                         'division_id' => $division->id,
+                        'roll_no' => $data['roll_no'] ?? null,
                         'serial_number' => $data['serial_number'] ?? null,
                     ]);
 
@@ -808,16 +808,16 @@ new class extends Component
                                 </p>
                             </div>
                             
-                            <!-- Badges -->
+                             <!-- Badges -->
                             <div class="flex flex-wrap items-center gap-2">
-                                @if ($student->roll_no)
-                                    <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-100/50 dark:border-amber-900/30">
-                                        Roll No: {{ $student->roll_no }}
-                                    </span>
-                                @endif
                                 @php
                                     $enrollment = $student->campaignStudents->first();
                                 @endphp
+                                @if ($enrollment && $enrollment->roll_no)
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-100/50 dark:border-amber-900/30">
+                                        Roll No: {{ $enrollment->roll_no }}
+                                    </span>
+                                @endif
                                 @if ($enrollment && $enrollment->serial_number)
                                     <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-100/50 dark:border-blue-900/30">
                                         Ref No: {{ $enrollment->serial_number }}

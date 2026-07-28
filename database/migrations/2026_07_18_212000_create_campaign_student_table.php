@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('student_id')->constrained()->cascadeOnDelete();
             $table->foreignId('grade_id')->constrained()->cascadeOnDelete();
             $table->foreignId('division_id')->constrained()->cascadeOnDelete();
+            $table->string('roll_no')->nullable();
             $table->string('serial_number')->nullable();
             $table->timestamps();
 

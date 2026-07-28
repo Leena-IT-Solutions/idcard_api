@@ -354,7 +354,6 @@ class SchoolAdminController extends Controller
             'first_name' => $request->first_name,
             'middle_name' => $request->middle_name ?: null,
             'last_name' => $request->last_name,
-            'roll_no' => $request->roll_no ?: null,
             'blood_group' => $request->blood_group ?: null,
             'dob' => $request->dob,
             'address' => $request->address,
@@ -386,6 +385,7 @@ class SchoolAdminController extends Controller
             [
                 'grade_id' => $request->grade_id,
                 'division_id' => $request->division_id,
+                'roll_no' => $request->roll_no ?: null,
                 'serial_number' => $request->serial_number ?: null,
             ]
         );

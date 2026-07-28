@@ -62,6 +62,7 @@ class CampaignController extends Controller
             'student_id' => 'required|exists:students,id',
             'grade_id' => 'required|exists:grades,id',
             'division_id' => 'required|exists:divisions,id',
+            'roll_no' => 'nullable|string|max:100',
             'serial_number' => 'nullable|string|max:100',
         ]);
 
@@ -80,6 +81,7 @@ class CampaignController extends Controller
             [
                 'grade_id' => $grade->id,
                 'division_id' => $division->id,
+                'roll_no' => $request->roll_no ?: null,
                 'serial_number' => $request->serial_number ?: null,
             ]
         );
