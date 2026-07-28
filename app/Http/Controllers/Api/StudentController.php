@@ -13,7 +13,7 @@ class StudentController extends Controller
     {
         $user = auth()->user();
         $query = Student::query();
-        if ($user && $user->hasRole('parent')) {
+        if ($user) {
             $query->where('user_id', $user->id);
         }
         
