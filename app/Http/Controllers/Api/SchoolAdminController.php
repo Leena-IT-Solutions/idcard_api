@@ -312,22 +312,26 @@ class SchoolAdminController extends Controller
 
  
         $perPage = $request->input('per_page', 15);
+        $sortBy = $request->input('sort_by', 'name');
         
-        $campaignId = $request->filter_campaign;
-        $orderSubquery = \App\Models\CampaignStudent::select('serial_number')
-            ->whereColumn('student_id', 'students.id');
-        if ($campaignId) {
-            $orderSubquery->where('campaign_id', $campaignId);
-        } else {
-            $orderSubquery->join('campaigns', 'campaigns.id', '=', 'campaign_student.campaign_id')
-                ->where('campaigns.school_id', $schoolId)
-                ->orderBy('campaign_student.created_at', 'desc');
-        }
-        $orderSubquery->limit(1);
+        if ($sortBy === 'serial_number') {
+            $campaignId = $request->filter_campaign;
+            $orderSubquery = \App\Models\CampaignStudent::select('serial_number')
+                ->whereColumn('student_id', 'students.id');
+            if ($campaignId) {
+                $orderSubquery->where('campaign_id', $campaignId);
+            } else {
+                $orderSubquery->join('campaigns', 'campaigns.id', '=', 'campaign_student.campaign_id')
+                    ->where('campaigns.school_id', $schoolId)
+                    ->orderBy('campaign_student.created_at', 'desc');
+            }
+            $orderSubquery->limit(1);
 
-        $query->orderBy($orderSubquery, 'asc')
-            ->orderBy('first_name', 'asc')
-            ->orderBy('last_name', 'asc');
+            $query->orderBy($orderSubquery, 'asc');
+        } else {
+            $query->orderBy('first_name', 'asc')
+                ->orderBy('last_name', 'asc');
+        }
 
         if ($request->has('page')) {
             $studentsPaginator = $query->with(['campaignStudents' => function($q) use ($schoolId) {
