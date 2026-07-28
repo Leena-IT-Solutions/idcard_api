@@ -903,25 +903,25 @@ new class extends Component
                                     $enrollment = $student->campaignStudents->first();
                                 @endphp
                                 @if ($enrollment && $enrollment->roll_no)
-                                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-700/50">
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100/80 text-amber-900 border border-amber-200 dark:bg-amber-950/90 dark:text-amber-300 dark:border-amber-800/80 shadow-sm">
                                         Roll No: {{ $enrollment->roll_no }}
                                     </span>
                                 @endif
                                 @if ($enrollment && $enrollment->serial_number)
-                                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 border border-blue-200/60 dark:border-blue-700/50">
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sky-100/80 text-sky-900 border border-sky-200 dark:bg-sky-950/90 dark:text-sky-300 dark:border-sky-800/80 shadow-sm">
                                         Ref No: {{ $enrollment->serial_number }}
                                     </span>
                                 @endif
                                 @if ($enrollment && $enrollment->grade && $enrollment->division)
-                                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-700/50">
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-100/80 text-indigo-900 border border-indigo-200 dark:bg-indigo-950/90 dark:text-indigo-300 dark:border-indigo-800/80 shadow-sm">
                                         Std: {{ $enrollment->grade->name }}
                                     </span>
-                                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-700/50">
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100/80 text-emerald-900 border border-emerald-200 dark:bg-emerald-950/90 dark:text-emerald-300 dark:border-emerald-800/80 shadow-sm">
                                         Div: {{ $enrollment->division->name }}
                                     </span>
                                 @endif
                                 @if ($student->blood_group)
-                                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-50 dark:bg-rose-900/40 text-rose-800 dark:text-rose-300 border border-rose-200/60 dark:border-rose-700/50">
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-100/80 text-rose-900 border border-rose-200 dark:bg-rose-950/90 dark:text-rose-300 dark:border-rose-800/80 shadow-sm">
                                         Blood: {{ $student->blood_group }}
                                     </span>
                                 @endif
