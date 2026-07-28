@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('campaign_student', function (Blueprint $table) {
-            $table->string('serial_number')->nullable()->after('division_id');
-        });
+        if (!Schema::hasColumn('campaign_student', 'serial_number')) {
+            Schema::table('campaign_student', function (Blueprint $table) {
+                $table->string('serial_number')->nullable()->after('division_id');
+            });
+        }
     }
 
     /**
@@ -21,8 +23,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('campaign_student', function (Blueprint $table) {
-            $table->dropColumn('serial_number');
-        });
+        if (Schema::hasColumn('campaign_student', 'serial_number')) {
+            Schema::table('campaign_student', function (Blueprint $table) {
+                $table->dropColumn('serial_number');
+            });
+        }
     }
 };
