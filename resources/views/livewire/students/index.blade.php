@@ -15,7 +15,7 @@ new class extends Component
 
     // Bulk upload fields
     public bool $isBulkModalOpen = false;
-    public $bulkCsv = null;
+    public $bulkCsvs = [];
     public $bulkZip = null;
 
     // Filter fields
@@ -439,7 +439,7 @@ new class extends Component
     public function openBulkModal()
     {
         $this->resetValidation();
-        $this->reset(['bulkCsv', 'bulkZip']);
+        $this->reset(['bulkCsvs', 'bulkZip']);
         $this->isBulkModalOpen = true;
     }
 
@@ -502,19 +502,18 @@ new class extends Component
 
         $activeSchoolId = session('active_school_id');
         if (!$activeSchoolId) {
-            $this->addError('bulkCsv', 'Please select a school first.');
+            $this->addError('bulkCsvs', 'Please select a school first.');
             return;
         }
 
         $rules = [
-            'bulkCsv' => ['required', 'file', 'mimes:csv,txt', 'max:2048'], // CSV max 2MB
+            'bulkCsvs' => ['required', 'array', 'min:1'],
+            'bulkCsvs.*' => ['file', 'mimes:csv,txt', 'max:2048'], // CSV max 2MB
             'bulkZip' => ['nullable', 'file', 'mimes:zip', 'max:51200'], // ZIP max 50MB
         ];
 
         $this->validate($rules);
 
-        $csvPath = $this->bulkCsv->getRealPath();
-        
         // Temporary directory to extract ZIP images if present
         $extractedPath = null;
         if ($this->bulkZip) {
@@ -537,160 +536,163 @@ new class extends Component
         $errorCount = 0;
         $errorsLog = [];
 
-        if (($handle = fopen($csvPath, 'r')) !== false) {
-            // Read headers
-            $headers = fgetcsv($handle, 1000, ',');
-            if ($headers) {
-                // Trim header whitespace
-                $headers = array_map('trim', $headers);
-                
-                // Map columns to indexes
-                $headerMap = array_flip($headers);
+        foreach ($this->bulkCsvs as $bulkCsv) {
+            $csvPath = $bulkCsv->getRealPath();
+            $fileName = $bulkCsv->getClientOriginalName();
 
-                $requiredColumns = ['first_name', 'last_name', 'address', 'pincode', 'contact_number', 'campaign_name', 'grade_name', 'division_name'];
-                $missing = [];
-                foreach ($requiredColumns as $req) {
-                    if (!isset($headerMap[$req])) {
-                        $missing[] = $req;
-                    }
-                }
+            if (($handle = fopen($csvPath, 'r')) !== false) {
+                // Read headers
+                $headers = fgetcsv($handle, 1000, ',');
+                if ($headers) {
+                    // Trim header whitespace
+                    $headers = array_map('trim', $headers);
+                    
+                    // Map columns to indexes
+                    $headerMap = array_flip($headers);
 
-                if (!empty($missing)) {
-                    $this->addError('bulkCsv', 'Missing required CSV headers: ' . implode(', ', $missing));
-                    if ($extractedPath && file_exists($extractedPath)) {
-                        $this->deleteDir($extractedPath);
-                    }
-                    fclose($handle);
-                    return;
-                }
-
-                $rowNum = 1;
-                while (($row = fgetcsv($handle, 1000, ',')) !== false) {
-                    $rowNum++;
-                    // Build row data
-                    $data = [];
-                    foreach ($headerMap as $col => $idx) {
-                        $data[$col] = isset($row[$idx]) ? trim($row[$idx]) : '';
-                    }
-
-                    // Basic validation
-                    if (empty($data['first_name']) || empty($data['last_name']) || empty($data['campaign_name']) || empty($data['grade_name']) || empty($data['division_name'])) {
-                        $errorCount++;
-                        $errorsLog[] = "Row {$rowNum}: Missing required fields.";
-                        continue;
-                    }
-
-                    // Find campaign, grade, division
-                    $campaign = Campaign::where('school_id', $activeSchoolId)
-                        ->where('name', $data['campaign_name'])
-                        ->first();
-
-                    $grade = Grade::where('school_id', $activeSchoolId)
-                        ->where('name', $data['grade_name'])
-                        ->first();
-
-                    if (!$campaign || !$grade) {
-                        $errorCount++;
-                        $errorsLog[] = "Row {$rowNum}: Campaign '{$data['campaign_name']}' or Grade '{$data['grade_name']}' not found in active school.";
-                        continue;
-                    }
-
-                    $division = Division::where('grade_id', $grade->id)
-                        ->where('name', $data['division_name'])
-                        ->first();
-
-                    if (!$division) {
-                        $errorCount++;
-                        $errorsLog[] = "Row {$rowNum}: Division '{$data['division_name']}' not found under grade '{$grade->name}'.";
-                        continue;
-                    }
-
-                    $scopes = $this->getPermittedScopes();
-                    if ($scopes['restricted']) {
-                        if (!in_array($grade->id, $scopes['grades']) || !in_array($division->id, $scopes['divisions'])) {
-                            $errorCount++;
-                            $errorsLog[] = "Row {$rowNum}: Grade '{$grade->name}' or Division '{$division->name}' is outside your permitted access scope.";
-                            continue;
+                    $requiredColumns = ['first_name', 'last_name', 'address', 'pincode', 'contact_number', 'campaign_name', 'grade_name', 'division_name'];
+                    $missing = [];
+                    foreach ($requiredColumns as $req) {
+                        if (!isset($headerMap[$req])) {
+                            $missing[] = $req;
                         }
                     }
 
-                    // Process photo matching
-                    $photoPath = null;
-                    if (!empty($data['photo_filename']) && $extractedPath) {
-                        $localPhotoFile = $extractedPath . '/' . $data['photo_filename'];
-                        
-                        // Handle potential subdirectory matching inside zip
-                        if (!file_exists($localPhotoFile)) {
-                            $files = new \RecursiveIteratorIterator(
-                                new \RecursiveDirectoryIterator($extractedPath),
-                                \RecursiveIteratorIterator::LEAVES_ONLY
-                            );
-                            foreach ($files as $file) {
-                                if (!$file->isDir() && basename($file->getPathname()) === $data['photo_filename']) {
-                                    $localPhotoFile = $file->getPathname();
-                                    break;
-                                }
+                    if (!empty($missing)) {
+                        $errorCount++;
+                        $errorsLog[] = "[{$fileName}]: Missing required CSV headers: " . implode(', ', $missing);
+                        fclose($handle);
+                        continue;
+                    }
+
+                    $rowNum = 1;
+                    while (($row = fgetcsv($handle, 1000, ',')) !== false) {
+                        $rowNum++;
+                        // Build row data
+                        $data = [];
+                        foreach ($headerMap as $col => $idx) {
+                            $data[$col] = isset($row[$idx]) ? trim($row[$idx]) : '';
+                        }
+
+                        // Basic validation
+                        if (empty($data['first_name']) || empty($data['last_name']) || empty($data['campaign_name']) || empty($data['grade_name']) || empty($data['division_name'])) {
+                            $errorCount++;
+                            $errorsLog[] = "[{$fileName}] Row {$rowNum}: Missing required fields.";
+                            continue;
+                        }
+
+                        // Find campaign, grade, division
+                        $campaign = Campaign::where('school_id', $activeSchoolId)
+                            ->where('name', $data['campaign_name'])
+                            ->first();
+
+                        $grade = Grade::where('school_id', $activeSchoolId)
+                            ->where('name', $data['grade_name'])
+                            ->first();
+
+                        if (!$campaign || !$grade) {
+                            $errorCount++;
+                            $errorsLog[] = "[{$fileName}] Row {$rowNum}: Campaign '{$data['campaign_name']}' or Grade '{$data['grade_name']}' not found in active school.";
+                            continue;
+                        }
+
+                        $division = Division::where('grade_id', $grade->id)
+                            ->where('name', $data['division_name'])
+                            ->first();
+
+                        if (!$division) {
+                            $errorCount++;
+                            $errorsLog[] = "[{$fileName}] Row {$rowNum}: Division '{$data['division_name']}' not found under grade '{$grade->name}'.";
+                            continue;
+                        }
+
+                        $scopes = $this->getPermittedScopes();
+                        if ($scopes['restricted']) {
+                            if (!in_array($grade->id, $scopes['grades']) || !in_array($division->id, $scopes['divisions'])) {
+                                $errorCount++;
+                                $errorsLog[] = "[{$fileName}] Row {$rowNum}: Grade '{$grade->name}' or Division '{$division->name}' is outside your permitted access scope.";
+                                continue;
                             }
                         }
 
-                        if (file_exists($localPhotoFile) && !is_dir($localPhotoFile)) {
-                            $extension = pathinfo($localPhotoFile, PATHINFO_EXTENSION);
-                            $newFileName = 'photos/' . uniqid() . '.' . $extension;
-                            Storage::disk('public')->put($newFileName, file_get_contents($localPhotoFile));
-                            $photoPath = $newFileName;
+                        // Process photo matching
+                        $photoPath = null;
+                        if (!empty($data['photo_filename']) && $extractedPath) {
+                            $localPhotoFile = $extractedPath . '/' . $data['photo_filename'];
+                            
+                            // Handle potential subdirectory matching inside zip
+                            if (!file_exists($localPhotoFile)) {
+                                $files = new \RecursiveIteratorIterator(
+                                    new \RecursiveDirectoryIterator($extractedPath),
+                                    \RecursiveIteratorIterator::LEAVES_ONLY
+                                );
+                                foreach ($files as $file) {
+                                    if (!$file->isDir() && basename($file->getPathname()) === $data['photo_filename']) {
+                                        $localPhotoFile = $file->getPathname();
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (file_exists($localPhotoFile) && !is_dir($localPhotoFile)) {
+                                $extension = pathinfo($localPhotoFile, PATHINFO_EXTENSION);
+                                $newFileName = 'photos/' . uniqid() . '.' . $extension;
+                                Storage::disk('public')->put($newFileName, file_get_contents($localPhotoFile));
+                                $photoPath = $newFileName;
+                            }
                         }
-                    }
 
-                    // Check if student profile matches (e.g. by matching contact number or name/dob in this campaign)
-                    $existingStudentQuery = Student::where('first_name', $data['first_name'])
-                        ->where('last_name', $data['last_name']);
-                    if (!empty($data['dob'])) {
-                        $existingStudentQuery->where('dob', $data['dob']);
-                    } else {
-                        $existingStudentQuery->whereNull('dob');
-                    }
-                    $existingStudent = $existingStudentQuery->first();
-
-                    if ($existingStudent) {
-                        // Check if already enrolled in this campaign
-                        $isEnrolled = CampaignStudent::where('campaign_id', $campaign->id)
-                            ->where('student_id', $existingStudent->id)
-                            ->exists();
-
-                        if ($isEnrolled) {
-                            $skippedCount++;
-                            continue;
+                        // Check if student profile matches
+                        $existingStudentQuery = Student::where('first_name', $data['first_name'])
+                            ->where('last_name', $data['last_name']);
+                        if (!empty($data['dob'])) {
+                            $existingStudentQuery->where('dob', $data['dob']);
+                        } else {
+                            $existingStudentQuery->whereNull('dob');
                         }
-                        $student = $existingStudent;
-                    } else {
-                        // Create new student
-                        $student = Student::create([
-                            'first_name' => $data['first_name'],
-                            'middle_name' => $data['middle_name'] ?: null,
-                            'last_name' => $data['last_name'],
-                            'blood_group' => $data['blood_group'] ?: null,
-                            'dob' => !empty($data['dob']) ? $data['dob'] : null,
-                            'address' => $data['address'],
-                            'pincode' => $data['pincode'],
-                            'contact_number' => $data['contact_number'],
-                            'photo_path' => $photoPath,
+                        $existingStudent = $existingStudentQuery->first();
+
+                        if ($existingStudent) {
+                            // Check if already enrolled in this campaign
+                            $isEnrolled = CampaignStudent::where('campaign_id', $campaign->id)
+                                ->where('student_id', $existingStudent->id)
+                                ->exists();
+
+                            if ($isEnrolled) {
+                                $skippedCount++;
+                                continue;
+                            }
+                            $student = $existingStudent;
+                        } else {
+                            // Create new student
+                            $student = Student::create([
+                                'first_name' => $data['first_name'],
+                                'middle_name' => $data['middle_name'] ?: null,
+                                'last_name' => $data['last_name'],
+                                'blood_group' => $data['blood_group'] ?: null,
+                                'dob' => !empty($data['dob']) ? $data['dob'] : null,
+                                'address' => $data['address'],
+                                'pincode' => $data['pincode'],
+                                'contact_number' => $data['contact_number'],
+                                'photo_path' => $photoPath,
+                            ]);
+                        }
+
+                        // Create campaign enrollment
+                        CampaignStudent::create([
+                            'campaign_id' => $campaign->id,
+                            'student_id' => $student->id,
+                            'grade_id' => $grade->id,
+                            'division_id' => $division->id,
+                            'roll_no' => $data['roll_no'] ?? null,
+                            'serial_number' => $data['serial_number'] ?? null,
                         ]);
+
+                        $insertedCount++;
                     }
-
-                    // Create campaign enrollment
-                    CampaignStudent::create([
-                        'campaign_id' => $campaign->id,
-                        'student_id' => $student->id,
-                        'grade_id' => $grade->id,
-                        'division_id' => $division->id,
-                        'roll_no' => $data['roll_no'] ?? null,
-                        'serial_number' => $data['serial_number'] ?? null,
-                    ]);
-
-                    $insertedCount++;
                 }
+                fclose($handle);
             }
-            fclose($handle);
         }
 
         // Cleanup extracted directory
@@ -699,7 +701,7 @@ new class extends Component
         }
 
         $this->isBulkModalOpen = false;
-        $this->reset(['bulkCsv', 'bulkZip']);
+        $this->reset(['bulkCsvs', 'bulkZip']);
 
         $message = "Import complete! Added {$insertedCount} student(s) successfully.";
         if ($skippedCount > 0) {
@@ -1247,7 +1249,7 @@ new class extends Component
                     <!-- CSV File Input -->
                     <div>
                         <div class="flex items-center justify-between">
-                            <x-input-label for="bulkCsv" :value="__('1. Upload CSV Data File (Required)')" />
+                            <x-input-label for="bulkCsvs" :value="__('1. Upload CSV Data File(s) (Required)')" />
                             <button type="button" wire:click="downloadSampleCsv" class="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline cursor-pointer transition">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -1255,15 +1257,15 @@ new class extends Component
                                 {{ __('Download Sample CSV') }}
                             </button>
                         </div>
-                        <input wire:model="bulkCsv" id="bulkCsv" type="file" accept=".csv" class="mt-2 block w-full text-xs text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 dark:file:bg-indigo-950/30 file:text-indigo-700 dark:file:text-indigo-400 file:cursor-pointer hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/50 transition" required>
+                        <input wire:model="bulkCsvs" id="bulkCsvs" type="file" accept=".csv" class="mt-2 block w-full text-xs text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 dark:file:bg-indigo-950/30 file:text-indigo-700 dark:file:text-indigo-400 file:cursor-pointer hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/50 transition" multiple required>
                         <span class="text-[10px] text-gray-405 dark:text-gray-500 mt-1.5 block leading-normal">
-                            {{ __('Accepts standard .csv containing student fields. Required CSV columns: ') }}
+                            {{ __('Accepts standard .csv containing student fields. You can select multiple files at once. Required CSV columns: ') }}
                             <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-900 rounded text-indigo-650 dark:text-indigo-400 font-mono text-[9px]">first_name, last_name, address, pincode, contact_number, campaign_name, grade_name, division_name</code>.
                             <br>
                             {{ __('Optional columns: ') }}
                             <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-900 rounded text-[9px] font-mono">middle_name, roll_no, serial_number, dob, blood_group, photo_filename</code>.
                         </span>
-                        <x-input-error :messages="$errors->get('bulkCsv')" class="mt-2" />
+                        <x-input-error :messages="$errors->get('bulkCsvs')" class="mt-2" />
                     </div>
 
                     <!-- ZIP Photos Input -->
