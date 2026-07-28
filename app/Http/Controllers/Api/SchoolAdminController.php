@@ -313,12 +313,28 @@ class SchoolAdminController extends Controller
  
         $perPage = $request->input('per_page', 15);
         
+        $campaignId = $request->filter_campaign;
+        $orderSubquery = \App\Models\CampaignStudent::select('serial_number')
+            ->whereColumn('student_id', 'students.id');
+        if ($campaignId) {
+            $orderSubquery->where('campaign_id', $campaignId);
+        } else {
+            $orderSubquery->join('campaigns', 'campaigns.id', '=', 'campaign_student.campaign_id')
+                ->where('campaigns.school_id', $schoolId)
+                ->orderBy('campaign_student.created_at', 'desc');
+        }
+        $orderSubquery->limit(1);
+
+        $query->orderBy($orderSubquery, 'asc')
+            ->orderBy('first_name', 'asc')
+            ->orderBy('last_name', 'asc');
+
         if ($request->has('page')) {
             $studentsPaginator = $query->with(['campaignStudents' => function($q) use ($schoolId) {
                 $q->whereHas('campaign', function($inner) use ($schoolId) {
                     $inner->where('school_id', $schoolId);
                 })->with(['grade', 'division', 'campaign']);
-            }])->orderBy('created_at', 'desc')->simplePaginate($perPage);
+            }])->simplePaginate($perPage);
             
             return response()->json($studentsPaginator->items());
         } else {
@@ -326,7 +342,7 @@ class SchoolAdminController extends Controller
                 $q->whereHas('campaign', function($inner) use ($schoolId) {
                     $inner->where('school_id', $schoolId);
                 })->with(['grade', 'division', 'campaign']);
-            }])->orderBy('created_at', 'desc')->get();
+            }])->get();
             
             return response()->json($students);
         }
