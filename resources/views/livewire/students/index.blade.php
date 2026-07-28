@@ -802,7 +802,7 @@ new class extends Component
     <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-white dark:bg-gray-800 p-5 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none">
         <!-- Campaign Filter -->
         <div>
-            <label class="text-[9px] uppercase font-black text-gray-405 dark:text-gray-500 tracking-wider block mb-1.5">{{ __('Campaign') }}</label>
+            <label class="text-[9px] uppercase font-bold text-gray-500 dark:text-gray-400 tracking-wider block mb-1.5">{{ __('Campaign') }}</label>
             <select wire:model.live="filterCampaign" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-xl text-xs focus:ring-indigo-500 focus:border-indigo-500">
                 <option value="">{{ __('All Campaigns') }}</option>
                 @foreach (\App\Models\Campaign::where('school_id', session('active_school_id'))->orderBy('created_at', 'desc')->get() as $camp)
@@ -813,7 +813,7 @@ new class extends Component
 
         <!-- Grade Filter -->
         <div>
-            <label class="text-[9px] uppercase font-black text-gray-405 dark:text-gray-500 tracking-wider block mb-1.5">{{ __('Standard / Class') }}</label>
+            <label class="text-[9px] uppercase font-bold text-gray-500 dark:text-gray-400 tracking-wider block mb-1.5">{{ __('Standard / Class') }}</label>
             <select wire:model.live="filterGrade" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-xl text-xs focus:ring-indigo-500 focus:border-indigo-500">
                 <option value="">{{ __('All Standards') }}</option>
                 @php
@@ -832,7 +832,7 @@ new class extends Component
 
         <!-- Division Filter -->
         <div>
-            <label class="text-[9px] uppercase font-black text-gray-405 dark:text-gray-500 tracking-wider block mb-1.5">{{ __('Division') }}</label>
+            <label class="text-[9px] uppercase font-bold text-gray-500 dark:text-gray-400 tracking-wider block mb-1.5">{{ __('Division') }}</label>
             <select wire:model.live="filterDivision" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-xl text-xs focus:ring-indigo-500 focus:border-indigo-500">
                 <option value="">{{ __('All Divisions') }}</option>
                 @if ($filterGrade)
@@ -886,10 +886,10 @@ new class extends Component
                         <!-- Header Line: Name, Contact & Badges -->
                         <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                             <div class="space-y-1">
-                                <h4 class="font-extrabold text-gray-905 dark:text-gray-100 text-2xl leading-none">
+                                <h4 class="font-extrabold text-gray-900 dark:text-gray-100 text-2xl leading-none">
                                     {{ $student->first_name }} {{ $student->middle_name ? $student->middle_name . ' ' : '' }}{{ $student->last_name }}
                                 </h4>
-                                <p class="text-xs font-semibold text-indigo-650 dark:text-indigo-400 flex items-center gap-1.5 pt-1 select-all">
+                                <p class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5 pt-1 select-all">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                                     </svg>
@@ -903,66 +903,64 @@ new class extends Component
                                     $enrollment = $student->campaignStudents->first();
                                 @endphp
                                 @if ($enrollment && $enrollment->roll_no)
-                                    <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-100/50 dark:border-amber-900/30">
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-700/50">
                                         Roll No: {{ $enrollment->roll_no }}
                                     </span>
                                 @endif
                                 @if ($enrollment && $enrollment->serial_number)
-                                    <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-100/50 dark:border-blue-900/30">
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 border border-blue-200/60 dark:border-blue-700/50">
                                         Ref No: {{ $enrollment->serial_number }}
                                     </span>
                                 @endif
                                 @if ($enrollment && $enrollment->grade && $enrollment->division)
-                                    <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100/50 dark:border-indigo-900/30">
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-700/50">
                                         Std: {{ $enrollment->grade->name }}
                                     </span>
-                                    <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-100/50 dark:border-teal-900/30">
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-700/50">
                                         Div: {{ $enrollment->division->name }}
                                     </span>
                                 @endif
                                 @if ($student->blood_group)
-                                    <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-100/50 dark:border-rose-900/30">
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-50 dark:bg-rose-900/40 text-rose-800 dark:text-rose-300 border border-rose-200/60 dark:border-rose-700/50">
                                         Blood: {{ $student->blood_group }}
                                     </span>
                                 @endif
                             </div>
                         </div>
 
-                        <!-- Info Grid (Clean layout, no sub-card) -->
+                        <!-- Info Grid -->
                         <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm border-t border-gray-200 dark:border-gray-700 pt-5">
                             <div class="flex flex-col gap-1">
-                                <span>
-                                    {{ __('DOB:') }}
-                                    @if ($student->dob)
-                                        <span class="text-gray-800 dark:text-gray-200 font-semibold">{{ \Carbon\Carbon::parse($student->dob)->format('M d, Y') }}</span>
-                                    @else
-                                        <span class="text-gray-400 dark:text-gray-500 font-normal">N/A</span>
-                                    @endif
-                                </span>
+                                <span class="text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 tracking-wider">{{ __('DOB') }}</span>
+                                @if ($student->dob)
+                                    <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ \Carbon\Carbon::parse($student->dob)->format('M d, Y') }}</span>
+                                @else
+                                    <span class="text-sm text-gray-400 dark:text-gray-500 font-normal">N/A</span>
+                                @endif
                             </div>
                             <div class="flex flex-col gap-1">
-                                <span class="text-[9px] uppercase font-black text-gray-405 dark:text-gray-500 tracking-wider">{{ __('Pincode') }}</span>
-                                <span class="text-gray-800 dark:text-gray-200 font-semibold font-mono">{{ $student->pincode }}</span>
+                                <span class="text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 tracking-wider">{{ __('Pincode') }}</span>
+                                <span class="text-sm font-semibold text-gray-900 dark:text-gray-100 font-mono">{{ $student->pincode }}</span>
                             </div>
                             <div class="sm:col-span-2 flex flex-col gap-1">
-                                <span class="text-[9px] uppercase font-black text-gray-405 dark:text-gray-500 tracking-wider">{{ __('Address') }}</span>
-                                <span class="text-gray-700 dark:text-gray-300 font-medium leading-relaxed">{{ $student->address }}</span>
+                                <span class="text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 tracking-wider">{{ __('Address') }}</span>
+                                <span class="text-sm font-medium text-gray-800 dark:text-gray-200 leading-relaxed">{{ $student->address }}</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Card Actions -->
                     <div class="pt-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                        <span class="text-[9px] uppercase font-black tracking-widest text-gray-400 dark:text-gray-500">
+                        <span class="text-[10px] uppercase font-bold tracking-widest text-gray-500 dark:text-gray-400">
                             ST-ID: #{{ $student->id }}
                         </span>
                         <div class="flex items-center gap-1.5">
-                            <button wire:click="openEditModal({{ $student->id }})" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-xl text-gray-400 hover:text-indigo-600 dark:text-gray-500 dark:hover:text-indigo-400 transition-colors">
+                            <button wire:click="openEditModal({{ $student->id }})" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700/60 rounded-xl text-gray-400 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 transition-colors">
                                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
                             </button>
-                            <button wire:click="confirmDelete({{ $student->id }})" class="p-2 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl text-gray-400 hover:text-red-650 dark:text-gray-500 dark:hover:text-red-400 transition-colors">
+                            <button wire:click="confirmDelete({{ $student->id }})" class="p-2 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl text-gray-400 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors">
                                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                 </svg>
