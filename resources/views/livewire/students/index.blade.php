@@ -34,7 +34,7 @@ new class extends Component
     public $gradeId = '';
     public $divisionId = '';
     public string $blood_group = '';
-    public string $dob = '';
+    public ?string $dob = null;
     public string $address = '';
     public string $pincode = '';
     public string $contact_number = '';
@@ -199,7 +199,7 @@ new class extends Component
         $this->middle_name = $student->middle_name ?? '';
         $this->last_name = $student->last_name;
         $this->blood_group = $student->blood_group ?? '';
-        $this->dob = $student->dob;
+        $this->dob = $student->dob ?? '';
         $this->address = $student->address;
         $this->pincode = $student->pincode;
         $this->contact_number = $student->contact_number;
@@ -273,7 +273,7 @@ new class extends Component
             'gradeId' => ['required', 'exists:grades,id'],
             'divisionId' => ['required', 'exists:divisions,id'],
             'blood_group' => ['nullable', 'string', 'max:10'],
-            'dob' => ['required', 'date'],
+            'dob' => ['nullable', 'date'],
             'address' => ['required', 'string'],
             'pincode' => ['required', 'string', 'max:20'],
             'contact_number' => ['required', 'string', 'max:20'],
@@ -303,7 +303,7 @@ new class extends Component
             'middle_name' => $this->middle_name ?: null,
             'last_name' => $this->last_name,
             'blood_group' => $this->blood_group ?: null,
-            'dob' => $this->dob,
+            'dob' => $this->dob ?: null,
             'address' => $this->address,
             'pincode' => $this->pincode,
             'contact_number' => $this->contact_number,
@@ -487,7 +487,7 @@ new class extends Component
                 // Map columns to indexes
                 $headerMap = array_flip($headers);
 
-                $requiredColumns = ['first_name', 'last_name', 'dob', 'address', 'pincode', 'contact_number', 'campaign_name', 'grade_name', 'division_name'];
+                $requiredColumns = ['first_name', 'last_name', 'address', 'pincode', 'contact_number', 'campaign_name', 'grade_name', 'division_name'];
                 $missing = [];
                 foreach ($requiredColumns as $req) {
                     if (!isset($headerMap[$req])) {
@@ -514,7 +514,7 @@ new class extends Component
                     }
 
                     // Basic validation
-                    if (empty($data['first_name']) || empty($data['last_name']) || empty($data['dob']) || empty($data['campaign_name']) || empty($data['grade_name']) || empty($data['division_name'])) {
+                    if (empty($data['first_name']) || empty($data['last_name']) || empty($data['campaign_name']) || empty($data['grade_name']) || empty($data['division_name'])) {
                         $errorCount++;
                         $errorsLog[] = "Row {$rowNum}: Missing required fields.";
                         continue;
@@ -582,10 +582,14 @@ new class extends Component
                     }
 
                     // Check if student profile matches (e.g. by matching contact number or name/dob in this campaign)
-                    $existingStudent = Student::where('first_name', $data['first_name'])
-                        ->where('last_name', $data['last_name'])
-                        ->where('dob', $data['dob'])
-                        ->first();
+                    $existingStudentQuery = Student::where('first_name', $data['first_name'])
+                        ->where('last_name', $data['last_name']);
+                    if (!empty($data['dob'])) {
+                        $existingStudentQuery->where('dob', $data['dob']);
+                    } else {
+                        $existingStudentQuery->whereNull('dob');
+                    }
+                    $existingStudent = $existingStudentQuery->first();
 
                     if ($existingStudent) {
                         // Check if already enrolled in this campaign
@@ -605,7 +609,7 @@ new class extends Component
                             'middle_name' => $data['middle_name'] ?: null,
                             'last_name' => $data['last_name'],
                             'blood_group' => $data['blood_group'] ?: null,
-                            'dob' => $data['dob'],
+                            'dob' => !empty($data['dob']) ? $data['dob'] : null,
                             'address' => $data['address'],
                             'pincode' => $data['pincode'],
                             'contact_number' => $data['contact_number'],
@@ -842,8 +846,14 @@ new class extends Component
                         <!-- Info Grid (Clean layout, no sub-card) -->
                         <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm border-t border-gray-200 dark:border-gray-700 pt-5">
                             <div class="flex flex-col gap-1">
-                                <span class="text-[9px] uppercase font-black text-gray-405 dark:text-gray-500 tracking-wider">{{ __('Date of Birth') }}</span>
-                                <span class="text-gray-800 dark:text-gray-200 font-semibold">{{ \Carbon\Carbon::parse($student->dob)->format('M d, Y') }}</span>
+                                <span>
+                                    {{ __('DOB:') }}
+                                    @if ($student->dob)
+                                        <span class="text-gray-800 dark:text-gray-200 font-semibold">{{ \Carbon\Carbon::parse($student->dob)->format('M d, Y') }}</span>
+                                    @else
+                                        <span class="text-gray-400 dark:text-gray-500 font-normal">N/A</span>
+                                    @endif
+                                </span>
                             </div>
                             <div class="flex flex-col gap-1">
                                 <span class="text-[9px] uppercase font-black text-gray-405 dark:text-gray-500 tracking-wider">{{ __('Pincode') }}</span>
@@ -1025,7 +1035,7 @@ new class extends Component
                         <!-- DOB -->
                         <div>
                             <x-input-label for="dob" :value="__('Date of Birth')" />
-                            <x-text-input wire:model="dob" id="dob" type="date" class="mt-1 block w-full" required />
+                            <x-text-input wire:model="dob" id="dob" type="date" class="mt-1 block w-full" />
                             <x-input-error :messages="$errors->get('dob')" class="mt-2" />
                         </div>
 
@@ -1165,10 +1175,10 @@ new class extends Component
                         <input wire:model="bulkCsv" id="bulkCsv" type="file" accept=".csv" class="mt-2 block w-full text-xs text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 dark:file:bg-indigo-950/30 file:text-indigo-700 dark:file:text-indigo-400 file:cursor-pointer hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/50 transition" required>
                         <span class="text-[10px] text-gray-405 dark:text-gray-500 mt-1.5 block leading-normal">
                             {{ __('Accepts standard .csv containing student fields. Required CSV columns: ') }}
-                            <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-900 rounded text-indigo-650 dark:text-indigo-400 font-mono text-[9px]">first_name, last_name, dob, address, pincode, contact_number, campaign_name, grade_name, division_name</code>.
+                            <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-900 rounded text-indigo-650 dark:text-indigo-400 font-mono text-[9px]">first_name, last_name, address, pincode, contact_number, campaign_name, grade_name, division_name</code>.
                             <br>
                             {{ __('Optional columns: ') }}
-                            <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-900 rounded text-[9px] font-mono">middle_name, roll_no, serial_number, blood_group, photo_filename</code>.
+                            <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-900 rounded text-[9px] font-mono">middle_name, roll_no, serial_number, dob, blood_group, photo_filename</code>.
                         </span>
                         <x-input-error :messages="$errors->get('bulkCsv')" class="mt-2" />
                     </div>

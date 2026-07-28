@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('middle_name')->nullable();
             $table->string('last_name');
             $table->string('blood_group')->nullable();
-            $table->date('dob');
+            $table->date('dob')->nullable();
             $table->text('address');
             $table->string('pincode');
             $table->string('contact_number');
