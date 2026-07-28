@@ -177,6 +177,66 @@ new class extends Component
         }])->orderBy('created_at', 'desc')->take($this->perPage)->get()->all();
     }
 
+    public function getStudentCounts()
+    {
+        $activeSchoolId = session('active_school_id');
+        if (!$activeSchoolId) {
+            return ['total' => 0, 'filtered' => 0, 'is_filtered' => false];
+        }
+
+        $scopes = $this->getPermittedScopes();
+
+        $buildBaseQuery = function() use ($activeSchoolId, $scopes) {
+            $q = Student::query();
+            if ($scopes['restricted']) {
+                $q->whereHas('campaignStudents', function($cs) use ($scopes) {
+                    $cs->whereIn('grade_id', $scopes['grades'])
+                       ->whereIn('division_id', $scopes['divisions']);
+                });
+            }
+            $q->whereHas('campaignStudents.campaign', function($c) use ($activeSchoolId) {
+                $c->where('school_id', $activeSchoolId);
+            });
+            return $q;
+        };
+
+        $totalCount = $buildBaseQuery()->count();
+
+        $filteredQuery = $buildBaseQuery();
+
+        if ($this->filterCampaign) {
+            $filteredQuery->whereHas('campaignStudents', function($q) {
+                $q->where('campaign_id', $this->filterCampaign);
+            });
+        }
+
+        if ($this->filterGrade) {
+            $filteredQuery->whereHas('campaignStudents', function($q) {
+                $q->where('grade_id', $this->filterGrade);
+            });
+        }
+
+        if ($this->filterDivision) {
+            $filteredQuery->whereHas('campaignStudents', function($q) {
+                $q->where('division_id', $this->filterDivision);
+            });
+        }
+
+        $filteredCount = $filteredQuery->count();
+        $isFiltered = !empty($this->filterCampaign) || !empty($this->filterGrade) || !empty($this->filterDivision);
+
+        return [
+            'total' => $totalCount,
+            'filtered' => $filteredCount,
+            'is_filtered' => $isFiltered
+        ];
+    }
+
+    public function resetFilters()
+    {
+        $this->reset(['filterCampaign', 'filterGrade', 'filterDivision']);
+    }
+
 
 
     public function updatedGradeId($value)
@@ -670,6 +730,7 @@ new class extends Component
 
 @php
     $studentsList = $this->loadStudents();
+    $studentCounts = $this->getStudentCounts();
 @endphp
 
 <div class="space-y-6">
@@ -704,9 +765,21 @@ new class extends Component
             </div>
             <div>
                 <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ __('Students Directory') }}</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    {{ count($studentsList) }} {{ __('students registered in the system') }}
-                </p>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 flex flex-wrap items-center gap-2">
+                    <span class="inline-flex items-center gap-1.5 font-bold text-gray-700 dark:text-gray-300">
+                        <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                        {{ $studentCounts['total'] }} {{ __('Total Students') }}
+                    </span>
+                    @if ($studentCounts['is_filtered'])
+                        <span class="text-gray-300 dark:text-gray-600">•</span>
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/30">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                            </svg>
+                            {{ $studentCounts['filtered'] }} {{ __('Filtered') }}
+                        </span>
+                    @endif
+                </div>
             </div>
         </div>
         <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
@@ -775,6 +848,18 @@ new class extends Component
                     @endforeach
                 @endif
             </select>
+        </div>
+
+        <!-- Actions / Clear Filters -->
+        <div class="flex items-end">
+            @if ($studentCounts['is_filtered'])
+                <button wire:click="resetFilters" type="button" class="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    {{ __('Clear Filters') }}
+                </button>
+            @endif
         </div>
 
 
