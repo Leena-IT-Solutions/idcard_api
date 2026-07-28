@@ -18,6 +18,17 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
+    protected static function booted()
+    {
+        static::created(function ($user) {
+            if ($user->mobile) {
+                \App\Models\Student::where('contact_number', $user->mobile)
+                    ->whereNull('user_id')
+                    ->update(['user_id' => $user->id]);
+            }
+        });
+    }
+
     /**
      * Get the attributes that should be cast.
      *
