@@ -19,24 +19,8 @@
 @endphp
 
 <div class="w-[480px] h-[300px] bg-white border border-slate-200 rounded-[2rem] overflow-hidden flex flex-col justify-between shadow-2xl relative select-none font-sans">
-    <!-- Subtle Grid Background Watermark -->
-    <svg class="absolute inset-0 w-full h-full opacity-[0.04] pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
-        <path d="M-10 30 L110 30 M-10 60 L110 60 M-10 90 L110 90 M20 -10 L20 110 M50 -10 L50 110 M80 -10 L80 110" stroke="currentColor" stroke-width="0.3" fill="none" />
-        <path d="M-10 10 L110 90 M-10 40 L90 120 M10 -20 L110 60" stroke="currentColor" stroke-width="0.3" fill="none" />
-    </svg>
-
-    <!-- Top Wavy Header Pattern -->
-    <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 480 300" preserveAspectRatio="none">
-        <!-- Part A: Left Corner Orange Accent -->
-        <path d="M 0 45 C 25 22, 55 0, 90 0 L 0 0 Z" fill="#E05B35" />
-        <!-- Part A: Left Corner Blue Accent -->
-        <path d="M 0 34 C 18 14, 42 0, 72 0 L 0 0 Z" fill="#0A2540" />
-
-        <!-- Part C: Right Orange Wave -->
-        <path d="M 165 0 C 225 75, 330 145, 480 125 L 480 0 Z" fill="#E05B35" />
-        <!-- Part C: Right Dark Blue Wave -->
-        <path d="M 195 0 C 245 60, 340 120, 480 95 L 480 0 Z" fill="#0A2540" />
-    </svg>
+    <!-- Official Background Vector Artwork Overlay (from user svg/1.svg) -->
+    <img src="{{ asset('svg/card-template-background.svg') }}" class="absolute inset-0 w-full h-full object-cover pointer-events-none z-0">
 
     <!-- Card Content -->
     <div class="flex-1 p-6 pb-2 z-10 flex flex-col justify-between">
@@ -139,6 +123,4 @@
         </div>
     </div>
 
-    <!-- Solid Blue Footer Bar -->
-    <div class="w-full h-4 bg-[#0A2540] shrink-0"></div>
 </div>
