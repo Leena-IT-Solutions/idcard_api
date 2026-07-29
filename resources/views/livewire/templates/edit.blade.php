@@ -154,119 +154,7 @@ new class extends Component {
         }
     }
 
-    public function spaceSelectedEvenly(string $direction)
-    {
-        $indices = $this->selectedLayerIndices;
-        $count = count($indices);
-        if ($count <= 2) return;
 
-        if ($direction === 'vertical') {
-            usort($indices, function($a, $b) {
-                return ($this->layers[$a]['y'] ?? 0) <=> ($this->layers[$b]['y'] ?? 0);
-            });
-
-            $firstIdx = $indices[0];
-            $lastIdx = $indices[$count - 1];
-
-            $firstY = $this->layers[$firstIdx]['y'] ?? 0;
-            $lastY = $this->layers[$lastIdx]['y'] ?? 0;
-
-            $totalHeights = 0;
-            for ($i = 0; $i < $count; $i++) {
-                $totalHeights += $this->layers[$indices[$i]]['height'] ?? 30;
-            }
-
-            $span = ($lastY + ($this->layers[$lastIdx]['height'] ?? 30)) - $firstY;
-            $totalGaps = $span - $totalHeights;
-            $gap = $totalGaps / ($count - 1);
-
-            $currentY = $firstY;
-            for ($i = 0; $i < $count; $i++) {
-                $idx = $indices[$i];
-                $this->layers[$idx]['y'] = round($currentY);
-                $currentY += ($this->layers[$idx]['height'] ?? 30) + $gap;
-            }
-        } elseif ($direction === 'horizontal') {
-            usort($indices, function($a, $b) {
-                return ($this->layers[$a]['x'] ?? 0) <=> ($this->layers[$b]['x'] ?? 0);
-            });
-
-            $firstIdx = $indices[0];
-            $lastIdx = $indices[$count - 1];
-
-            $firstX = $this->layers[$firstIdx]['x'] ?? 0;
-            $lastX = $this->layers[$lastIdx]['x'] ?? 0;
-
-            $totalWidths = 0;
-            for ($i = 0; $i < $count; $i++) {
-                $totalWidths += $this->layers[$indices[$i]]['width'] ?? 150;
-            }
-
-            $span = ($lastX + ($this->layers[$lastIdx]['width'] ?? 150)) - $firstX;
-            $totalGaps = $span - $totalWidths;
-            $gap = $totalGaps / ($count - 1);
-
-            $currentX = $firstX;
-            for ($i = 0; $i < $count; $i++) {
-                $idx = $indices[$i];
-                $this->layers[$idx]['x'] = round($currentX);
-                $currentX += ($this->layers[$idx]['width'] ?? 150) + $gap;
-            }
-        }
-    }
-
-    public function tidyUpSelected()
-    {
-        $indices = $this->selectedLayerIndices;
-        $count = count($indices);
-        if ($count <= 1) return;
-
-        // Calculate selection bounding box bounds
-        $minX = 999999;
-        $maxX = -999999;
-        $minY = 999999;
-        $maxY = -999999;
-
-        foreach ($indices as $idx) {
-            if (!isset($this->layers[$idx])) continue;
-            $x = $this->layers[$idx]['x'] ?? 0;
-            $y = $this->layers[$idx]['y'] ?? 0;
-            $w = $this->layers[$idx]['width'] ?? 150;
-            $h = $this->layers[$idx]['height'] ?? 30;
-
-            if ($x < $minX) $minX = $x;
-            if ($x + $w > $maxX) $maxX = $x + $w;
-            if ($y < $minY) $minY = $y;
-            if ($y + $h > $maxY) $maxY = $y + $h;
-        }
-
-        $boxW = $maxX - $minX;
-        $boxH = $maxY - $minY;
-
-        if ($boxH >= $boxW) {
-            // Vertical Layout: align left edges to the bounding box left edge (so colons align perfectly)
-            foreach ($indices as $idx) {
-                if (!isset($this->layers[$idx])) continue;
-                $this->layers[$idx]['x'] = $minX;
-            }
-
-            // Distribute vertically if 3 or more elements
-            if ($count >= 3) {
-                $this->spaceSelectedEvenly('vertical');
-            }
-        } else {
-            // Horizontal Layout: align top edges to the bounding box top edge
-            foreach ($indices as $idx) {
-                if (!isset($this->layers[$idx])) continue;
-                $this->layers[$idx]['y'] = $minY;
-            }
-
-            // Distribute horizontally if 3 or more elements
-            if ($count >= 3) {
-                $this->spaceSelectedEvenly('horizontal');
-            }
-        }
-    }
 
     public function updateCommonProperty(string $property, $value)
     {
@@ -657,6 +545,183 @@ new class extends Component {
     onViewportMouseDown(event) {
         if (!event.target.closest('[data-layer-box]')) {
             this.$wire.selectLayer(null);
+        }
+    },
+
+    spaceSelectedEvenly(direction) {
+        const indices = this.$wire.selectedLayerIndices || [];
+        const count = indices.length;
+        if (count <= 2) return;
+
+        // Fetch all elements with their actual dimensions
+        const items = [];
+        indices.forEach((idx) => {
+            const el = document.querySelector('[data-layer-index="' + idx + '"]');
+            if (el) {
+                items.push({
+                    idx: idx,
+                    el: el,
+                    x: parseFloat(el.style.left) || 0,
+                    y: parseFloat(el.style.top) || 0,
+                    w: el.offsetWidth || 0,
+                    h: el.offsetHeight || 0
+                });
+            }
+        });
+
+        if (items.length <= 2) return;
+
+        const updates = [];
+
+        if (direction === 'vertical') {
+            // Sort items by Y coordinate
+            items.sort((a, b) => a.y - b.y);
+
+            const firstY = items[0].y;
+            const lastY = items[count - 1].y;
+            const lastH = items[count - 1].h;
+
+            let totalHeights = 0;
+            items.forEach(item => {
+                totalHeights += item.h;
+            });
+
+            const span = (lastY + lastH) - firstY;
+            const totalGaps = span - totalHeights;
+            const gap = totalGaps / (count - 1);
+
+            let currentY = firstY;
+            items.forEach((item, index) => {
+                const finalY = Math.round(currentY);
+                item.el.style.top = finalY + 'px';
+                
+                // Keep local client state updated
+                this.$wire.layers[item.idx].y = finalY;
+
+                updates.push({
+                    index: item.idx,
+                    x: Math.round(item.x),
+                    y: finalY
+                });
+
+                currentY += item.h + gap;
+            });
+        } else if (direction === 'horizontal') {
+            // Sort items by X coordinate
+            items.sort((a, b) => a.x - b.x);
+
+            const firstX = items[0].x;
+            const lastX = items[count - 1].x;
+            const lastW = items[count - 1].w;
+
+            let totalWidths = 0;
+            items.forEach(item => {
+                totalWidths += item.w;
+            });
+
+            const span = (lastX + lastW) - firstX;
+            const totalGaps = span - totalWidths;
+            const gap = totalGaps / (count - 1);
+
+            let currentX = firstX;
+            items.forEach((item, index) => {
+                const finalX = Math.round(currentX);
+                item.el.style.left = finalX + 'px';
+                
+                // Keep local client state updated
+                this.$wire.layers[item.idx].x = finalX;
+
+                updates.push({
+                    index: item.idx,
+                    x: finalX,
+                    y: Math.round(item.y)
+                });
+
+                currentX += item.w + gap;
+            });
+        }
+
+        // Commit coordinates to Livewire
+        this.$wire.updateMultipleLayersCoordinates(updates);
+    },
+
+    tidyUpSelected() {
+        const indices = this.$wire.selectedLayerIndices || [];
+        const count = indices.length;
+        if (count <= 1) return;
+
+        // Fetch elements with actual dimensions
+        const items = [];
+        indices.forEach((idx) => {
+            const el = document.querySelector('[data-layer-index="' + idx + '"]');
+            if (el) {
+                items.push({
+                    idx: idx,
+                    el: el,
+                    x: parseFloat(el.style.left) || 0,
+                    y: parseFloat(el.style.top) || 0,
+                    w: el.offsetWidth || 0,
+                    h: el.offsetHeight || 0
+                });
+            }
+        });
+
+        if (items.length <= 1) return;
+
+        // Calculate bounding box bounds
+        let minX = 999999;
+        let maxX = -999999;
+        let minY = 999999;
+        let maxY = -999999;
+
+        items.forEach(item => {
+            if (item.x < minX) minX = item.x;
+            if (item.x + item.w > maxX) maxX = item.x + item.w;
+            if (item.y < minY) minY = item.y;
+            if (item.y + item.h > maxY) maxY = item.y + item.h;
+        });
+
+        const boxW = maxX - minX;
+        const boxH = maxY - minY;
+
+        if (boxH >= boxW) {
+            // Vertical Layout: align left edges to minX
+            items.forEach(item => {
+                item.el.style.left = Math.round(minX) + 'px';
+                this.$wire.layers[item.idx].x = Math.round(minX);
+            });
+
+            // Distribute vertically if 3 or more elements
+            if (count >= 3) {
+                this.spaceSelectedEvenly('vertical');
+            } else {
+                // If just 2 elements, commit left alignment
+                const updates = items.map(item => ({
+                    index: item.idx,
+                    x: Math.round(minX),
+                    y: Math.round(item.y)
+                }));
+                this.$wire.updateMultipleLayersCoordinates(updates);
+            }
+        } else {
+            // Horizontal Layout: align top edges to minY
+            items.forEach(item => {
+                item.el.style.top = Math.round(minY) + 'px';
+                this.$wire.layers[item.idx].y = Math.round(minY);
+            });
+
+            // Distribute horizontally if 3 or more elements
+            if (count >= 3) {
+                this.spaceSelectedEvenly('horizontal');
+            } else {
+                // If just 2 elements, commit top alignment
+                const updates = items.map(item => ({
+                    index: item.idx,
+                    x: Math.round(item.x),
+                    y: Math.round(minY)
+                }));
+                this.$wire.updateMultipleLayersCoordinates(updates);
+            }
         }
     },
 
@@ -1594,7 +1659,7 @@ new class extends Component {
                     <div class="space-y-2">
                         <span class="text-xs font-bold text-slate-300 block">Space evenly</span>
                         <div class="grid grid-cols-3 gap-2.5">
-                            <button type="button" wire:click="spaceSelectedEvenly('vertical')" class="flex flex-col items-center justify-center p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-[10px] font-bold transition space-y-1">
+                            <button type="button" @click="spaceSelectedEvenly('vertical')" class="flex flex-col items-center justify-center p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-[10px] font-bold transition space-y-1">
                                 <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <line x1="4" y1="6" x2="20" y2="6"></line>
                                     <line x1="4" y1="12" x2="20" y2="12"></line>
@@ -1602,7 +1667,7 @@ new class extends Component {
                                 </svg>
                                 <span>Vertically</span>
                             </button>
-                            <button type="button" wire:click="spaceSelectedEvenly('horizontal')" class="flex flex-col items-center justify-center p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-[10px] font-bold transition space-y-1">
+                            <button type="button" @click="spaceSelectedEvenly('horizontal')" class="flex flex-col items-center justify-center p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-[10px] font-bold transition space-y-1">
                                 <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <line x1="6" y1="4" x2="6" y2="20"></line>
                                     <line x1="12" y1="4" x2="12" y2="20"></line>
@@ -1610,7 +1675,7 @@ new class extends Component {
                                 </svg>
                                 <span>Horizontally</span>
                             </button>
-                            <button type="button" wire:click="tidyUpSelected" class="flex flex-col items-center justify-center p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-[10px] font-bold transition space-y-1">
+                            <button type="button" @click="tidyUpSelected()" class="flex flex-col items-center justify-center p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-[10px] font-bold transition space-y-1">
                                 <svg class="w-4 h-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <rect x="3" y="3" width="7" height="7"></rect>
                                     <rect x="14" y="3" width="7" height="7"></rect>
