@@ -188,11 +188,11 @@ new class extends Component {
                 <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm hover:shadow-md transition duration-200 flex flex-col justify-between group">
                     <div>
                         <!-- Card Visual Live Blade Preview Container -->
-                        <div wire:click="openPreviewModal('{{ $tpl->id }}')" class="cursor-pointer h-56 w-full rounded-2xl bg-slate-950/30 overflow-hidden flex items-center justify-center p-2 relative shadow-inner mb-4 hover:bg-slate-950/40 transition duration-200">
+                        <a href="{{ route('templates.edit', $tpl->id) }}" class="cursor-pointer h-56 w-full rounded-2xl bg-slate-950/30 overflow-hidden flex items-center justify-center p-2 relative shadow-inner mb-4 hover:bg-slate-950/40 transition duration-200 block">
                             <div class="scale-[0.4] sm:scale-[0.45] origin-center shrink-0 pointer-events-none">
                                 @include($tpl->view_path, ['student' => $mockStudent, 'school' => $mockSchool])
                             </div>
-                        </div>
+                        </a>
 
                         <!-- Info -->
                         <div class="space-y-2">
@@ -229,17 +229,24 @@ new class extends Component {
 
                     <!-- Action buttons -->
                     <div class="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800/80 flex flex-col gap-2">
+                        <a href="{{ route('templates.edit', $tpl->id) }}" class="w-full text-center py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center shadow-md shadow-indigo-600/20">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            Edit Design
+                        </a>
+
                         @if(!$isSchoolDefault)
-                            <button type="button" wire:click="assignToSchool({{ $tpl->id }})" class="w-full text-center py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition">
+                            <button type="button" wire:click="assignToSchool('{{ $tpl->id }}')" class="w-full text-center py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition">
                                 Make School Default
                             </button>
                         @else
-                            <button type="button" disabled class="w-full text-center py-2 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-xl text-xs font-bold cursor-not-allowed">
-                                Active Default
+                            <button type="button" disabled class="w-full text-center py-2 bg-emerald-500/10 text-emerald-400 rounded-xl text-xs font-bold cursor-not-allowed border border-emerald-500/20">
+                                Active School Default
                             </button>
                         @endif
 
-                        <button type="button" wire:click="openAssignModal({{ $tpl->id }})" class="w-full text-center py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition">
+                        <button type="button" wire:click="openAssignModal('{{ $tpl->id }}')" class="w-full text-center py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition">
                             Assign to Class
                         </button>
                     </div>
@@ -313,43 +320,5 @@ new class extends Component {
             </div>
         </div>
     @endif
-
-    <!-- Preview Modal -->
-    @if($isPreviewModalOpen && $selectedTemplateForPreview)
-        <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
-            <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:p-0">
-                <div class="fixed inset-0 bg-slate-950/75 backdrop-blur-md transition-opacity" wire:click="closePreviewModal"></div>
-
-                <!-- Center elements -->
-                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-                <div class="inline-block align-middle bg-slate-900 border border-slate-800 rounded-[2rem] p-8 text-center overflow-hidden shadow-2xl transform transition-all max-w-xl w-full relative">
-                    <!-- Close Button -->
-                    <button type="button" wire:click="closePreviewModal" class="absolute top-5 right-5 text-slate-400 hover:text-white transition">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
-
-                    <!-- Title/Header in Modal -->
-                    <div class="mb-6 text-left">
-                        <h3 class="text-lg font-black text-white">{{ $selectedTemplateForPreview->name }}</h3>
-                        <p class="text-xs text-slate-400 mt-1">Full-scale design preview (CR-80 Landscape Layout)</p>
-                    </div>
-
-                    <!-- Card Preview at 100% scale -->
-                    <div class="flex justify-center items-center py-6 bg-slate-950/30 rounded-[1.75rem] border border-slate-800/60 p-4 text-left">
-                        @include($selectedTemplateForPreview->view_path, ['student' => $mockStudent, 'school' => $mockSchool])
-                    </div>
-
-                    <!-- Footer Actions inside Modal -->
-                    <div class="mt-6 flex justify-end">
-                        <button type="button" wire:click="closePreviewModal" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition">
-                            Close Preview
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endif
+</div>
 </div>
