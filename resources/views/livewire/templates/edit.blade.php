@@ -424,14 +424,21 @@ new class extends Component {
                     if (event) event.preventDefault();
 
                     this.draggingIndex = idx;
-                    this.draggingEl = event.currentTarget;
+                    this.draggingEl = event.currentTarget ? (event.currentTarget.closest('[data-layer-box]') || event.currentTarget) : null;
+                    if (!this.draggingEl) return;
+
                     this.startX = event.clientX;
                     this.startY = event.clientY;
                     this.hasMoved = false;
 
                     const layer = ($wire.layers && $wire.layers[idx]) ? $wire.layers[idx] : {};
-                    this.origX = parseInt(layer.x) || 0;
-                    this.origY = parseInt(layer.y) || 0;
+                    let parseX = parseFloat(layer.x);
+                    let parseY = parseFloat(layer.y);
+                    if (isNaN(parseX)) parseX = parseFloat(this.draggingEl.style.left) || 0;
+                    if (isNaN(parseY)) parseY = parseFloat(this.draggingEl.style.top) || 0;
+
+                    this.origX = parseX;
+                    this.origY = parseY;
                     this.curX = this.origX;
                     this.curY = this.origY;
                 },
@@ -442,7 +449,7 @@ new class extends Component {
                     const dx = (event.clientX - this.startX) / scale;
                     const dy = (event.clientY - this.startY) / scale;
 
-                    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+                    if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
                         this.hasMoved = true;
                     }
 
@@ -487,25 +494,28 @@ new class extends Component {
                     }
                     this.resizingIndex = idx;
                     this.resizeHandle = handle;
-                    this.resizeEl = event.currentTarget.closest('[data-layer-box]');
+                    this.resizeEl = event.currentTarget ? event.currentTarget.closest('[data-layer-box]') : null;
+                    if (!this.resizeEl) return;
+
                     this.startX = event.clientX;
                     this.startY = event.clientY;
 
                     const layer = ($wire.layers && $wire.layers[idx]) ? $wire.layers[idx] : {};
-                    this.origX = parseInt(layer.x) || 0;
-                    this.origY = parseInt(layer.y) || 0;
+                    let parseX = parseFloat(layer.x);
+                    let parseY = parseFloat(layer.y);
+                    if (isNaN(parseX)) parseX = parseFloat(this.resizeEl.style.left) || 0;
+                    if (isNaN(parseY)) parseY = parseFloat(this.resizeEl.style.top) || 0;
 
-                    const contentEl = this.resizeEl ? this.resizeEl.querySelector('[data-layer-content]') : null;
-                    const realW = contentEl ? contentEl.offsetWidth : (this.resizeEl ? this.resizeEl.offsetWidth : 100);
-                    const realH = contentEl ? contentEl.offsetHeight : (this.resizeEl ? this.resizeEl.offsetHeight : 30);
+                    this.origX = parseX;
+                    this.origY = parseY;
 
-                    this.startW = parseInt(layer.width) || realW;
-                    if (this.startW < 20) this.startW = realW;
+                    const contentEl = this.resizeEl.querySelector('[data-layer-content]');
+                    const realW = contentEl ? contentEl.offsetWidth : this.resizeEl.offsetWidth;
+                    const realH = contentEl ? contentEl.offsetHeight : this.resizeEl.offsetHeight;
 
-                    this.startH = parseInt(layer.height) || realH;
-                    if (this.startH < 10) this.startH = realH;
-
-                    this.startFontSize = parseInt(layer.font_size) || 14;
+                    this.startW = parseFloat(layer.width) || realW || 100;
+                    this.startH = parseFloat(layer.height) || realH || 30;
+                    this.startFontSize = parseFloat(layer.font_size) || 14;
 
                     this.curX = this.origX;
                     this.curY = this.origY;
