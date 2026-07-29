@@ -88,15 +88,30 @@ new class extends Component {
             return;
         }
 
-        if ($shift) {
-            if (in_array($index, $this->selectedLayerIndices)) {
-                $this->selectedLayerIndices = array_diff($this->selectedLayerIndices, [$index]);
-            } else {
-                $this->selectedLayerIndices[] = $index;
+        // Find the group of the clicked layer (if any)
+        $targetGroupId = $this->layers[$index]['group_id'] ?? null;
+        $indicesToToggle = [$index];
+
+        if ($targetGroupId) {
+            $indicesToToggle = [];
+            foreach ($this->layers as $i => $layer) {
+                if (($layer['group_id'] ?? null) === $targetGroupId) {
+                    $indicesToToggle[] = $i;
+                }
             }
-            $this->selectedLayerIndices = array_values($this->selectedLayerIndices);
+        }
+
+        if ($shift) {
+            // If any element of the group is already selected, remove the whole group
+            $hasIntersection = !empty(array_intersect($indicesToToggle, $this->selectedLayerIndices));
+            if ($hasIntersection) {
+                $this->selectedLayerIndices = array_diff($this->selectedLayerIndices, $indicesToToggle);
+            } else {
+                $this->selectedLayerIndices = array_merge($this->selectedLayerIndices, $indicesToToggle);
+            }
+            $this->selectedLayerIndices = array_values(array_unique($this->selectedLayerIndices));
         } else {
-            $this->selectedLayerIndices = [$index];
+            $this->selectedLayerIndices = $indicesToToggle;
         }
 
         if (count($this->selectedLayerIndices) === 1) {
@@ -117,10 +132,6 @@ new class extends Component {
         }
     }
 
-
-
-
-
     public function duplicateSelected()
     {
         if (empty($this->selectedLayerIndices)) {
@@ -135,6 +146,8 @@ new class extends Component {
         $sortedIndices = $this->selectedLayerIndices;
         sort($sortedIndices);
 
+        $groupMap = [];
+
         foreach ($sortedIndices as $idx) {
             if (!isset($this->layers[$idx])) continue;
 
@@ -148,6 +161,14 @@ new class extends Component {
                 $duplicate['label'] .= ' (Copy)';
             }
 
+            $oldGroupId = $layer['group_id'] ?? null;
+            if ($oldGroupId) {
+                if (!isset($groupMap[$oldGroupId])) {
+                    $groupMap[$oldGroupId] = 'group_' . microtime(true) . '_' . rand(1000, 9999);
+                }
+                $duplicate['group_id'] = $groupMap[$oldGroupId];
+            }
+
             $this->layers[] = $duplicate;
             $newIndices[] = count($this->layers) - 1;
         }
@@ -157,6 +178,44 @@ new class extends Component {
             $this->selectedLayerIndex = $newIndices[0];
         } else {
             $this->selectedLayerIndex = null;
+        }
+    }
+
+    public function groupSelected()
+    {
+        if (count($this->selectedLayerIndices) <= 1) return;
+
+        $groupId = 'group_' . microtime(true) . '_' . rand(1000, 9999);
+        foreach ($this->selectedLayerIndices as $idx) {
+            if (isset($this->layers[$idx])) {
+                $this->layers[$idx]['group_id'] = $groupId;
+            }
+        }
+    }
+
+    public function ungroupSelected()
+    {
+        $groupIdsToClear = [];
+
+        if ($this->selectedLayerIndex !== null && isset($this->layers[$this->selectedLayerIndex])) {
+            if (!empty($this->layers[$this->selectedLayerIndex]['group_id'])) {
+                $groupIdsToClear[] = $this->layers[$this->selectedLayerIndex]['group_id'];
+            }
+        }
+
+        foreach ($this->selectedLayerIndices as $idx) {
+            if (isset($this->layers[$idx]) && !empty($this->layers[$idx]['group_id'])) {
+                $groupIdsToClear[] = $this->layers[$idx]['group_id'];
+            }
+        }
+
+        $groupIdsToClear = array_unique($groupIdsToClear);
+        if (empty($groupIdsToClear)) return;
+
+        foreach ($this->layers as $i => $layer) {
+            if (isset($layer['group_id']) && in_array($layer['group_id'], $groupIdsToClear)) {
+                $this->layers[$i]['group_id'] = null;
+            }
         }
     }
 
@@ -1400,6 +1459,24 @@ new class extends Component {
                 }
             }
 
+            // Ctrl + Shift + G / Cmd + Shift + G ungroup shortcut
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'g') {
+                if (indices.length > 0 || singleIdx !== null) {
+                    e.preventDefault();
+                    this.$wire.ungroupSelected();
+                    return;
+                }
+            }
+
+            // Ctrl + G / Cmd + G group shortcut
+            if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'g') {
+                if (indices.length > 1) {
+                    e.preventDefault();
+                    this.$wire.groupSelected();
+                    return;
+                }
+            }
+
             if (indices.length === 0) return;
 
             const keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
@@ -1960,8 +2037,32 @@ new class extends Component {
                     </div>
 
                     <div class="flex items-center justify-between pt-3 border-t border-slate-800">
+                        @php
+                            $hasGroup = false;
+                            foreach ($selectedLayerIndices as $idx) {
+                                if (!empty($layers[$idx]['group_id'])) {
+                                    $hasGroup = true;
+                                    break;
+                                }
+                            }
+                        @endphp
                         <span class="text-[10px] text-slate-500 font-medium">Bulk operations affect selection.</span>
                         <div class="flex items-center space-x-2">
+                            @if($hasGroup)
+                                <button type="button" 
+                                    wire:click="ungroupSelected" 
+                                    class="px-3.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-xl text-xs font-bold transition flex items-center shadow-sm"
+                                >
+                                    Ungroup
+                                </button>
+                            @else
+                                <button type="button" 
+                                    wire:click="groupSelected" 
+                                    class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-sm"
+                                >
+                                    Group
+                                </button>
+                            @endif
                             <button type="button" 
                                 wire:click="duplicateSelected" 
                                 class="px-3.5 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-xl text-xs font-bold transition flex items-center shadow-sm"
@@ -2096,6 +2197,9 @@ new class extends Component {
                             <button type="button" wire:click="moveLayer({{ $selectedLayerIndex }}, 'up')" class="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-bold">Move Up</button>
                             <button type="button" wire:click="moveLayer({{ $selectedLayerIndex }}, 'down')" class="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-bold">Move Down</button>
                             <button type="button" wire:click="duplicateSelected" class="px-2.5 py-1 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-lg text-xs font-bold">Duplicate</button>
+                            @if(!empty($selectedLayer['group_id']))
+                                <button type="button" wire:click="ungroupSelected" class="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-lg text-xs font-bold transition">Ungroup</button>
+                            @endif
                         </div>
                         <button type="button" wire:click="removeLayer({{ $selectedLayerIndex }})" class="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-bold">Delete Layer</button>
                     </div>
