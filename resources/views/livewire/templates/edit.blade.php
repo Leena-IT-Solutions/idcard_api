@@ -431,7 +431,7 @@ new class extends Component {
                     this.startY = event.clientY;
                     this.hasMoved = false;
 
-                    const layer = ($wire.layers && $wire.layers[idx]) ? $wire.layers[idx] : {};
+                    const layer = (this.$wire.layers && this.$wire.layers[idx]) ? this.$wire.layers[idx] : {};
                     let parseX = parseFloat(layer.x);
                     let parseY = parseFloat(layer.y);
                     if (isNaN(parseX)) parseX = parseFloat(this.draggingEl.style.left) || 0;
@@ -480,9 +480,9 @@ new class extends Component {
                         this.hasMoved = false;
 
                         if (moved) {
-                            $wire.updateLayerCoordinates(idx, finalX, finalY);
+                            this.$wire.updateLayerCoordinates(idx, finalX, finalY);
                         } else {
-                            $wire.selectLayer(idx);
+                            this.$wire.selectLayer(idx);
                         }
                     }
                 },
@@ -500,7 +500,7 @@ new class extends Component {
                     this.startX = event.clientX;
                     this.startY = event.clientY;
 
-                    const layer = ($wire.layers && $wire.layers[idx]) ? $wire.layers[idx] : {};
+                    const layer = (this.$wire.layers && this.$wire.layers[idx]) ? this.$wire.layers[idx] : {};
                     const layerType = (layer && layer.type) ? layer.type : (this.resizeEl ? this.resizeEl.getAttribute('data-layer-type') : 'text');
                     const isText = (layerType === 'text');
 
@@ -539,7 +539,7 @@ new class extends Component {
                     const dx = (event.clientX - this.startX) / scale;
                     const dy = (event.clientY - this.startY) / scale;
 
-                    const layer = ($wire.layers && $wire.layers[this.resizingIndex]) ? $wire.layers[this.resizingIndex] : {};
+                    const layer = (this.$wire.layers && this.$wire.layers[this.resizingIndex]) ? this.$wire.layers[this.resizingIndex] : {};
                     const layerType = (layer && layer.type) ? layer.type : (this.resizeEl ? this.resizeEl.getAttribute('data-layer-type') : 'text');
                     const isText = (layerType === 'text');
                     const h = this.resizeHandle;
@@ -620,7 +620,7 @@ new class extends Component {
                         this.resizeHandle = null;
                         this.resizeEl = null;
 
-                        $wire.updateLayerDimensions(idx, finalW, finalH, finalFontSize, finalX, finalY);
+                        this.$wire.updateLayerDimensions(idx, finalW, finalH, finalFontSize, finalX, finalY);
                     }
                 },
 
