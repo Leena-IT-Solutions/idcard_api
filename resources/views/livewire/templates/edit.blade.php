@@ -140,8 +140,8 @@ new class extends Component {
             'photo_path' => '',
             'campaignStudents' => collect([
                 (object)[
-                    'grade' => (object)['name' => 'Grade 5'],
-                    'division' => (object)['name' => 'Div A'],
+                    'grade' => (object)['name' => 'V'],
+                    'division' => (object)['name' => 'A'],
                     'roll_no' => '42',
                     'serial_number' => 'SR-2026-042',
                 ]
