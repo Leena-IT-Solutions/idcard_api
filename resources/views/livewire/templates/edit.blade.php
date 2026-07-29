@@ -398,7 +398,7 @@ new class extends Component {
     $bgUrl = $bgPath ? (str_starts_with($bgPath, 'http') ? $bgPath : asset('storage/' . $bgPath)) : null;
 @endphp
 
-<div class="space-y-6" x-data="{
+<div class="space-y-6 notranslate" translate="no" x-data="{
     zoomLevel: 100,
     draggingIndex: null,
     draggingEl: null,
