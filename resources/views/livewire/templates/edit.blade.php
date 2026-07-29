@@ -323,6 +323,14 @@ new class extends Component {
     }
 }; ?>
 
+@php
+    $isPortrait = $orientation === 'portrait';
+    $canvasW = $isPortrait ? 638 : 1011;
+    $canvasH = $isPortrait ? 1011 : 638;
+    $bgPath = $template->background_image;
+    $bgUrl = $bgPath ? (str_starts_with($bgPath, 'http') ? $bgPath : asset('storage/' . $bgPath)) : null;
+@endphp
+
 <div class="space-y-6" x-data="{
     zoomLevel: 100,
     draggingIndex: null,
@@ -690,13 +698,6 @@ new class extends Component {
             </div>
 
             <!-- Canvas Container with Drag & Snap Capabilities -->
-            @php
-                $isPortrait = $orientation === 'portrait';
-                $canvasW = $isPortrait ? 638 : 1011;
-                $canvasH = $isPortrait ? 1011 : 638;
-                $bgPath = $template->background_image;
-                $bgUrl = $bgPath ? (str_starts_with($bgPath, 'http') ? $bgPath : asset('storage/' . $bgPath)) : null;
-            @endphp
 
             <!-- Canvas Outer Interactive Container with Zoom & Resize State -->
             <div class="w-full space-y-4">
