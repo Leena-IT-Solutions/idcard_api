@@ -431,7 +431,8 @@ new class extends Component {
                     this.startY = event.clientY;
                     this.hasMoved = false;
 
-                    const layer = (this.$wire.layers && this.$wire.layers[idx]) ? this.$wire.layers[idx] : {};
+                    const layers = this.$wire.get('layers');
+                    const layer = (layers && layers[idx]) ? layers[idx] : {};
                     let parseX = parseFloat(layer.x);
                     let parseY = parseFloat(layer.y);
                     if (isNaN(parseX)) parseX = parseFloat(this.draggingEl.style.left) || 0;
@@ -500,7 +501,8 @@ new class extends Component {
                     this.startX = event.clientX;
                     this.startY = event.clientY;
 
-                    const layer = (this.$wire.layers && this.$wire.layers[idx]) ? this.$wire.layers[idx] : {};
+                    const layers = this.$wire.get('layers');
+                    const layer = (layers && layers[idx]) ? layers[idx] : {};
                     const layerType = (layer && layer.type) ? layer.type : (this.resizeEl ? this.resizeEl.getAttribute('data-layer-type') : 'text');
                     const isText = (layerType === 'text');
 
@@ -539,7 +541,8 @@ new class extends Component {
                     const dx = (event.clientX - this.startX) / scale;
                     const dy = (event.clientY - this.startY) / scale;
 
-                    const layer = (this.$wire.layers && this.$wire.layers[this.resizingIndex]) ? this.$wire.layers[this.resizingIndex] : {};
+                    const layers = this.$wire.get('layers');
+                    const layer = (layers && layers[this.resizingIndex]) ? layers[this.resizingIndex] : {};
                     const layerType = (layer && layer.type) ? layer.type : (this.resizeEl ? this.resizeEl.getAttribute('data-layer-type') : 'text');
                     const isText = (layerType === 'text');
                     const h = this.resizeHandle;
