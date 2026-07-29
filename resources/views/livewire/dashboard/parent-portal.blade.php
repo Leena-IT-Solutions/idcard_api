@@ -19,6 +19,7 @@ new class extends Component {
     public string $middle_name = '';
     public string $last_name = '';
     public string $blood_group = '';
+    public string $gender = '';
     public string $dob = '';
     public string $address = '';
     public string $pincode = '';
@@ -89,6 +90,7 @@ new class extends Component {
         $this->middle_name = $student->middle_name ?? '';
         $this->last_name = $student->last_name;
         $this->blood_group = $student->blood_group ?? '';
+        $this->gender = $student->gender ?? '';
         $this->dob = $student->dob;
         $this->address = $student->address;
         $this->pincode = $student->pincode;
@@ -105,6 +107,7 @@ new class extends Component {
         $this->middle_name = '';
         $this->last_name = '';
         $this->blood_group = '';
+        $this->gender = '';
         $this->dob = '';
         $this->address = '';
         $this->pincode = '';
@@ -121,6 +124,7 @@ new class extends Component {
             'middle_name' => ['nullable', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'blood_group' => ['nullable', 'string', 'max:10'],
+            'gender' => ['nullable', 'string', 'max:50'],
             'dob' => ['required', 'date'],
             'address' => ['required', 'string'],
             'pincode' => ['required', 'string', 'max:20'],
@@ -144,6 +148,7 @@ new class extends Component {
             'middle_name' => $this->middle_name ?: null,
             'last_name' => $this->last_name,
             'blood_group' => $this->blood_group ?: null,
+            'gender' => $this->gender ?: null,
             'dob' => $this->dob,
             'address' => $this->address,
             'pincode' => $this->pincode,
@@ -376,6 +381,12 @@ new class extends Component {
                                     <span>DOB:</span>
                                     <span class="text-gray-700 dark:text-gray-300 font-bold">{{ \Carbon\Carbon::parse($child->dob)->format('d M, Y') }}</span>
                                 </p>
+                                @if ($child->gender)
+                                    <p class="flex items-center gap-1">
+                                        <span>Gender:</span>
+                                        <span class="text-gray-700 dark:text-gray-300 font-bold">{{ $child->gender }}</span>
+                                    </p>
+                                @endif
                                 @if ($child->blood_group)
                                     <p class="flex items-center gap-1">
                                         <span>Blood Group:</span>
@@ -456,12 +467,23 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
                         <!-- DOB -->
                         <div>
                             <x-input-label for="dob" :value="__('Date of Birth')" />
                             <x-text-input wire:model="dob" id="dob" type="date" class="mt-1 block w-full" required />
                             <x-input-error :messages="$errors->get('dob')" class="mt-2" />
+                        </div>
+                        <!-- Gender -->
+                        <div>
+                            <x-input-label for="gender" :value="__('Gender')" />
+                            <select wire:model="gender" id="gender" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm">
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <x-input-error :messages="$errors->get('gender')" class="mt-2" />
                         </div>
                         <!-- Blood Group -->
                         <div>
