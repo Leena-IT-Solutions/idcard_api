@@ -122,9 +122,12 @@
 @endphp
 
 <div 
-    class="relative overflow-hidden select-none shadow-2xl rounded-2xl border border-slate-700/50 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950"
-    style="width: {{ $widthPx }}px; height: {{ $heightPx }}px; background-image: {{ $bgUrl ? "url('$bgUrl')" : 'none' }}; background-size: cover; background-position: center;"
+    class="relative overflow-hidden select-none shadow-2xl rounded-2xl border border-slate-700/50 bg-slate-950"
+    style="width: {{ $widthPx }}px; height: {{ $heightPx }}px;"
 >
+    @if($bgUrl)
+        <img src="{{ $bgUrl }}" class="absolute inset-0 w-full h-full object-fill pointer-events-none z-0" alt="Card Background" />
+    @endif
     @foreach($config as $layer)
         @php
             $type = $layer['type'] ?? 'text';

@@ -310,7 +310,7 @@ new class extends Component {
             <div 
                 id="canva-studio-canvas"
                 class="relative select-none shadow-2xl rounded-2xl border-2 {{ $selectedLayerIndex !== null ? 'border-indigo-500/50' : 'border-slate-800' }} bg-slate-950 overflow-hidden my-auto transform transition-transform duration-200"
-                style="width: {{ $canvasW }}px; height: {{ $canvasH }}px; background-image: {{ $bgUrl ? "url('$bgUrl')" : 'none' }}; background-size: cover; background-position: center;"
+                style="width: {{ $canvasW }}px; height: {{ $canvasH }}px;"
                 x-data="{
                     draggingIndex: null,
                     startX: 0,
@@ -345,9 +345,13 @@ new class extends Component {
                 @mousemove.window="onDrag($event)"
                 @mouseup.window="stopDrag()"
             >
+                @if($bgUrl)
+                    <img src="{{ $bgUrl }}" class="absolute inset-0 w-full h-full object-fill pointer-events-none z-0" alt="Background Graphic" />
+                @endif
+
                 <!-- Optional Visual Grid Lines -->
                 @if($showGrid)
-                    <div class="absolute inset-0 pointer-events-none opacity-20" style="background-image: radial-gradient(#6366f1 1px, transparent 1px); background-size: 20px 20px;"></div>
+                    <div class="absolute inset-0 pointer-events-none opacity-20 z-10" style="background-image: radial-gradient(#6366f1 1px, transparent 1px); background-size: 20px 20px;"></div>
                 @endif
 
                 <!-- Center Snap Line (Visual Indicator when Selected) -->
