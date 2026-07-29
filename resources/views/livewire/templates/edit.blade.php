@@ -28,6 +28,8 @@ new class extends Component {
     public bool $livePreviewMode = true; // Show mock data vs placeholder text
     public ?int $selectedLayerIndex = null;
     public array $selectedLayerIndices = [];
+    public array $undoStack = [];
+    public array $redoStack = [];
 
     public function mount($templateId, $type = 'master')
     {
@@ -80,6 +82,46 @@ new class extends Component {
         unset($l);
     }
 
+    public function recordHistory()
+    {
+        if (!empty($this->undoStack) && end($this->undoStack) === $this->layers) {
+            return;
+        }
+
+        $this->undoStack[] = $this->layers;
+
+        if (count($this->undoStack) > 50) {
+            array_shift($this->undoStack);
+        }
+
+        $this->redoStack = [];
+    }
+
+    public function undo()
+    {
+        if (empty($this->undoStack)) return;
+
+        $this->redoStack[] = $this->layers;
+        $this->layers = array_pop($this->undoStack);
+        $this->selectLayer(null);
+    }
+
+    public function redo()
+    {
+        if (empty($this->redoStack)) return;
+
+        $this->undoStack[] = $this->layers;
+        $this->layers = array_pop($this->redoStack);
+        $this->selectLayer(null);
+    }
+
+    public function updating($name, $value)
+    {
+        if (str_starts_with($name, 'layers')) {
+            $this->recordHistory();
+        }
+    }
+
     public function selectLayer(?int $index = null, bool $shift = false)
     {
         if ($index === null) {
@@ -123,6 +165,7 @@ new class extends Component {
 
     public function updateMultipleLayersCoordinates(array $updates)
     {
+        $this->recordHistory();
         foreach ($updates as $update) {
             $idx = $update['index'];
             if (isset($this->layers[$idx])) {
@@ -142,6 +185,7 @@ new class extends Component {
             }
         }
 
+        $this->recordHistory();
         $newIndices = [];
         $sortedIndices = $this->selectedLayerIndices;
         sort($sortedIndices);
@@ -185,6 +229,7 @@ new class extends Component {
     {
         if (count($this->selectedLayerIndices) <= 1) return;
 
+        $this->recordHistory();
         $groupId = 'group_' . microtime(true) . '_' . rand(1000, 9999);
         foreach ($this->selectedLayerIndices as $idx) {
             if (isset($this->layers[$idx])) {
@@ -211,6 +256,8 @@ new class extends Component {
 
         $groupIdsToClear = array_unique($groupIdsToClear);
         if (empty($groupIdsToClear)) return;
+
+        $this->recordHistory();
 
         foreach ($this->layers as $i => $layer) {
             if (isset($layer['group_id']) && in_array($layer['group_id'], $groupIdsToClear)) {
@@ -242,6 +289,7 @@ new class extends Component {
 
     public function addTextLayer()
     {
+        $this->recordHistory();
         $newIndex = count($this->layers);
 
         // Find last text layer to copy its styling settings
@@ -285,6 +333,7 @@ new class extends Component {
 
     public function addPhotoLayer()
     {
+        $this->recordHistory();
         $newIndex = count($this->layers);
 
         // Find last photo layer to copy its styling settings
@@ -327,6 +376,7 @@ new class extends Component {
 
     public function addLogoLayer()
     {
+        $this->recordHistory();
         $newIndex = count($this->layers);
 
         // Find last logo layer to copy its styling settings
@@ -365,6 +415,7 @@ new class extends Component {
 
     public function removeLayer(int $index)
     {
+        $this->recordHistory();
         if ($index === -1) {
             $sorted = $this->selectedLayerIndices;
             rsort($sorted);
@@ -387,6 +438,7 @@ new class extends Component {
     {
         if (!isset($this->layers[$index])) return;
 
+        $this->recordHistory();
         if ($direction === 'up' && $index > 0) {
             $temp = $this->layers[$index];
             $this->layers[$index] = $this->layers[$index - 1];
@@ -1450,6 +1502,23 @@ new class extends Component {
                 return;
             }
 
+            // Ctrl + Z / Cmd + Z: Undo
+            if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
+                e.preventDefault();
+                this.$wire.undo();
+                return;
+            }
+
+            // Ctrl + Y / Cmd + Y / Ctrl + Shift + Z: Redo
+            if (
+                ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') ||
+                ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z')
+            ) {
+                e.preventDefault();
+                this.$wire.redo();
+                return;
+            }
+
             // Ctrl + D / Cmd + D duplication shortcut
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
                 if (indices.length > 0 || singleIdx !== null) {
@@ -1602,9 +1671,32 @@ new class extends Component {
         <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center min-h-[620px] shadow-2xl relative overflow-hidden">
             <!-- Studio Canvas Header Info -->
             <div class="w-full flex items-center justify-between mb-4 px-2">
-                <span class="text-[10px] font-black uppercase tracking-widest text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-lg">
-                    Interactive Canva Studio (CR-80 Scale)
-                </span>
+                <div class="flex items-center space-x-2">
+                    <span class="text-[10px] font-black uppercase tracking-widest text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-lg mr-2">
+                        Interactive Canva Studio (CR-80 Scale)
+                    </span>
+                    <!-- Undo / Redo Buttons -->
+                    <button type="button" 
+                        wire:click="undo" 
+                        title="Undo (Ctrl+Z)"
+                        @if(empty($undoStack)) disabled @endif
+                        class="p-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white disabled:opacity-30 disabled:hover:bg-slate-950 disabled:hover:text-slate-300 transition"
+                    >
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"></path>
+                        </svg>
+                    </button>
+                    <button type="button" 
+                        wire:click="redo" 
+                        title="Redo (Ctrl+Y)"
+                        @if(empty($redoStack)) disabled @endif
+                        class="p-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white disabled:opacity-30 disabled:hover:bg-slate-950 disabled:hover:text-slate-300 transition"
+                    >
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3"></path>
+                        </svg>
+                    </button>
+                </div>
                 <span class="text-xs text-slate-400 font-mono">85.6mm × 54mm</span>
             </div>
 
