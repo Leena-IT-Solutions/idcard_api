@@ -34,6 +34,7 @@ new class extends Component
     public $gradeId = '';
     public $divisionId = '';
     public string $blood_group = '';
+    public string $gender = '';
     public ?string $dob = null;
     public string $address = '';
     public string $pincode = '';
@@ -259,6 +260,7 @@ new class extends Component
         $this->middle_name = $student->middle_name ?? '';
         $this->last_name = $student->last_name;
         $this->blood_group = $student->blood_group ?? '';
+        $this->gender = $student->gender ?? '';
         $this->dob = $student->dob ?? '';
         $this->address = $student->address;
         $this->pincode = $student->pincode;
@@ -302,6 +304,7 @@ new class extends Component
         $this->gradeId = '';
         $this->divisionId = '';
         $this->blood_group = '';
+        $this->gender = '';
         $this->dob = '';
         $this->address = '';
         $this->pincode = '';
@@ -333,6 +336,7 @@ new class extends Component
             'gradeId' => ['required', 'exists:grades,id'],
             'divisionId' => ['required', 'exists:divisions,id'],
             'blood_group' => ['nullable', 'string', 'max:10'],
+            'gender' => ['nullable', 'string', 'max:50'],
             'dob' => ['nullable', 'date'],
             'address' => ['required', 'string'],
             'pincode' => ['required', 'string', 'max:20'],
@@ -363,6 +367,7 @@ new class extends Component
             'middle_name' => $this->middle_name ?: null,
             'last_name' => $this->last_name,
             'blood_group' => $this->blood_group ?: null,
+            'gender' => $this->gender ?: null,
             'dob' => $this->dob ?: null,
             'address' => $this->address,
             'pincode' => $this->pincode,
@@ -927,6 +932,11 @@ new class extends Component
                                         Blood: {{ $student->blood_group }}
                                     </span>
                                 @endif
+                                @if ($student->gender)
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-purple-900/40 text-purple-200 border border-purple-700/50">
+                                        Gender: {{ $student->gender }}
+                                    </span>
+                                @endif
                             </div>
                         </div>
 
@@ -1115,6 +1125,18 @@ new class extends Component
                                 <option value="O-">O-</option>
                             </select>
                             <x-input-error :messages="$errors->get('blood_group')" class="mt-2" />
+                        </div>
+
+                        <!-- Gender -->
+                        <div>
+                            <x-input-label for="gender" :value="__('Gender')" />
+                            <select wire:model="gender" id="gender" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm">
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <x-input-error :messages="$errors->get('gender')" class="mt-2" />
                         </div>
 
                         <!-- DOB -->
