@@ -418,6 +418,7 @@ new class extends Component {
                 curH: 0,
                 curFontSize: 0,
                 hasMoved: false,
+                isText: false,
 
                 startDrag(idx, event) {
                     if (this.resizingIndex !== null) return;
@@ -434,6 +435,9 @@ new class extends Component {
 
                     const layers = this.$wire.get('layers');
                     const layer = (layers && layers[idx]) ? layers[idx] : {};
+                    const layerType = (layer && layer.type) ? layer.type : (this.draggingEl.getAttribute('data-layer-type') || 'text');
+                    this.isText = (layerType === 'text');
+
                     let parseX = parseFloat(layer.x);
                     let parseY = parseFloat(layer.y);
                     if (isNaN(parseX)) parseX = parseFloat(this.draggingEl.style.left) || 0;
@@ -509,8 +513,8 @@ new class extends Component {
 
                     const layers = this.$wire.get('layers');
                     const layer = (layers && layers[idx]) ? layers[idx] : {};
-                    const layerType = (layer && layer.type) ? layer.type : (this.resizeEl ? this.resizeEl.getAttribute('data-layer-type') : 'text');
-                    const isText = (layerType === 'text');
+                    const layerType = (layer && layer.type) ? layer.type : (this.resizeEl.getAttribute('data-layer-type') || 'text');
+                    this.isText = (layerType === 'text');
 
                     let parseX = parseFloat(layer.x);
                     let parseY = parseFloat(layer.y);
@@ -524,7 +528,7 @@ new class extends Component {
                     const realW = contentEl ? contentEl.offsetWidth : this.resizeEl.offsetWidth;
                     const realH = contentEl ? contentEl.offsetHeight : this.resizeEl.offsetHeight;
 
-                    if (isText) {
+                    if (this.isText) {
                         this.startW = realW || 50;
                         this.startH = realH || 20;
                     } else {
@@ -548,10 +552,7 @@ new class extends Component {
                     const dx = (event.clientX - this.startX) / scale;
                     const dy = (event.clientY - this.startY) / scale;
 
-                    const layers = this.$wire.get('layers');
-                    const layer = (layers && layers[this.resizingIndex]) ? layers[this.resizingIndex] : {};
-                    const layerType = (layer && layer.type) ? layer.type : (this.resizeEl ? this.resizeEl.getAttribute('data-layer-type') : 'text');
-                    const isText = (layerType === 'text');
+                    const isText = this.isText;
                     const h = this.resizeHandle;
 
                     let newW = this.startW;
@@ -691,8 +692,9 @@ new class extends Component {
 
                             <div 
                                 wire:key="canvas-layer-{{ $layer['id'] ?? $idx }}"
-                                @mousedown="startDrag({{ $idx }}, $event)"
+                                @mousedown.prevent="startDrag({{ $idx }}, $event)"
                                 @dragstart.prevent
+                                @selectstart.prevent
                                 data-layer-box
                                 data-layer-type="{{ $type }}"
                                 class="absolute cursor-move select-none transition-shadow group {{ $isSelected ? 'ring-2 ring-indigo-500 ring-offset-1 ring-offset-slate-900 z-30' : 'hover:ring-1 hover:ring-indigo-400/50 z-10' }}"
