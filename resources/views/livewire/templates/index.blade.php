@@ -1,61 +1,113 @@
 <?php
 
 use Livewire\Volt\Component;
+use App\Models\Template;
+use App\Models\School;
+use App\Models\Grade;
 
 new class extends Component {
     public string $search = '';
     public string $selectedCategory = 'all';
 
+    // Modal properties
+    public bool $isAssignModalOpen = false;
+    public ?Template $selectedTemplateForAssign = null;
+    public $schoolGrades = [];
+
+    public function mount()
+    {
+        $this->loadGrades();
+    }
+
+    public function loadGrades()
+    {
+        $activeSchoolId = session('active_school_id');
+        if ($activeSchoolId) {
+            $this->schoolGrades = Grade::where('school_id', $activeSchoolId)
+                ->orderBy('name', 'asc')
+                ->get();
+        } else {
+            $this->schoolGrades = [];
+        }
+    }
+
     public function with(): array
     {
-        return [
-            'templates' => [
-                [
-                    'id' => 1,
-                    'title' => 'Standard Student Badge (Portrait)',
-                    'category' => 'student',
-                    'orientation' => 'Portrait (85.6 x 54 mm)',
-                    'dimensions' => 'CR-80 Standard',
-                    'is_default' => true,
-                    'preview_color' => 'from-indigo-600 to-blue-800',
-                    'badge' => 'Most Popular',
-                    'updated_at' => '2026-07-20',
-                ],
-                [
-                    'id' => 2,
-                    'title' => 'Modern Student Badge (Landscape)',
-                    'category' => 'student',
-                    'orientation' => 'Landscape (54 x 85.6 mm)',
-                    'dimensions' => 'CR-80 Standard',
-                    'is_default' => false,
-                    'preview_color' => 'from-purple-600 to-indigo-900',
-                    'badge' => 'New',
-                    'updated_at' => '2026-07-21',
-                ],
-                [
-                    'id' => 3,
-                    'title' => 'Executive Staff / Teacher Pass',
-                    'category' => 'staff',
-                    'orientation' => 'Portrait (85.6 x 54 mm)',
-                    'dimensions' => 'CR-80 Standard',
-                    'is_default' => true,
-                    'preview_color' => 'from-amber-500 to-slate-900',
-                    'badge' => 'Staff Default',
-                    'updated_at' => '2026-07-18',
-                ],
-                [
-                    'id' => 4,
-                    'title' => 'Visitor & Event Temporary Pass',
-                    'category' => 'visitor',
-                    'orientation' => 'Portrait (85.6 x 54 mm)',
-                    'dimensions' => 'CR-80 Standard',
-                    'is_default' => false,
-                    'preview_color' => 'from-emerald-600 to-teal-900',
-                    'badge' => 'Visitor',
-                    'updated_at' => '2026-07-15',
-                ],
-            ]
+        $activeSchoolId = session('active_school_id');
+        $activeSchool = $activeSchoolId ? School::find($activeSchoolId) : null;
+
+        // Create a mock student object for previewing
+        $mockStudent = (object)[
+            'first_name' => 'John',
+            'middle_name' => 'A.',
+            'last_name' => 'Doe',
+            'dob' => '2015-05-15',
+            'contact_number' => '9876543210',
+            'blood_group' => 'A+',
+            'address' => '123 Main Street',
+            'pincode' => '400001',
+            'photo_path' => '', // placeholder
+            'campaignStudents' => collect([
+                (object)[
+                    'grade' => (object)['name' => 'Grade 5'],
+                    'division' => (object)['name' => 'Div A'],
+                    'roll_no' => '42',
+                    'serial_number' => 'SR-2026-042',
+                ]
+            ])
         ];
+
+        $mockSchool = $activeSchool ?? (object)[
+            'name' => 'Sarvodaya Vidyalay',
+            'logo_path' => '',
+            'school_code' => 'SV-99',
+        ];
+
+        return [
+            'templates' => Template::all(),
+            'activeSchool' => $activeSchool,
+            'mockStudent' => $mockStudent,
+            'mockSchool' => $mockSchool,
+        ];
+    }
+
+    public function assignToSchool($templateId)
+    {
+        $activeSchoolId = session('active_school_id');
+        if (!$activeSchoolId) {
+            $this->addError('general', 'No active school selected.');
+            return;
+        }
+
+        $school = School::find($activeSchoolId);
+        if ($school) {
+            $school->update(['template_id' => $templateId]);
+            session()->flash('message', 'Default school template updated successfully!');
+        }
+    }
+
+    public function openAssignModal($templateId)
+    {
+        $this->selectedTemplateForAssign = Template::find($templateId);
+        $this->loadGrades();
+        $this->isAssignModalOpen = true;
+    }
+
+    public function closeAssignModal()
+    {
+        $this->isAssignModalOpen = false;
+        $this->selectedTemplateForAssign = null;
+    }
+
+    public function assignToGrade($gradeId, $templateId)
+    {
+        $grade = Grade::find($gradeId);
+        if ($grade) {
+            // Toggle assignment
+            $newTemplateId = $grade->template_id == $templateId ? null : $templateId;
+            $grade->update(['template_id' => $newTemplateId]);
+            $this->loadGrades();
+        }
     }
 }; ?>
 
@@ -73,20 +125,21 @@ new class extends Component {
                 </div>
                 <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">ID Card Templates</h1>
                 <p class="text-slate-400 text-sm mt-1 max-w-2xl">
-                    Manage and customize layout templates for student ID cards, teacher passes, and visitor badges. Select default styles for your institution.
+                    Manage and customize layout templates for student ID cards, teacher passes, and visitor badges. Select default styles for your institution or override them per class.
                 </p>
-            </div>
-            
-            <div class="flex items-center space-x-3 shrink-0">
-                <button type="button" class="inline-flex items-center justify-center px-5 py-3 text-xs font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 rounded-xl transition duration-200 shadow-lg shadow-amber-500/10 focus:outline-none focus:ring-2 focus:ring-amber-500">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Create Template
-                </button>
             </div>
         </div>
     </div>
+
+    <!-- Feedback Flash Alerts -->
+    @if (session()->has('message'))
+        <div class="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold rounded-2xl p-4 flex items-center space-x-2">
+            <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <span>{{ session('message') }}</span>
+        </div>
+    @endif
 
     <!-- Filter & Search Controls -->
     <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
@@ -120,43 +173,17 @@ new class extends Component {
     <!-- Templates Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         @foreach($templates as $tpl)
-            @if(($selectedCategory === 'all' || $tpl['category'] === $selectedCategory) && (empty($search) || stripos($tpl['title'], $search) !== false))
+            @if(($selectedCategory === 'all' || $tpl->category === $selectedCategory) && (empty($search) || stripos($tpl->name, $search) !== false))
+                @php
+                    $isSchoolDefault = $activeSchool && $activeSchool->template_id == $tpl->id;
+                    $classOverridesCount = $activeSchool ? App\Models\Grade::where('template_id', $tpl->id)->where('school_id', $activeSchool->id)->count() : 0;
+                @endphp
                 <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm hover:shadow-md transition duration-200 flex flex-col justify-between group">
                     <div>
-                        <!-- Card Visual Mockup Thumbnail -->
-                        <div class="h-44 w-full rounded-2xl bg-gradient-to-br {{ $tpl['preview_color'] }} p-4 relative flex flex-col justify-between overflow-hidden shadow-inner mb-4">
-                            <!-- Overlay Pattern -->
-                            <div class="absolute inset-0 bg-slate-950/20 backdrop-blur-[1px]"></div>
-                            
-                            <!-- Header Mockup -->
-                            <div class="relative z-10 flex items-center justify-between">
-                                <div class="flex items-center space-x-1.5">
-                                    <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
-                                        <div class="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
-                                    </div>
-                                    <span class="text-[10px] font-bold text-white tracking-wider uppercase">iCard</span>
-                                </div>
-                                <span class="text-[9px] font-medium px-2 py-0.5 rounded-full bg-white/10 text-white backdrop-blur-md border border-white/10">
-                                    {{ $tpl['badge'] }}
-                                </span>
-                            </div>
-
-                            <!-- Avatar & Details Mockup -->
-                            <div class="relative z-10 flex items-center space-x-3 my-auto">
-                                <div class="w-12 h-12 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center text-white font-bold text-sm shadow-md shrink-0">
-                                    ID
-                                </div>
-                                <div class="space-y-1">
-                                    <div class="h-2.5 w-24 bg-white/80 rounded-full"></div>
-                                    <div class="h-2 w-16 bg-white/50 rounded-full"></div>
-                                    <div class="h-1.5 w-20 bg-amber-400/80 rounded-full"></div>
-                                </div>
-                            </div>
-
-                            <!-- Footer Bar Mockup -->
-                            <div class="relative z-10 flex items-center justify-between border-t border-white/10 pt-2">
-                                <div class="h-1.5 w-14 bg-white/40 rounded-full"></div>
-                                <div class="h-2 w-8 bg-white/60 rounded"></div>
+                        <!-- Card Visual Live Blade Preview Container -->
+                        <div class="h-56 w-full rounded-2xl bg-slate-950/30 overflow-hidden flex items-center justify-center p-2 relative shadow-inner mb-4">
+                            <div class="scale-[0.4] sm:scale-[0.45] origin-center shrink-0">
+                                @include($tpl->view_path, ['student' => $mockStudent, 'school' => $mockSchool])
                             </div>
                         </div>
 
@@ -164,38 +191,122 @@ new class extends Component {
                         <div class="space-y-2">
                             <div class="flex items-center justify-between">
                                 <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 px-2 py-0.5 rounded-md">
-                                    {{ $tpl['category'] }}
+                                    {{ $tpl->category }}
                                 </span>
-                                @if($tpl['is_default'])
-                                    <span class="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center">
+                                @if($isSchoolDefault)
+                                    <span class="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center bg-emerald-500/10 px-2 py-0.5 rounded-md">
                                         <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                         </svg>
-                                        Active Default
+                                        School Default
                                     </span>
                                 @endif
                             </div>
                             
                             <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">
-                                {{ $tpl['title'] }}
+                                {{ $tpl->name }}
                             </h3>
                             <p class="text-xs text-slate-500 dark:text-slate-400">
-                                {{ $tpl['orientation'] }}
+                                {{ $tpl->orientation }}
                             </p>
+
+                            @if($classOverridesCount > 0)
+                                <div class="mt-1">
+                                    <span class="text-[9px] font-black tracking-wider uppercase text-purple-600 dark:text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded">
+                                        Overriding {{ $classOverridesCount }} Class{{ $classOverridesCount > 1 ? 'es' : '' }}
+                                    </span>
+                                </div>
+                            @endif
                         </div>
                     </div>
 
                     <!-- Action buttons -->
-                    <div class="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-                        <button type="button" class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
-                            Edit Template
-                        </button>
-                        <button type="button" class="text-xs font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                            Preview
+                    <div class="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800/80 flex flex-col gap-2">
+                        @if(!$isSchoolDefault)
+                            <button type="button" wire:click="assignToSchool({{ $tpl->id }})" class="w-full text-center py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition">
+                                Make School Default
+                            </button>
+                        @else
+                            <button type="button" disabled class="w-full text-center py-2 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-xl text-xs font-bold cursor-not-allowed">
+                                Active Default
+                            </button>
+                        @endif
+
+                        <button type="button" wire:click="openAssignModal({{ $tpl->id }})" class="w-full text-center py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition">
+                            Assign to Class
                         </button>
                     </div>
                 </div>
             @endif
         @endforeach
     </div>
+
+    <!-- Assign to Class Modal -->
+    @if($isAssignModalOpen && $selectedTemplateForAssign)
+        <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <!-- Backdrop -->
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity" aria-hidden="true" wire:click="closeAssignModal"></div>
+
+                <!-- Center elements -->
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div class="inline-block align-bottom bg-slate-900 border border-slate-800 rounded-3xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <div class="px-6 pt-6 pb-4">
+                        <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                            <div>
+                                <h3 class="text-lg font-black text-white" id="modal-title">Assign to Class</h3>
+                                <p class="text-xs text-slate-400 mt-1">Assign <span class="text-indigo-400 font-bold">{{ $selectedTemplateForAssign->name }}</span> to specific classes</p>
+                            </div>
+                            <button type="button" wire:click="closeAssignModal" class="text-slate-400 hover:text-white transition">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Grades List -->
+                        <div class="mt-4 max-h-[300px] overflow-y-auto space-y-2 pr-1">
+                            @forelse($schoolGrades as $grade)
+                                <div class="bg-slate-950/40 border border-slate-800/80 rounded-2xl p-4 flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-xs font-bold text-white">{{ $grade->name }}</h4>
+                                        <p class="text-[10px] text-slate-500 mt-0.5">
+                                            @if($grade->template_id == $selectedTemplateForAssign->id)
+                                                <span class="text-indigo-400 font-semibold">Active Class Override</span>
+                                            @elseif($grade->template_id)
+                                                @php
+                                                    $assignedTpl = App\Models\Template::find($grade->template_id);
+                                                @endphp
+                                                <span>Overridden by: <span class="text-slate-300 font-semibold">{{ $assignedTpl?->name ?? 'Another template' }}</span></span>
+                                            @else
+                                                <span class="text-slate-600">Using School Default</span>
+                                            @endif
+                                        </p>
+                                    </div>
+                                    <button type="button" wire:click="assignToGrade({{ $grade->id }}, {{ $selectedTemplateForAssign->id }})" 
+                                        class="px-3.5 py-1.5 rounded-xl text-[10px] font-bold tracking-wider uppercase transition 
+                                        {{ $grade->template_id == $selectedTemplateForAssign->id 
+                                            ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20' 
+                                            : 'bg-indigo-600 hover:bg-indigo-700 text-white' }}">
+                                        {{ $grade->template_id == $selectedTemplateForAssign->id ? 'Remove' : 'Assign' }}
+                                    </button>
+                                </div>
+                            @empty
+                                <div class="text-center py-6 text-slate-500 text-xs">
+                                    No classes (grades) found for this school.
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-950 px-6 py-4 flex justify-end">
+                        <button type="button" wire:click="closeAssignModal" class="px-5 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition">
+                            Done
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

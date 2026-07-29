@@ -20,7 +20,13 @@ class School extends Model
         'website',
         'school_code',
         'principal_name',
+        'template_id',
     ];
+
+    public function template()
+    {
+        return $this->belongsTo(Template::class);
+    }
 
     public function grades()
     {
