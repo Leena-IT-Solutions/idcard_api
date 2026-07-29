@@ -518,7 +518,10 @@ new class extends Component {
         if ($idx >= 0 && isset($this->layers[$idx])) {
             if ($x !== null) $this->layers[$idx]['x'] = max(0, (int)round((float)$x));
             if ($y !== null) $this->layers[$idx]['y'] = max(0, (int)round((float)$y));
-            if ($width !== null && (float)$width > 0) $this->layers[$idx]['width'] = max(10, (int)round((float)$width));
+            if ($width !== null) {
+                $wVal = (int)round((float)$width);
+                $this->layers[$idx]['width'] = $wVal > 0 ? max(10, $wVal) : 0;
+            }
             if ($height !== null && (float)$height > 0) $this->layers[$idx]['height'] = max(10, (int)round((float)$height));
             if ($fontSize !== null && (float)$fontSize > 0 && ($this->layers[$idx]['type'] ?? '') === 'text') {
                 $this->layers[$idx]['font_size'] = max(4, (int)round((float)$fontSize));
@@ -1435,10 +1438,21 @@ new class extends Component {
             const finalX = parseInt(this.curX) || 0;
             const finalY = parseInt(this.curY) || 0;
 
+            const isText = this.isText;
             const contentEl = this.resizeEl ? this.resizeEl.querySelector('[data-layer-content]') : null;
             if (contentEl) {
-                finalW = contentEl.offsetWidth || finalW;
-                finalH = contentEl.offsetHeight || finalH;
+                if (!isText) {
+                    finalW = contentEl.offsetWidth || finalW;
+                    finalH = contentEl.offsetHeight || finalH;
+                } else {
+                    if (this.resizeHandle === 'e' || this.resizeHandle === 'w') {
+                        finalW = parseInt(this.curW) || 0;
+                    } else {
+                        const layer = this.$wire.layers[idx];
+                        finalW = layer ? (layer.width || 0) : 0;
+                    }
+                    finalH = 0;
+                }
             }
 
             this.resizingIndex = null;
@@ -1760,7 +1774,7 @@ new class extends Component {
                                 class="absolute cursor-move select-none transition-shadow group {{ $isSelected ? 'ring-2 ring-indigo-500 ring-offset-1 ring-offset-slate-900 z-30' : 'hover:ring-1 hover:ring-indigo-400/50 z-10' }}"
                                 style="left: {{ $x }}px; top: {{ $y }}px; transform: rotate({{ $rot }}deg); transform-origin: top left;"
                             >
-                                <div data-layer-content style="width: {{ ($type === 'text') ? 'max-content' : ($w . 'px') }}; height: {{ ($type === 'text') ? 'max-content' : ($h . 'px') }}; max-width: 100%;">
+                                <div data-layer-content style="width: {{ ($type === 'text') ? (!empty($layer['width']) ? ($layer['width'] . 'px') : 'max-content') : ($w . 'px') }}; height: {{ ($type === 'text') ? 'max-content' : ($h . 'px') }}; max-width: 100%;">
                                     @if($type === 'text')
                                         @php
                                             $rawText = $layer['text'] ?? '';
@@ -1795,7 +1809,7 @@ new class extends Component {
                                             $color = $layer['color'] ?? '#ffffff';
                                             $align = $layer['align'] ?? 'left';
                                         @endphp
-                                        <div style="font-size: {{ $fontSize }}pt; font-weight: {{ $fontWeight }}; font-family: {{ $fontFamily }}, sans-serif; color: {{ $color }}; text-align: {{ $align }}; white-space: nowrap; padding: 2px 4px; border-radius: 4px; width: max-content; box-sizing: border-box; background: {{ $isSelected ? 'rgba(99, 102, 241, 0.15)' : 'transparent' }};">
+                                        <div style="font-size: {{ $fontSize }}pt; font-weight: {{ $fontWeight }}; font-family: {{ $fontFamily }}, sans-serif; color: {{ $color }}; text-align: {{ $align }}; {{ !empty($layer['width']) ? ('width: ' . $layer['width'] . 'px; max-width: ' . $layer['width'] . 'px; white-space: normal; word-break: break-word;') : 'width: max-content; white-space: nowrap;' }} padding: 2px 4px; border-radius: 4px; box-sizing: border-box; background: {{ $isSelected ? 'rgba(99, 102, 241, 0.15)' : 'transparent' }};">
                                             {{ $displayText }}
                                         </div>
 
@@ -2220,22 +2234,29 @@ new class extends Component {
                             </div>
                         </div>
  
-                        @if(in_array($selectedLayer['type'] ?? '', ['photo', 'logo', 'qr']))
+                        @if(in_array($selectedLayer['type'] ?? '', ['photo', 'logo', 'qr', 'text']))
                             <div class="grid grid-cols-2 gap-3 pt-1">
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Width (mm)</label>
+                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">
+                                        {{ ($selectedLayer['type'] ?? '') === 'text' ? 'Max Width (mm)' : 'Width (mm)' }}
+                                    </label>
                                     <div class="relative">
                                         <input type="number" step="0.1" wire:key="input-w-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(curW / 11.8128 * 10) / 10" @input="curW = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].width = curW; $wire.updateLayerDimensions({{ $selectedLayerIndex }}, curW, curH, curFontSize, curX, curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
                                         <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="curW + 'px'"></span>
                                     </div>
+                                    @if(($selectedLayer['type'] ?? '') === 'text')
+                                        <span class="text-[9px] text-slate-500 mt-1 block">0 = auto-width (no wrap).</span>
+                                    @endif
                                 </div>
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Height (mm)</label>
-                                    <div class="relative">
-                                        <input type="number" step="0.1" wire:key="input-h-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(curH / 11.8128 * 10) / 10" @input="curH = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].height = curH; $wire.updateLayerDimensions({{ $selectedLayerIndex }}, curW, curH, curFontSize, curX, curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
-                                        <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="curH + 'px'"></span>
+                                @if(($selectedLayer['type'] ?? '') !== 'text')
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-400 mb-1">Height (mm)</label>
+                                        <div class="relative">
+                                            <input type="number" step="0.1" wire:key="input-h-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(curH / 11.8128 * 10) / 10" @input="curH = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].height = curH; $wire.updateLayerDimensions({{ $selectedLayerIndex }}, curW, curH, curFontSize, curX, curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                            <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="curH + 'px'"></span>
+                                        </div>
                                     </div>
-                                </div>
+                                @endif
                             </div>
                         @endif
                     </div>
