@@ -9,15 +9,41 @@ new class extends Component {
     public $activeSchool = null;
     public $schoolGrades = [];
 
-    // Editable template properties
+    // Editable template branding
     public string $schoolName = '';
     public string $subtitle = 'High School';
     public string $photoBorderColor = '#E05B35';
+
+    // Student Fields Labels & Visibility (students table)
     public string $nameLabel = 'NAME';
-    public string $idLabel = 'ID';
+    public string $firstNameLabel = 'FIRST NAME';
+    public string $middleNameLabel = 'MIDDLE NAME';
+    public string $lastNameLabel = 'LAST NAME';
     public string $dobLabel = 'D.O.B';
+    public string $bloodGroupLabel = 'BLOOD GRP';
+    public string $contactLabel = 'CONTACT';
     public string $addressLabel = 'ADDRES';
+    public string $pincodeLabel = 'PINCODE';
+
+    public bool $showName = true;
+    public bool $showDob = true;
+    public bool $showAddress = true;
+    public bool $showBloodGroup = false;
+    public bool $showContact = false;
+
+    // Campaign Student Fields Labels & Visibility (campaign_student table)
+    public string $idLabel = 'ID';
+    public string $gradeLabel = 'CLASS';
+    public string $divisionLabel = 'DIV';
+    public string $rollNoLabel = 'ROLL';
+
+    public bool $showId = true;
+    public bool $showGrade = true;
+    public bool $showRollNo = true;
     public bool $showBarcode = true;
+
+    // Active tab in fields section
+    public string $activeFieldTab = 'students';
 
     public function mount($templateId = 'premium-landscape')
     {
@@ -139,7 +165,7 @@ new class extends Component {
                     <h1 class="text-lg font-black text-white">Premium Landscape Student ID</h1>
                     <span class="text-[10px] font-extrabold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider">CR-80 Landscape</span>
                 </div>
-                <p class="text-xs text-slate-400 mt-0.5">Customize template design elements, branding, and class assignments</p>
+                <p class="text-xs text-slate-400 mt-0.5">Customize template design elements, branding, and student fields</p>
             </div>
         </div>
 
@@ -178,7 +204,19 @@ new class extends Component {
 
             <!-- ID Card Rendering Container -->
             <div class="my-auto py-10 transition duration-300 transform hover:scale-[1.02]">
-                @include('id-card-templates.premium-landscape', ['student' => $mockStudent, 'school' => $mockSchool])
+                @include('id-card-templates.premium-landscape', [
+                    'student' => $mockStudent, 
+                    'school' => $mockSchool,
+                    'nameLabel' => $nameLabel,
+                    'idLabel' => $idLabel,
+                    'dobLabel' => $dobLabel,
+                    'addressLabel' => $addressLabel,
+                    'showBloodGroup' => $showBloodGroup,
+                    'bloodGroupLabel' => $bloodGroupLabel,
+                    'showContact' => $showContact,
+                    'contactLabel' => $contactLabel,
+                    'showBarcode' => $showBarcode
+                ])
             </div>
 
             <div class="absolute bottom-5 left-5 text-[11px] text-slate-500 flex items-center space-x-2">
@@ -214,35 +252,106 @@ new class extends Component {
                 </div>
             </div>
 
-            <!-- Field Labels Panel -->
+            <!-- Field Configuration Panel (Students & Campaign Students) -->
             <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-                <div class="flex items-center space-x-2 border-b border-slate-800 pb-3">
-                    <div class="p-2 rounded-xl bg-purple-500/10 text-purple-400">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
-                        </svg>
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <div class="flex items-center space-x-2">
+                        <div class="p-2 rounded-xl bg-purple-500/10 text-purple-400">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-sm font-black text-white">Field Configuration</h3>
                     </div>
-                    <h3 class="text-sm font-black text-white">Field Labels</h3>
+
+                    <!-- Category Tab Switcher -->
+                    <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] font-bold">
+                        <button type="button" wire:click="$set('activeFieldTab', 'students')" 
+                            class="px-3 py-1 rounded-lg transition {{ $activeFieldTab === 'students' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white' }}">
+                            Student Fields
+                        </button>
+                        <button type="button" wire:click="$set('activeFieldTab', 'campaign_student')" 
+                            class="px-3 py-1 rounded-lg transition {{ $activeFieldTab === 'campaign_student' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white' }}">
+                            Campaign Student Fields
+                        </button>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 mb-1">Name Label</label>
-                        <input type="text" wire:model.live="nameLabel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
+                <!-- Tab 1: Student Fields (students table) -->
+                @if($activeFieldTab === 'students')
+                    <div class="space-y-3.5 pt-1">
+                        <p class="text-[11px] text-slate-400 font-medium">Configure labels and visibility for fields stored in the <span class="text-indigo-400 font-bold">students</span> table:</p>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Full Name Label</label>
+                                <input type="text" wire:model.live="nameLabel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 mb-1">D.O.B Label</label>
+                                <input type="text" wire:model.live="dobLabel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Address Label</label>
+                                <input type="text" wire:model.live="addressLabel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Blood Group Label</label>
+                                <input type="text" wire:model.live="bloodGroupLabel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Contact Label</label>
+                                <input type="text" wire:model.live="contactLabel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
+                            </div>
+                        </div>
+
+                        <!-- Visibility Toggles -->
+                        <div class="pt-2 border-t border-slate-800 space-y-2">
+                            <label class="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800/80 cursor-pointer">
+                                <span class="text-xs font-bold text-slate-300">Show Blood Group</span>
+                                <input type="checkbox" wire:model.live="showBloodGroup" class="w-4 h-4 text-indigo-600 rounded bg-slate-900 border-slate-700 focus:ring-indigo-500">
+                            </label>
+                            <label class="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800/80 cursor-pointer">
+                                <span class="text-xs font-bold text-slate-300">Show Contact Number</span>
+                                <input type="checkbox" wire:model.live="showContact" class="w-4 h-4 text-indigo-600 rounded bg-slate-900 border-slate-700 focus:ring-indigo-500">
+                            </label>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 mb-1">ID Label</label>
-                        <input type="text" wire:model.live="idLabel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
+                @endif
+
+                <!-- Tab 2: Campaign Student Fields (campaign_student table) -->
+                @if($activeFieldTab === 'campaign_student')
+                    <div class="space-y-3.5 pt-1">
+                        <p class="text-[11px] text-slate-400 font-medium">Configure labels and visibility for enrollment fields stored in <span class="text-indigo-400 font-bold">campaign_student</span>:</p>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 mb-1">ID / Serial No Label</label>
+                                <input type="text" wire:model.live="idLabel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Class / Grade Label</label>
+                                <input type="text" wire:model.live="gradeLabel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Division Label</label>
+                                <input type="text" wire:model.live="divisionLabel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Roll No Label</label>
+                                <input type="text" wire:model.live="rollNoLabel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
+                            </div>
+                        </div>
+
+                        <!-- Barcode Toggle -->
+                        <div class="pt-2 border-t border-slate-800">
+                            <label class="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800/80 cursor-pointer">
+                                <span class="text-xs font-bold text-slate-300">Show Barcode (Serial Number)</span>
+                                <input type="checkbox" wire:model.live="showBarcode" class="w-4 h-4 text-indigo-600 rounded bg-slate-900 border-slate-700 focus:ring-indigo-500">
+                            </label>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 mb-1">D.O.B Label</label>
-                        <input type="text" wire:model.live="dobLabel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-400 mb-1">Address Label</label>
-                        <input type="text" wire:model.live="addressLabel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
-                    </div>
-                </div>
+                @endif
             </div>
 
             <!-- Class Assignment Overrides Panel -->

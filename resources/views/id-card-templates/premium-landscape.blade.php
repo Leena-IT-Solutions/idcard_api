@@ -16,6 +16,17 @@
     $division = $enrollment && $enrollment->division ? $enrollment->division->name : 'N/A';
     $rollNo = $enrollment->roll_no ?? 'N/A';
     $serialNumber = $enrollment->serial_number ?? 'N/A';
+
+    // Dynamic field labels and toggles
+    $nameLabel = $nameLabel ?? 'NAME';
+    $idLabel = $idLabel ?? 'ID';
+    $dobLabel = $dobLabel ?? 'D.O.B';
+    $addressLabel = $addressLabel ?? 'ADDRES';
+    $showBloodGroup = $showBloodGroup ?? false;
+    $bloodGroupLabel = $bloodGroupLabel ?? 'BLOOD GRP';
+    $showContact = $showContact ?? false;
+    $contactLabel = $contactLabel ?? 'CONTACT';
+    $showBarcode = $showBarcode ?? true;
 @endphp
 
 <div class="w-[480px] h-[300px] bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col justify-between shadow-2xl relative select-none font-sans text-left">
@@ -55,19 +66,31 @@
             <!-- Left: Fields List -->
             <div class="flex-1 min-w-0 pr-2">
                 <div class="grid grid-cols-[48px_10px_1fr] gap-y-1.5 text-[10px] font-sans items-center">
-                    <div class="text-slate-600 font-extrabold tracking-wider uppercase">NAME</div>
+                    <div class="text-slate-600 font-extrabold tracking-wider uppercase truncate">{{ $nameLabel }}</div>
                     <div class="text-slate-400 font-extrabold text-center">:</div>
                     <div class="text-[#0A2540] font-black uppercase truncate leading-tight">{{ $fullName }}</div>
 
-                    <div class="text-slate-600 font-extrabold tracking-wider uppercase">ID</div>
+                    <div class="text-slate-600 font-extrabold tracking-wider uppercase truncate">{{ $idLabel }}</div>
                     <div class="text-slate-400 font-extrabold text-center">:</div>
                     <div class="text-[#0A2540] font-black uppercase truncate leading-tight">#{{ $serialNumber }}</div>
 
-                    <div class="text-slate-600 font-extrabold tracking-wider uppercase">D.O.B</div>
+                    <div class="text-slate-600 font-extrabold tracking-wider uppercase truncate">{{ $dobLabel }}</div>
                     <div class="text-slate-400 font-extrabold text-center">:</div>
                     <div class="text-[#0A2540] font-black uppercase truncate leading-tight">{{ $dob }}</div>
 
-                    <div class="text-slate-600 font-extrabold tracking-wider uppercase">ADDRES</div>
+                    @if($showBloodGroup)
+                        <div class="text-slate-600 font-extrabold tracking-wider uppercase truncate">{{ $bloodGroupLabel }}</div>
+                        <div class="text-slate-400 font-extrabold text-center">:</div>
+                        <div class="text-[#0A2540] font-black uppercase truncate leading-tight">{{ $bloodGroup }}</div>
+                    @endif
+
+                    @if($showContact)
+                        <div class="text-slate-600 font-extrabold tracking-wider uppercase truncate">{{ $contactLabel }}</div>
+                        <div class="text-slate-400 font-extrabold text-center">:</div>
+                        <div class="text-[#0A2540] font-black uppercase truncate leading-tight">{{ $contact }}</div>
+                    @endif
+
+                    <div class="text-slate-600 font-extrabold tracking-wider uppercase truncate">{{ $addressLabel }}</div>
                     <div class="text-slate-400 font-extrabold text-center">:</div>
                     <div class="text-[#0A2540] font-black uppercase leading-tight line-clamp-2 pr-1">{{ $fullAddress }}</div>
                 </div>
@@ -88,34 +111,36 @@
         <!-- Bottom Row: Barcode & Class/Roll Info -->
         <div class="flex items-end justify-between mb-2">
             <div class="shrink-0">
-                <svg class="h-6 w-32 text-slate-900" viewBox="0 0 100 20" preserveAspectRatio="none">
-                    <rect x="0" width="2" height="20" fill="currentColor"/>
-                    <rect x="3" width="1" height="20" fill="currentColor"/>
-                    <rect x="5" width="3" height="20" fill="currentColor"/>
-                    <rect x="10" width="1" height="20" fill="currentColor"/>
-                    <rect x="12" width="2" height="20" fill="currentColor"/>
-                    <rect x="15" width="4" height="20" fill="currentColor"/>
-                    <rect x="20" width="1" height="20" fill="currentColor"/>
-                    <rect x="23" width="2" height="20" fill="currentColor"/>
-                    <rect x="27" width="3" height="20" fill="currentColor"/>
-                    <rect x="32" width="1" height="20" fill="currentColor"/>
-                    <rect x="34" width="2" height="20" fill="currentColor"/>
-                    <rect x="38" width="4" height="20" fill="currentColor"/>
-                    <rect x="44" width="1" height="20" fill="currentColor"/>
-                    <rect x="46" width="2" height="20" fill="currentColor"/>
-                    <rect x="50" width="3" height="20" fill="currentColor"/>
-                    <rect x="55" width="1" height="20" fill="currentColor"/>
-                    <rect x="58" width="2" height="20" fill="currentColor"/>
-                    <rect x="62" width="4" height="20" fill="currentColor"/>
-                    <rect x="68" width="1" height="20" fill="currentColor"/>
-                    <rect x="71" width="2" height="20" fill="currentColor"/>
-                    <rect x="75" width="3" height="20" fill="currentColor"/>
-                    <rect x="80" width="1" height="20" fill="currentColor"/>
-                    <rect x="83" width="2" height="20" fill="currentColor"/>
-                    <rect x="87" width="4" height="20" fill="currentColor"/>
-                    <rect x="93" width="2" height="20" fill="currentColor"/>
-                    <rect x="96" width="4" height="20" fill="currentColor"/>
-                </svg>
+                @if($showBarcode)
+                    <svg class="h-6 w-32 text-slate-900" viewBox="0 0 100 20" preserveAspectRatio="none">
+                        <rect x="0" width="2" height="20" fill="currentColor"/>
+                        <rect x="3" width="1" height="20" fill="currentColor"/>
+                        <rect x="5" width="3" height="20" fill="currentColor"/>
+                        <rect x="10" width="1" height="20" fill="currentColor"/>
+                        <rect x="12" width="2" height="20" fill="currentColor"/>
+                        <rect x="15" width="4" height="20" fill="currentColor"/>
+                        <rect x="20" width="1" height="20" fill="currentColor"/>
+                        <rect x="23" width="2" height="20" fill="currentColor"/>
+                        <rect x="27" width="3" height="20" fill="currentColor"/>
+                        <rect x="32" width="1" height="20" fill="currentColor"/>
+                        <rect x="34" width="2" height="20" fill="currentColor"/>
+                        <rect x="38" width="4" height="20" fill="currentColor"/>
+                        <rect x="44" width="1" height="20" fill="currentColor"/>
+                        <rect x="46" width="2" height="20" fill="currentColor"/>
+                        <rect x="50" width="3" height="20" fill="currentColor"/>
+                        <rect x="55" width="1" height="20" fill="currentColor"/>
+                        <rect x="58" width="2" height="20" fill="currentColor"/>
+                        <rect x="62" width="4" height="20" fill="currentColor"/>
+                        <rect x="68" width="1" height="20" fill="currentColor"/>
+                        <rect x="71" width="2" height="20" fill="currentColor"/>
+                        <rect x="75" width="3" height="20" fill="currentColor"/>
+                        <rect x="80" width="1" height="20" fill="currentColor"/>
+                        <rect x="83" width="2" height="20" fill="currentColor"/>
+                        <rect x="87" width="4" height="20" fill="currentColor"/>
+                        <rect x="93" width="2" height="20" fill="currentColor"/>
+                        <rect x="96" width="4" height="20" fill="currentColor"/>
+                    </svg>
+                @endif
             </div>
             <div class="text-right text-[8.5px] text-slate-500 font-bold uppercase tracking-wider mr-1">
                 Class: <span class="text-[#0A2540] font-black">{{ $grade }} ({{ $division }})</span> | Roll: <span class="text-[#0A2540] font-black">#{{ $rollNo }}</span>
