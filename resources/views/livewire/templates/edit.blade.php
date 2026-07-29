@@ -417,6 +417,7 @@ new class extends Component {
                 curW: 0,
                 curH: 0,
                 curFontSize: 0,
+                hasMoved: false,
 
                 startDrag(idx, event) {
                     if (this.resizingIndex !== null) return;
@@ -424,6 +425,8 @@ new class extends Component {
                     this.draggingEl = event.currentTarget;
                     this.startX = event.clientX;
                     this.startY = event.clientY;
+                    this.hasMoved = false;
+
                     const layer = ($wire.layers && $wire.layers[idx]) ? $wire.layers[idx] : {};
                     this.origX = parseInt(layer.x) || 0;
                     this.origY = parseInt(layer.y) || 0;
@@ -436,6 +439,11 @@ new class extends Component {
                     const scale = (parseFloat(this.zoomLevel) || 100) / 100;
                     const dx = (event.clientX - this.startX) / scale;
                     const dy = (event.clientY - this.startY) / scale;
+
+                    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+                        this.hasMoved = true;
+                    }
+
                     let newX = Math.max(0, Math.round(this.origX + dx));
                     let newY = Math.max(0, Math.round(this.origY + dy));
 
@@ -456,9 +464,17 @@ new class extends Component {
                         const idx = this.draggingIndex;
                         const finalX = parseInt(this.curX) || 0;
                         const finalY = parseInt(this.curY) || 0;
+                        const moved = this.hasMoved;
+
                         this.draggingIndex = null;
                         this.draggingEl = null;
-                        $wire.updateLayerCoordinates(idx, finalX, finalY);
+                        this.hasMoved = false;
+
+                        if (moved) {
+                            $wire.updateLayerCoordinates(idx, finalX, finalY);
+                        } else {
+                            $wire.selectLayer(idx);
+                        }
                     }
                 },
 
@@ -626,7 +642,6 @@ new class extends Component {
 
                             <div 
                                 wire:key="canvas-layer-{{ $layer['id'] ?? $idx }}"
-                                wire:click="selectLayer({{ $idx }})"
                                 @mousedown="startDrag({{ $idx }}, $event)"
                                 data-layer-box
                                 class="absolute cursor-move select-none transition-shadow group {{ $isSelected ? 'ring-2 ring-indigo-500 ring-offset-1 ring-offset-slate-900 z-30' : 'hover:ring-1 hover:ring-indigo-400/50 z-10' }}"
