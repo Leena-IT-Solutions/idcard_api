@@ -5,6 +5,7 @@ use Livewire\WithFileUploads;
 use App\Models\Template;
 use App\Models\SchoolTemplate;
 use App\Models\School;
+use Illuminate\Support\Facades\Storage;
 
 new class extends Component {
     use WithFileUploads;
@@ -232,12 +233,33 @@ new class extends Component {
         }
     }
 
+    public function deleteBackgroundImage()
+    {
+        if (!$this->template) return;
+
+        $bgPath = $this->template->background_image;
+        if ($bgPath && !str_starts_with($bgPath, 'http') && Storage::disk('public')->exists($bgPath)) {
+            Storage::disk('public')->delete($bgPath);
+        }
+
+        $this->template->update([
+            'background_image' => null,
+        ]);
+
+        $this->bgUpload = null;
+        session()->flash('message', 'Background image deleted successfully!');
+    }
+
     public function saveStudioDesign()
     {
         if (!$this->template) return;
 
         $bgPath = $this->template->background_image;
         if ($this->bgUpload) {
+            // Delete old background image file from storage if updating
+            if ($bgPath && !str_starts_with($bgPath, 'http') && Storage::disk('public')->exists($bgPath)) {
+                Storage::disk('public')->delete($bgPath);
+            }
             $bgPath = $this->bgUpload->store('templates/backgrounds', 'public');
         }
 
@@ -250,6 +272,7 @@ new class extends Component {
             'layout_config' => $this->layers,
         ]);
 
+        $this->bgUpload = null;
         session()->flash('message', 'Canvas studio design saved successfully!');
     }
 
@@ -746,12 +769,47 @@ new class extends Component {
                 </div>
             </div>
 
-            <!-- Background Graphic Upload -->
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-3">
-                <h3 class="text-sm font-black text-white">Background Template Image</h3>
+            <!-- Background Graphic Management -->
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <h3 class="text-sm font-black text-white">Background Template Graphic</h3>
+                    @if($template && $template->background_image)
+                        <button type="button" wire:click="deleteBackgroundImage" wire:confirm="Are you sure you want to delete the current background image?" class="px-2.5 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-bold transition flex items-center space-x-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            <span>Delete Background</span>
+                        </button>
+                    @endif
+                </div>
+
+                @if($template && $template->background_image)
+                    <div class="relative group rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 p-2">
+                        @php
+                            $bgImgUrl = str_starts_with($template->background_image, 'http') 
+                                ? $template->background_image 
+                                : asset('storage/' . $template->background_image);
+                        @endphp
+                        <div class="h-28 rounded-xl overflow-hidden bg-slate-900 flex items-center justify-center">
+                            <img src="{{ $bgImgUrl }}" class="w-full h-full object-cover" alt="Background Graphic Preview" />
+                        </div>
+                        <div class="mt-2 flex items-center justify-between text-[11px] font-bold text-slate-400 px-1">
+                            <span class="text-emerald-400 font-semibold flex items-center">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block mr-1.5"></span>
+                                Active Background Image
+                            </span>
+                        </div>
+                    </div>
+                @endif
+
                 <div>
+                    <label class="block text-[11px] font-bold text-slate-400 mb-1">
+                        {{ ($template && $template->background_image) ? 'Update / Replace Background Graphic' : 'Upload New Background Graphic' }}
+                    </label>
                     <input type="file" wire:model="bgUpload" accept="image/*" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
-                    <span class="text-[10px] text-slate-500 mt-1 block">Upload custom background graphic (CR-80 85.6mm x 54mm equivalent ratio)</span>
+                    @if($bgUpload)
+                        <span class="text-[11px] font-bold text-indigo-400 mt-1 block">New background file selected. Click 'Save Design' to apply update!</span>
+                    @else
+                        <span class="text-[10px] text-slate-500 mt-1 block">Upload custom background graphic (CR-80 85.6mm x 54mm equivalent ratio)</span>
+                    @endif
                 </div>
             </div>
         </div>
