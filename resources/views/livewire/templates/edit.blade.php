@@ -307,52 +307,56 @@ new class extends Component {
                 $bgUrl = $bgPath ? (str_starts_with($bgPath, 'http') ? $bgPath : asset('storage/' . $bgPath)) : null;
             @endphp
 
-            <div 
-                id="canva-studio-canvas"
-                class="relative select-none shadow-2xl rounded-2xl border-2 {{ $selectedLayerIndex !== null ? 'border-indigo-500/50' : 'border-slate-800' }} bg-slate-950 overflow-hidden my-auto transform transition-transform duration-200"
-                style="width: {{ $canvasW }}px; height: {{ $canvasH }}px;"
-                x-data="{
-                    draggingIndex: null,
-                    startX: 0,
-                    startY: 0,
-                    origX: 0,
-                    origY: 0,
-                    startDrag(idx, event) {
-                        this.draggingIndex = idx;
-                        this.startX = event.clientX;
-                        this.startY = event.clientY;
-                        const layer = $wire.layers[idx];
-                        this.origX = layer.x || 0;
-                        this.origY = layer.y || 0;
-                    },
-                    onDrag(event) {
-                        if (this.draggingIndex === null) return;
-                        const dx = event.clientX - this.startX;
-                        const dy = event.clientY - this.startY;
-                        let newX = Math.max(0, this.origX + dx);
-                        let newY = Math.max(0, this.origY + dy);
+            <div class="w-full flex items-center justify-center overflow-x-auto p-2">
+                <div 
+                    id="canva-studio-canvas"
+                    class="relative select-none shadow-2xl rounded-2xl bg-slate-950 overflow-hidden shrink-0 my-auto transform transition-transform duration-200"
+                    style="width: {{ $canvasW }}px; height: {{ $canvasH }}px;"
+                    x-data="{
+                        draggingIndex: null,
+                        startX: 0,
+                        startY: 0,
+                        origX: 0,
+                        origY: 0,
+                        startDrag(idx, event) {
+                            this.draggingIndex = idx;
+                            this.startX = event.clientX;
+                            this.startY = event.clientY;
+                            const layer = $wire.layers[idx];
+                            this.origX = layer.x || 0;
+                            this.origY = layer.y || 0;
+                        },
+                        onDrag(event) {
+                            if (this.draggingIndex === null) return;
+                            const dx = event.clientX - this.startX;
+                            const dy = event.clientY - this.startY;
+                            let newX = Math.max(0, this.origX + dx);
+                            let newY = Math.max(0, this.origY + dy);
 
-                        // Magnetic snap to center (within 10px)
-                        const centerH = Math.round(({{ $canvasW }} - 150) / 2);
-                        if (Math.abs(newX - centerH) < 10) newX = centerH;
+                            // Magnetic snap to center (within 10px)
+                            const centerH = Math.round(({{ $canvasW }} - 150) / 2);
+                            if (Math.abs(newX - centerH) < 10) newX = centerH;
 
-                        $wire.updateLayerCoordinates(this.draggingIndex, Math.round(newX), Math.round(newY));
-                    },
-                    stopDrag() {
-                        this.draggingIndex = null;
-                    }
-                }"
-                @mousemove.window="onDrag($event)"
-                @mouseup.window="stopDrag()"
-            >
-                @if($bgUrl)
-                    <img src="{{ $bgUrl }}" class="absolute inset-0 w-full h-full object-fill pointer-events-none z-0" alt="Background Graphic" />
-                @endif
+                            $wire.updateLayerCoordinates(this.draggingIndex, Math.round(newX), Math.round(newY));
+                        },
+                        stopDrag() {
+                            this.draggingIndex = null;
+                        }
+                    }"
+                    @mousemove.window="onDrag($event)"
+                    @mouseup.window="stopDrag()"
+                >
+                    @if($bgUrl)
+                        <img src="{{ $bgUrl }}" class="absolute inset-0 w-full h-full object-fill pointer-events-none z-0 rounded-2xl" alt="Background Graphic" />
+                    @endif
 
-                <!-- Optional Visual Grid Lines -->
-                @if($showGrid)
-                    <div class="absolute inset-0 pointer-events-none opacity-20 z-10" style="background-image: radial-gradient(#6366f1 1px, transparent 1px); background-size: 20px 20px;"></div>
-                @endif
+                    <!-- Card Perimeter Border Overlay (Sits flush on top of background) -->
+                    <div class="absolute inset-0 rounded-2xl border-2 pointer-events-none z-40 {{ $selectedLayerIndex !== null ? 'border-indigo-500' : 'border-slate-700/60' }}"></div>
+
+                    <!-- Optional Visual Grid Lines -->
+                    @if($showGrid)
+                        <div class="absolute inset-0 pointer-events-none opacity-20 z-10 rounded-2xl" style="background-image: radial-gradient(#6366f1 1px, transparent 1px); background-size: 20px 20px;"></div>
+                    @endif
 
                 <!-- Center Snap Line (Visual Indicator when Selected) -->
                 @if($selectedLayerIndex !== null)
@@ -443,6 +447,7 @@ new class extends Component {
                     </div>
                 @endforeach
             </div>
+        </div>
 
             <!-- Clickable Variable Inserter Toolbar Pills -->
             <div class="w-full mt-6 space-y-3 bg-slate-950/60 border border-slate-800 rounded-2xl p-4">
