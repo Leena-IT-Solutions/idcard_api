@@ -221,18 +221,54 @@ new class extends Component {
         $count = count($indices);
         if ($count <= 1) return;
 
-        $sumX = 0;
-        foreach ($indices as $idx) {
-            $sumX += $this->layers[$idx]['x'] ?? 0;
-        }
-        $avgX = round($sumX / $count);
+        // Calculate selection bounding box bounds
+        $minX = 999999;
+        $maxX = -999999;
+        $minY = 999999;
+        $maxY = -999999;
 
         foreach ($indices as $idx) {
-            $this->layers[$idx]['x'] = $avgX;
+            if (!isset($this->layers[$idx])) continue;
+            $x = $this->layers[$idx]['x'] ?? 0;
+            $y = $this->layers[$idx]['y'] ?? 0;
+            $w = $this->layers[$idx]['width'] ?? 150;
+            $h = $this->layers[$idx]['height'] ?? 30;
+
+            if ($x < $minX) $minX = $x;
+            if ($x + $w > $maxX) $maxX = $x + $w;
+            if ($y < $minY) $minY = $y;
+            if ($y + $h > $maxY) $maxY = $y + $h;
         }
 
-        if ($count >= 3) {
-            $this->spaceSelectedEvenly('vertical');
+        $boxW = $maxX - $minX;
+        $boxH = $maxY - $minY;
+
+        if ($boxH >= $boxW) {
+            // Vertical Layout: align horizontally to the bounding box center axis
+            $centerX = $minX + ($boxW / 2);
+            foreach ($indices as $idx) {
+                if (!isset($this->layers[$idx])) continue;
+                $w = $this->layers[$idx]['width'] ?? 150;
+                $this->layers[$idx]['x'] = round($centerX - ($w / 2));
+            }
+
+            // Distribute vertically if 3 or more elements
+            if ($count >= 3) {
+                $this->spaceSelectedEvenly('vertical');
+            }
+        } else {
+            // Horizontal Layout: align vertically to the bounding box center axis
+            $centerY = $minY + ($boxH / 2);
+            foreach ($indices as $idx) {
+                if (!isset($this->layers[$idx])) continue;
+                $h = $this->layers[$idx]['height'] ?? 30;
+                $this->layers[$idx]['y'] = round($centerY - ($h / 2));
+            }
+
+            // Distribute horizontally if 3 or more elements
+            if ($count >= 3) {
+                $this->spaceSelectedEvenly('horizontal');
+            }
         }
     }
 
