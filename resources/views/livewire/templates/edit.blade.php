@@ -950,15 +950,15 @@ new class extends Component {
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">Position X (mm)</label>
                                 <div class="relative">
-                                    <input type="number" step="0.1" wire:key="input-x-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(curX / 11.8128 * 10) / 10" @input="curX = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].x = curX; $wire.updateLayerCoordinates({{ $selectedLayerIndex }}, curX, curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
-                                    <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="curX + 'px'"></span>
+                                    <input type="number" step="0.1" wire:key="input-x-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round($root.curX / 11.8128 * 10) / 10" @input="$root.curX = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].x = $root.curX; $wire.updateLayerCoordinates({{ $selectedLayerIndex }}, $root.curX, $root.curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                    <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="$root.curX + 'px'"></span>
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">Position Y (mm)</label>
                                 <div class="relative">
-                                    <input type="number" step="0.1" wire:key="input-y-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(curY / 11.8128 * 10) / 10" @input="curY = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].y = curY; $wire.updateLayerCoordinates({{ $selectedLayerIndex }}, curX, curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
-                                    <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="curY + 'px'"></span>
+                                    <input type="number" step="0.1" wire:key="input-y-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round($root.curY / 11.8128 * 10) / 10" @input="$root.curY = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].y = $root.curY; $wire.updateLayerCoordinates({{ $selectedLayerIndex }}, $root.curX, $root.curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                    <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="$root.curY + 'px'"></span>
                                 </div>
                             </div>
                         </div>
@@ -968,15 +968,15 @@ new class extends Component {
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-400 mb-1">Width (mm)</label>
                                     <div class="relative">
-                                        <input type="number" step="0.1" wire:key="input-w-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(curW / 11.8128 * 10) / 10" @input="curW = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].width = curW; $wire.updateLayerDimensions({{ $selectedLayerIndex }}, curW, curH, curFontSize, curX, curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
-                                        <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="curW + 'px'"></span>
+                                        <input type="number" step="0.1" wire:key="input-w-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round($root.curW / 11.8128 * 10) / 10" @input="$root.curW = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].width = $root.curW; $wire.updateLayerDimensions({{ $selectedLayerIndex }}, $root.curW, $root.curH, $root.curFontSize, $root.curX, $root.curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                        <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="$root.curW + 'px'"></span>
                                     </div>
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-400 mb-1">Height (mm)</label>
                                     <div class="relative">
-                                        <input type="number" step="0.1" wire:key="input-h-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(curH / 11.8128 * 10) / 10" @input="curH = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].height = curH; $wire.updateLayerDimensions({{ $selectedLayerIndex }}, curW, curH, curFontSize, curX, curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
-                                        <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="curH + 'px'"></span>
+                                        <input type="number" step="0.1" wire:key="input-h-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round($root.curH / 11.8128 * 10) / 10" @input="$root.curH = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].height = $root.curH; $wire.updateLayerDimensions({{ $selectedLayerIndex }}, $root.curW, $root.curH, $root.curFontSize, $root.curX, $root.curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                        <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="$root.curH + 'px'"></span>
                                     </div>
                                 </div>
                             </div>
@@ -995,7 +995,7 @@ new class extends Component {
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-400 mb-1">Font Size (pt)</label>
                                     <div class="relative">
-                                        <input type="number" min="4" max="120" step="1" wire:key="input-size-pt-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="curFontSize" @input="curFontSize = parseInt($event.target.value) || 14; $wire.layers[{{ $selectedLayerIndex }}].font_size = curFontSize; $wire.updateLayerDimensions({{ $selectedLayerIndex }}, curW, curH, curFontSize, curX, curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                        <input type="number" min="4" max="120" step="1" wire:key="input-size-pt-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="$root.curFontSize" @input="$root.curFontSize = parseInt($event.target.value) || 14; $wire.layers[{{ $selectedLayerIndex }}].font_size = $root.curFontSize; $wire.updateLayerDimensions({{ $selectedLayerIndex }}, $root.curW, $root.curH, $root.curFontSize, $root.curX, $root.curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
                                         <span class="absolute right-3 top-2 text-[10px] text-indigo-400 font-mono font-bold">pt</span>
                                     </div>
                                 </div>
