@@ -28,13 +28,13 @@
     <!-- Top Wavy Header Pattern -->
     <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 480 300" preserveAspectRatio="none">
         <!-- Left Corner Blue Accent -->
-        <path d="M 0 35 C 10 15, 45 0, 85 0 L 0 0 Z" fill="#0A2540" />
+        <path d="M 0 0 L 105 0 C 65 25, 25 45, 0 55 Z" fill="#0A2540" />
         
         <!-- Orange Wave -->
-        <path d="M 180 0 C 260 110, 370 120, 480 85 L 480 0 Z" fill="#E05B35" />
+        <path d="M 120 0 C 170 70, 250 130, 330 130 C 390 120, 440 90, 480 110 L 480 0 Z" fill="#E05B35" />
         
         <!-- Dark Blue Wave -->
-        <path d="M 220 0 C 290 90, 380 95, 480 65 L 480 0 Z" fill="#0A2540" />
+        <path d="M 160 0 C 210 50, 280 105, 350 105 C 400 95, 450 70, 480 85 L 480 0 Z" fill="#0A2540" />
     </svg>
 
     <!-- Card Content -->
