@@ -32,6 +32,7 @@
         '{full_name}' => $fullName,
         '{serial_number}' => $serialNumber,
         '{dob}' => $dob,
+        '{gender}' => $student->gender ?? 'N/A',
         '{blood_group}' => $bloodGroup,
         '{contact_number}' => $contact,
         '{address}' => $address,
