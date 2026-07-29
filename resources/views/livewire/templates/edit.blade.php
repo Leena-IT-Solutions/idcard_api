@@ -420,17 +420,28 @@ new class extends Component {
                 hasMoved: false,
                 isText: false,
 
+                getClientCoords(e) {
+                    if (e.touches && e.touches.length > 0) {
+                        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                    }
+                    if (e.changedTouches && e.changedTouches.length > 0) {
+                        return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+                    }
+                    return { x: e.clientX, y: e.clientY };
+                },
+
                 startDrag(idx, event) {
                     if (this.resizingIndex !== null) return;
-                    if (event) event.preventDefault();
+                    if (event && event.cancelable) event.preventDefault();
 
                     this.draggingIndex = idx;
                     this.draggingEl = event.currentTarget ? (event.currentTarget.closest('[data-layer-box]') || event.currentTarget) : null;
                     console.log('Alpine startDrag', { idx, draggingEl: this.draggingEl });
                     if (!this.draggingEl) return;
 
-                    this.startX = event.clientX;
-                    this.startY = event.clientY;
+                    const coords = this.getClientCoords(event);
+                    this.startX = coords.x;
+                    this.startY = coords.y;
                     this.hasMoved = false;
 
                     const layers = this.$wire.get('layers');
@@ -453,8 +464,9 @@ new class extends Component {
                 onDrag(event) {
                     if (this.draggingIndex === null || !this.draggingEl) return;
                     const scale = (parseFloat(this.zoomLevel) || 100) / 100;
-                    const dx = (event.clientX - this.startX) / scale;
-                    const dy = (event.clientY - this.startY) / scale;
+                    const coords = this.getClientCoords(event);
+                    const dx = (coords.x - this.startX) / scale;
+                    const dy = (coords.y - this.startY) / scale;
 
                     if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
                         this.hasMoved = true;
@@ -499,7 +511,7 @@ new class extends Component {
 
                 startResize(idx, handle, event) {
                     if (event) {
-                        event.preventDefault();
+                        if (event.cancelable) event.preventDefault();
                         event.stopPropagation();
                     }
                     this.resizingIndex = idx;
@@ -508,8 +520,9 @@ new class extends Component {
                     console.log('Alpine startResize', { idx, handle, resizeEl: this.resizeEl });
                     if (!this.resizeEl) return;
 
-                    this.startX = event.clientX;
-                    this.startY = event.clientY;
+                    const coords = this.getClientCoords(event);
+                    this.startX = coords.x;
+                    this.startY = coords.y;
 
                     const layers = this.$wire.get('layers');
                     const layer = (layers && layers[idx]) ? layers[idx] : {};
@@ -549,8 +562,9 @@ new class extends Component {
                 onResize(event) {
                     if (this.resizingIndex === null || !this.resizeEl) return;
                     const scale = (parseFloat(this.zoomLevel) || 100) / 100;
-                    const dx = (event.clientX - this.startX) / scale;
-                    const dy = (event.clientY - this.startY) / scale;
+                    const coords = this.getClientCoords(event);
+                    const dx = (coords.x - this.startX) / scale;
+                    const dy = (coords.y - this.startY) / scale;
 
                     const isText = this.isText;
                     const h = this.resizeHandle;
@@ -639,8 +653,9 @@ new class extends Component {
 
                 init() {
                     console.log('Alpine canvas init called successfully!');
+                    
+                    // Mouse event listeners
                     window.addEventListener('mousemove', (e) => {
-                        console.log('Window mousemove event', { dragging: this.draggingIndex, resizing: this.resizingIndex });
                         if (this.resizingIndex !== null) {
                             this.onResize(e);
                         } else if (this.draggingIndex !== null) {
@@ -648,7 +663,23 @@ new class extends Component {
                         }
                     });
                     window.addEventListener('mouseup', (e) => {
-                        console.log('Window mouseup event', { dragging: this.draggingIndex, resizing: this.resizingIndex });
+                        if (this.resizingIndex !== null) {
+                            this.stopResize();
+                        }
+                        if (this.draggingIndex !== null) {
+                            this.stopDrag();
+                        }
+                    });
+
+                    // Touch event listeners
+                    window.addEventListener('touchmove', (e) => {
+                        if (this.resizingIndex !== null) {
+                            this.onResize(e);
+                        } else if (this.draggingIndex !== null) {
+                            this.onDrag(e);
+                        }
+                    }, { passive: false });
+                    window.addEventListener('touchend', (e) => {
                         if (this.resizingIndex !== null) {
                             this.stopResize();
                         }
@@ -693,6 +724,7 @@ new class extends Component {
                             <div 
                                 wire:key="canvas-layer-{{ $layer['id'] ?? $idx }}"
                                 @mousedown.prevent="startDrag({{ $idx }}, $event)"
+                                @touchstart.prevent="startDrag({{ $idx }}, $event)"
                                 @dragstart.prevent
                                 @selectstart.prevent
                                 data-layer-box
@@ -775,16 +807,16 @@ new class extends Component {
                                 <!-- Canva 8 Interactive Resize Handles (Rendered on Selection) -->
                                 @if($isSelected)
                                     <!-- 4 Corner Handles -->
-                                    <div @mousedown.stop.prevent="startResize({{ $idx }}, 'nw', $event)" title="Resize Top-Left" class="absolute w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full shadow-lg hover:scale-125 cursor-nwse-resize z-50 transition-transform" style="top: 0; left: 0; transform: translate(-50%, -50%);"></div>
-                                    <div @mousedown.stop.prevent="startResize({{ $idx }}, 'ne', $event)" title="Resize Top-Right" class="absolute w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full shadow-lg hover:scale-125 cursor-nesw-resize z-50 transition-transform" style="top: 0; left: 100%; transform: translate(-50%, -50%);"></div>
-                                    <div @mousedown.stop.prevent="startResize({{ $idx }}, 'sw', $event)" title="Resize Bottom-Left" class="absolute w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full shadow-lg hover:scale-125 cursor-nesw-resize z-50 transition-transform" style="top: 100%; left: 0; transform: translate(-50%, -50%);"></div>
-                                    <div @mousedown.stop.prevent="startResize({{ $idx }}, 'se', $event)" title="Resize Bottom-Right" class="absolute w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full shadow-lg hover:scale-125 cursor-nwse-resize z-50 transition-transform" style="top: 100%; left: 100%; transform: translate(-50%, -50%);"></div>
+                                    <div @mousedown.stop.prevent="startResize({{ $idx }}, 'nw', $event)" @touchstart.stop.prevent="startResize({{ $idx }}, 'nw', $event)" title="Resize Top-Left" class="absolute w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full shadow-lg hover:scale-125 cursor-nwse-resize z-50 transition-transform" style="top: 0; left: 0; transform: translate(-50%, -50%);"></div>
+                                    <div @mousedown.stop.prevent="startResize({{ $idx }}, 'ne', $event)" @touchstart.stop.prevent="startResize({{ $idx }}, 'ne', $event)" title="Resize Top-Right" class="absolute w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full shadow-lg hover:scale-125 cursor-nesw-resize z-50 transition-transform" style="top: 0; left: 100%; transform: translate(-50%, -50%);"></div>
+                                    <div @mousedown.stop.prevent="startResize({{ $idx }}, 'sw', $event)" @touchstart.stop.prevent="startResize({{ $idx }}, 'sw', $event)" title="Resize Bottom-Left" class="absolute w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full shadow-lg hover:scale-125 cursor-nesw-resize z-50 transition-transform" style="top: 100%; left: 0; transform: translate(-50%, -50%);"></div>
+                                    <div @mousedown.stop.prevent="startResize({{ $idx }}, 'se', $event)" @touchstart.stop.prevent="startResize({{ $idx }}, 'se', $event)" title="Resize Bottom-Right" class="absolute w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full shadow-lg hover:scale-125 cursor-nwse-resize z-50 transition-transform" style="top: 100%; left: 100%; transform: translate(-50%, -50%);"></div>
 
                                     <!-- 4 Side Handles -->
-                                    <div @mousedown.stop.prevent="startResize({{ $idx }}, 'n', $event)" title="Stretch Top" class="absolute w-3 h-2.5 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ns-resize z-50 transition-transform" style="top: 0; left: 50%; transform: translate(-50%, -50%);"></div>
-                                    <div @mousedown.stop.prevent="startResize({{ $idx }}, 's', $event)" title="Stretch Bottom" class="absolute w-3 h-2.5 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ns-resize z-50 transition-transform" style="top: 100%; left: 50%; transform: translate(-50%, -50%);"></div>
-                                    <div @mousedown.stop.prevent="startResize({{ $idx }}, 'w', $event)" title="Stretch Left" class="absolute w-2.5 h-3 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ew-resize z-50 transition-transform" style="top: 50%; left: 0; transform: translate(-50%, -50%);"></div>
-                                    <div @mousedown.stop.prevent="startResize({{ $idx }}, 'e', $event)" title="Stretch Right" class="absolute w-2.5 h-3 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ew-resize z-50 transition-transform" style="top: 50%; left: 100%; transform: translate(-50%, -50%);"></div>
+                                    <div @mousedown.stop.prevent="startResize({{ $idx }}, 'n', $event)" @touchstart.stop.prevent="startResize({{ $idx }}, 'n', $event)" title="Stretch Top" class="absolute w-3 h-2.5 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ns-resize z-50 transition-transform" style="top: 0; left: 50%; transform: translate(-50%, -50%);"></div>
+                                    <div @mousedown.stop.prevent="startResize({{ $idx }}, 's', $event)" @touchstart.stop.prevent="startResize({{ $idx }}, 's', $event)" title="Stretch Bottom" class="absolute w-3 h-2.5 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ns-resize z-50 transition-transform" style="top: 100%; left: 50%; transform: translate(-50%, -50%);"></div>
+                                    <div @mousedown.stop.prevent="startResize({{ $idx }}, 'w', $event)" @touchstart.stop.prevent="startResize({{ $idx }}, 'w', $event)" title="Stretch Left" class="absolute w-2.5 h-3 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ew-resize z-50 transition-transform" style="top: 50%; left: 0; transform: translate(-50%, -50%);"></div>
+                                    <div @mousedown.stop.prevent="startResize({{ $idx }}, 'e', $event)" @touchstart.stop.prevent="startResize({{ $idx }}, 'e', $event)" title="Stretch Right" class="absolute w-2.5 h-3 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ew-resize z-50 transition-transform" style="top: 50%; left: 100%; transform: translate(-50%, -50%);"></div>
                                 @endif
                             </div>
                         @endforeach
