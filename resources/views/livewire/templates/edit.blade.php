@@ -425,6 +425,7 @@ new class extends Component {
 
                     this.draggingIndex = idx;
                     this.draggingEl = event.currentTarget ? (event.currentTarget.closest('[data-layer-box]') || event.currentTarget) : null;
+                    console.log('Alpine startDrag', { idx, draggingEl: this.draggingEl });
                     if (!this.draggingEl) return;
 
                     this.startX = event.clientX;
@@ -442,6 +443,7 @@ new class extends Component {
                     this.origY = parseY;
                     this.curX = this.origX;
                     this.curY = this.origY;
+                    console.log('Alpine startDrag initial pos', { origX: this.origX, origY: this.origY });
                 },
 
                 onDrag(event) {
@@ -470,6 +472,7 @@ new class extends Component {
                 },
 
                 stopDrag() {
+                    console.log('Alpine stopDrag', { draggingIndex: this.draggingIndex, hasMoved: this.hasMoved });
                     if (this.draggingIndex !== null) {
                         const idx = this.draggingIndex;
                         const finalX = parseInt(this.curX) || 0;
@@ -481,8 +484,10 @@ new class extends Component {
                         this.hasMoved = false;
 
                         if (moved) {
+                            console.log('Alpine sync coordinates to Livewire', { idx, finalX, finalY });
                             this.$wire.updateLayerCoordinates(idx, finalX, finalY);
                         } else {
+                            console.log('Alpine select layer in Livewire', { idx });
                             this.$wire.selectLayer(idx);
                         }
                     }
@@ -496,6 +501,7 @@ new class extends Component {
                     this.resizingIndex = idx;
                     this.resizeHandle = handle;
                     this.resizeEl = event.currentTarget ? event.currentTarget.closest('[data-layer-box]') : null;
+                    console.log('Alpine startResize', { idx, handle, resizeEl: this.resizeEl });
                     if (!this.resizeEl) return;
 
                     this.startX = event.clientX;
@@ -533,6 +539,7 @@ new class extends Component {
                     this.curW = this.startW;
                     this.curH = this.startH;
                     this.curFontSize = this.startFontSize;
+                    console.log('Alpine startResize initial state', { startW: this.startW, startH: this.startH, startFontSize: this.startFontSize });
                 },
 
                 onResize(event) {
@@ -605,6 +612,7 @@ new class extends Component {
                 },
 
                 stopResize() {
+                    console.log('Alpine stopResize', { resizingIndex: this.resizingIndex });
                     if (this.resizingIndex !== null) {
                         const idx = this.resizingIndex;
                         let finalW = parseInt(this.curW) || 0;
@@ -623,6 +631,7 @@ new class extends Component {
                         this.resizeHandle = null;
                         this.resizeEl = null;
 
+                        console.log('Alpine sync dimensions to Livewire', { idx, finalW, finalH, finalFontSize, finalX, finalY });
                         this.$wire.updateLayerDimensions(idx, finalW, finalH, finalFontSize, finalX, finalY);
                     }
                 },
