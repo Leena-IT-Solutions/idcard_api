@@ -577,13 +577,13 @@ new class extends Component {
                     let newY = this.origY;
                     let newFontSize = this.startFontSize;
 
-                    if (h.includes('r')) newW = Math.max(15, Math.round(this.startW + dx));
-                    if (h.includes('l')) {
+                    if (h.includes('e')) newW = Math.max(15, Math.round(this.startW + dx));
+                    if (h.includes('w')) {
                         newW = Math.max(15, Math.round(this.startW - dx));
                         newX = Math.round(this.origX + dx);
                     }
-                    if (h.includes('b')) newH = Math.max(10, Math.round(this.startH + dy));
-                    if (h.includes('t')) {
+                    if (h.includes('s')) newH = Math.max(10, Math.round(this.startH + dy));
+                    if (h.includes('n')) {
                         newH = Math.max(10, Math.round(this.startH - dy));
                         newY = Math.round(this.origY + dy);
                     }
