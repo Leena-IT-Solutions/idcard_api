@@ -1009,56 +1009,55 @@ new class extends Component
             <div class="fixed inset-0 bg-gray-950/60 backdrop-blur-sm transition-opacity" wire:click="$set('isModalOpen', false)"></div>
 
             <!-- Modal Container -->
-            <div class="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-xl transform transition-all w-full max-w-2xl z-50 border border-gray-100 dark:border-gray-700">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-2xl transform transition-all w-full max-w-4xl z-50 border border-gray-100 dark:border-gray-700">
                 <form wire:submit="saveStudent" class="p-6 sm:p-8 space-y-6">
                     <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-700">
-                        <h3 class="text-base font-bold text-gray-900 dark:text-gray-100">
-                            {{ $studentId ? __('Edit Student') : __('Add New Student') }}
-                        </h3>
-                        <button type="button" wire:click="$set('isModalOpen', false)" class="text-gray-400 hover:text-gray-500">
-                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div>
+                            <h3 class="text-lg font-black text-gray-900 dark:text-gray-100">
+                                {{ $studentId ? __('Edit Student Record') : __('Add New Student') }}
+                            </h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Fill in student details and enrollment parameters</p>
+                        </div>
+                        <button type="button" wire:click="$set('isModalOpen', false)" class="p-2 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
-                        <!-- First Name -->
+                        <!-- Row 1: Names & Roll No -->
                         <div>
                             <x-input-label for="first_name" :value="__('First Name')" />
-                            <x-text-input wire:model="first_name" id="first_name" type="text" class="mt-1 block w-full" required />
+                            <x-text-input wire:model="first_name" id="first_name" type="text" class="mt-1 block w-full" placeholder="First Name" required />
                             <x-input-error :messages="$errors->get('first_name')" class="mt-2" />
                         </div>
 
-                        <!-- Middle Name -->
                         <div>
                             <x-input-label for="middle_name" :value="__('Middle Name')" />
-                            <x-text-input wire:model="middle_name" id="middle_name" type="text" class="mt-1 block w-full" />
+                            <x-text-input wire:model="middle_name" id="middle_name" type="text" class="mt-1 block w-full" placeholder="Middle Name" />
                             <x-input-error :messages="$errors->get('middle_name')" class="mt-2" />
                         </div>
 
-                        <!-- Last Name -->
                         <div>
                             <x-input-label for="last_name" :value="__('Last Name')" />
-                            <x-text-input wire:model="last_name" id="last_name" type="text" class="mt-1 block w-full" required />
+                            <x-text-input wire:model="last_name" id="last_name" type="text" class="mt-1 block w-full" placeholder="Last Name" required />
                             <x-input-error :messages="$errors->get('last_name')" class="mt-2" />
                         </div>
 
-                        <!-- Roll No -->
                         <div>
                             <x-input-label for="roll_no" :value="__('Roll No')" />
                             <x-text-input wire:model="roll_no" id="roll_no" type="text" class="mt-1 block w-full" placeholder="e.g. 101" />
                             <x-input-error :messages="$errors->get('roll_no')" class="mt-2" />
                         </div>
 
-                        <!-- Serial / Ref No -->
+                        <!-- Row 2: Ref No & Academic Enrollment -->
                         <div>
                             <x-input-label for="serial_number" :value="__('Serial / Ref No')" />
                             <x-text-input wire:model="serial_number" id="serial_number" type="text" class="mt-1 block w-full" placeholder="e.g. REF-1001" />
                             <x-input-error :messages="$errors->get('serial_number')" class="mt-2" />
                         </div>
 
-                        <!-- Campaign -->
                         <div>
                             <x-input-label for="campaignId" :value="__('Campaign')" />
                             <select wire:model.live="campaignId" id="campaignId" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm" required>
@@ -1070,7 +1069,6 @@ new class extends Component
                             <x-input-error :messages="$errors->get('campaignId')" class="mt-2" />
                         </div>
 
-                        <!-- Standard / Grade -->
                         <div>
                             <x-input-label for="gradeId" :value="__('Standard / Class')" />
                             <select wire:model.live="gradeId" id="gradeId" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm" required>
@@ -1090,7 +1088,6 @@ new class extends Component
                             <x-input-error :messages="$errors->get('gradeId')" class="mt-2" />
                         </div>
 
-                        <!-- Division -->
                         <div>
                             <x-input-label for="divisionId" :value="__('Division / Section')" />
                             <select wire:model="divisionId" id="divisionId" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm" required>
@@ -1113,7 +1110,7 @@ new class extends Component
                             <x-input-error :messages="$errors->get('divisionId')" class="mt-2" />
                         </div>
 
-                        <!-- Blood Group -->
+                        <!-- Row 3: Personal & Contact Attributes -->
                         <div>
                             <x-input-label for="blood_group" :value="__('Blood Group')" />
                             <select wire:model="blood_group" id="blood_group" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm">
@@ -1130,7 +1127,6 @@ new class extends Component
                             <x-input-error :messages="$errors->get('blood_group')" class="mt-2" />
                         </div>
 
-                        <!-- Gender -->
                         <div>
                             <x-input-label for="gender" :value="__('Gender')" />
                             <select wire:model="gender" id="gender" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm">
@@ -1142,52 +1138,61 @@ new class extends Component
                             <x-input-error :messages="$errors->get('gender')" class="mt-2" />
                         </div>
 
-                        <!-- DOB -->
                         <div>
                             <x-input-label for="dob" :value="__('Date of Birth')" />
                             <x-text-input wire:model="dob" id="dob" type="date" class="mt-1 block w-full" />
                             <x-input-error :messages="$errors->get('dob')" class="mt-2" />
                         </div>
 
-                        <!-- Contact Number -->
                         <div>
                             <x-input-label for="contact_number" :value="__('Contact Number')" />
-                            <x-text-input wire:model="contact_number" id="contact_number" type="text" class="mt-1 block w-full" required />
+                            <x-text-input wire:model="contact_number" id="contact_number" type="text" class="mt-1 block w-full" placeholder="e.g. 9876543210" required />
                             <x-input-error :messages="$errors->get('contact_number')" class="mt-2" />
                         </div>
 
-                        <!-- Pincode -->
-                        <div>
-                            <x-input-label for="pincode" :value="__('Pincode')" />
-                            <x-text-input wire:model="pincode" id="pincode" type="text" class="mt-1 block w-full" required />
-                            <x-input-error :messages="$errors->get('pincode')" class="mt-2" />
-                        </div>
-
-                        <!-- Address -->
+                        <!-- Row 4: Full Address (Text Input) & Pincode (AFTER Address) -->
                         <div class="md:col-span-3">
                             <x-input-label for="address" :value="__('Full Address')" />
-                            <textarea wire:model="address" id="address" rows="3" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm" required></textarea>
+                            <x-text-input wire:model="address" id="address" type="text" class="mt-1 block w-full" placeholder="e.g. 123 Main Street, Sector 4, City" required />
                             <x-input-error :messages="$errors->get('address')" class="mt-2" />
                         </div>
 
-                        <!-- Photo Upload -->
-                        <div class="md:col-span-3">
+                        <div class="md:col-span-1">
+                            <x-input-label for="pincode" :value="__('Pincode')" />
+                            <x-text-input wire:model="pincode" id="pincode" type="text" class="mt-1 block w-full" placeholder="e.g. 400001" required />
+                            <x-input-error :messages="$errors->get('pincode')" class="mt-2" />
+                        </div>
+
+                        <!-- Row 5: Photo Upload Card -->
+                        <div class="md:col-span-4 border-t border-gray-100 dark:border-gray-700 pt-4">
                             <x-input-label :value="__('Student Photo')" />
-                            <div class="mt-2 flex items-center gap-5">
+                            <div class="mt-2 flex items-center gap-5 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-2xl border border-gray-200 dark:border-gray-700/80">
                                 @if ($photo)
-                                    <img src="{{ $photo->temporaryUrl() }}" class="h-20 w-20 object-cover rounded-2xl border border-gray-200" />
+                                    <img src="{{ $photo->temporaryUrl() }}" class="h-16 w-16 object-cover rounded-xl border border-indigo-200 dark:border-indigo-800 shadow-sm shrink-0" />
                                 @elseif ($currentPhotoPath)
-                                    <img src="{{ asset('storage/' . $currentPhotoPath) }}" class="h-20 w-20 object-cover rounded-2xl border border-gray-200" />
+                                    <img src="{{ asset('storage/' . $currentPhotoPath) }}" class="h-16 w-16 object-cover rounded-xl border border-indigo-200 dark:border-indigo-800 shadow-sm shrink-0" />
                                 @else
-                                    <div class="h-20 w-20 bg-gray-100 dark:bg-gray-900 rounded-2xl flex items-center justify-center text-gray-400">
-                                        <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    <div class="h-16 w-16 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-400 shrink-0 shadow-sm">
+                                        <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                         </svg>
                                     </div>
                                 @endif
 
                                 <div class="flex-1">
                                     <input type="file" wire:model="photo" id="photo" class="hidden" accept="image/*" />
+                                    <label for="photo" class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold text-xs uppercase rounded-xl transition shadow-sm">
+                                        <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                                        </svg>
+                                        {{ __('Choose Photo') }}
+                                    </label>
+                                    <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5 font-medium">JPEG, PNG up to 2MB (Square ratio recommended)</p>
+                                </div>
+                            </div>
+                            <x-input-error :messages="$errors->get('photo')" class="mt-2" />
+                        </div>
+                    </div>
                                     <label for="photo" class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/60 text-gray-700 dark:text-gray-300 font-bold text-xs uppercase rounded-xl transition">
                                         {{ __('Choose Photo') }}
                                     </label>
