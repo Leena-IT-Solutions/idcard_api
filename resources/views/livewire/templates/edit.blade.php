@@ -383,173 +383,206 @@ new class extends Component {
                 $bgUrl = $bgPath ? (str_starts_with($bgPath, 'http') ? $bgPath : asset('storage/' . $bgPath)) : null;
             @endphp
 
-            <div class="w-full flex items-center justify-center overflow-x-auto p-2">
-                <div 
-                    id="canva-studio-canvas"
-                    class="relative select-none shadow-2xl rounded-2xl bg-slate-950 overflow-hidden shrink-0 my-auto transform transition-transform duration-200"
-                    style="width: {{ $canvasW }}px; height: {{ $canvasH }}px;"
-                    x-data="{
-                        draggingIndex: null,
-                        draggingEl: null,
-                        startX: 0,
-                        startY: 0,
-                        origX: 0,
-                        origY: 0,
-                        curX: 0,
-                        curY: 0,
-                        startDrag(idx, event) {
-                            this.draggingIndex = idx;
-                            this.draggingEl = event.currentTarget;
-                            this.startX = event.clientX;
-                            this.startY = event.clientY;
-                            const layer = ($wire.layers && $wire.layers[idx]) ? $wire.layers[idx] : {};
-                            this.origX = parseInt(layer.x) || 0;
-                            this.origY = parseInt(layer.y) || 0;
-                            this.curX = this.origX;
-                            this.curY = this.origY;
-                        },
-                        onDrag(event) {
-                            if (this.draggingIndex === null || !this.draggingEl) return;
-                            const dx = event.clientX - this.startX;
-                            const dy = event.clientY - this.startY;
-                            let newX = Math.max(0, Math.round(this.origX + dx));
-                            let newY = Math.max(0, Math.round(this.origY + dy));
+            <!-- Canvas Outer Interactive Container with Zoom State -->
+            <div class="w-full space-y-4" x-data="{
+                zoomLevel: 100,
+                draggingIndex: null,
+                draggingEl: null,
+                startX: 0,
+                startY: 0,
+                origX: 0,
+                origY: 0,
+                curX: 0,
+                curY: 0,
+                startDrag(idx, event) {
+                    this.draggingIndex = idx;
+                    this.draggingEl = event.currentTarget;
+                    this.startX = event.clientX;
+                    this.startY = event.clientY;
+                    const layer = ($wire.layers && $wire.layers[idx]) ? $wire.layers[idx] : {};
+                    this.origX = parseInt(layer.x) || 0;
+                    this.origY = parseInt(layer.y) || 0;
+                    this.curX = this.origX;
+                    this.curY = this.origY;
+                },
+                onDrag(event) {
+                    if (this.draggingIndex === null || !this.draggingEl) return;
+                    const scale = (parseFloat(this.zoomLevel) || 100) / 100;
+                    const dx = (event.clientX - this.startX) / scale;
+                    const dy = (event.clientY - this.startY) / scale;
+                    let newX = Math.max(0, Math.round(this.origX + dx));
+                    let newY = Math.max(0, Math.round(this.origY + dy));
 
-                            // Magnetic snap to center (within 10px)
-                            const centerH = Math.round(({{ $canvasW }} - 150) / 2);
-                            if (Math.abs(newX - centerH) < 10) newX = centerH;
+                    // Magnetic snap to center (within 10px)
+                    const centerH = Math.round(({{ $canvasW }} - 150) / 2);
+                    if (Math.abs(newX - centerH) < 10) newX = centerH;
 
-                            this.curX = newX;
-                            this.curY = newY;
+                    this.curX = newX;
+                    this.curY = newY;
 
-                            // Direct DOM manipulation for zero latency 60fps dragging
-                            this.draggingEl.style.left = newX + 'px';
-                            this.draggingEl.style.top = newY + 'px';
-                        },
-                        stopDrag() {
-                            if (this.draggingIndex !== null) {
-                                const idx = this.draggingIndex;
-                                const finalX = parseInt(this.curX) || 0;
-                                const finalY = parseInt(this.curY) || 0;
-                                this.draggingIndex = null;
-                                this.draggingEl = null;
-                                // Single Livewire POST sync on mouse release!
-                                $wire.updateLayerCoordinates(idx, finalX, finalY);
-                            }
-                        }
-                    }"
-                    @mousemove.window="onDrag($event)"
-                    @mouseup.window="stopDrag()"
-                >
-                    @if($bgUrl)
-                        <img src="{{ $bgUrl }}" class="absolute inset-0 w-full h-full object-fill pointer-events-none z-0 rounded-2xl" alt="Background Graphic" />
-                    @endif
+                    // Direct DOM manipulation for zero latency 60fps dragging
+                    this.draggingEl.style.left = newX + 'px';
+                    this.draggingEl.style.top = newY + 'px';
+                },
+                stopDrag() {
+                    if (this.draggingIndex !== null) {
+                        const idx = this.draggingIndex;
+                        const finalX = parseInt(this.curX) || 0;
+                        const finalY = parseInt(this.curY) || 0;
+                        this.draggingIndex = null;
+                        this.draggingEl = null;
+                        $wire.updateLayerCoordinates(idx, finalX, finalY);
+                    }
+                }
+            }"
+            @mousemove.window="onDrag($event)"
+            @mouseup.window="stopDrag()">
 
-                    <!-- Card Perimeter Border Overlay (Sits flush on top of background) -->
-                    <div class="absolute inset-0 rounded-2xl border-2 pointer-events-none z-40 {{ $selectedLayerIndex !== null ? 'border-indigo-500' : 'border-slate-700/60' }}"></div>
-
-                    <!-- Optional Visual Grid Lines -->
-                    @if($showGrid)
-                        <div class="absolute inset-0 pointer-events-none opacity-20 z-10 rounded-2xl" style="background-image: radial-gradient(#6366f1 1px, transparent 1px); background-size: 20px 20px;"></div>
-                    @endif
-
-                <!-- Center Snap Line (Visual Indicator when Selected) -->
-                @if($selectedLayerIndex !== null)
-                    <div class="absolute top-0 bottom-0 left-1/2 w-[1px] bg-indigo-500/40 pointer-events-none border-r border-dashed border-indigo-400"></div>
-                @endif
-
-                <!-- Render Interactive Canvas Layers -->
-                @foreach($layers as $idx => $layer)
-                    @php
-                        $type = $layer['type'] ?? 'text';
-                        $x = $layer['x'] ?? 0;
-                        $y = $layer['y'] ?? 0;
-                        $w = $layer['width'] ?? 'auto';
-                        $h = $layer['height'] ?? 'auto';
-                        $rot = $layer['rotation'] ?? 0;
-                        $isSelected = ($selectedLayerIndex === $idx);
-                    @endphp
-
+                <!-- Scrollable Canvas Viewport -->
+                <div class="w-full flex items-center justify-center overflow-auto p-4 min-h-[460px] bg-slate-950/40 rounded-2xl border border-slate-800/60 shadow-inner">
                     <div 
-                        wire:key="canvas-layer-{{ $layer['id'] ?? $idx }}"
-                        wire:click="selectLayer({{ $idx }})"
-                        @mousedown="startDrag({{ $idx }}, $event)"
-                        class="absolute cursor-move transition-shadow {{ $isSelected ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-slate-900 z-30' : 'hover:ring-1 hover:ring-indigo-400/50 z-10' }}"
-                        style="left: {{ $x }}px; top: {{ $y }}px; transform: rotate({{ $rot }}deg); transform-origin: top left;"
+                        id="canva-studio-canvas"
+                        class="relative select-none shadow-2xl rounded-2xl bg-slate-950 overflow-hidden shrink-0 my-auto transform transition-transform duration-200"
+                        :style="'width: {{ $canvasW }}px; height: {{ $canvasH }}px; transform: scale(' + ((parseFloat(zoomLevel) || 100) / 100) + '); transform-origin: center center;'"
                     >
-                        @if($type === 'text')
-                            @php
-                                $rawText = $layer['text'] ?? '';
-                                $displayText = $livePreviewMode 
-                                    ? strtr($rawText, [
-                                        '{first_name}' => 'Aaditya', '{middle_name}' => 'Sonu', '{last_name}' => 'Thakur',
-                                        '{First Name}' => 'Aaditya', '{Middle Name}' => 'Sonu', '{Last Name}' => 'Thakur',
-                                        '{dob}' => '2017-10-27', '{DOB}' => '2017-10-27',
-                                        '{blood_group}' => 'AB+', '{Blood Group}' => 'AB+',
-                                        '{gender}' => 'Male', '{Gender}' => 'Male',
-                                        '{contact_number}' => '9730777244', '{Contact Number}' => '9730777244',
-                                        '{address}' => 'Sarvodhya Nagar Flat 704', '{Address}' => 'Sarvodhya Nagar Flat 704',
-                                        '{pincode}' => '400001', '{Pincode}' => '400001',
-                                        '{grade}' => 'V', '{Grade}' => 'V', '{Standard}' => 'V',
-                                        '{division}' => 'B', '{Division}' => 'B', '{Div}' => 'B',
-                                        '{roll_no}' => '202', '{Roll No}' => '202', '{serial_number}' => '202', '{Ref No}' => '202',
-                                        '{Campaign}' => 'iCard 2026-27',
-                                        '{School Name}' => ($activeSchool->name ?? 'Sarvodya Vidyalay'),
-                                        '{School Code}' => ($activeSchool->school_code ?? 'SV-2026'),
-                                        '{Registration Code}' => ($activeSchool->school_code ?? 'SV-2026'),
-                                        '{Principal Name}' => 'Dr. R. K. Sharma',
-                                        '{School Contact}' => '9820198201',
-                                        '{School Email}' => 'info@sarvodya.edu.in',
-                                        '{School Website}' => 'www.sarvodya.edu.in',
-                                        '{School Address}' => 'Station Road, Mumbai',
-                                      ])
-                                    : $rawText;
-
-                                $fontSize = $layer['font_size'] ?? 14;
-                                $fontWeight = $layer['font_weight'] ?? 'normal';
-                                $fontFamily = $layer['font_family'] ?? 'Inter';
-                                $color = $layer['color'] ?? '#ffffff';
-                                $align = $layer['align'] ?? 'left';
-                            @endphp
-                            <div style="font-size: {{ $fontSize }}pt; font-weight: {{ $fontWeight }}; font-family: {{ $fontFamily }}, sans-serif; color: {{ $color }}; text-align: {{ $align }}; white-space: nowrap; padding: 2px 4px; border-radius: 4px; background: {{ $isSelected ? 'rgba(99, 102, 241, 0.15)' : 'transparent' }};">
-                                {{ $displayText }}
-                            </div>
-
-                        @elseif($type === 'photo')
-                            @php
-                                $borderRadius = $layer['border_radius'] ?? 12;
-                                $borderColor = $layer['border_color'] ?? '#818cf8';
-                                $borderWidth = $layer['border_width'] ?? 2;
-                            @endphp
-                            <div style="width: {{ $w }}px; height: {{ $h }}px; border-radius: {{ $borderRadius }}px; border: {{ $borderWidth }}px solid {{ $borderColor }}; overflow: hidden; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
-                                <svg viewBox="0 0 24 24" style="width: 40%; height: 40%; color: #818cf8;" fill="currentColor">
-                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                                </svg>
-                                <span style="font-size: 8px; font-weight: 800; color: #a5b4fc; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">STUDENT PHOTO</span>
-                            </div>
-
-                        @elseif($type === 'logo')
-                            <div style="width: {{ $w }}px; height: {{ $h }}px; border-radius: 10px; background: linear-gradient(135deg, #312e81 0%, #4338ca 100%); border: 1.5px dashed #818cf8; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ffffff; padding: 2px; box-sizing: border-box;">
-                                <svg viewBox="0 0 24 24" style="width: 40%; height: 40%; color: #fbbf24;" fill="currentColor">
-                                    <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM3.82 9L12 4.54 20.18 9 12 13.46 3.82 9zM5 14.45v3.55l7 3.82 7-3.82v-3.55l-7 3.81-7-3.81z"/>
-                                </svg>
-                                <span style="font-size: 7px; font-weight: 800; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; text-align: center;">SCHOOL LOGO</span>
-                            </div>
-
-                        @elseif($type === 'qr')
-                            <div style="width: {{ $w }}px; height: {{ $h }}px; background: white; padding: 4px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                                <svg viewBox="0 0 24 24" style="width: 100%; height: 100%;" fill="#0f172a">
-                                    <rect x="3" y="3" width="7" height="7" rx="1"/>
-                                    <rect x="14" y="3" width="7" height="7" rx="1"/>
-                                    <rect x="3" y="14" width="7" height="7" rx="1"/>
-                                    <path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 18h3v3h-3z"/>
-                                </svg>
-                            </div>
+                        @if($bgUrl)
+                            <img src="{{ $bgUrl }}" class="absolute inset-0 w-full h-full object-fill pointer-events-none z-0 rounded-2xl" alt="Background Graphic" />
                         @endif
+
+                        <!-- Card Perimeter Border Overlay (Sits flush on top of background) -->
+                        <div class="absolute inset-0 rounded-2xl border-2 pointer-events-none z-40 border-slate-700/60"></div>
+
+                        <!-- Center Snap Line (Visual Indicator when Selected) -->
+                        @if($selectedLayerIndex !== null)
+                            <div class="absolute top-0 bottom-0 left-1/2 w-[1px] bg-indigo-500/40 pointer-events-none border-r border-dashed border-indigo-400"></div>
+                        @endif
+
+                        <!-- Render Interactive Canvas Layers -->
+                        @foreach($layers as $idx => $layer)
+                            @php
+                                $type = $layer['type'] ?? 'text';
+                                $x = $layer['x'] ?? 0;
+                                $y = $layer['y'] ?? 0;
+                                $w = $layer['width'] ?? 'auto';
+                                $h = $layer['height'] ?? 'auto';
+                                $rot = $layer['rotation'] ?? 0;
+                                $isSelected = ($selectedLayerIndex === $idx);
+                            @endphp
+
+                            <div 
+                                wire:key="canvas-layer-{{ $layer['id'] ?? $idx }}"
+                                wire:click="selectLayer({{ $idx }})"
+                                @mousedown="startDrag({{ $idx }}, $event)"
+                                class="absolute cursor-move transition-shadow {{ $isSelected ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-slate-900 z-30' : 'hover:ring-1 hover:ring-indigo-400/50 z-10' }}"
+                                style="left: {{ $x }}px; top: {{ $y }}px; transform: rotate({{ $rot }}deg); transform-origin: top left;"
+                            >
+                                @if($type === 'text')
+                                    @php
+                                        $rawText = $layer['text'] ?? '';
+                                        $displayText = $livePreviewMode 
+                                            ? strtr($rawText, [
+                                                '{first_name}' => 'Aaditya', '{middle_name}' => 'Sonu', '{last_name}' => 'Thakur',
+                                                '{First Name}' => 'Aaditya', '{Middle Name}' => 'Sonu', '{Last Name}' => 'Thakur',
+                                                '{dob}' => '2017-10-27', '{DOB}' => '2017-10-27',
+                                                '{blood_group}' => 'AB+', '{Blood Group}' => 'AB+',
+                                                '{gender}' => 'Male', '{Gender}' => 'Male',
+                                                '{contact_number}' => '9730777244', '{Contact Number}' => '9730777244',
+                                                '{address}' => 'Sarvodhya Nagar Flat 704', '{Address}' => 'Sarvodhya Nagar Flat 704',
+                                                '{pincode}' => '400001', '{Pincode}' => '400001',
+                                                '{grade}' => 'V', '{Grade}' => 'V', '{Standard}' => 'V',
+                                                '{division}' => 'B', '{Division}' => 'B', '{Div}' => 'B',
+                                                '{roll_no}' => '202', '{Roll No}' => '202', '{serial_number}' => '202', '{Ref No}' => '202',
+                                                '{Campaign}' => 'iCard 2026-27',
+                                                '{School Name}' => ($activeSchool->name ?? 'Sarvodya Vidyalay'),
+                                                '{School Code}' => ($activeSchool->school_code ?? 'SV-2026'),
+                                                '{Registration Code}' => ($activeSchool->school_code ?? 'SV-2026'),
+                                                '{Principal Name}' => 'Dr. R. K. Sharma',
+                                                '{School Contact}' => '9820198201',
+                                                '{School Email}' => 'info@sarvodya.edu.in',
+                                                '{School Website}' => 'www.sarvodya.edu.in',
+                                                '{School Address}' => 'Station Road, Mumbai',
+                                              ])
+                                            : $rawText;
+
+                                        $fontSize = $layer['font_size'] ?? 14;
+                                        $fontWeight = $layer['font_weight'] ?? 'normal';
+                                        $fontFamily = $layer['font_family'] ?? 'Inter';
+                                        $color = $layer['color'] ?? '#ffffff';
+                                        $align = $layer['align'] ?? 'left';
+                                    @endphp
+                                    <div style="font-size: {{ $fontSize }}pt; font-weight: {{ $fontWeight }}; font-family: {{ $fontFamily }}, sans-serif; color: {{ $color }}; text-align: {{ $align }}; white-space: nowrap; padding: 2px 4px; border-radius: 4px; background: {{ $isSelected ? 'rgba(99, 102, 241, 0.15)' : 'transparent' }};">
+                                        {{ $displayText }}
+                                    </div>
+
+                                @elseif($type === 'photo')
+                                    @php
+                                        $borderRadius = $layer['border_radius'] ?? 12;
+                                        $borderColor = $layer['border_color'] ?? '#818cf8';
+                                        $borderWidth = $layer['border_width'] ?? 2;
+                                    @endphp
+                                    <div style="width: {{ $w }}px; height: {{ $h }}px; border-radius: {{ $borderRadius }}px; border: {{ $borderWidth }}px solid {{ $borderColor }}; overflow: hidden; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
+                                        <svg viewBox="0 0 24 24" style="width: 40%; height: 40%; color: #818cf8;" fill="currentColor">
+                                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                        </svg>
+                                        <span style="font-size: 8px; font-weight: 800; color: #a5b4fc; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">STUDENT PHOTO</span>
+                                    </div>
+
+                                @elseif($type === 'logo')
+                                    <div style="width: {{ $w }}px; height: {{ $h }}px; border-radius: 10px; background: linear-gradient(135deg, #312e81 0%, #4338ca 100%); border: 1.5px dashed #818cf8; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ffffff; padding: 2px; box-sizing: border-box;">
+                                        <svg viewBox="0 0 24 24" style="width: 40%; height: 40%; color: #fbbf24;" fill="currentColor">
+                                            <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM3.82 9L12 4.54 20.18 9 12 13.46 3.82 9zM5 14.45v3.55l7 3.82 7-3.82v-3.55l-7 3.81-7-3.81z"/>
+                                        </svg>
+                                        <span style="font-size: 7px; font-weight: 800; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; text-align: center;">SCHOOL LOGO</span>
+                                    </div>
+
+                                @elseif($type === 'qr')
+                                    <div style="width: {{ $w }}px; height: {{ $h }}px; background: white; padding: 4px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                        <svg viewBox="0 0 24 24" style="width: 100%; height: 100%;" fill="#0f172a">
+                                            <rect x="3" y="3" width="7" height="7" rx="1"/>
+                                            <rect x="14" y="3" width="7" height="7" rx="1"/>
+                                            <rect x="3" y="14" width="7" height="7" rx="1"/>
+                                            <path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 18h3v3h-3z"/>
+                                        </svg>
+                                    </div>
+                                @endif
+                            </div>
+                        @endforeach
                     </div>
-                @endforeach
+                </div>
+
+                <!-- Canvas Bottom Toolbar: Zoom Controls & Presets Bar -->
+                <div class="w-full bg-slate-950/90 border border-slate-800 rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 shadow-inner">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-xs font-bold text-slate-300 flex items-center">
+                            <svg class="w-4 h-4 mr-1.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"></path>
+                            </svg>
+                            Canvas Zoom:
+                        </span>
+                        <div class="flex items-center space-x-2">
+                            <button type="button" @click="zoomLevel = Math.max(30, parseInt(zoomLevel) - 10)" title="Zoom Out" class="w-7 h-7 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold flex items-center justify-center transition">
+                                &minus;
+                            </button>
+                            <input type="range" min="30" max="200" step="5" x-model="zoomLevel" class="w-28 sm:w-40 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+                            <button type="button" @click="zoomLevel = Math.min(200, parseInt(zoomLevel) + 10)" title="Zoom In" class="w-7 h-7 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold flex items-center justify-center transition">
+                                &#43;
+                            </button>
+                        </div>
+                        <span class="text-xs font-black text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-md font-mono" x-text="zoomLevel + '%'">
+                            100%
+                        </span>
+                    </div>
+
+                    <!-- Quick Zoom Preset Buttons -->
+                    <div class="flex items-center space-x-1.5">
+                        <button type="button" @click="zoomLevel = 50" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 50 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">50%</button>
+                        <button type="button" @click="zoomLevel = 75" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 75 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">75%</button>
+                        <button type="button" @click="zoomLevel = 100" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 100 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">100%</button>
+                        <button type="button" @click="zoomLevel = 125" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 125 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">125%</button>
+                        <button type="button" @click="zoomLevel = 150" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 150 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">150%</button>
+                    </div>
+                </div>
             </div>
-        </div>
 
             <!-- Clickable Variable Inserter Toolbar Pills -->
             <div class="w-full mt-6 space-y-3 bg-slate-950/60 border border-slate-800 rounded-2xl p-4">
