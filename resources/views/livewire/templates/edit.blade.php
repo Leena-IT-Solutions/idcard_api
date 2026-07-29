@@ -323,7 +323,308 @@ new class extends Component {
     }
 }; ?>
 
-<div class="space-y-6">
+<div class="space-y-6" x-data="{
+    zoomLevel: 100,
+    draggingIndex: null,
+    draggingEl: null,
+    resizingIndex: null,
+    resizeHandle: null,
+    resizeEl: null,
+    startX: 0,
+    startY: 0,
+    origX: 0,
+    origY: 0,
+    startW: 0,
+    startH: 0,
+    startFontSize: 0,
+    curX: 0,
+    curY: 0,
+    curW: 0,
+    curH: 0,
+    curFontSize: 0,
+    hasMoved: false,
+    isText: false,
+
+    getClientCoords(e) {
+        if (e.touches && e.touches.length > 0) {
+            return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }
+        if (e.changedTouches && e.changedTouches.length > 0) {
+            return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+        }
+        return { x: e.clientX, y: e.clientY };
+    },
+
+    syncSelectedLayerData() {
+        const idx = this.$wire.selectedLayerIndex;
+        if (idx !== null && this.$wire.layers && this.$wire.layers[idx]) {
+            const layer = this.$wire.layers[idx];
+            this.curX = Math.round(parseFloat(layer.x) || 0);
+            this.curY = Math.round(parseFloat(layer.y) || 0);
+            this.curW = Math.round(parseFloat(layer.width) || 0);
+            this.curH = Math.round(parseFloat(layer.height) || 0);
+            this.curFontSize = Math.round(parseFloat(layer.font_size) || 14);
+        }
+    },
+
+    startDrag(idx, event) {
+        if (this.resizingIndex !== null) return;
+        if (event && event.cancelable) event.preventDefault();
+
+        this.draggingIndex = idx;
+        this.draggingEl = event.currentTarget ? (event.currentTarget.closest('[data-layer-box]') || event.currentTarget) : null;
+        if (!this.draggingEl) return;
+
+        const coords = this.getClientCoords(event);
+        this.startX = coords.x;
+        this.startY = coords.y;
+        this.hasMoved = false;
+
+        const layers = this.$wire.get('layers');
+        const layer = (layers && layers[idx]) ? layers[idx] : {};
+        const layerType = (layer && layer.type) ? layer.type : (this.draggingEl.getAttribute('data-layer-type') || 'text');
+        this.isText = (layerType === 'text');
+
+        let parseX = parseFloat(layer.x);
+        let parseY = parseFloat(layer.y);
+        if (isNaN(parseX)) parseX = parseFloat(this.draggingEl.style.left) || 0;
+        if (isNaN(parseY)) parseY = parseFloat(this.draggingEl.style.top) || 0;
+
+        this.origX = parseX;
+        this.origY = parseY;
+        this.curX = this.origX;
+        this.curY = this.origY;
+    },
+
+    onDrag(event) {
+        if (this.draggingIndex === null || !this.draggingEl) return;
+        const scale = (parseFloat(this.zoomLevel) || 100) / 100;
+        const coords = this.getClientCoords(event);
+        const dx = (coords.x - this.startX) / scale;
+        const dy = (coords.y - this.startY) / scale;
+
+        if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+            this.hasMoved = true;
+        }
+
+        let newX = Math.max(0, Math.round(this.origX + dx));
+        let newY = Math.max(0, Math.round(this.origY + dy));
+
+        // Magnetic snap to center (within 10px)
+        const centerH = Math.round(({{ $canvasW }} - 150) / 2);
+        if (Math.abs(newX - centerH) < 10) newX = centerH;
+
+        this.curX = newX;
+        this.curY = newY;
+
+        // Direct DOM manipulation for zero latency 60fps dragging
+        this.draggingEl.style.left = newX + 'px';
+        this.draggingEl.style.top = newY + 'px';
+    },
+
+    stopDrag() {
+        if (this.draggingIndex !== null) {
+            const idx = this.draggingIndex;
+            const finalX = parseInt(this.curX) || 0;
+            const finalY = parseInt(this.curY) || 0;
+            const moved = this.hasMoved;
+
+            this.draggingIndex = null;
+            this.draggingEl = null;
+            this.hasMoved = false;
+
+            if (moved) {
+                this.$wire.updateLayerCoordinates(idx, finalX, finalY);
+            } else {
+                this.$wire.selectLayer(idx);
+            }
+        }
+    },
+
+    startResize(idx, handle, event) {
+        if (event) {
+            if (event.cancelable) event.preventDefault();
+            event.stopPropagation();
+        }
+        this.resizingIndex = idx;
+        this.resizeHandle = handle;
+        this.resizeEl = event.currentTarget ? event.currentTarget.closest('[data-layer-box]') : null;
+        if (!this.resizeEl) return;
+
+        const coords = this.getClientCoords(event);
+        this.startX = coords.x;
+        this.startY = coords.y;
+
+        const layers = this.$wire.get('layers');
+        const layer = (layers && layers[idx]) ? layers[idx] : {};
+        const layerType = (layer && layer.type) ? layer.type : (this.resizeEl.getAttribute('data-layer-type') || 'text');
+        this.isText = (layerType === 'text');
+
+        let parseX = parseFloat(layer.x);
+        let parseY = parseFloat(layer.y);
+        if (isNaN(parseX)) parseX = parseFloat(this.resizeEl.style.left) || 0;
+        if (isNaN(parseY)) parseY = parseFloat(this.resizeEl.style.top) || 0;
+
+        this.origX = parseX;
+        this.origY = parseY;
+
+        const contentEl = this.resizeEl.querySelector('[data-layer-content]');
+        const realW = contentEl ? contentEl.offsetWidth : this.resizeEl.offsetWidth;
+        const realH = contentEl ? contentEl.offsetHeight : this.resizeEl.offsetHeight;
+
+        if (this.isText) {
+            this.startW = realW || 50;
+            this.startH = realH || 20;
+        } else {
+            this.startW = parseFloat(layer.width) || realW || 100;
+            this.startH = parseFloat(layer.height) || realH || 30;
+        }
+
+        this.startFontSize = parseFloat(layer.font_size) || 14;
+
+        this.curX = this.origX;
+        this.curY = this.origY;
+        this.curW = this.startW;
+        this.curH = this.startH;
+        this.curFontSize = this.startFontSize;
+    },
+
+    onResize(event) {
+        if (this.resizingIndex === null || !this.resizeEl) return;
+        const scale = (parseFloat(this.zoomLevel) || 100) / 100;
+        const coords = this.getClientCoords(event);
+        const dx = (coords.x - this.startX) / scale;
+        const dy = (coords.y - this.startY) / scale;
+
+        const isText = this.isText;
+        const h = this.resizeHandle;
+
+        let newW = this.startW;
+        let newH = this.startH;
+        let newX = this.origX;
+        let newY = this.origY;
+        let newFontSize = this.startFontSize;
+
+        if (h.includes('e')) newW = Math.max(15, Math.round(this.startW + dx));
+        if (h.includes('w')) {
+            newW = Math.max(15, Math.round(this.startW - dx));
+            newX = Math.round(this.origX + dx);
+        }
+        if (h.includes('s')) newH = Math.max(10, Math.round(this.startH + dy));
+        if (h.includes('n')) {
+            newH = Math.max(10, Math.round(this.startH - dy));
+            newY = Math.round(this.origY + dy);
+        }
+
+        if (isText) {
+            if (h === 'se' || h === 'sw' || h === 'ne' || h === 'nw') {
+                const ratio = newW / (this.startW || 1);
+                newFontSize = Math.max(6, Math.min(140, Math.round(this.startFontSize * ratio)));
+            }
+        } else {
+            if (h === 'se' || h === 'sw' || h === 'ne' || h === 'nw') {
+                const aspect = (this.startW || 1) / (this.startH || 1);
+                newH = Math.round(newW / aspect);
+            }
+        }
+
+        this.curW = newW;
+        this.curH = newH;
+        this.curX = newX;
+        this.curY = newY;
+        this.curFontSize = newFontSize;
+
+        // Direct DOM manipulation for zero latency 60fps resizing
+        this.resizeEl.style.left = newX + 'px';
+        this.resizeEl.style.top = newY + 'px';
+
+        const innerContent = this.resizeEl.querySelector('[data-layer-content]');
+        if (innerContent) {
+            if (!isText) {
+                innerContent.style.width = newW + 'px';
+                innerContent.style.height = newH + 'px';
+            } else {
+                const textDiv = innerContent.querySelector('div');
+                if (textDiv) {
+                    textDiv.style.fontSize = newFontSize + 'pt';
+                    if (h === 'e' || h === 'w') {
+                        textDiv.style.whiteSpace = 'normal';
+                        textDiv.style.width = newW + 'px';
+                    }
+                }
+            }
+        }
+    },
+
+    stopResize() {
+        if (this.resizingIndex !== null) {
+            const idx = this.resizingIndex;
+            let finalW = parseInt(this.curW) || 0;
+            let finalH = parseInt(this.curH) || 0;
+            const finalFontSize = parseInt(this.curFontSize) || 14;
+            const finalX = parseInt(this.curX) || 0;
+            const finalY = parseInt(this.curY) || 0;
+
+            const contentEl = this.resizeEl ? this.resizeEl.querySelector('[data-layer-content]') : null;
+            if (contentEl) {
+                finalW = contentEl.offsetWidth || finalW;
+                finalH = contentEl.offsetHeight || finalH;
+            }
+
+            this.resizingIndex = null;
+            this.resizeHandle = null;
+            this.resizeEl = null;
+
+            this.$wire.updateLayerDimensions(idx, finalW, finalH, finalFontSize, finalX, finalY);
+        }
+    },
+
+    init() {
+        this.syncSelectedLayerData();
+        this.$watch('$wire.selectedLayerIndex', (val) => {
+            this.syncSelectedLayerData();
+        });
+        this.$watch('$wire.layers', (val) => {
+            this.syncSelectedLayerData();
+        });
+
+        // Mouse event listeners
+        window.addEventListener('mousemove', (e) => {
+            if (this.resizingIndex !== null) {
+                this.onResize(e);
+            } else if (this.draggingIndex !== null) {
+                this.onDrag(e);
+            }
+        });
+        window.addEventListener('mouseup', (e) => {
+            if (this.resizingIndex !== null) {
+                this.stopResize();
+            }
+            if (this.draggingIndex !== null) {
+                this.stopDrag();
+            }
+        });
+
+        // Touch event listeners
+        window.addEventListener('touchmove', (e) => {
+            const coords = (e.touches && e.touches.length > 0) ? e.touches[0] : (e.changedTouches ? e.changedTouches[0] : null);
+
+            if (this.resizingIndex !== null) {
+                this.onResize(e);
+            } else if (this.draggingIndex !== null) {
+                this.onDrag(e);
+            }
+        }, { passive: false });
+        window.addEventListener('touchend', (e) => {
+            if (this.resizingIndex !== null) {
+                this.stopResize();
+            }
+            if (this.draggingIndex !== null) {
+                this.stopDrag();
+            }
+        });
+    }
+}">
     @if(session()->has('message'))
         <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-2xl flex items-center justify-between text-sm font-semibold">
             <span>{{ session('message') }}</span>
@@ -398,312 +699,7 @@ new class extends Component {
             @endphp
 
             <!-- Canvas Outer Interactive Container with Zoom & Resize State -->
-            <div class="w-full space-y-4" x-data="{
-                zoomLevel: 100,
-                draggingIndex: null,
-                draggingEl: null,
-                resizingIndex: null,
-                resizeHandle: null,
-                resizeEl: null,
-                startX: 0,
-                startY: 0,
-                origX: 0,
-                origY: 0,
-                startW: 0,
-                startH: 0,
-                startFontSize: 0,
-                curX: 0,
-                curY: 0,
-                curW: 0,
-                curH: 0,
-                curFontSize: 0,
-                hasMoved: false,
-                isText: false,
-
-                getClientCoords(e) {
-                    if (e.touches && e.touches.length > 0) {
-                        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-                    }
-                    if (e.changedTouches && e.changedTouches.length > 0) {
-                        return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
-                    }
-                    return { x: e.clientX, y: e.clientY };
-                },
-
-                syncSelectedLayerData() {
-                    const idx = this.$wire.selectedLayerIndex;
-                    if (idx !== null && this.$wire.layers && this.$wire.layers[idx]) {
-                        const layer = this.$wire.layers[idx];
-                        this.curX = Math.round(parseFloat(layer.x) || 0);
-                        this.curY = Math.round(parseFloat(layer.y) || 0);
-                        this.curW = Math.round(parseFloat(layer.width) || 0);
-                        this.curH = Math.round(parseFloat(layer.height) || 0);
-                        this.curFontSize = Math.round(parseFloat(layer.font_size) || 14);
-                    }
-                },
-
-                startDrag(idx, event) {
-                    if (this.resizingIndex !== null) return;
-                    if (event && event.cancelable) event.preventDefault();
-
-                    this.draggingIndex = idx;
-                    this.draggingEl = event.currentTarget ? (event.currentTarget.closest('[data-layer-box]') || event.currentTarget) : null;
-                    if (!this.draggingEl) return;
-
-                    const coords = this.getClientCoords(event);
-                    this.startX = coords.x;
-                    this.startY = coords.y;
-                    this.hasMoved = false;
-
-                    const layers = this.$wire.get('layers');
-                    const layer = (layers && layers[idx]) ? layers[idx] : {};
-                    const layerType = (layer && layer.type) ? layer.type : (this.draggingEl.getAttribute('data-layer-type') || 'text');
-                    this.isText = (layerType === 'text');
-
-                    let parseX = parseFloat(layer.x);
-                    let parseY = parseFloat(layer.y);
-                    if (isNaN(parseX)) parseX = parseFloat(this.draggingEl.style.left) || 0;
-                    if (isNaN(parseY)) parseY = parseFloat(this.draggingEl.style.top) || 0;
-
-                    this.origX = parseX;
-                    this.origY = parseY;
-                    this.curX = this.origX;
-                    this.curY = this.origY;
-                },
-
-                onDrag(event) {
-                    if (this.draggingIndex === null || !this.draggingEl) return;
-                    const scale = (parseFloat(this.zoomLevel) || 100) / 100;
-                    const coords = this.getClientCoords(event);
-                    const dx = (coords.x - this.startX) / scale;
-                    const dy = (coords.y - this.startY) / scale;
-
-                    if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
-                        this.hasMoved = true;
-                    }
-
-                    let newX = Math.max(0, Math.round(this.origX + dx));
-                    let newY = Math.max(0, Math.round(this.origY + dy));
-
-                    // Magnetic snap to center (within 10px)
-                    const centerH = Math.round(({{ $canvasW }} - 150) / 2);
-                    if (Math.abs(newX - centerH) < 10) newX = centerH;
-
-                    this.curX = newX;
-                    this.curY = newY;
-
-                    // Direct DOM manipulation for zero latency 60fps dragging
-                    this.draggingEl.style.left = newX + 'px';
-                    this.draggingEl.style.top = newY + 'px';
-                },
-
-                stopDrag() {
-                    if (this.draggingIndex !== null) {
-                        const idx = this.draggingIndex;
-                        const finalX = parseInt(this.curX) || 0;
-                        const finalY = parseInt(this.curY) || 0;
-                        const moved = this.hasMoved;
-
-                        this.draggingIndex = null;
-                        this.draggingEl = null;
-                        this.hasMoved = false;
-
-                        if (moved) {
-                            this.$wire.updateLayerCoordinates(idx, finalX, finalY);
-                        } else {
-                            this.$wire.selectLayer(idx);
-                        }
-                    }
-                },
-
-                startResize(idx, handle, event) {
-                    if (event) {
-                        if (event.cancelable) event.preventDefault();
-                        event.stopPropagation();
-                    }
-                    this.resizingIndex = idx;
-                    this.resizeHandle = handle;
-                    this.resizeEl = event.currentTarget ? event.currentTarget.closest('[data-layer-box]') : null;
-                    if (!this.resizeEl) return;
-
-                    const coords = this.getClientCoords(event);
-                    this.startX = coords.x;
-                    this.startY = coords.y;
-
-                    const layers = this.$wire.get('layers');
-                    const layer = (layers && layers[idx]) ? layers[idx] : {};
-                    const layerType = (layer && layer.type) ? layer.type : (this.resizeEl.getAttribute('data-layer-type') || 'text');
-                    this.isText = (layerType === 'text');
-
-                    let parseX = parseFloat(layer.x);
-                    let parseY = parseFloat(layer.y);
-                    if (isNaN(parseX)) parseX = parseFloat(this.resizeEl.style.left) || 0;
-                    if (isNaN(parseY)) parseY = parseFloat(this.resizeEl.style.top) || 0;
-
-                    this.origX = parseX;
-                    this.origY = parseY;
-
-                    const contentEl = this.resizeEl.querySelector('[data-layer-content]');
-                    const realW = contentEl ? contentEl.offsetWidth : this.resizeEl.offsetWidth;
-                    const realH = contentEl ? contentEl.offsetHeight : this.resizeEl.offsetHeight;
-
-                    if (this.isText) {
-                        this.startW = realW || 50;
-                        this.startH = realH || 20;
-                    } else {
-                        this.startW = parseFloat(layer.width) || realW || 100;
-                        this.startH = parseFloat(layer.height) || realH || 30;
-                    }
-
-                    this.startFontSize = parseFloat(layer.font_size) || 14;
-
-                    this.curX = this.origX;
-                    this.curY = this.origY;
-                    this.curW = this.startW;
-                    this.curH = this.startH;
-                    this.curFontSize = this.startFontSize;
-                },
-
-                onResize(event) {
-                    if (this.resizingIndex === null || !this.resizeEl) return;
-                    const scale = (parseFloat(this.zoomLevel) || 100) / 100;
-                    const coords = this.getClientCoords(event);
-                    const dx = (coords.x - this.startX) / scale;
-                    const dy = (coords.y - this.startY) / scale;
-
-                    const isText = this.isText;
-                    const h = this.resizeHandle;
-
-                    let newW = this.startW;
-                    let newH = this.startH;
-                    let newX = this.origX;
-                    let newY = this.origY;
-                    let newFontSize = this.startFontSize;
-
-                    if (h.includes('e')) newW = Math.max(15, Math.round(this.startW + dx));
-                    if (h.includes('w')) {
-                        newW = Math.max(15, Math.round(this.startW - dx));
-                        newX = Math.round(this.origX + dx);
-                    }
-                    if (h.includes('s')) newH = Math.max(10, Math.round(this.startH + dy));
-                    if (h.includes('n')) {
-                        newH = Math.max(10, Math.round(this.startH - dy));
-                        newY = Math.round(this.origY + dy);
-                    }
-
-                    if (isText) {
-                        if (h === 'se' || h === 'sw' || h === 'ne' || h === 'nw') {
-                            const ratio = newW / (this.startW || 1);
-                            newFontSize = Math.max(6, Math.min(140, Math.round(this.startFontSize * ratio)));
-                        }
-                    } else {
-                        if (h === 'se' || h === 'sw' || h === 'ne' || h === 'nw') {
-                            const aspect = (this.startW || 1) / (this.startH || 1);
-                            newH = Math.round(newW / aspect);
-                        }
-                    }
-
-
-                    this.curW = newW;
-                    this.curH = newH;
-                    this.curX = newX;
-                    this.curY = newY;
-                    this.curFontSize = newFontSize;
-
-                    // Direct DOM manipulation for zero latency 60fps resizing
-                    this.resizeEl.style.left = newX + 'px';
-                    this.resizeEl.style.top = newY + 'px';
-
-                    const innerContent = this.resizeEl.querySelector('[data-layer-content]');
-                    if (innerContent) {
-                        if (!isText) {
-                            innerContent.style.width = newW + 'px';
-                            innerContent.style.height = newH + 'px';
-
-                        } else {
-                            const textDiv = innerContent.querySelector('div');
-                            if (textDiv) {
-                                textDiv.style.fontSize = newFontSize + 'pt';
-                                if (h === 'e' || h === 'w') {
-                                    textDiv.style.whiteSpace = 'normal';
-                                    textDiv.style.width = newW + 'px';
-                                }
-
-                            }
-                        }
-                    }
-                },
-
-                stopResize() {
-                    if (this.resizingIndex !== null) {
-                        const idx = this.resizingIndex;
-                        let finalW = parseInt(this.curW) || 0;
-                        let finalH = parseInt(this.curH) || 0;
-                        const finalFontSize = parseInt(this.curFontSize) || 14;
-                        const finalX = parseInt(this.curX) || 0;
-                        const finalY = parseInt(this.curY) || 0;
-
-                        const contentEl = this.resizeEl ? this.resizeEl.querySelector('[data-layer-content]') : null;
-                        if (contentEl) {
-                            finalW = contentEl.offsetWidth || finalW;
-                            finalH = contentEl.offsetHeight || finalH;
-                        }
-
-                        this.resizingIndex = null;
-                        this.resizeHandle = null;
-                        this.resizeEl = null;
-
-                        this.$wire.updateLayerDimensions(idx, finalW, finalH, finalFontSize, finalX, finalY);
-                    }
-                },
-
-                init() {
-                    this.syncSelectedLayerData();
-                    this.$watch('$wire.selectedLayerIndex', (val) => {
-                        this.syncSelectedLayerData();
-                    });
-                    this.$watch('$wire.layers', (val) => {
-                        this.syncSelectedLayerData();
-                    });
-
-                    // Mouse event listeners
-                    window.addEventListener('mousemove', (e) => {
-
-                        if (this.resizingIndex !== null) {
-                            this.onResize(e);
-                        } else if (this.draggingIndex !== null) {
-                            this.onDrag(e);
-                        }
-                    });
-                    window.addEventListener('mouseup', (e) => {
-                        if (this.resizingIndex !== null) {
-                            this.stopResize();
-                        }
-                        if (this.draggingIndex !== null) {
-                            this.stopDrag();
-                        }
-                    });
-
-                    // Touch event listeners
-                    window.addEventListener('touchmove', (e) => {
-                        const coords = (e.touches && e.touches.length > 0) ? e.touches[0] : (e.changedTouches ? e.changedTouches[0] : null);
-
-                        if (this.resizingIndex !== null) {
-                            this.onResize(e);
-                        } else if (this.draggingIndex !== null) {
-                            this.onDrag(e);
-                        }
-                    }, { passive: false });
-                    window.addEventListener('touchend', (e) => {
-                        if (this.resizingIndex !== null) {
-                            this.stopResize();
-                        }
-                        if (this.draggingIndex !== null) {
-                            this.stopDrag();
-                        }
-                    });
-                }
-            }">
+            <div class="w-full space-y-4">
 
                 <!-- Scrollable Canvas Viewport -->
                 <div class="w-full flex items-center justify-center overflow-auto p-4 min-h-[460px] bg-slate-950/40 rounded-2xl border border-slate-800/60 shadow-inner">
@@ -950,15 +946,15 @@ new class extends Component {
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">Position X (mm)</label>
                                 <div class="relative">
-                                    <input type="number" step="0.1" wire:key="input-x-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round($root.curX / 11.8128 * 10) / 10" @input="$root.curX = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].x = $root.curX; $wire.updateLayerCoordinates({{ $selectedLayerIndex }}, $root.curX, $root.curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
-                                    <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="$root.curX + 'px'"></span>
+                                    <input type="number" step="0.1" wire:key="input-x-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(curX / 11.8128 * 10) / 10" @input="curX = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].x = curX; $wire.updateLayerCoordinates({{ $selectedLayerIndex }}, curX, curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                    <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="curX + 'px'"></span>
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">Position Y (mm)</label>
                                 <div class="relative">
-                                    <input type="number" step="0.1" wire:key="input-y-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round($root.curY / 11.8128 * 10) / 10" @input="$root.curY = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].y = $root.curY; $wire.updateLayerCoordinates({{ $selectedLayerIndex }}, $root.curX, $root.curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
-                                    <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="$root.curY + 'px'"></span>
+                                    <input type="number" step="0.1" wire:key="input-y-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(curY / 11.8128 * 10) / 10" @input="curY = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].y = curY; $wire.updateLayerCoordinates({{ $selectedLayerIndex }}, curX, curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                    <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="curY + 'px'"></span>
                                 </div>
                             </div>
                         </div>
@@ -968,15 +964,15 @@ new class extends Component {
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-400 mb-1">Width (mm)</label>
                                     <div class="relative">
-                                        <input type="number" step="0.1" wire:key="input-w-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round($root.curW / 11.8128 * 10) / 10" @input="$root.curW = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].width = $root.curW; $wire.updateLayerDimensions({{ $selectedLayerIndex }}, $root.curW, $root.curH, $root.curFontSize, $root.curX, $root.curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
-                                        <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="$root.curW + 'px'"></span>
+                                        <input type="number" step="0.1" wire:key="input-w-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(curW / 11.8128 * 10) / 10" @input="curW = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].width = curW; $wire.updateLayerDimensions({{ $selectedLayerIndex }}, curW, curH, curFontSize, curX, curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                        <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="curW + 'px'"></span>
                                     </div>
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-400 mb-1">Height (mm)</label>
                                     <div class="relative">
-                                        <input type="number" step="0.1" wire:key="input-h-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round($root.curH / 11.8128 * 10) / 10" @input="$root.curH = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].height = $root.curH; $wire.updateLayerDimensions({{ $selectedLayerIndex }}, $root.curW, $root.curH, $root.curFontSize, $root.curX, $root.curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
-                                        <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="$root.curH + 'px'"></span>
+                                        <input type="number" step="0.1" wire:key="input-h-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(curH / 11.8128 * 10) / 10" @input="curH = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].height = curH; $wire.updateLayerDimensions({{ $selectedLayerIndex }}, curW, curH, curFontSize, curX, curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                        <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="curH + 'px'"></span>
                                     </div>
                                 </div>
                             </div>
@@ -995,7 +991,7 @@ new class extends Component {
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-400 mb-1">Font Size (pt)</label>
                                     <div class="relative">
-                                        <input type="number" min="4" max="120" step="1" wire:key="input-size-pt-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="$root.curFontSize" @input="$root.curFontSize = parseInt($event.target.value) || 14; $wire.layers[{{ $selectedLayerIndex }}].font_size = $root.curFontSize; $wire.updateLayerDimensions({{ $selectedLayerIndex }}, $root.curW, $root.curH, $root.curFontSize, $root.curX, $root.curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                        <input type="number" min="4" max="120" step="1" wire:key="input-size-pt-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="curFontSize" @input="curFontSize = parseInt($event.target.value) || 14; $wire.layers[{{ $selectedLayerIndex }}].font_size = curFontSize; $wire.updateLayerDimensions({{ $selectedLayerIndex }}, curW, curH, curFontSize, curX, curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
                                         <span class="absolute right-3 top-2 text-[10px] text-indigo-400 font-mono font-bold">pt</span>
                                     </div>
                                 </div>
