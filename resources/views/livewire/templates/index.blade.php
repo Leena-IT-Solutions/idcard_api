@@ -123,9 +123,9 @@ new class extends Component {
                     </svg>
                     <span>ID Card Design Library</span>
                 </div>
-                <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">ID Card Templates</h1>
+                <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Active ID Card Template</h1>
                 <p class="text-slate-400 text-sm mt-1 max-w-2xl">
-                    Manage and customize layout templates for student ID cards, teacher passes, and visitor badges. Select default styles for your institution or override them per class.
+                    Assign the premium landscape student ID card template as the institution-wide default or configure class overrides.
                 </p>
             </div>
         </div>
@@ -141,34 +141,7 @@ new class extends Component {
         </div>
     @endif
 
-    <!-- Filter & Search Controls -->
-    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
-        <!-- Search Input -->
-        <div class="relative w-full sm:w-80">
-            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
-            </div>
-            <input wire:model.live="search" type="text" placeholder="Search templates..." class="block w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
-        </div>
 
-        <!-- Filter Pills -->
-        <div class="flex items-center space-x-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
-            <button wire:click="$set('selectedCategory', 'all')" class="px-3.5 py-2 rounded-xl text-xs font-semibold transition {{ $selectedCategory === 'all' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700' }}">
-                All Templates
-            </button>
-            <button wire:click="$set('selectedCategory', 'student')" class="px-3.5 py-2 rounded-xl text-xs font-semibold transition {{ $selectedCategory === 'student' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700' }}">
-                Students
-            </button>
-            <button wire:click="$set('selectedCategory', 'staff')" class="px-3.5 py-2 rounded-xl text-xs font-semibold transition {{ $selectedCategory === 'staff' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700' }}">
-                Staff & Teachers
-            </button>
-            <button wire:click="$set('selectedCategory', 'visitor')" class="px-3.5 py-2 rounded-xl text-xs font-semibold transition {{ $selectedCategory === 'visitor' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700' }}">
-                Visitors
-            </button>
-        </div>
-    </div>
 
     <!-- Templates Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
