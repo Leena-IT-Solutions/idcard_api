@@ -501,7 +501,8 @@ new class extends Component {
                     this.startY = event.clientY;
 
                     const layer = ($wire.layers && $wire.layers[idx]) ? $wire.layers[idx] : {};
-                    const isText = (layer.type === 'text');
+                    const layerType = (layer && layer.type) ? layer.type : (this.resizeEl ? this.resizeEl.getAttribute('data-layer-type') : 'text');
+                    const isText = (layerType === 'text');
 
                     let parseX = parseFloat(layer.x);
                     let parseY = parseFloat(layer.y);
@@ -539,7 +540,8 @@ new class extends Component {
                     const dy = (event.clientY - this.startY) / scale;
 
                     const layer = ($wire.layers && $wire.layers[this.resizingIndex]) ? $wire.layers[this.resizingIndex] : {};
-                    const isText = (layer.type === 'text');
+                    const layerType = (layer && layer.type) ? layer.type : (this.resizeEl ? this.resizeEl.getAttribute('data-layer-type') : 'text');
+                    const isText = (layerType === 'text');
                     const h = this.resizeHandle;
 
                     let newW = this.startW;
@@ -678,6 +680,7 @@ new class extends Component {
                                 @mousedown="startDrag({{ $idx }}, $event)"
                                 @dragstart.prevent
                                 data-layer-box
+                                data-layer-type="{{ $type }}"
                                 class="absolute cursor-move select-none transition-shadow group {{ $isSelected ? 'ring-2 ring-indigo-500 ring-offset-1 ring-offset-slate-900 z-30' : 'hover:ring-1 hover:ring-indigo-400/50 z-10' }}"
                                 style="left: {{ $x }}px; top: {{ $y }}px; transform: rotate({{ $rot }}deg); transform-origin: top left;"
                             >
