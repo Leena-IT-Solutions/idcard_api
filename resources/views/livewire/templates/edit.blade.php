@@ -639,6 +639,7 @@ new class extends Component {
                 init() {
                     console.log('Alpine canvas init called successfully!');
                     window.addEventListener('mousemove', (e) => {
+                        console.log('Window mousemove event', { dragging: this.draggingIndex, resizing: this.resizingIndex });
                         if (this.resizingIndex !== null) {
                             this.onResize(e);
                         } else if (this.draggingIndex !== null) {
@@ -646,6 +647,7 @@ new class extends Component {
                         }
                     });
                     window.addEventListener('mouseup', (e) => {
+                        console.log('Window mouseup event', { dragging: this.draggingIndex, resizing: this.resizingIndex });
                         if (this.resizingIndex !== null) {
                             this.stopResize();
                         }
