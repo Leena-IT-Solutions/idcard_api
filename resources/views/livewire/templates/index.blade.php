@@ -338,7 +338,7 @@ new class extends Component {
                     </div>
 
                     <!-- Card Preview at 100% scale -->
-                    <div class="flex justify-center items-center py-6 bg-slate-950/30 rounded-[1.75rem] border border-slate-800/60 p-4">
+                    <div class="flex justify-center items-center py-6 bg-slate-950/30 rounded-[1.75rem] border border-slate-800/60 p-4 text-left">
                         @include($selectedTemplateForPreview->view_path, ['student' => $mockStudent, 'school' => $mockSchool])
                     </div>
 
