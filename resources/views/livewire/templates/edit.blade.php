@@ -69,6 +69,13 @@ new class extends Component {
                 ]
             ];
         }
+
+        foreach ($this->layers as $idx => &$l) {
+            if (empty($l['id'])) {
+                $l['id'] = 'layer_' . $idx . '_' . rand(1000, 9999);
+            }
+        }
+        unset($l);
     }
 
     public function selectLayer(int $index)
@@ -84,7 +91,7 @@ new class extends Component {
     {
         $newIndex = count($this->layers);
         $this->layers[] = [
-            'id' => 'text_' . time(),
+            'id' => 'text_' . microtime(true) . '_' . rand(1000, 9999),
             'type' => 'text',
             'label' => 'Text Layer ' . ($newIndex + 1),
             'text' => 'Sample Text Layer',
@@ -376,6 +383,7 @@ new class extends Component {
                     @endphp
 
                     <div 
+                        wire:key="canvas-layer-{{ $layer['id'] ?? $idx }}"
                         wire:click="selectLayer({{ $idx }})"
                         @mousedown="startDrag({{ $idx }}, $event)"
                         class="absolute cursor-move transition-shadow {{ $isSelected ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-slate-900 z-30' : 'hover:ring-1 hover:ring-indigo-400/50 z-10' }}"
@@ -520,7 +528,7 @@ new class extends Component {
                     <div class="space-y-3 pt-1">
                         <div>
                             <label class="block text-[11px] font-bold text-indigo-400 mb-1">Layer Name / Label in List</label>
-                            <input type="text" wire:model.live="layers.{{ $selectedLayerIndex }}.label" placeholder="e.g. Header Title, Student Roll Tag" class="w-full bg-slate-950 border border-indigo-500/30 rounded-xl px-3.5 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                            <input type="text" wire:key="input-label-{{ $selectedLayerIndex }}" wire:model.live="layers.{{ $selectedLayerIndex }}.label" placeholder="e.g. Header Title, Student Roll Tag" class="w-full bg-slate-950 border border-indigo-500/30 rounded-xl px-3.5 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
                         </div>
 
                         <div class="grid grid-cols-2 gap-3">
@@ -598,6 +606,7 @@ new class extends Component {
                 <div class="space-y-2 max-h-60 overflow-y-auto pr-1">
                     @foreach($layers as $idx => $layer)
                         <div 
+                            wire:key="list-layer-{{ $layer['id'] ?? $idx }}"
                             wire:click="selectLayer({{ $idx }})"
                             class="p-3 rounded-2xl border transition flex items-center justify-between cursor-pointer {{ $selectedLayerIndex === $idx ? 'bg-indigo-500/10 border-indigo-500/40 text-white' : 'bg-slate-950/60 border-slate-800 text-slate-300 hover:border-slate-700' }}"
                         >
