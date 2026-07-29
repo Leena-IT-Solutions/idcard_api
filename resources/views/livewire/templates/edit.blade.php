@@ -556,7 +556,7 @@ new class extends Component {
         // Fetch all elements with their actual dimensions
         const items = [];
         indices.forEach((idx) => {
-            const el = document.querySelector('[data-layer-index="' + idx + '"]');
+            const el = document.querySelector('[data-layer-index=\'' + idx + '\']');
             if (el) {
                 items.push({
                     idx: idx,
@@ -653,7 +653,7 @@ new class extends Component {
         // Fetch elements with actual dimensions
         const items = [];
         indices.forEach((idx) => {
-            const el = document.querySelector('[data-layer-index="' + idx + '"]');
+            const el = document.querySelector('[data-layer-index=\'' + idx + '\']');
             if (el) {
                 items.push({
                     idx: idx,
