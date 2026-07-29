@@ -25,17 +25,16 @@
         <path d="M-10 10 L110 90 M-10 40 L90 120 M10 -20 L110 60" stroke="currentColor" stroke-width="0.3" fill="none" />
     </svg>
 
-    <!-- Top Wavy Header Pattern (Top Right) -->
-    <svg class="absolute top-0 right-0 w-[60%] h-32 pointer-events-none" viewBox="0 0 300 120" preserveAspectRatio="none">
+    <!-- Top Wavy Header Pattern -->
+    <svg class="absolute top-0 left-0 w-full h-32 pointer-events-none" viewBox="0 0 480 120" preserveAspectRatio="none">
+        <!-- Left Corner Blue Accent -->
+        <path d="M 0 0 C 40 40, 90 40, 130 0 Z" fill="#0A2540" />
+        
         <!-- Orange Wave -->
-        <path d="M 0 0 C 80 40, 160 30, 300 90 L 300 0 Z" fill="#E05B35" />
+        <path d="M 130 0 C 210 90, 330 145, 480 95 L 480 0 Z" fill="#E05B35" />
+        
         <!-- Dark Blue Wave -->
-        <path d="M 30 0 C 100 35, 170 20, 300 75 L 300 0 Z" fill="#0A2540" />
-    </svg>
-
-    <!-- Left Corner Accent -->
-    <svg class="absolute top-0 left-0 w-24 h-12 pointer-events-none" viewBox="0 0 100 50" preserveAspectRatio="none">
-        <path d="M 0 0 C 40 10, 70 0, 100 0 L 0 0 Z" fill="#0A2540" />
+        <path d="M 170 0 C 240 75, 340 115, 480 75 L 480 0 Z" fill="#0A2540" />
     </svg>
 
     <!-- Card Content -->
