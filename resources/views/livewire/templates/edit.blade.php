@@ -91,19 +91,42 @@ new class extends Component {
     public function addTextLayer()
     {
         $newIndex = count($this->layers);
+
+        // Find last text layer to copy its styling settings
+        $lastTextLayer = null;
+        if ($this->selectedLayerIndex !== null && isset($this->layers[$this->selectedLayerIndex]) && $this->layers[$this->selectedLayerIndex]['type'] === 'text') {
+            $lastTextLayer = $this->layers[$this->selectedLayerIndex];
+        } else {
+            for ($i = count($this->layers) - 1; $i >= 0; $i--) {
+                if ($this->layers[$i]['type'] === 'text') {
+                    $lastTextLayer = $this->layers[$i];
+                    break;
+                }
+            }
+        }
+
+        $fontSize = $lastTextLayer ? ($lastTextLayer['font_size'] ?? 14) : 14;
+        $fontWeight = $lastTextLayer ? ($lastTextLayer['font_weight'] ?? 'bold') : 'bold';
+        $fontFamily = $lastTextLayer ? ($lastTextLayer['font_family'] ?? 'Inter') : 'Inter';
+        $color = $lastTextLayer ? ($lastTextLayer['color'] ?? '#ffffff') : '#ffffff';
+        $align = $lastTextLayer ? ($lastTextLayer['align'] ?? 'left') : 'left';
+        $rotation = $lastTextLayer ? ($lastTextLayer['rotation'] ?? 0) : 0;
+        $x = $lastTextLayer ? (($lastTextLayer['x'] ?? 100) + 15) : 100;
+        $y = $lastTextLayer ? (($lastTextLayer['y'] ?? 100) + 15) : 100;
+
         $this->layers[] = [
             'id' => 'text_' . microtime(true) . '_' . rand(1000, 9999),
             'type' => 'text',
             'label' => 'Text Layer ' . ($newIndex + 1),
             'text' => 'Sample Text Layer',
-            'x' => 100,
-            'y' => 100,
-            'font_size' => 14,
-            'font_weight' => 'bold',
-            'font_family' => 'Inter',
-            'color' => '#ffffff',
-            'align' => 'left',
-            'rotation' => 0,
+            'x' => $x,
+            'y' => $y,
+            'font_size' => $fontSize,
+            'font_weight' => $fontWeight,
+            'font_family' => $fontFamily,
+            'color' => $color,
+            'align' => $align,
+            'rotation' => $rotation,
         ];
         $this->selectedLayerIndex = $newIndex;
     }
@@ -111,18 +134,41 @@ new class extends Component {
     public function addPhotoLayer()
     {
         $newIndex = count($this->layers);
+
+        // Find last photo layer to copy its styling settings
+        $lastPhotoLayer = null;
+        if ($this->selectedLayerIndex !== null && isset($this->layers[$this->selectedLayerIndex]) && $this->layers[$this->selectedLayerIndex]['type'] === 'photo') {
+            $lastPhotoLayer = $this->layers[$this->selectedLayerIndex];
+        } else {
+            for ($i = count($this->layers) - 1; $i >= 0; $i--) {
+                if ($this->layers[$i]['type'] === 'photo') {
+                    $lastPhotoLayer = $this->layers[$i];
+                    break;
+                }
+            }
+        }
+
+        $w = $lastPhotoLayer ? ($lastPhotoLayer['width'] ?? 90) : 90;
+        $h = $lastPhotoLayer ? ($lastPhotoLayer['height'] ?? 110) : 110;
+        $borderRadius = $lastPhotoLayer ? ($lastPhotoLayer['border_radius'] ?? 12) : 12;
+        $borderColor = $lastPhotoLayer ? ($lastPhotoLayer['border_color'] ?? '#818cf8') : '#818cf8';
+        $borderWidth = $lastPhotoLayer ? ($lastPhotoLayer['border_width'] ?? 2) : 2;
+        $rotation = $lastPhotoLayer ? ($lastPhotoLayer['rotation'] ?? 0) : 0;
+        $x = $lastPhotoLayer ? (($lastPhotoLayer['x'] ?? 24) + 15) : 24;
+        $y = $lastPhotoLayer ? (($lastPhotoLayer['y'] ?? 80) + 15) : 80;
+
         $this->layers[] = [
             'id' => 'photo_' . microtime(true) . '_' . rand(1000, 9999),
             'type' => 'photo',
             'label' => 'Student Photo',
-            'x' => 24,
-            'y' => 80,
-            'width' => 90,
-            'height' => 110,
-            'border_radius' => 12,
-            'border_color' => '#818cf8',
-            'border_width' => 2,
-            'rotation' => 0,
+            'x' => $x,
+            'y' => $y,
+            'width' => $w,
+            'height' => $h,
+            'border_radius' => $borderRadius,
+            'border_color' => $borderColor,
+            'border_width' => $borderWidth,
+            'rotation' => $rotation,
         ];
         $this->selectedLayerIndex = $newIndex;
     }
@@ -130,16 +176,37 @@ new class extends Component {
     public function addLogoLayer()
     {
         $newIndex = count($this->layers);
+
+        // Find last logo layer to copy its styling settings
+        $lastLogoLayer = null;
+        if ($this->selectedLayerIndex !== null && isset($this->layers[$this->selectedLayerIndex]) && $this->layers[$this->selectedLayerIndex]['type'] === 'logo') {
+            $lastLogoLayer = $this->layers[$this->selectedLayerIndex];
+        } else {
+            for ($i = count($this->layers) - 1; $i >= 0; $i--) {
+                if ($this->layers[$i]['type'] === 'logo') {
+                    $lastLogoLayer = $this->layers[$i];
+                    break;
+                }
+            }
+        }
+
+        $w = $lastLogoLayer ? ($lastLogoLayer['width'] ?? 45) : 45;
+        $h = $lastLogoLayer ? ($lastLogoLayer['height'] ?? 45) : 45;
+        $borderRadius = $lastLogoLayer ? ($lastLogoLayer['border_radius'] ?? 8) : 8;
+        $rotation = $lastLogoLayer ? ($lastLogoLayer['rotation'] ?? 0) : 0;
+        $x = $lastLogoLayer ? (($lastLogoLayer['x'] ?? 24) + 15) : 24;
+        $y = $lastLogoLayer ? (($lastLogoLayer['y'] ?? 20) + 15) : 20;
+
         $this->layers[] = [
             'id' => 'logo_' . microtime(true) . '_' . rand(1000, 9999),
             'type' => 'logo',
             'label' => 'School Logo',
-            'x' => 24,
-            'y' => 20,
-            'width' => 45,
-            'height' => 45,
-            'border_radius' => 8,
-            'rotation' => 0,
+            'x' => $x,
+            'y' => $y,
+            'width' => $w,
+            'height' => $h,
+            'border_radius' => $borderRadius,
+            'rotation' => $rotation,
         ];
         $this->selectedLayerIndex = $newIndex;
     }
