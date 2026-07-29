@@ -86,7 +86,7 @@ new class extends Component {
         $this->layers[] = [
             'id' => 'text_' . time(),
             'type' => 'text',
-            'label' => 'Custom Text',
+            'label' => 'Text Layer ' . ($newIndex + 1),
             'text' => 'Sample Text Layer',
             'x' => 100,
             'y' => 100,
@@ -516,15 +516,22 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <!-- Coordinates & Dimension Controls -->
-                    <div class="grid grid-cols-2 gap-3 pt-2">
+                    <!-- Layer Name / Label & Coordinates -->
+                    <div class="space-y-3 pt-1">
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-400 mb-1">Position X (px)</label>
-                            <input type="number" wire:model.live="layers.{{ $selectedLayerIndex }}.x" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                            <label class="block text-[11px] font-bold text-indigo-400 mb-1">Layer Name / Label in List</label>
+                            <input type="text" wire:model.live="layers.{{ $selectedLayerIndex }}.label" placeholder="e.g. Header Title, Student Roll Tag" class="w-full bg-slate-950 border border-indigo-500/30 rounded-xl px-3.5 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
                         </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-400 mb-1">Position Y (px)</label>
-                            <input type="number" wire:model.live="layers.{{ $selectedLayerIndex }}.y" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Position X (px)</label>
+                                <input type="number" wire:model.live="layers.{{ $selectedLayerIndex }}.x" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Position Y (px)</label>
+                                <input type="number" wire:model.live="layers.{{ $selectedLayerIndex }}.y" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                            </div>
                         </div>
                     </div>
 
