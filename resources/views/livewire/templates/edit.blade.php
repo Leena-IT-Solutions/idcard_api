@@ -443,7 +443,7 @@ new class extends Component {
                                 $color = $layer['color'] ?? '#ffffff';
                                 $align = $layer['align'] ?? 'left';
                             @endphp
-                            <div style="font-size: {{ $fontSize }}px; font-weight: {{ $fontWeight }}; font-family: {{ $fontFamily }}, sans-serif; color: {{ $color }}; text-align: {{ $align }}; white-space: nowrap; padding: 2px 4px; border-radius: 4px; background: {{ $isSelected ? 'rgba(99, 102, 241, 0.15)' : 'transparent' }};">
+                            <div style="font-size: {{ $fontSize }}pt; font-weight: {{ $fontWeight }}; font-family: {{ $fontFamily }}, sans-serif; color: {{ $color }}; text-align: {{ $align }}; white-space: nowrap; padding: 2px 4px; border-radius: 4px; background: {{ $isSelected ? 'rgba(99, 102, 241, 0.15)' : 'transparent' }};">
                                 {{ $displayText }}
                             </div>
 
@@ -611,15 +611,11 @@ new class extends Component {
                             </div>
 
                             <div class="grid grid-cols-2 gap-3">
-                                <div x-data="{
-                                    updateFontSizeMm(val) {
-                                        $wire.layers[{{ $selectedLayerIndex }}].font_size = Math.round((parseFloat(val) || 0) * 11.8128);
-                                    }
-                                }">
-                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Font Size (mm)</label>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Font Size (pt)</label>
                                     <div class="relative">
-                                        <input type="number" step="0.1" wire:key="input-size-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(($wire.layers[{{ $selectedLayerIndex }}].font_size || 14) / 11.8128 * 10) / 10" @input="updateFontSizeMm($event.target.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
-                                        <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono">{{ $selectedLayer['font_size'] ?? 14 }}px</span>
+                                        <input type="number" min="4" max="120" step="1" wire:key="input-size-pt-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.font_size" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                        <span class="absolute right-3 top-2 text-[10px] text-indigo-400 font-mono font-bold">pt</span>
                                     </div>
                                 </div>
                                 <div>
