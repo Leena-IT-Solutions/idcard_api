@@ -244,12 +244,10 @@ new class extends Component {
         $boxH = $maxY - $minY;
 
         if ($boxH >= $boxW) {
-            // Vertical Layout: align horizontally to the bounding box center axis
-            $centerX = $minX + ($boxW / 2);
+            // Vertical Layout: align left edges to the bounding box left edge (so colons align perfectly)
             foreach ($indices as $idx) {
                 if (!isset($this->layers[$idx])) continue;
-                $w = $this->layers[$idx]['width'] ?? 150;
-                $this->layers[$idx]['x'] = round($centerX - ($w / 2));
+                $this->layers[$idx]['x'] = $minX;
             }
 
             // Distribute vertically if 3 or more elements
@@ -257,12 +255,10 @@ new class extends Component {
                 $this->spaceSelectedEvenly('vertical');
             }
         } else {
-            // Horizontal Layout: align vertically to the bounding box center axis
-            $centerY = $minY + ($boxH / 2);
+            // Horizontal Layout: align top edges to the bounding box top edge
             foreach ($indices as $idx) {
                 if (!isset($this->layers[$idx])) continue;
-                $h = $this->layers[$idx]['height'] ?? 30;
-                $this->layers[$idx]['y'] = round($centerY - ($h / 2));
+                $this->layers[$idx]['y'] = $minY;
             }
 
             // Distribute horizontally if 3 or more elements
