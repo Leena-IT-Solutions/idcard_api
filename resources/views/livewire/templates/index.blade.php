@@ -13,6 +13,10 @@ new class extends Component {
     public $selectedTemplateForAssign = null;
     public $schoolGrades = [];
 
+    // Preview properties
+    public bool $isPreviewModalOpen = false;
+    public $selectedTemplateForPreview = null;
+
     public function mount()
     {
         $this->loadGrades();
@@ -113,6 +117,22 @@ new class extends Component {
         $this->selectedTemplateForAssign = null;
     }
 
+    public function openPreviewModal($templateId)
+    {
+        $this->selectedTemplateForPreview = (object)[
+            'id' => 'premium-landscape',
+            'name' => 'Premium Landscape Student ID',
+            'view_path' => 'id-card-templates.premium-landscape',
+        ];
+        $this->isPreviewModalOpen = true;
+    }
+
+    public function closePreviewModal()
+    {
+        $this->isPreviewModalOpen = false;
+        $this->selectedTemplateForPreview = null;
+    }
+
     public function assignToGrade($gradeId, $templateId)
     {
         $grade = Grade::find($gradeId);
@@ -168,8 +188,8 @@ new class extends Component {
                 <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm hover:shadow-md transition duration-200 flex flex-col justify-between group">
                     <div>
                         <!-- Card Visual Live Blade Preview Container -->
-                        <div class="h-56 w-full rounded-2xl bg-slate-950/30 overflow-hidden flex items-center justify-center p-2 relative shadow-inner mb-4">
-                            <div class="scale-[0.4] sm:scale-[0.45] origin-center shrink-0">
+                        <div wire:click="openPreviewModal('{{ $tpl->id }}')" class="cursor-pointer h-56 w-full rounded-2xl bg-slate-950/30 overflow-hidden flex items-center justify-center p-2 relative shadow-inner mb-4 hover:bg-slate-950/40 transition duration-200">
+                            <div class="scale-[0.4] sm:scale-[0.45] origin-center shrink-0 pointer-events-none">
                                 @include($tpl->view_path, ['student' => $mockStudent, 'school' => $mockSchool])
                             </div>
                         </div>
@@ -287,6 +307,45 @@ new class extends Component {
                     <div class="bg-slate-950 px-6 py-4 flex justify-end">
                         <button type="button" wire:click="closeAssignModal" class="px-5 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition">
                             Done
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Preview Modal -->
+    @if($isPreviewModalOpen && $selectedTemplateForPreview)
+        <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+            <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:p-0">
+                <div class="fixed inset-0 bg-slate-950/75 backdrop-blur-md transition-opacity" wire:click="closePreviewModal"></div>
+
+                <!-- Center elements -->
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div class="inline-block align-middle bg-slate-900 border border-slate-800 rounded-[2rem] p-8 text-center overflow-hidden shadow-2xl transform transition-all max-w-xl w-full relative">
+                    <!-- Close Button -->
+                    <button type="button" wire:click="closePreviewModal" class="absolute top-5 right-5 text-slate-400 hover:text-white transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+
+                    <!-- Title/Header in Modal -->
+                    <div class="mb-6 text-left">
+                        <h3 class="text-lg font-black text-white">{{ $selectedTemplateForPreview->name }}</h3>
+                        <p class="text-xs text-slate-400 mt-1">Full-scale design preview (CR-80 Landscape Layout)</p>
+                    </div>
+
+                    <!-- Card Preview at 100% scale -->
+                    <div class="flex justify-center items-center py-6 bg-slate-950/30 rounded-[1.75rem] border border-slate-800/60 p-4">
+                        @include($selectedTemplateForPreview->view_path, ['student' => $mockStudent, 'school' => $mockSchool])
+                    </div>
+
+                    <!-- Footer Actions inside Modal -->
+                    <div class="mt-6 flex justify-end">
+                        <button type="button" wire:click="closePreviewModal" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition">
+                            Close Preview
                         </button>
                     </div>
                 </div>
