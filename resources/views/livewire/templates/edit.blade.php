@@ -600,6 +600,8 @@ new class extends Component {
                         }
                     }
 
+                    console.log('Alpine onResize values calculated', { newW, newH, newX, newY, newFontSize });
+
                     this.curW = newW;
                     this.curH = newH;
                     this.curX = newX;
@@ -615,6 +617,7 @@ new class extends Component {
                         if (!isText) {
                             innerContent.style.width = newW + 'px';
                             innerContent.style.height = newH + 'px';
+                            console.log('onResize image styles set', { width: innerContent.style.width, height: innerContent.style.height });
                         } else {
                             const textDiv = innerContent.querySelector('div');
                             if (textDiv) {
@@ -623,6 +626,7 @@ new class extends Component {
                                     textDiv.style.whiteSpace = 'normal';
                                     textDiv.style.width = newW + 'px';
                                 }
+                                console.log('onResize text styles set', { fontSize: textDiv.style.fontSize, width: textDiv.style.width });
                             }
                         }
                     }
