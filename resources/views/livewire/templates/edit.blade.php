@@ -79,9 +79,9 @@ new class extends Component {
         unset($l);
     }
 
-    public function selectLayer(int $index)
+    public function selectLayer(?int $index = null)
     {
-        if (isset($this->layers[$index])) {
+        if ($index !== null && isset($this->layers[$index])) {
             $this->selectedLayerIndex = $index;
         } else {
             $this->selectedLayerIndex = null;
@@ -440,6 +440,12 @@ new class extends Component {
             this.curW = Math.round(parseFloat(layer.width) || 0);
             this.curH = Math.round(parseFloat(layer.height) || 0);
             this.curFontSize = Math.round(parseFloat(layer.font_size) || 14);
+        }
+    },
+
+    onViewportMouseDown(event) {
+        if (!event.target.closest('[data-layer-box]')) {
+            this.$wire.selectLayer(null);
         }
     },
 
@@ -1022,7 +1028,10 @@ new class extends Component {
             <div class="w-full space-y-4">
 
                 <!-- Scrollable Canvas Viewport -->
-                <div class="w-full flex items-center justify-center overflow-auto p-4 min-h-[460px] bg-slate-950/40 rounded-2xl border border-slate-800/60 shadow-inner">
+                <div 
+                    @mousedown="onViewportMouseDown($event)"
+                    class="w-full flex items-center justify-center overflow-auto p-4 min-h-[460px] bg-slate-950/40 rounded-2xl border border-slate-800/60 shadow-inner"
+                >
                     <div 
                         id="canva-studio-canvas"
                         class="relative select-none shadow-2xl rounded-2xl bg-slate-950 overflow-hidden shrink-0 my-auto transform transition-transform duration-200"
