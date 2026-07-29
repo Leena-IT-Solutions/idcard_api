@@ -13,11 +13,17 @@ class Grade extends Model
         'school_id',
         'name',
         'template_id',
+        'school_template_id',
     ];
 
     public function school()
     {
         return $this->belongsTo(School::class);
+    }
+
+    public function schoolTemplate()
+    {
+        return $this->belongsTo(SchoolTemplate::class, 'school_template_id');
     }
 
     public function divisions()

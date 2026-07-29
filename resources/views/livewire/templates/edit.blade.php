@@ -1,172 +1,240 @@
 <?php
 
 use Livewire\Volt\Component;
+use Livewire\WithFileUploads;
+use App\Models\Template;
+use App\Models\SchoolTemplate;
 use App\Models\School;
-use App\Models\Grade;
 
 new class extends Component {
-    public string $templateId = 'premium-landscape';
-    public $activeSchool = null;
-    public $schoolGrades = [];
+    use WithFileUploads;
 
-    // Editable branding
-    public string $schoolName = '';
-    public string $subtitle = 'High School';
+    public $templateId;
+    public string $type = 'master'; // 'master' or 'school'
+    public $template = null;
 
-    // Dynamic Custom Field Builder
-    // Each item has 'label' and 'value_format' (which can use placeholders like {first_name}, {last_name}, {serial_number})
-    public array $customFields = [
-        ['label' => 'NAME', 'value_format' => '{full_name}'],
-        ['label' => 'ID', 'value_format' => '#{serial_number}'],
-        ['label' => 'D.O.B', 'value_format' => '{dob}'],
-        ['label' => 'ADDRES', 'value_format' => '{address} {pincode}'],
-    ];
+    // Editable template properties
+    public string $templateName = '';
+    public string $orientation = 'landscape';
+    public float $widthMm = 85.60;
+    public float $heightMm = 54.00;
+    public array $layers = [];
+    public $bgUpload = null;
 
-    public bool $showBarcode = true;
+    // Studio Canvas Settings
+    public bool $showGrid = true;
+    public bool $enableSnapping = true;
+    public bool $livePreviewMode = true; // Show mock data vs placeholder text
+    public ?int $selectedLayerIndex = null;
 
-    // Available variables list
-    public array $availableVariables = [
-        '{full_name}' => 'Full Name',
-        '{first_name}' => 'First Name',
-        '{middle_name}' => 'Middle Name',
-        '{last_name}' => 'Last Name',
-        '{serial_number}' => 'ID / Serial No',
-        '{dob}' => 'Date of Birth',
-        '{gender}' => 'Gender',
-        '{blood_group}' => 'Blood Group',
-        '{contact_number}' => 'Contact Phone',
-        '{address}' => 'Address',
-        '{pincode}' => 'Pincode',
-        '{grade}' => 'Class / Grade',
-        '{division}' => 'Division',
-        '{roll_no}' => 'Roll Number',
-    ];
-
-    public function mount($templateId = 'premium-landscape')
+    public function mount($templateId, $type = 'master')
     {
         $this->templateId = $templateId;
-        $activeSchoolId = session('active_school_id');
-        if ($activeSchoolId) {
-            $this->activeSchool = School::find($activeSchoolId);
-        }
+        $this->type = request()->query('type', $type);
 
-        if ($this->activeSchool) {
-            $this->schoolName = $this->activeSchool->name ?? 'Sarvodaya Vidyalay';
+        if ($this->type === 'school') {
+            $this->template = SchoolTemplate::find($templateId);
         } else {
-            $this->schoolName = 'Sarvodaya Vidyalay';
+            $this->template = Template::find($templateId);
         }
 
-        $this->loadGrades();
+        if (!$this->template) {
+            session()->flash('error', 'Template not found.');
+            return redirect()->route('templates');
+        }
+
+        $this->templateName = $this->template->name;
+        $this->orientation = $this->template->orientation ?? 'landscape';
+        $this->widthMm = (float)($this->template->width_mm ?? 85.60);
+        $this->heightMm = (float)($this->template->height_mm ?? 54.00);
+
+        $config = $this->template->layout_config;
+        $this->layers = is_array($config) ? $config : (is_string($config) ? json_decode($config, true) : []);
+
+        if (empty($this->layers)) {
+            $this->layers = [
+                [
+                    'id' => 'student_name',
+                    'type' => 'text',
+                    'label' => 'Student Name',
+                    'text' => '{First Name} {Middle Name} {Last Name}',
+                    'x' => 130,
+                    'y' => 82,
+                    'font_size' => 16,
+                    'font_weight' => 'bold',
+                    'font_family' => 'Inter',
+                    'color' => '#ffffff',
+                    'align' => 'left',
+                    'rotation' => 0,
+                ]
+            ];
+        }
     }
 
-    public function loadGrades()
+    public function selectLayer(int $index)
     {
-        $activeSchoolId = session('active_school_id');
-        if ($activeSchoolId) {
-            $this->schoolGrades = Grade::where('school_id', $activeSchoolId)
-                ->orderBy('name', 'asc')
-                ->get();
+        if (isset($this->layers[$index])) {
+            $this->selectedLayerIndex = $index;
         } else {
-            $this->schoolGrades = [];
+            $this->selectedLayerIndex = null;
         }
     }
 
-    public function addField()
+    public function addTextLayer()
     {
-        $this->customFields[] = [
-            'label' => 'NEW FIELD',
-            'value_format' => '{first_name}',
+        $newIndex = count($this->layers);
+        $this->layers[] = [
+            'id' => 'text_' . time(),
+            'type' => 'text',
+            'label' => 'Custom Text',
+            'text' => 'Sample Text Layer',
+            'x' => 100,
+            'y' => 100,
+            'font_size' => 14,
+            'font_weight' => 'bold',
+            'font_family' => 'Inter',
+            'color' => '#ffffff',
+            'align' => 'left',
+            'rotation' => 0,
         ];
+        $this->selectedLayerIndex = $newIndex;
     }
 
-    public function removeField($index)
+    public function removeLayer(int $index)
     {
-        if (isset($this->customFields[$index])) {
-            array_splice($this->customFields, $index, 1);
+        if (isset($this->layers[$index])) {
+            array_splice($this->layers, $index, 1);
+            if ($this->selectedLayerIndex === $index) {
+                $this->selectedLayerIndex = null;
+            } elseif ($this->selectedLayerIndex > $index) {
+                $this->selectedLayerIndex--;
+            }
         }
     }
 
-    public function insertTag($index, $tag)
+    public function moveLayer(int $index, string $direction)
     {
-        if (isset($this->customFields[$index])) {
-            $this->customFields[$index]['value_format'] .= ' ' . $tag;
-            $this->customFields[$index]['value_format'] = trim($this->customFields[$index]['value_format']);
+        if (!isset($this->layers[$index])) return;
+
+        if ($direction === 'up' && $index > 0) {
+            $temp = $this->layers[$index];
+            $this->layers[$index] = $this->layers[$index - 1];
+            $this->layers[$index - 1] = $temp;
+            $this->selectedLayerIndex = $index - 1;
+        } elseif ($direction === 'down' && $index < count($this->layers) - 1) {
+            $temp = $this->layers[$index];
+            $this->layers[$index] = $this->layers[$index + 1];
+            $this->layers[$index + 1] = $temp;
+            $this->selectedLayerIndex = $index + 1;
         }
     }
 
-    public function makeSchoolDefault()
+    public function alignSelectedLayer(string $alignment)
     {
-        $activeSchoolId = session('active_school_id');
-        if (!$activeSchoolId) {
-            $this->addError('general', 'No active school selected.');
-            return;
-        }
+        if ($this->selectedLayerIndex === null || !isset($this->layers[$this->selectedLayerIndex])) return;
 
-        $school = School::find($activeSchoolId);
-        if ($school) {
-            $school->update(['template_id' => $this->templateId]);
-            $this->activeSchool = $school->fresh();
-            session()->flash('message', 'Template set as School Default successfully!');
+        $canvasWidth = $this->orientation === 'portrait' ? 638 : 1011;
+        $canvasHeight = $this->orientation === 'portrait' ? 1011 : 638;
+
+        $layer = &$this->layers[$this->selectedLayerIndex];
+        $layerW = $layer['width'] ?? 150;
+        $layerH = $layer['height'] ?? 30;
+
+        switch ($alignment) {
+            case 'left':
+                $layer['x'] = 20;
+                break;
+            case 'center_h':
+                $layer['x'] = (int)(($canvasWidth - $layerW) / 2);
+                break;
+            case 'right':
+                $layer['x'] = (int)($canvasWidth - $layerW - 20);
+                break;
+            case 'top':
+                $layer['y'] = 20;
+                break;
+            case 'center_v':
+                $layer['y'] = (int)(($canvasHeight - $layerH) / 2);
+                break;
+            case 'bottom':
+                $layer['y'] = (int)($canvasHeight - $layerH - 20);
+                break;
         }
     }
 
-    public function assignToGrade($gradeId)
+    public function appendVariableToSelected(string $tag)
     {
-        $grade = Grade::find($gradeId);
-        if ($grade) {
-            $newTemplateId = $grade->template_id == $this->templateId ? null : $this->templateId;
-            $grade->update(['template_id' => $newTemplateId]);
-            $this->loadGrades();
+        if ($this->selectedLayerIndex !== null && isset($this->layers[$this->selectedLayerIndex])) {
+            if (($this->layers[$this->selectedLayerIndex]['type'] ?? '') === 'text') {
+                $this->layers[$this->selectedLayerIndex]['text'] .= ' ' . $tag;
+            }
         }
     }
 
-    public function saveCustomization()
+    public function updateLayerCoordinates(int $index, int $x, int $y)
     {
-        session()->flash('message', 'Design customization saved successfully!');
+        if (isset($this->layers[$index])) {
+            $this->layers[$index]['x'] = max(0, $x);
+            $this->layers[$index]['y'] = max(0, $y);
+        }
+    }
+
+    public function saveStudioDesign()
+    {
+        if (!$this->template) return;
+
+        $bgPath = $this->template->background_image;
+        if ($this->bgUpload) {
+            $bgPath = $this->bgUpload->store('templates/backgrounds', 'public');
+        }
+
+        $this->template->update([
+            'name' => $this->templateName,
+            'orientation' => $this->orientation,
+            'width_mm' => $this->widthMm,
+            'height_mm' => $this->heightMm,
+            'background_image' => $bgPath,
+            'layout_config' => $this->layers,
+        ]);
+
+        session()->flash('message', 'Canvas studio design saved successfully!');
     }
 
     public function with(): array
     {
-        $isSchoolDefault = $this->activeSchool && $this->activeSchool->template_id == $this->templateId;
+        $activeSchoolId = session('active_school_id');
+        $activeSchool = $activeSchoolId ? School::find($activeSchoolId) : null;
 
         $mockStudent = (object)[
-            'first_name' => 'John',
-            'middle_name' => 'A.',
-            'last_name' => 'Doe',
-            'dob' => '2015-05-15',
+            'first_name' => 'Aaditya',
+            'middle_name' => 'Sonu',
+            'last_name' => 'Thakur',
+            'dob' => '2017-10-27',
+            'contact_number' => '9730777244',
+            'blood_group' => 'AB+',
             'gender' => 'Male',
-            'contact_number' => '9876543210',
-            'blood_group' => 'A+',
-            'address' => '123 Main Street',
+            'address' => 'Sarvodhya Nagar Phase 3 Flat No 704',
             'pincode' => '400001',
             'photo_path' => '',
             'campaignStudents' => collect([
                 (object)[
                     'grade' => (object)['name' => 'V'],
-                    'division' => (object)['name' => 'A'],
-                    'roll_no' => '42',
-                    'serial_number' => 'SR-2026-042',
+                    'division' => (object)['name' => 'B'],
+                    'roll_no' => '202',
+                    'serial_number' => '202',
                 ]
             ])
         ];
 
-        $mockSchool = $this->activeSchool ?? (object)[
-            'name' => $this->schoolName,
-            'logo_path' => '',
-            'school_code' => 'SV-99',
-        ];
-
         return [
-            'isSchoolDefault' => $isSchoolDefault,
+            'activeSchool' => $activeSchool,
             'mockStudent' => $mockStudent,
-            'mockSchool' => $mockSchool,
         ];
     }
 }; ?>
 
 <div class="space-y-6">
-    <!-- Session Message Alert -->
-    @if (session()->has('message'))
+    @if(session()->has('message'))
         <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-2xl flex items-center justify-between text-sm font-semibold">
             <span>{{ session('message') }}</span>
             <button type="button" onclick="this.parentElement.remove()" class="text-emerald-400 hover:text-white">&times;</button>
@@ -183,31 +251,36 @@ new class extends Component {
             </a>
             <div>
                 <div class="flex items-center space-x-2">
-                    <h1 class="text-lg font-black text-white">Premium Landscape Student ID</h1>
-                    <span class="text-[10px] font-extrabold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider">CR-80 Landscape</span>
+                    <input type="text" wire:model.live="templateName" class="bg-transparent border-b border-slate-700 text-lg font-black text-white focus:outline-none focus:border-indigo-500">
+                    <span class="text-[10px] font-black text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                        {{ strtoupper($type) }} • CR-80
+                    </span>
                 </div>
-                <p class="text-xs text-slate-400 mt-0.5">Add custom field labels and map student/campaign variables dynamically</p>
+                <p class="text-xs text-slate-400 mt-0.5">Canva Studio • Drag layers, snap to guides, edit text & formatting</p>
             </div>
         </div>
 
+        <!-- Studio Quick Tools Bar -->
         <div class="flex items-center space-x-3">
-            @if(!$isSchoolDefault)
-                <button type="button" wire:click="makeSchoolDefault" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition flex items-center">
-                    <svg class="w-4 h-4 mr-1.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                    </svg>
-                    Make School Default
-                </button>
-            @else
-                <span class="px-3.5 py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-xs font-bold flex items-center">
-                    <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                    </svg>
-                    Active School Default
-                </span>
-            @endif
+            <button type="button" wire:click="$toggle('showGrid')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center {{ $showGrid ? 'bg-indigo-600/20 border border-indigo-500/30 text-indigo-400' : 'bg-slate-800 text-slate-400' }}">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+                Grid: {{ $showGrid ? 'ON' : 'OFF' }}
+            </button>
 
-            <button type="button" wire:click="saveCustomization" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-indigo-600/25">
+            <button type="button" wire:click="$toggle('livePreviewMode')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center {{ $livePreviewMode ? 'bg-emerald-600/20 border border-emerald-500/30 text-emerald-400' : 'bg-slate-800 text-slate-400' }}">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+                Preview: {{ $livePreviewMode ? 'Live Data' : 'Tags' }}
+            </button>
+
+            <button type="button" wire:click="saveStudioDesign" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-indigo-600/25 flex items-center">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
                 Save Design
             </button>
         </div>
@@ -215,159 +288,297 @@ new class extends Component {
 
     <!-- Main Workspace Split -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start w-full">
-        <!-- Left: Live Studio Canvas Preview (7 Cols) -->
-        <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-3xl p-8 flex flex-col items-center justify-center min-h-[580px] shadow-2xl relative overflow-hidden">
-            <div class="absolute top-5 left-5 flex items-center space-x-2">
+        <!-- Left: Interactive Canva Canvas Studio (7 Cols) -->
+        <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center min-h-[620px] shadow-2xl relative overflow-hidden">
+            <!-- Studio Canvas Header Info -->
+            <div class="w-full flex items-center justify-between mb-4 px-2">
                 <span class="text-[10px] font-black uppercase tracking-widest text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-lg">
-                    Live Studio Canvas (100% Scale)
+                    Interactive Canva Studio (CR-80 Scale)
                 </span>
+                <span class="text-xs text-slate-400 font-mono">85.6mm × 54mm</span>
             </div>
 
-            <!-- ID Card Rendering Container -->
-            <div class="my-auto py-10 transition duration-300 transform hover:scale-[1.02]">
-                @include('id-card-templates.premium-landscape', [
-                    'student' => $mockStudent, 
-                    'school' => $mockSchool,
-                    'customFields' => $customFields,
-                    'showBarcode' => $showBarcode
-                ])
+            <!-- Canvas Container with Drag & Snap Capabilities -->
+            @php
+                $isPortrait = $orientation === 'portrait';
+                $canvasW = $isPortrait ? 638 : 1011;
+                $canvasH = $isPortrait ? 1011 : 638;
+                $bgPath = $template->background_image;
+                $bgUrl = $bgPath ? (str_starts_with($bgPath, 'http') ? $bgPath : asset('storage/' . $bgPath)) : null;
+            @endphp
+
+            <div 
+                id="canva-studio-canvas"
+                class="relative select-none shadow-2xl rounded-2xl border-2 {{ $selectedLayerIndex !== null ? 'border-indigo-500/50' : 'border-slate-800' }} bg-slate-950 overflow-hidden my-auto transform transition-transform duration-200"
+                style="width: {{ $canvasW }}px; height: {{ $canvasH }}px; background-image: {{ $bgUrl ? "url('$bgUrl')" : 'none' }}; background-size: cover; background-position: center;"
+                x-data="{
+                    draggingIndex: null,
+                    startX: 0,
+                    startY: 0,
+                    origX: 0,
+                    origY: 0,
+                    startDrag(idx, event) {
+                        this.draggingIndex = idx;
+                        this.startX = event.clientX;
+                        this.startY = event.clientY;
+                        const layer = $wire.layers[idx];
+                        this.origX = layer.x || 0;
+                        this.origY = layer.y || 0;
+                    },
+                    onDrag(event) {
+                        if (this.draggingIndex === null) return;
+                        const dx = event.clientX - this.startX;
+                        const dy = event.clientY - this.startY;
+                        let newX = Math.max(0, this.origX + dx);
+                        let newY = Math.max(0, this.origY + dy);
+
+                        // Magnetic snap to center (within 10px)
+                        const centerH = Math.round(({{ $canvasW }} - 150) / 2);
+                        if (Math.abs(newX - centerH) < 10) newX = centerH;
+
+                        $wire.updateLayerCoordinates(this.draggingIndex, Math.round(newX), Math.round(newY));
+                    },
+                    stopDrag() {
+                        this.draggingIndex = null;
+                    }
+                }"
+                @mousemove.window="onDrag($event)"
+                @mouseup.window="stopDrag()"
+            >
+                <!-- Optional Visual Grid Lines -->
+                @if($showGrid)
+                    <div class="absolute inset-0 pointer-events-none opacity-20" style="background-image: radial-gradient(#6366f1 1px, transparent 1px); background-size: 20px 20px;"></div>
+                @endif
+
+                <!-- Center Snap Line (Visual Indicator when Selected) -->
+                @if($selectedLayerIndex !== null)
+                    <div class="absolute top-0 bottom-0 left-1/2 w-[1px] bg-indigo-500/40 pointer-events-none border-r border-dashed border-indigo-400"></div>
+                @endif
+
+                <!-- Render Interactive Canvas Layers -->
+                @foreach($layers as $idx => $layer)
+                    @php
+                        $type = $layer['type'] ?? 'text';
+                        $x = $layer['x'] ?? 0;
+                        $y = $layer['y'] ?? 0;
+                        $w = $layer['width'] ?? 'auto';
+                        $h = $layer['height'] ?? 'auto';
+                        $rot = $layer['rotation'] ?? 0;
+                        $isSelected = ($selectedLayerIndex === $idx);
+                    @endphp
+
+                    <div 
+                        wire:click="selectLayer({{ $idx }})"
+                        @mousedown="startDrag({{ $idx }}, $event)"
+                        class="absolute cursor-move transition-shadow {{ $isSelected ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-slate-900 z-30' : 'hover:ring-1 hover:ring-indigo-400/50 z-10' }}"
+                        style="left: {{ $x }}px; top: {{ $y }}px; transform: rotate({{ $rot }}deg); transform-origin: top left;"
+                    >
+                        @if($type === 'text')
+                            @php
+                                $rawText = $layer['text'] ?? '';
+                                $displayText = $livePreviewMode 
+                                    ? strtr($rawText, [
+                                        '{first_name}' => 'Aaditya', '{middle_name}' => 'Sonu', '{last_name}' => 'Thakur',
+                                        '{First Name}' => 'Aaditya', '{Middle Name}' => 'Sonu', '{Last Name}' => 'Thakur',
+                                        '{dob}' => '2017-10-27', '{DOB}' => '2017-10-27',
+                                        '{blood_group}' => 'AB+', '{Blood Group}' => 'AB+',
+                                        '{gender}' => 'Male', '{Gender}' => 'Male',
+                                        '{contact_number}' => '9730777244', '{Contact Number}' => '9730777244',
+                                        '{address}' => 'Sarvodhya Nagar Flat 704', '{Address}' => 'Sarvodhya Nagar Flat 704',
+                                        '{pincode}' => '400001', '{Pincode}' => '400001',
+                                        '{grade}' => 'V', '{Grade}' => 'V', '{division}' => 'B', '{Division}' => 'B',
+                                        '{roll_no}' => '202', '{Roll No}' => '202', '{serial_number}' => '202', '{Ref No}' => '202',
+                                        '{School Name}' => ($activeSchool->name ?? 'Sarvodya Vidyalay'),
+                                        '{School Code}' => ($activeSchool->school_code ?? 'SV-2026'),
+                                      ])
+                                    : $rawText;
+
+                                $fontSize = $layer['font_size'] ?? 14;
+                                $fontWeight = $layer['font_weight'] ?? 'normal';
+                                $fontFamily = $layer['font_family'] ?? 'Inter';
+                                $color = $layer['color'] ?? '#ffffff';
+                                $align = $layer['align'] ?? 'left';
+                            @endphp
+                            <div style="font-size: {{ $fontSize }}px; font-weight: {{ $fontWeight }}; font-family: {{ $fontFamily }}, sans-serif; color: {{ $color }}; text-align: {{ $align }}; white-space: nowrap; padding: 2px 4px; border-radius: 4px; background: {{ $isSelected ? 'rgba(99, 102, 241, 0.15)' : 'transparent' }};">
+                                {{ $displayText }}
+                            </div>
+
+                        @elseif($type === 'photo')
+                            @php
+                                $borderRadius = $layer['border_radius'] ?? 12;
+                                $borderColor = $layer['border_color'] ?? '#818cf8';
+                                $borderWidth = $layer['border_width'] ?? 2;
+                            @endphp
+                            <div style="width: {{ $w }}px; height: {{ $h }}px; border-radius: {{ $borderRadius }}px; border: {{ $borderWidth }}px solid {{ $borderColor }}; overflow: hidden; background: #1e293b;">
+                                <img src="https://ui-avatars.com/api/?name=Aaditya+Thakur&background=6366f1&color=fff&size=200" style="width: 100%; height: 100%; object-fit: cover;" />
+                            </div>
+
+                        @elseif($type === 'logo')
+                            <div style="width: {{ $w }}px; height: {{ $h }}px; border-radius: 8px; background: rgba(99, 102, 241, 0.2); display: flex; align-items: center; justify-content: center; color: #818cf8; font-weight: bold; font-size: 11px;">
+                                LOGO
+                            </div>
+
+                        @elseif($type === 'qr')
+                            <div style="width: {{ $w }}px; height: {{ $h }}px; background: white; padding: 4px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                <svg viewBox="0 0 24 24" style="width: 100%; height: 100%;" fill="#0f172a">
+                                    <rect x="3" y="3" width="7" height="7" rx="1"/>
+                                    <rect x="14" y="3" width="7" height="7" rx="1"/>
+                                    <rect x="3" y="14" width="7" height="7" rx="1"/>
+                                    <path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 18h3v3h-3z"/>
+                                </svg>
+                            </div>
+                        @endif
+                    </div>
+                @endforeach
             </div>
 
-            <div class="absolute bottom-5 left-5 text-[11px] text-slate-500 flex items-center space-x-2">
-                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <span>Dimensions: 85.6mm x 54mm (Standard CR-80 PVC Card)</span>
+            <!-- Clickable Variable Inserter Toolbar Pills -->
+            <div class="w-full mt-6 space-y-2">
+                <span class="text-[11px] font-bold text-slate-400 block">Click to Insert Dynamic Variable Tag:</span>
+                <div class="flex flex-wrap gap-2">
+                    @php
+                        $vars = [
+                            '{First Name}', '{Middle Name}', '{Last Name}',
+                            'Grade ({grade}) Div ({division})', '{Roll No}', '{Ref No}',
+                            '{DOB}', '{Blood Group}', '{Gender}', '{Contact Number}',
+                            '{Address}', '{Pincode}', '{School Name}', '{School Code}'
+                        ];
+                    @endphp
+                    @foreach($vars as $v)
+                        <button type="button" wire:click="appendVariableToSelected('{{ $v }}')" class="px-2.5 py-1 bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white rounded-lg text-xs font-semibold transition border border-slate-700/60 shadow-sm">
+                            + {{ $v }}
+                        </button>
+                    @endforeach
+                </div>
             </div>
         </div>
 
-        <!-- Right: Dynamic Custom Field Builder (5 Cols) -->
+        <!-- Right: Canva Element Control Panel (5 Cols) -->
         <div class="lg:col-span-5 space-y-5">
-            <!-- Branding Panel -->
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-                <div class="flex items-center space-x-2 border-b border-slate-800 pb-3">
-                    <div class="p-2 rounded-xl bg-indigo-500/10 text-indigo-400">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                        </svg>
+            <!-- Alignment & Layer Tools -->
+            @if($selectedLayerIndex !== null && isset($layers[$selectedLayerIndex]))
+                @php $selectedLayer = $layers[$selectedLayerIndex]; @endphp
+                <div class="bg-slate-900 border border-indigo-500/40 rounded-3xl p-6 shadow-xl space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-indigo-400"></span>
+                            <h3 class="text-sm font-black text-white">Element Controls ({{ $selectedLayer['label'] ?? 'Layer' }})</h3>
+                        </div>
+                        <button type="button" wire:click="$set('selectedLayerIndex', null)" class="text-xs font-bold text-slate-400 hover:text-white">Deselect</button>
                     </div>
-                    <h3 class="text-sm font-black text-white">School Branding</h3>
-                </div>
 
-                <div class="space-y-3">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-400 mb-1">School Name</label>
-                        <input type="text" wire:model.live="schoolName" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
+                    <!-- Alignment Actions Bar -->
+                    <div class="space-y-2">
+                        <span class="text-[11px] font-bold text-slate-400 block">Quick Align Canvas:</span>
+                        <div class="grid grid-cols-6 gap-1.5">
+                            <button type="button" wire:click="alignSelectedLayer('left')" title="Align Left" class="p-2 bg-slate-950 hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-bold flex justify-center">Left</button>
+                            <button type="button" wire:click="alignSelectedLayer('center_h')" title="Center Horizontally" class="p-2 bg-slate-950 hover:bg-slate-800 text-indigo-400 rounded-lg text-xs font-bold flex justify-center">Center H</button>
+                            <button type="button" wire:click="alignSelectedLayer('right')" title="Align Right" class="p-2 bg-slate-950 hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-bold flex justify-center">Right</button>
+                            <button type="button" wire:click="alignSelectedLayer('top')" title="Align Top" class="p-2 bg-slate-950 hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-bold flex justify-center">Top</button>
+                            <button type="button" wire:click="alignSelectedLayer('center_v')" title="Center Vertically" class="p-2 bg-slate-950 hover:bg-slate-800 text-indigo-400 rounded-lg text-xs font-bold flex justify-center">Center V</button>
+                            <button type="button" wire:click="alignSelectedLayer('bottom')" title="Align Bottom" class="p-2 bg-slate-950 hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-bold flex justify-center">Bottom</button>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Dynamic Custom Fields Builder Panel -->
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <div class="flex items-center space-x-2">
-                        <div class="p-2 rounded-xl bg-purple-500/10 text-purple-400">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
-                            </svg>
+                    <!-- Coordinates & Dimension Controls -->
+                    <div class="grid grid-cols-2 gap-3 pt-2">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-400 mb-1">Position X (px)</label>
+                            <input type="number" wire:model.live="layers.{{ $selectedLayerIndex }}.x" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
                         </div>
                         <div>
-                            <h3 class="text-sm font-black text-white">Dynamic Field Builder</h3>
-                            <p class="text-[10px] text-slate-400 mt-0.5">Add as many custom fields as you need</p>
+                            <label class="block text-[11px] font-bold text-slate-400 mb-1">Position Y (px)</label>
+                            <input type="number" wire:model.live="layers.{{ $selectedLayerIndex }}.y" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
                         </div>
                     </div>
 
-                    <button type="button" wire:click="addField" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow">
-                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                        </svg>
-                        Add Field
+                    <!-- Text Specific Formatting Controls -->
+                    @if(($selectedLayer['type'] ?? '') === 'text')
+                        <div class="space-y-3 pt-2">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Text Content / Template Code</label>
+                                <input type="text" wire:model.live="layers.{{ $selectedLayerIndex }}.text" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Font Size (px)</label>
+                                    <input type="number" wire:model.live="layers.{{ $selectedLayerIndex }}.font_size" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Text Color (Hex)</label>
+                                    <div class="flex items-center space-x-2">
+                                        <input type="color" wire:model.live="layers.{{ $selectedLayerIndex }}.color" class="w-8 h-8 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer">
+                                        <input type="text" wire:model.live="layers.{{ $selectedLayerIndex }}.color" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 uppercase">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Font Weight</label>
+                                    <select wire:model.live="layers.{{ $selectedLayerIndex }}.font_weight" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                        <option value="normal">Normal</option>
+                                        <option value="semibold">SemiBold</option>
+                                        <option value="bold">Bold</option>
+                                        <option value="extrabold">ExtraBold</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Rotation Angle (°)</label>
+                                    <input type="number" wire:model.live="layers.{{ $selectedLayerIndex }}.rotation" min="0" max="360" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Layer Action Buttons -->
+                    <div class="flex items-center justify-between pt-3 border-t border-slate-800">
+                        <div class="flex space-x-2">
+                            <button type="button" wire:click="moveLayer({{ $selectedLayerIndex }}, 'up')" class="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-bold">Move Up</button>
+                            <button type="button" wire:click="moveLayer({{ $selectedLayerIndex }}, 'down')" class="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-bold">Move Down</button>
+                        </div>
+                        <button type="button" wire:click="removeLayer({{ $selectedLayerIndex }})" class="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-bold">Delete Layer</button>
+                    </div>
+                </div>
+            @endif
+
+            <!-- Layers Directory & Add Elements -->
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <h3 class="text-sm font-black text-white">Template Layers List</h3>
+                    <button type="button" wire:click="addTextLayer" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center">
+                        + Add Custom Text Layer
                     </button>
                 </div>
 
-                <!-- Dynamic Field List -->
-                <div class="space-y-4 max-h-[380px] overflow-y-auto pr-1">
-                    @foreach($customFields as $index => $field)
-                        <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 space-y-3 relative group">
-                            <!-- Field Row Top Bar -->
-                            <div class="flex items-center justify-between">
-                                <span class="text-[10px] font-black uppercase tracking-wider text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded">
-                                    Field #{{ $index + 1 }}
+                <div class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                    @foreach($layers as $idx => $layer)
+                        <div 
+                            wire:click="selectLayer({{ $idx }})"
+                            class="p-3 rounded-2xl border transition flex items-center justify-between cursor-pointer {{ $selectedLayerIndex === $idx ? 'bg-indigo-500/10 border-indigo-500/40 text-white' : 'bg-slate-950/60 border-slate-800 text-slate-300 hover:border-slate-700' }}"
+                        >
+                            <div class="flex items-center space-x-3">
+                                <span class="text-[10px] font-black uppercase tracking-wider text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md">
+                                    {{ $layer['type'] ?? 'layer' }}
                                 </span>
-                                @if(count($customFields) > 1)
-                                    <button type="button" wire:click="removeField({{ $index }})" class="text-slate-500 hover:text-red-400 transition p-1" title="Delete Field">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                        </svg>
-                                    </button>
-                                @endif
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Label Text</label>
-                                    <input type="text" wire:model.live="customFields.{{ $index }}.label" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition" placeholder="e.g. NAME">
-                                </div>
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Value Pattern</label>
-                                    <input type="text" wire:model.live="customFields.{{ $index }}.value_format" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition" placeholder="e.g. {first_name} {last_name}">
+                                    <span class="text-xs font-bold block">{{ $layer['label'] ?? 'Layer #' . ($idx + 1) }}</span>
+                                    <span class="text-[10px] text-slate-400">X: {{ $layer['x'] ?? 0 }}px, Y: {{ $layer['y'] ?? 0 }}px</span>
                                 </div>
                             </div>
-
-                            <!-- Click to Insert Variables Pill Bar -->
-                            <div>
-                                <span class="block text-[9.5px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Insert Dynamic Tag:</span>
-                                <div class="flex flex-wrap gap-1">
-                                    @foreach($availableVariables as $tag => $name)
-                                        <button type="button" wire:click="insertTag({{ $index }}, '{{ $tag }}')" 
-                                            class="text-[9px] font-semibold text-slate-300 hover:text-white bg-slate-900 hover:bg-indigo-600/80 border border-slate-800 hover:border-indigo-500 px-2 py-0.5 rounded-lg transition">
-                                            + {{ $tag }}
-                                        </button>
-                                    @endforeach
-                                </div>
-                            </div>
+                            <span class="text-xs text-slate-500">&rarr;</span>
                         </div>
                     @endforeach
                 </div>
             </div>
 
-            <!-- Class Assignment Overrides Panel -->
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-                <div class="flex items-center space-x-2 border-b border-slate-800 pb-3">
-                    <div class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-sm font-black text-white">Class Assignment Overrides</h3>
-                </div>
-
-                <div class="max-h-[220px] overflow-y-auto space-y-2 pr-1">
-                    @forelse($schoolGrades as $grade)
-                        <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-3 flex items-center justify-between">
-                            <div>
-                                <h4 class="text-xs font-bold text-white">{{ $grade->name }}</h4>
-                                <p class="text-[10px] text-slate-500 mt-0.5">
-                                    @if($grade->template_id == $templateId)
-                                        <span class="text-indigo-400 font-semibold">Active Class Template</span>
-                                    @else
-                                        <span>Default / Inherited</span>
-                                    @endif
-                                </p>
-                            </div>
-                            <button type="button" wire:click="assignToGrade({{ $grade->id }})" 
-                                class="px-3 py-1.5 rounded-xl text-[10px] font-bold tracking-wider uppercase transition 
-                                {{ $grade->template_id == $templateId 
-                                    ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20' 
-                                    : 'bg-indigo-600 hover:bg-indigo-700 text-white' }}">
-                                {{ $grade->template_id == $templateId ? 'Remove' : 'Assign' }}
-                            </button>
-                        </div>
-                    @empty
-                        <div class="text-center py-4 text-slate-500 text-xs">
-                            No classes (grades) registered for this school.
-                        </div>
-                    @endforelse
+            <!-- Background Graphic Upload -->
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-3">
+                <h3 class="text-sm font-black text-white">Background Template Image</h3>
+                <div>
+                    <input type="file" wire:model="bgUpload" accept="image/*" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
+                    <span class="text-[10px] text-slate-500 mt-1 block">Upload custom background graphic (CR-80 85.6mm x 54mm equivalent ratio)</span>
                 </div>
             </div>
         </div>

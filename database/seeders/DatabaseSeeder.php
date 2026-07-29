@@ -48,5 +48,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
         $leena->roles()->sync($allRoleIds);
+
+        $this->call(TemplateSeeder::class);
     }
 }

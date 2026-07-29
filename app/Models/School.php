@@ -28,6 +28,11 @@ class School extends Model
         return $this->hasMany(Grade::class);
     }
 
+    public function schoolTemplates()
+    {
+        return $this->hasMany(SchoolTemplate::class);
+    }
+
     public function students()
     {
         return $this->hasMany(Student::class);
