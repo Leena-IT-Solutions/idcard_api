@@ -916,7 +916,7 @@ new class extends Component {
             e.preventDefault();
 
             const step = e.shiftKey ? 10 : 1;
-            const el = document.querySelector('[data-layer-index="' + idx + '"]');
+            const el = document.querySelector('[data-layer-index=' + idx + ']');
             if (!el) return;
 
             if (e.key === 'ArrowLeft') this.curX = Math.max(0, this.curX - step);
