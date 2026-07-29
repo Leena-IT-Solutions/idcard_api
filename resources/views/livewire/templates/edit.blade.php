@@ -117,42 +117,7 @@ new class extends Component {
         }
     }
 
-    public function alignSelectedToPage(string $alignment)
-    {
-        if (empty($this->selectedLayerIndices)) return;
 
-        $isPortrait = $this->orientation === 'portrait';
-        $canvasW = $isPortrait ? 638 : 1011;
-        $canvasH = $isPortrait ? 1011 : 638;
-
-        foreach ($this->selectedLayerIndices as $idx) {
-            if (!isset($this->layers[$idx])) continue;
-
-            $w = $this->layers[$idx]['width'] ?? 150;
-            $h = $this->layers[$idx]['height'] ?? 30;
-
-            switch ($alignment) {
-                case 'top':
-                    $this->layers[$idx]['y'] = 0;
-                    break;
-                case 'left':
-                    $this->layers[$idx]['x'] = 0;
-                    break;
-                case 'middle':
-                    $this->layers[$idx]['y'] = round(($canvasH - $h) / 2);
-                    break;
-                case 'center':
-                    $this->layers[$idx]['x'] = round(($canvasW - $w) / 2);
-                    break;
-                case 'bottom':
-                    $this->layers[$idx]['y'] = $canvasH - $h;
-                    break;
-                case 'right':
-                    $this->layers[$idx]['x'] = $canvasW - $w;
-                    break;
-            }
-        }
-    }
 
 
 
@@ -519,6 +484,7 @@ new class extends Component {
     snapLines: { x: null, y: null },
     isShiftPressed: false,
     draggedLayers: [],
+    alignMode: 'page',
 
     getClientCoords(e) {
         if (e.touches && e.touches.length > 0) {
@@ -546,6 +512,160 @@ new class extends Component {
         if (!event.target.closest('[data-layer-box]')) {
             this.$wire.selectLayer(null);
         }
+    },
+
+    alignSelectedToPage(alignment) {
+        const indices = this.$wire.selectedLayerIndices || [];
+        const count = indices.length;
+        if (count === 0) return;
+
+        const canvasW = {{ $canvasW }};
+        const canvasH = {{ $canvasH }};
+
+        const items = [];
+        indices.forEach((idx) => {
+            const el = document.querySelector('[data-layer-index=\'' + idx + '\']');
+            if (el) {
+                items.push({
+                    idx: idx,
+                    el: el,
+                    x: parseFloat(el.style.left) || 0,
+                    y: parseFloat(el.style.top) || 0,
+                    w: el.offsetWidth || 0,
+                    h: el.offsetHeight || 0
+                });
+            }
+        });
+
+        const updates = [];
+
+        items.forEach((item) => {
+            let finalX = item.x;
+            let finalY = item.y;
+
+            switch (alignment) {
+                case 'left':
+                    finalX = 0;
+                    break;
+                case 'center':
+                    finalX = (canvasW - item.w) / 2;
+                    break;
+                case 'right':
+                    finalX = canvasW - item.w;
+                    break;
+                case 'top':
+                    finalY = 0;
+                    break;
+                case 'middle':
+                    finalY = (canvasH - item.h) / 2;
+                    break;
+                case 'bottom':
+                    finalY = canvasH - item.h;
+                    break;
+            }
+
+            finalX = Math.round(finalX);
+            finalY = Math.round(finalY);
+
+            item.el.style.left = finalX + 'px';
+            item.el.style.top = finalY + 'px';
+
+            this.$wire.layers[item.idx].x = finalX;
+            this.$wire.layers[item.idx].y = finalY;
+
+            updates.push({
+                index: item.idx,
+                x: finalX,
+                y: finalY
+            });
+        });
+
+        this.$wire.updateMultipleLayersCoordinates(updates);
+    },
+
+    alignSelectedToSelection(alignment) {
+        const indices = this.$wire.selectedLayerIndices || [];
+        const count = indices.length;
+        if (count <= 1) return;
+
+        const items = [];
+        indices.forEach((idx) => {
+            const el = document.querySelector('[data-layer-index=\'' + idx + '\']');
+            if (el) {
+                items.push({
+                    idx: idx,
+                    el: el,
+                    x: parseFloat(el.style.left) || 0,
+                    y: parseFloat(el.style.top) || 0,
+                    w: el.offsetWidth || 0,
+                    h: el.offsetHeight || 0
+                });
+            }
+        });
+
+        if (items.length <= 1) return;
+
+        let minX = 999999;
+        let maxX = -999999;
+        let minY = 999999;
+        let maxY = -999999;
+
+        items.forEach(item => {
+            if (item.x < minX) minX = item.x;
+            if (item.x + item.w > maxX) maxX = item.x + item.w;
+            if (item.y < minY) minY = item.y;
+            if (item.y + item.h > maxY) maxY = item.y + item.h;
+        });
+
+        const boxW = maxX - minX;
+        const boxH = maxY - minY;
+        const centerX = minX + boxW / 2;
+        const centerY = minY + boxH / 2;
+
+        const updates = [];
+
+        items.forEach((item) => {
+            let finalX = item.x;
+            let finalY = item.y;
+
+            switch (alignment) {
+                case 'left':
+                    finalX = minX;
+                    break;
+                case 'center':
+                    finalX = centerX - item.w / 2;
+                    break;
+                case 'right':
+                    finalX = maxX - item.w;
+                    break;
+                case 'top':
+                    finalY = minY;
+                    break;
+                case 'middle':
+                    finalY = centerY - item.h / 2;
+                    break;
+                case 'bottom':
+                    finalY = maxY - item.h;
+                    break;
+            }
+
+            finalX = Math.round(finalX);
+            finalY = Math.round(finalY);
+
+            item.el.style.left = finalX + 'px';
+            item.el.style.top = finalY + 'px';
+
+            this.$wire.layers[item.idx].x = finalX;
+            this.$wire.layers[item.idx].y = finalY;
+
+            updates.push({
+                index: item.idx,
+                x: finalX,
+                y: finalY
+            });
+        });
+
+        this.$wire.updateMultipleLayersCoordinates(updates);
     },
 
     spaceSelectedEvenly(direction) {
@@ -1604,25 +1724,34 @@ new class extends Component {
                         <button type="button" wire:click="selectLayer(null)" class="text-xs font-bold text-slate-400 hover:text-white">Deselect</button>
                     </div>
 
-                    <!-- Align to Page Section -->
-                    <div class="space-y-2">
-                        <span class="text-xs font-bold text-slate-300 block">Align to page</span>
+                    <!-- Alignment Section -->
+                    <div class="space-y-3">
+                        <!-- Align Target Selector Segment -->
+                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800">
+                            <button type="button" @click="alignMode = 'page'" class="flex-1 py-1.5 text-center text-xs font-bold rounded-lg transition" :class="alignMode === 'page' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'">
+                                Align to page
+                            </button>
+                            <button type="button" @click="alignMode = 'selection'" class="flex-1 py-1.5 text-center text-xs font-bold rounded-lg transition" :class="alignMode === 'selection' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'">
+                                Align selection
+                            </button>
+                        </div>
+
                         <div class="grid grid-cols-2 gap-3">
-                            <button type="button" wire:click="alignSelectedToPage('top')" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-xs font-bold transition">
+                            <button type="button" @click="alignMode === 'page' ? alignSelectedToPage('top') : alignSelectedToSelection('top')" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-xs font-bold transition">
                                 <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <line x1="4" y1="4" x2="20" y2="4"></line>
                                     <rect x="6" y="8" width="12" height="12" rx="1.5"></rect>
                                 </svg>
                                 <span>Top</span>
                             </button>
-                            <button type="button" wire:click="alignSelectedToPage('left')" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-xs font-bold transition">
+                            <button type="button" @click="alignMode === 'page' ? alignSelectedToPage('left') : alignSelectedToSelection('left')" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-xs font-bold transition">
                                 <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <line x1="4" y1="4" x2="4" y2="20"></line>
                                     <rect x="8" y="6" width="12" height="12" rx="1.5"></rect>
                                 </svg>
                                 <span>Left</span>
                             </button>
-                            <button type="button" wire:click="alignSelectedToPage('middle')" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-xs font-bold transition">
+                            <button type="button" @click="alignMode === 'page' ? alignSelectedToPage('middle') : alignSelectedToSelection('middle')" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-xs font-bold transition">
                                 <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <line x1="4" y1="12" x2="20" y2="12"></line>
                                     <rect x="6" y="6" width="12" height="4" rx="1"></rect>
@@ -1630,7 +1759,7 @@ new class extends Component {
                                 </svg>
                                 <span>Middle</span>
                             </button>
-                            <button type="button" wire:click="alignSelectedToPage('center')" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-xs font-bold transition">
+                            <button type="button" @click="alignMode === 'page' ? alignSelectedToPage('center') : alignSelectedToSelection('center')" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-xs font-bold transition">
                                 <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <line x1="12" y1="4" x2="12" y2="20"></line>
                                     <rect x="6" y="6" width="4" height="12" rx="1"></rect>
@@ -1638,14 +1767,14 @@ new class extends Component {
                                 </svg>
                                 <span>Center</span>
                             </button>
-                            <button type="button" wire:click="alignSelectedToPage('bottom')" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-xs font-bold transition">
+                            <button type="button" @click="alignMode === 'page' ? alignSelectedToPage('bottom') : alignSelectedToSelection('bottom')" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-xs font-bold transition">
                                 <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <line x1="4" y1="20" x2="20" y2="20"></line>
                                     <rect x="6" y="4" width="12" height="12" rx="1.5"></rect>
                                 </svg>
                                 <span>Bottom</span>
                             </button>
-                            <button type="button" wire:click="alignSelectedToPage('right')" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-xs font-bold transition">
+                            <button type="button" @click="alignMode === 'page' ? alignSelectedToPage('right') : alignSelectedToSelection('right')" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-xs font-bold transition">
                                 <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <line x1="20" y1="4" x2="20" y2="20"></line>
                                     <rect x="4" y="6" width="12" height="12" rx="1.5"></rect>
