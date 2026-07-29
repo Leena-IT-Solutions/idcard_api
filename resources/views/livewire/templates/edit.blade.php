@@ -352,6 +352,7 @@ new class extends Component {
     curFontSize: 0,
     hasMoved: false,
     isText: false,
+    snapLines: { x: null, y: null },
 
     getClientCoords(e) {
         if (e.touches && e.touches.length > 0) {
@@ -418,19 +419,111 @@ new class extends Component {
         let newX = Math.max(0, Math.round(this.origX + dx));
         let newY = Math.max(0, Math.round(this.origY + dy));
 
-        // Magnetic snap to center (within 10px)
-        const centerH = Math.round(({{ $canvasW }} - 150) / 2);
-        if (Math.abs(newX - centerH) < 10) newX = centerH;
+        let snapX = null;
+        let snapY = null;
+
+        if (this.$wire.enableSnapping) {
+            const threshold = 6;
+            const curW = this.draggingEl.offsetWidth;
+            const curH = this.draggingEl.offsetHeight;
+
+            const left = newX;
+            const centerX = newX + curW / 2;
+            const right = newX + curW;
+
+            const top = newY;
+            const centerY = newY + curH / 2;
+            const bottom = newY + curH;
+
+            const canvasW = {{ $canvasW }};
+            const canvasH = {{ $canvasH }};
+
+            const xTargets = [
+                { val: 0, guide: 0 },
+                { val: canvasW / 2, guide: canvasW / 2 },
+                { val: canvasW, guide: canvasW }
+            ];
+
+            const yTargets = [
+                { val: 0, guide: 0 },
+                { val: canvasH / 2, guide: canvasH / 2 },
+                { val: canvasH, guide: canvasH }
+            ];
+
+            const layerEls = document.querySelectorAll('[data-layer-box]');
+            layerEls.forEach((el) => {
+                if (el === this.draggingEl) return;
+
+                const lx = parseFloat(el.style.left) || 0;
+                const ly = parseFloat(el.style.top) || 0;
+                const lw = el.offsetWidth || 0;
+                const lh = el.offsetHeight || 0;
+
+                xTargets.push({ val: lx, guide: lx });
+                xTargets.push({ val: lx + lw / 2, guide: lx + lw / 2 });
+                xTargets.push({ val: lx + lw, guide: lx + lw });
+
+                yTargets.push({ val: ly, guide: ly });
+                yTargets.push({ val: ly + lh / 2, guide: ly + lh / 2 });
+                yTargets.push({ val: ly + lh, guide: ly + lh });
+            });
+
+            for (let t of xTargets) {
+                if (Math.abs(left - t.val) < threshold) {
+                    newX = t.val;
+                    snapX = t.guide;
+                    break;
+                }
+                if (Math.abs(centerX - t.val) < threshold) {
+                    newX = t.val - curW / 2;
+                    snapX = t.guide;
+                    break;
+                }
+                if (Math.abs(right - t.val) < threshold) {
+                    newX = t.val - curW;
+                    snapX = t.guide;
+                    break;
+                }
+            }
+
+            for (let t of yTargets) {
+                if (Math.abs(top - t.val) < threshold) {
+                    newY = t.val;
+                    snapY = t.guide;
+                    break;
+                }
+                if (Math.abs(centerY - t.val) < threshold) {
+                    newY = t.val - curH / 2;
+                    snapY = t.guide;
+                    break;
+                }
+                if (Math.abs(bottom - t.val) < threshold) {
+                    newY = t.val - curH;
+                    snapY = t.guide;
+                    break;
+                }
+            }
+
+            if (snapX === null) {
+                newX = Math.round(newX / 10) * 10;
+            }
+            if (snapY === null) {
+                newY = Math.round(newY / 10) * 10;
+            }
+        }
+
+        this.snapLines.x = snapX !== null ? Math.round(snapX) : null;
+        this.snapLines.y = snapY !== null ? Math.round(snapY) : null;
 
         this.curX = newX;
         this.curY = newY;
 
-        // Direct DOM manipulation for zero latency 60fps dragging
         this.draggingEl.style.left = newX + 'px';
         this.draggingEl.style.top = newY + 'px';
     },
 
     stopDrag() {
+        this.snapLines = { x: null, y: null };
         if (this.draggingIndex !== null) {
             const idx = this.draggingIndex;
             const finalX = parseInt(this.curX) || 0;
@@ -524,6 +617,115 @@ new class extends Component {
             newY = Math.round(this.origY + dy);
         }
 
+        let snapX = null;
+        let snapY = null;
+
+        if (this.$wire.enableSnapping) {
+            const threshold = 6;
+            const canvasW = {{ $canvasW }};
+            const canvasH = {{ $canvasH }};
+
+            const xTargets = [
+                { val: 0, guide: 0 },
+                { val: canvasW / 2, guide: canvasW / 2 },
+                { val: canvasW, guide: canvasW }
+            ];
+
+            const yTargets = [
+                { val: 0, guide: 0 },
+                { val: canvasH / 2, guide: canvasH / 2 },
+                { val: canvasH, guide: canvasH }
+            ];
+
+            const layerEls = document.querySelectorAll('[data-layer-box]');
+            layerEls.forEach((el) => {
+                if (el === this.resizeEl) return;
+
+                const lx = parseFloat(el.style.left) || 0;
+                const ly = parseFloat(el.style.top) || 0;
+                const lw = el.offsetWidth || 0;
+                const lh = el.offsetHeight || 0;
+
+                xTargets.push({ val: lx, guide: lx });
+                xTargets.push({ val: lx + lw / 2, guide: lx + lw / 2 });
+                xTargets.push({ val: lx + lw, guide: lx + lw });
+
+                yTargets.push({ val: ly, guide: ly });
+                yTargets.push({ val: ly + lh / 2, guide: ly + lh / 2 });
+                yTargets.push({ val: ly + lh, guide: ly + lh });
+            });
+
+            if (h.includes('w')) {
+                for (let t of xTargets) {
+                    if (Math.abs(newX - t.val) < threshold) {
+                        const diff = newX - t.val;
+                        newX = t.val;
+                        newW = Math.max(15, newW + diff);
+                        snapX = t.guide;
+                        break;
+                    }
+                }
+            } else if (h.includes('e')) {
+                for (let t of xTargets) {
+                    const right = newX + newW;
+                    if (Math.abs(right - t.val) < threshold) {
+                        newW = Math.max(15, t.val - newX);
+                        snapX = t.guide;
+                        break;
+                    }
+                }
+            }
+
+            if (h.includes('n')) {
+                for (let t of yTargets) {
+                    if (Math.abs(newY - t.val) < threshold) {
+                        const diff = newY - t.val;
+                        newY = t.val;
+                        newH = Math.max(10, newH + diff);
+                        snapY = t.guide;
+                        break;
+                    }
+                }
+            } else if (h.includes('s')) {
+                for (let t of yTargets) {
+                    const bottom = newY + newH;
+                    if (Math.abs(bottom - t.val) < threshold) {
+                        newH = Math.max(10, t.val - newY);
+                        snapY = t.guide;
+                        break;
+                    }
+                }
+            }
+
+            if (snapX === null) {
+                if (h.includes('w')) {
+                    const snappedX = Math.round(newX / 10) * 10;
+                    const diff = newX - snappedX;
+                    newX = snappedX;
+                    newW = Math.max(15, newW + diff);
+                } else if (h.includes('e')) {
+                    const right = newX + newW;
+                    const snappedRight = Math.round(right / 10) * 10;
+                    newW = Math.max(15, snappedRight - newX);
+                }
+            }
+            if (snapY === null) {
+                if (h.includes('n')) {
+                    const snappedY = Math.round(newY / 10) * 10;
+                    const diff = newY - snappedY;
+                    newY = snappedY;
+                    newH = Math.max(10, newH + diff);
+                } else if (h.includes('s')) {
+                    const bottom = newY + newH;
+                    const snappedBottom = Math.round(bottom / 10) * 10;
+                    newH = Math.max(10, snappedBottom - newY);
+                }
+            }
+        }
+
+        this.snapLines.x = snapX !== null ? Math.round(snapX) : null;
+        this.snapLines.y = snapY !== null ? Math.round(snapY) : null;
+
         if (isText) {
             if (h === 'se' || h === 'sw' || h === 'ne' || h === 'nw') {
                 const ratio = newW / (this.startW || 1);
@@ -565,6 +767,7 @@ new class extends Component {
     },
 
     stopResize() {
+        this.snapLines = { x: null, y: null };
         if (this.resizingIndex !== null) {
             const idx = this.resizingIndex;
             let finalW = parseInt(this.curW) || 0;
@@ -668,6 +871,13 @@ new class extends Component {
                 Grid: {{ $showGrid ? 'ON' : 'OFF' }}
             </button>
 
+            <button type="button" wire:click="$toggle('enableSnapping')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center {{ $enableSnapping ? 'bg-indigo-600/20 border border-indigo-500/30 text-indigo-400' : 'bg-slate-800 text-slate-400' }}">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                </svg>
+                Snap: {{ $enableSnapping ? 'ON' : 'OFF' }}
+            </button>
+
             <button type="button" wire:click="$toggle('livePreviewMode')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center {{ $livePreviewMode ? 'bg-emerald-600/20 border border-emerald-500/30 text-emerald-400' : 'bg-slate-800 text-slate-400' }}">
                 <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -707,6 +917,7 @@ new class extends Component {
                     <div 
                         id="canva-studio-canvas"
                         class="relative select-none shadow-2xl rounded-2xl bg-slate-950 overflow-hidden shrink-0 my-auto transform transition-transform duration-200"
+                        :class="$wire.showGrid ? 'canvas-grid-bg' : ''"
                         :style="'width: {{ $canvasW }}px; height: {{ $canvasH }}px; transform: scale(' + ((parseFloat(zoomLevel) || 100) / 100) + '); transform-origin: center center;'"
                     >
                         @if($bgUrl)
@@ -720,6 +931,14 @@ new class extends Component {
                         @if($selectedLayerIndex !== null)
                             <div class="absolute top-0 bottom-0 left-1/2 w-[1px] bg-indigo-500/40 pointer-events-none border-r border-dashed border-indigo-400"></div>
                         @endif
+
+                        <!-- Dynamic Snapping Alignment Guide Lines -->
+                        <template x-if="snapLines.x !== null">
+                            <div class="absolute top-0 bottom-0 pointer-events-none z-40 border-r border-dashed border-indigo-400" :style="'left: ' + snapLines.x + 'px; width: 1px;'"></div>
+                        </template>
+                        <template x-if="snapLines.y !== null">
+                            <div class="absolute left-0 right-0 pointer-events-none z-40 border-b border-dashed border-indigo-400" :style="'top: ' + snapLines.y + 'px; height: 1px;'"></div>
+                        </template>
 
                         <!-- Render Interactive Canvas Layers -->
                         @foreach($layers as $idx => $layer)
@@ -1119,3 +1338,12 @@ new class extends Component {
         </div>
     </div>
 </div>
+
+<style>
+.canvas-grid-bg {
+    background-image: 
+        linear-gradient(to right, rgba(99, 102, 241, 0.07) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(99, 102, 241, 0.07) 1px, transparent 1px);
+    background-size: 10px 10px;
+}
+</style>
