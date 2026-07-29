@@ -636,25 +636,25 @@ new class extends Component {
                     }
                 },
 
-                onMouseMove(event) {
-                    if (this.resizingIndex !== null) {
-                        this.onResize(event);
-                    } else if (this.draggingIndex !== null) {
-                        this.onDrag(event);
-                    }
-                },
-
-                onMouseUp(event) {
-                    if (this.resizingIndex !== null) {
-                        this.stopResize();
-                    }
-                    if (this.draggingIndex !== null) {
-                        this.stopDrag();
-                    }
+                init() {
+                    console.log('Alpine canvas init called successfully!');
+                    window.addEventListener('mousemove', (e) => {
+                        if (this.resizingIndex !== null) {
+                            this.onResize(e);
+                        } else if (this.draggingIndex !== null) {
+                            this.onDrag(e);
+                        }
+                    });
+                    window.addEventListener('mouseup', (e) => {
+                        if (this.resizingIndex !== null) {
+                            this.stopResize();
+                        }
+                        if (this.draggingIndex !== null) {
+                            this.stopDrag();
+                        }
+                    });
                 }
-            }"
-            @mousemove.window="onMouseMove($event)"
-            @mouseup.window="onMouseUp($event)">
+            }">
 
                 <!-- Scrollable Canvas Viewport -->
                 <div class="w-full flex items-center justify-center overflow-auto p-4 min-h-[460px] bg-slate-950/40 rounded-2xl border border-slate-800/60 shadow-inner">
