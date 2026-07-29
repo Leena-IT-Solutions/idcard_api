@@ -462,6 +462,7 @@ new class extends Component
             'roll_no',
             'serial_number',
             'dob',
+            'gender',
             'blood_group',
             'contact_number',
             'address',
@@ -479,6 +480,7 @@ new class extends Component
             '101',
             'REF-2026-001',
             '2015-05-15',
+            'Male',
             'O+',
             '9876543210',
             '123 Main Street, Sector 4',
@@ -674,6 +676,7 @@ new class extends Component
                                 'first_name' => $data['first_name'],
                                 'middle_name' => $data['middle_name'] ?: null,
                                 'last_name' => $data['last_name'],
+                                'gender' => !empty($data['gender']) ? $data['gender'] : null,
                                 'blood_group' => $data['blood_group'] ?: null,
                                 'dob' => !empty($data['dob']) ? $data['dob'] : null,
                                 'address' => $data['address'],
@@ -1285,7 +1288,7 @@ new class extends Component
                             <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-900 rounded text-indigo-650 dark:text-indigo-400 font-mono text-[9px]">first_name, last_name, address, pincode, contact_number, campaign_name, grade_name, division_name</code>.
                             <br>
                             {{ __('Optional columns: ') }}
-                            <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-900 rounded text-[9px] font-mono">middle_name, roll_no, serial_number, dob, blood_group, photo_filename</code>.
+                            <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-900 rounded text-[9px] font-mono">middle_name, roll_no, serial_number, dob, blood_group, gender, photo_filename</code>.
                         </span>
                         <x-input-error :messages="$errors->get('bulkCsvs')" class="mt-2" />
                     </div>
