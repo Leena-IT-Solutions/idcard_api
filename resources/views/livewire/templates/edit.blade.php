@@ -430,6 +430,18 @@ new class extends Component {
                     return { x: e.clientX, y: e.clientY };
                 },
 
+                syncSelectedLayerData() {
+                    const idx = this.$wire.selectedLayerIndex;
+                    if (idx !== null && this.$wire.layers && this.$wire.layers[idx]) {
+                        const layer = this.$wire.layers[idx];
+                        this.curX = Math.round(parseFloat(layer.x) || 0);
+                        this.curY = Math.round(parseFloat(layer.y) || 0);
+                        this.curW = Math.round(parseFloat(layer.width) || 0);
+                        this.curH = Math.round(parseFloat(layer.height) || 0);
+                        this.curFontSize = Math.round(parseFloat(layer.font_size) || 14);
+                    }
+                },
+
                 startDrag(idx, event) {
                     if (this.resizingIndex !== null) return;
                     if (event && event.cancelable) event.preventDefault();
@@ -646,6 +658,14 @@ new class extends Component {
                 },
 
                 init() {
+                    this.syncSelectedLayerData();
+                    this.$watch('$wire.selectedLayerIndex', (val) => {
+                        this.syncSelectedLayerData();
+                    });
+                    this.$watch('$wire.layers', (val) => {
+                        this.syncSelectedLayerData();
+                    });
+
                     // Mouse event listeners
                     window.addEventListener('mousemove', (e) => {
 
@@ -926,57 +946,43 @@ new class extends Component {
                             <input type="text" wire:key="input-label-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.label" placeholder="e.g. Header Title, Student Roll Tag" class="w-full bg-slate-950 border border-indigo-500/30 rounded-xl px-3.5 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3" x-data="{
-                            updateX(val) {
-                                $wire.layers[{{ $selectedLayerIndex }}].x = Math.round((parseFloat(val) || 0) * 11.8128);
-                            },
-                            updateY(val) {
-                                $wire.layers[{{ $selectedLayerIndex }}].y = Math.round((parseFloat(val) || 0) * 11.8128);
-                            }
-                        }">
+                        <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">Position X (mm)</label>
                                 <div class="relative">
-                                    <input type="number" step="0.1" wire:key="input-x-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(($wire.layers[{{ $selectedLayerIndex }}].x || 0) / 11.8128 * 10) / 10" @input="updateX($event.target.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
-                                    <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono">{{ $selectedLayer['x'] ?? 0 }}px</span>
+                                    <input type="number" step="0.1" wire:key="input-x-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(curX / 11.8128 * 10) / 10" @input="curX = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].x = curX; $wire.updateLayerCoordinates({{ $selectedLayerIndex }}, curX, curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                    <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="curX + 'px'"></span>
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">Position Y (mm)</label>
                                 <div class="relative">
-                                    <input type="number" step="0.1" wire:key="input-y-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(($wire.layers[{{ $selectedLayerIndex }}].y || 0) / 11.8128 * 10) / 10" @input="updateY($event.target.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
-                                    <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono">{{ $selectedLayer['y'] ?? 0 }}px</span>
+                                    <input type="number" step="0.1" wire:key="input-y-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(curY / 11.8128 * 10) / 10" @input="curY = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].y = curY; $wire.updateLayerCoordinates({{ $selectedLayerIndex }}, curX, curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                    <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="curY + 'px'"></span>
                                 </div>
                             </div>
                         </div>
-
+ 
                         @if(in_array($selectedLayer['type'] ?? '', ['photo', 'logo', 'qr']))
-                            <div class="grid grid-cols-2 gap-3 pt-1" x-data="{
-                                updateW(val) {
-                                    $wire.layers[{{ $selectedLayerIndex }}].width = Math.round((parseFloat(val) || 0) * 11.8128);
-                                },
-                                updateH(val) {
-                                    $wire.layers[{{ $selectedLayerIndex }}].height = Math.round((parseFloat(val) || 0) * 11.8128);
-                                }
-                            }">
+                            <div class="grid grid-cols-2 gap-3 pt-1">
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-400 mb-1">Width (mm)</label>
                                     <div class="relative">
-                                        <input type="number" step="0.1" wire:key="input-w-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(($wire.layers[{{ $selectedLayerIndex }}].width || 0) / 11.8128 * 10) / 10" @input="updateW($event.target.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
-                                        <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono">{{ $selectedLayer['width'] ?? 0 }}px</span>
+                                        <input type="number" step="0.1" wire:key="input-w-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(curW / 11.8128 * 10) / 10" @input="curW = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].width = curW; $wire.updateLayerDimensions({{ $selectedLayerIndex }}, curW, curH, curFontSize, curX, curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                        <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="curW + 'px'"></span>
                                     </div>
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-400 mb-1">Height (mm)</label>
                                     <div class="relative">
-                                        <input type="number" step="0.1" wire:key="input-h-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(($wire.layers[{{ $selectedLayerIndex }}].height || 0) / 11.8128 * 10) / 10" @input="updateH($event.target.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
-                                        <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono">{{ $selectedLayer['height'] ?? 0 }}px</span>
+                                        <input type="number" step="0.1" wire:key="input-h-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(curH / 11.8128 * 10) / 10" @input="curH = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].height = curH; $wire.updateLayerDimensions({{ $selectedLayerIndex }}, curW, curH, curFontSize, curX, curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                        <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="curH + 'px'"></span>
                                     </div>
                                 </div>
                             </div>
                         @endif
                     </div>
-
+ 
                     <!-- Text Specific Formatting Controls -->
                     @if(($selectedLayer['type'] ?? '') === 'text')
                         <div class="space-y-3 pt-2">
@@ -984,12 +990,12 @@ new class extends Component {
                                 <label class="block text-[11px] font-bold text-slate-400 mb-1">Text Content / Template Code</label>
                                 <input type="text" wire:key="input-text-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.text" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
                             </div>
-
+ 
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-400 mb-1">Font Size (pt)</label>
                                     <div class="relative">
-                                        <input type="number" min="4" max="120" step="1" wire:key="input-size-pt-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.font_size" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                        <input type="number" min="4" max="120" step="1" wire:key="input-size-pt-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="curFontSize" @input="curFontSize = parseInt($event.target.value) || 14; $wire.layers[{{ $selectedLayerIndex }}].font_size = curFontSize; $wire.updateLayerDimensions({{ $selectedLayerIndex }}, curW, curH, curFontSize, curX, curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
                                         <span class="absolute right-3 top-2 text-[10px] text-indigo-400 font-mono font-bold">pt</span>
                                     </div>
                                 </div>
