@@ -23,11 +23,11 @@
     {!! file_get_contents(public_path('svg/card-template-background.svg')) !!}
 
     <!-- Card Content -->
-    <div class="flex-1 p-6 pb-2 z-10 flex flex-col justify-between">
+    <div class="flex-1 p-6 pb-4 z-10 flex flex-col justify-between h-full">
         <!-- Top Row: Logo & Title -->
-        <div class="flex justify-between items-start">
+        <div>
             <!-- School Logo & Name -->
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-2.5">
                 @if(!empty($school->logo_path))
                     <img src="{{ asset('storage/' . $school->logo_path) }}" class="w-8 h-8 rounded-lg bg-white/10 p-0.5 border border-slate-200 object-contain shadow-sm shrink-0">
                 @else
@@ -43,39 +43,39 @@
                     <span class="text-[7.5px] text-slate-400 font-bold uppercase tracking-widest block mt-0.5">High School</span>
                 </div>
             </div>
-        </div>
 
-        <!-- Title -->
-        <div class="mt-2">
-            <h1 class="text-[22px] font-black text-[#0A2540] tracking-wider uppercase leading-none">STUDENT ID CARD</h1>
+            <!-- Title -->
+            <div class="mt-3">
+                <h1 class="text-[20px] font-black text-[#0A2540] tracking-wider uppercase leading-none">STUDENT ID CARD</h1>
+            </div>
         </div>
 
         <!-- Mid Row: Details (Left) & Photo (Right) -->
-        <div class="flex items-start justify-between mt-3.5 gap-4">
+        <div class="flex items-start justify-between mt-1 gap-2">
             <!-- Left: Fields List -->
-            <div class="flex-1 min-w-0">
-                <div class="grid grid-cols-[65px_12px_1fr] gap-y-2.5 text-[10.5px] font-sans">
-                    <div class="text-slate-500 font-extrabold tracking-widest uppercase">NAME</div>
+            <div class="flex-1 min-w-0 pr-2">
+                <div class="grid grid-cols-[48px_10px_1fr] gap-y-1.5 text-[10px] font-sans items-center">
+                    <div class="text-slate-600 font-extrabold tracking-wider uppercase">NAME</div>
                     <div class="text-slate-400 font-extrabold text-center">:</div>
                     <div class="text-[#0A2540] font-black uppercase truncate leading-tight">{{ $fullName }}</div>
 
-                    <div class="text-slate-500 font-extrabold tracking-widest uppercase">ID</div>
+                    <div class="text-slate-600 font-extrabold tracking-wider uppercase">ID</div>
                     <div class="text-slate-400 font-extrabold text-center">:</div>
                     <div class="text-[#0A2540] font-black uppercase truncate leading-tight">#{{ $serialNumber }}</div>
 
-                    <div class="text-slate-500 font-extrabold tracking-widest uppercase">D.O.B</div>
+                    <div class="text-slate-600 font-extrabold tracking-wider uppercase">D.O.B</div>
                     <div class="text-slate-400 font-extrabold text-center">:</div>
                     <div class="text-[#0A2540] font-black uppercase truncate leading-tight">{{ $dob }}</div>
 
-                    <div class="text-slate-500 font-extrabold tracking-widest uppercase">ADDRES</div>
+                    <div class="text-slate-600 font-extrabold tracking-wider uppercase">ADDRES</div>
                     <div class="text-slate-400 font-extrabold text-center">:</div>
                     <div class="text-[#0A2540] font-black uppercase leading-tight line-clamp-2 pr-1">{{ $fullAddress }}</div>
                 </div>
             </div>
 
             <!-- Right: Student Photo -->
-            <div class="shrink-0 relative">
-                <div class="w-[110px] h-[110px] rounded-3xl overflow-hidden border-[3px] border-[#E05B35] bg-slate-50 flex items-center justify-center shadow-lg">
+            <div class="shrink-0 relative mr-2">
+                <div class="w-[96px] h-[96px] rounded-2xl overflow-hidden border-2 border-[#E05B35] bg-slate-50 flex items-center justify-center shadow-md">
                     @if(!empty($photo))
                         <img src="{{ asset('storage/' . $photo) }}" class="w-full h-full object-cover">
                     @else
@@ -85,10 +85,10 @@
             </div>
         </div>
 
-        <!-- Bottom Row: Barcode -->
-        <div class="mt-2.5 flex items-end justify-between">
+        <!-- Bottom Row: Barcode & Class/Roll Info -->
+        <div class="flex items-end justify-between mb-2">
             <div class="shrink-0">
-                <svg class="h-7 w-36 text-slate-900" viewBox="0 0 100 20" preserveAspectRatio="none">
+                <svg class="h-6 w-32 text-slate-900" viewBox="0 0 100 20" preserveAspectRatio="none">
                     <rect x="0" width="2" height="20" fill="currentColor"/>
                     <rect x="3" width="1" height="20" fill="currentColor"/>
                     <rect x="5" width="3" height="20" fill="currentColor"/>
@@ -117,7 +117,7 @@
                     <rect x="96" width="4" height="20" fill="currentColor"/>
                 </svg>
             </div>
-            <div class="text-right text-[8px] text-slate-400 font-bold uppercase tracking-wider">
+            <div class="text-right text-[8.5px] text-slate-500 font-bold uppercase tracking-wider mr-1">
                 Class: <span class="text-[#0A2540] font-black">{{ $grade }} ({{ $division }})</span> | Roll: <span class="text-[#0A2540] font-black">#{{ $rollNo }}</span>
             </div>
         </div>
