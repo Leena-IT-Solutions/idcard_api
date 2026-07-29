@@ -9,41 +9,37 @@ new class extends Component {
     public $activeSchool = null;
     public $schoolGrades = [];
 
-    // Editable template branding
+    // Editable branding
     public string $schoolName = '';
     public string $subtitle = 'High School';
-    public string $photoBorderColor = '#E05B35';
 
-    // Student Fields Labels & Visibility (students table)
-    public string $nameLabel = 'NAME';
-    public string $firstNameLabel = 'FIRST NAME';
-    public string $middleNameLabel = 'MIDDLE NAME';
-    public string $lastNameLabel = 'LAST NAME';
-    public string $dobLabel = 'D.O.B';
-    public string $bloodGroupLabel = 'BLOOD GRP';
-    public string $contactLabel = 'CONTACT';
-    public string $addressLabel = 'ADDRES';
-    public string $pincodeLabel = 'PINCODE';
+    // Dynamic Custom Field Builder
+    // Each item has 'label' and 'value_format' (which can use placeholders like {first_name}, {last_name}, {serial_number})
+    public array $customFields = [
+        ['label' => 'NAME', 'value_format' => '{full_name}'],
+        ['label' => 'ID', 'value_format' => '#{serial_number}'],
+        ['label' => 'D.O.B', 'value_format' => '{dob}'],
+        ['label' => 'ADDRES', 'value_format' => '{address} {pincode}'],
+    ];
 
-    public bool $showName = true;
-    public bool $showDob = true;
-    public bool $showAddress = true;
-    public bool $showBloodGroup = false;
-    public bool $showContact = false;
-
-    // Campaign Student Fields Labels & Visibility (campaign_student table)
-    public string $idLabel = 'ID';
-    public string $gradeLabel = 'CLASS';
-    public string $divisionLabel = 'DIV';
-    public string $rollNoLabel = 'ROLL';
-
-    public bool $showId = true;
-    public bool $showGrade = true;
-    public bool $showRollNo = true;
     public bool $showBarcode = true;
 
-    // Active tab in fields section
-    public string $activeFieldTab = 'students';
+    // Available variables list
+    public array $availableVariables = [
+        '{full_name}' => 'Full Name',
+        '{first_name}' => 'First Name',
+        '{middle_name}' => 'Middle Name',
+        '{last_name}' => 'Last Name',
+        '{serial_number}' => 'ID / Serial No',
+        '{dob}' => 'Date of Birth',
+        '{blood_group}' => 'Blood Group',
+        '{contact_number}' => 'Contact Phone',
+        '{address}' => 'Address',
+        '{pincode}' => 'Pincode',
+        '{grade}' => 'Class / Grade',
+        '{division}' => 'Division',
+        '{roll_no}' => 'Roll Number',
+    ];
 
     public function mount($templateId = 'premium-landscape')
     {
@@ -71,6 +67,29 @@ new class extends Component {
                 ->get();
         } else {
             $this->schoolGrades = [];
+        }
+    }
+
+    public function addField()
+    {
+        $this->customFields[] = [
+            'label' => 'NEW FIELD',
+            'value_format' => '{first_name}',
+        ];
+    }
+
+    public function removeField($index)
+    {
+        if (isset($this->customFields[$index])) {
+            array_splice($this->customFields, $index, 1);
+        }
+    }
+
+    public function insertTag($index, $tag)
+    {
+        if (isset($this->customFields[$index])) {
+            $this->customFields[$index]['value_format'] .= ' ' . $tag;
+            $this->customFields[$index]['value_format'] = trim($this->customFields[$index]['value_format']);
         }
     }
 
@@ -165,7 +184,7 @@ new class extends Component {
                     <h1 class="text-lg font-black text-white">Premium Landscape Student ID</h1>
                     <span class="text-[10px] font-extrabold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider">CR-80 Landscape</span>
                 </div>
-                <p class="text-xs text-slate-400 mt-0.5">Customize template design elements, branding, and student fields</p>
+                <p class="text-xs text-slate-400 mt-0.5">Add custom field labels and map student/campaign variables dynamically</p>
             </div>
         </div>
 
@@ -207,14 +226,7 @@ new class extends Component {
                 @include('id-card-templates.premium-landscape', [
                     'student' => $mockStudent, 
                     'school' => $mockSchool,
-                    'nameLabel' => $nameLabel,
-                    'idLabel' => $idLabel,
-                    'dobLabel' => $dobLabel,
-                    'addressLabel' => $addressLabel,
-                    'showBloodGroup' => $showBloodGroup,
-                    'bloodGroupLabel' => $bloodGroupLabel,
-                    'showContact' => $showContact,
-                    'contactLabel' => $contactLabel,
+                    'customFields' => $customFields,
                     'showBarcode' => $showBarcode
                 ])
             </div>
@@ -227,7 +239,7 @@ new class extends Component {
             </div>
         </div>
 
-        <!-- Right: Design Customization Controls (5 Cols) -->
+        <!-- Right: Dynamic Custom Field Builder (5 Cols) -->
         <div class="lg:col-span-5 space-y-5">
             <!-- Branding Panel -->
             <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
@@ -245,113 +257,76 @@ new class extends Component {
                         <label class="block text-xs font-bold text-slate-400 mb-1">School Name</label>
                         <input type="text" wire:model.live="schoolName" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-400 mb-1">School Subtitle</label>
-                        <input type="text" wire:model.live="subtitle" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
-                    </div>
                 </div>
             </div>
 
-            <!-- Field Configuration Panel (Students & Campaign Students) -->
+            <!-- Dynamic Custom Fields Builder Panel -->
             <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                     <div class="flex items-center space-x-2">
                         <div class="p-2 rounded-xl bg-purple-500/10 text-purple-400">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
                             </svg>
                         </div>
-                        <h3 class="text-sm font-black text-white">Field Configuration</h3>
+                        <div>
+                            <h3 class="text-sm font-black text-white">Dynamic Field Builder</h3>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Add as many custom fields as you need</p>
+                        </div>
                     </div>
 
-                    <!-- Category Tab Switcher -->
-                    <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] font-bold">
-                        <button type="button" wire:click="$set('activeFieldTab', 'students')" 
-                            class="px-3 py-1 rounded-lg transition {{ $activeFieldTab === 'students' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white' }}">
-                            Student Fields
-                        </button>
-                        <button type="button" wire:click="$set('activeFieldTab', 'campaign_student')" 
-                            class="px-3 py-1 rounded-lg transition {{ $activeFieldTab === 'campaign_student' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white' }}">
-                            Campaign Student Fields
-                        </button>
-                    </div>
+                    <button type="button" wire:click="addField" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow">
+                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Add Field
+                    </button>
                 </div>
 
-                <!-- Tab 1: Student Fields (students table) -->
-                @if($activeFieldTab === 'students')
-                    <div class="space-y-3.5 pt-1">
-                        <p class="text-[11px] text-slate-400 font-medium">Configure labels and visibility for fields stored in the <span class="text-indigo-400 font-bold">students</span> table:</p>
-                        
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Full Name Label</label>
-                                <input type="text" wire:model.live="nameLabel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
+                <!-- Dynamic Field List -->
+                <div class="space-y-4 max-h-[380px] overflow-y-auto pr-1">
+                    @foreach($customFields as $index => $field)
+                        <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 space-y-3 relative group">
+                            <!-- Field Row Top Bar -->
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-black uppercase tracking-wider text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded">
+                                    Field #{{ $index + 1 }}
+                                </span>
+                                @if(count($customFields) > 1)
+                                    <button type="button" wire:click="removeField({{ $index }})" class="text-slate-500 hover:text-red-400 transition p-1" title="Delete Field">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                @endif
                             </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-400 mb-1">D.O.B Label</label>
-                                <input type="text" wire:model.live="dobLabel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Label Text</label>
+                                    <input type="text" wire:model.live="customFields.{{ $index }}.label" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition" placeholder="e.g. NAME">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Value Pattern</label>
+                                    <input type="text" wire:model.live="customFields.{{ $index }}.value_format" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition" placeholder="e.g. {first_name} {last_name}">
+                                </div>
                             </div>
-                            <div class="col-span-2">
-                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Address Label</label>
-                                <input type="text" wire:model.live="addressLabel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
-                            </div>
+
+                            <!-- Click to Insert Variables Pill Bar -->
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Blood Group Label</label>
-                                <input type="text" wire:model.live="bloodGroupLabel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Contact Label</label>
-                                <input type="text" wire:model.live="contactLabel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
+                                <span class="block text-[9.5px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Insert Dynamic Tag:</span>
+                                <div class="flex flex-wrap gap-1">
+                                    @foreach($availableVariables as $tag => $name)
+                                        <button type="button" wire:click="insertTag({{ $index }}, '{{ $tag }}')" 
+                                            class="text-[9px] font-semibold text-slate-300 hover:text-white bg-slate-900 hover:bg-indigo-600/80 border border-slate-800 hover:border-indigo-500 px-2 py-0.5 rounded-lg transition">
+                                            + {{ $tag }}
+                                        </button>
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
-
-                        <!-- Visibility Toggles -->
-                        <div class="pt-2 border-t border-slate-800 space-y-2">
-                            <label class="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800/80 cursor-pointer">
-                                <span class="text-xs font-bold text-slate-300">Show Blood Group</span>
-                                <input type="checkbox" wire:model.live="showBloodGroup" class="w-4 h-4 text-indigo-600 rounded bg-slate-900 border-slate-700 focus:ring-indigo-500">
-                            </label>
-                            <label class="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800/80 cursor-pointer">
-                                <span class="text-xs font-bold text-slate-300">Show Contact Number</span>
-                                <input type="checkbox" wire:model.live="showContact" class="w-4 h-4 text-indigo-600 rounded bg-slate-900 border-slate-700 focus:ring-indigo-500">
-                            </label>
-                        </div>
-                    </div>
-                @endif
-
-                <!-- Tab 2: Campaign Student Fields (campaign_student table) -->
-                @if($activeFieldTab === 'campaign_student')
-                    <div class="space-y-3.5 pt-1">
-                        <p class="text-[11px] text-slate-400 font-medium">Configure labels and visibility for enrollment fields stored in <span class="text-indigo-400 font-bold">campaign_student</span>:</p>
-
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-400 mb-1">ID / Serial No Label</label>
-                                <input type="text" wire:model.live="idLabel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Class / Grade Label</label>
-                                <input type="text" wire:model.live="gradeLabel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Division Label</label>
-                                <input type="text" wire:model.live="divisionLabel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Roll No Label</label>
-                                <input type="text" wire:model.live="rollNoLabel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
-                            </div>
-                        </div>
-
-                        <!-- Barcode Toggle -->
-                        <div class="pt-2 border-t border-slate-800">
-                            <label class="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800/80 cursor-pointer">
-                                <span class="text-xs font-bold text-slate-300">Show Barcode (Serial Number)</span>
-                                <input type="checkbox" wire:model.live="showBarcode" class="w-4 h-4 text-indigo-600 rounded bg-slate-900 border-slate-700 focus:ring-indigo-500">
-                            </label>
-                        </div>
-                    </div>
-                @endif
+                    @endforeach
+                </div>
             </div>
 
             <!-- Class Assignment Overrides Panel -->

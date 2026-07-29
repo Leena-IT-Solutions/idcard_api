@@ -17,15 +17,29 @@
     $rollNo = $enrollment->roll_no ?? 'N/A';
     $serialNumber = $enrollment->serial_number ?? 'N/A';
 
-    // Dynamic field labels and toggles
-    $nameLabel = $nameLabel ?? 'NAME';
-    $idLabel = $idLabel ?? 'ID';
-    $dobLabel = $dobLabel ?? 'D.O.B';
-    $addressLabel = $addressLabel ?? 'ADDRES';
-    $showBloodGroup = $showBloodGroup ?? false;
-    $bloodGroupLabel = $bloodGroupLabel ?? 'BLOOD GRP';
-    $showContact = $showContact ?? false;
-    $contactLabel = $contactLabel ?? 'CONTACT';
+    // Dynamic Custom Fields Evaluator
+    $customFields = $customFields ?? [
+        ['label' => 'NAME', 'value_format' => '{full_name}'],
+        ['label' => 'ID', 'value_format' => '#{serial_number}'],
+        ['label' => 'D.O.B', 'value_format' => '{dob}'],
+        ['label' => 'ADDRES', 'value_format' => '{address} {pincode}'],
+    ];
+
+    $replacements = [
+        '{first_name}' => $student->first_name ?? '',
+        '{middle_name}' => $student->middle_name ?? '',
+        '{last_name}' => $student->last_name ?? '',
+        '{full_name}' => $fullName,
+        '{serial_number}' => $serialNumber,
+        '{dob}' => $dob,
+        '{blood_group}' => $bloodGroup,
+        '{contact_number}' => $contact,
+        '{address}' => $address,
+        '{pincode}' => $pincode,
+        '{grade}' => $grade,
+        '{division}' => $division,
+        '{roll_no}' => $rollNo,
+    ];
     $showBarcode = $showBarcode ?? true;
 @endphp
 
@@ -63,36 +77,18 @@
 
         <!-- Mid Row: Details (Left) & Photo (Right) -->
         <div class="flex items-start justify-between mt-1 gap-2">
-            <!-- Left: Fields List -->
+            <!-- Left: Dynamic Fields List -->
             <div class="flex-1 min-w-0 pr-2">
-                <div class="grid grid-cols-[48px_10px_1fr] gap-y-1.5 text-[10px] font-sans items-center">
-                    <div class="text-slate-600 font-extrabold tracking-wider uppercase truncate">{{ $nameLabel }}</div>
-                    <div class="text-slate-400 font-extrabold text-center">:</div>
-                    <div class="text-[#0A2540] font-black uppercase truncate leading-tight">{{ $fullName }}</div>
-
-                    <div class="text-slate-600 font-extrabold tracking-wider uppercase truncate">{{ $idLabel }}</div>
-                    <div class="text-slate-400 font-extrabold text-center">:</div>
-                    <div class="text-[#0A2540] font-black uppercase truncate leading-tight">#{{ $serialNumber }}</div>
-
-                    <div class="text-slate-600 font-extrabold tracking-wider uppercase truncate">{{ $dobLabel }}</div>
-                    <div class="text-slate-400 font-extrabold text-center">:</div>
-                    <div class="text-[#0A2540] font-black uppercase truncate leading-tight">{{ $dob }}</div>
-
-                    @if($showBloodGroup)
-                        <div class="text-slate-600 font-extrabold tracking-wider uppercase truncate">{{ $bloodGroupLabel }}</div>
+                <div class="grid grid-cols-[48px_10px_1fr] gap-y-1 text-[10px] font-sans items-center">
+                    @foreach($customFields as $field)
+                        @php
+                            $val = strtr($field['value_format'] ?? '', $replacements);
+                            if (empty(trim($val))) $val = 'N/A';
+                        @endphp
+                        <div class="text-slate-600 font-extrabold tracking-wider uppercase truncate">{{ $field['label'] ?? 'FIELD' }}</div>
                         <div class="text-slate-400 font-extrabold text-center">:</div>
-                        <div class="text-[#0A2540] font-black uppercase truncate leading-tight">{{ $bloodGroup }}</div>
-                    @endif
-
-                    @if($showContact)
-                        <div class="text-slate-600 font-extrabold tracking-wider uppercase truncate">{{ $contactLabel }}</div>
-                        <div class="text-slate-400 font-extrabold text-center">:</div>
-                        <div class="text-[#0A2540] font-black uppercase truncate leading-tight">{{ $contact }}</div>
-                    @endif
-
-                    <div class="text-slate-600 font-extrabold tracking-wider uppercase truncate">{{ $addressLabel }}</div>
-                    <div class="text-slate-400 font-extrabold text-center">:</div>
-                    <div class="text-[#0A2540] font-black uppercase leading-tight line-clamp-2 pr-1">{{ $fullAddress }}</div>
+                        <div class="text-[#0A2540] font-black uppercase truncate leading-tight">{{ $val }}</div>
+                    @endforeach
                 </div>
             </div>
 
