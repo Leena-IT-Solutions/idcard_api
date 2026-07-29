@@ -167,19 +167,21 @@ new class extends Component {
     </div>
 
     <!-- Main Workspace Split -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start w-full">
         <!-- Left: Live Studio Canvas Preview (7 Cols) -->
-        <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-3xl p-8 flex flex-col items-center justify-center min-h-[480px] shadow-xl relative overflow-hidden">
-            <div class="absolute top-4 left-4 text-[10px] font-black uppercase tracking-widest text-slate-500 bg-slate-950/60 px-3 py-1 rounded-lg border border-slate-800">
-                Live Studio Canvas (100% Scale)
+        <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-3xl p-8 flex flex-col items-center justify-center min-h-[580px] shadow-2xl relative overflow-hidden">
+            <div class="absolute top-5 left-5 flex items-center space-x-2">
+                <span class="text-[10px] font-black uppercase tracking-widest text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-lg">
+                    Live Studio Canvas (100% Scale)
+                </span>
             </div>
 
             <!-- ID Card Rendering Container -->
-            <div class="my-auto py-8">
+            <div class="my-auto py-10 transition duration-300 transform hover:scale-[1.02]">
                 @include('id-card-templates.premium-landscape', ['student' => $mockStudent, 'school' => $mockSchool])
             </div>
 
-            <div class="text-[11px] text-slate-500 flex items-center space-x-2 mt-2">
+            <div class="absolute bottom-5 left-5 text-[11px] text-slate-500 flex items-center space-x-2">
                 <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
