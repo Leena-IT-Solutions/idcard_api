@@ -1336,14 +1336,12 @@ new class extends Component {
                 </div>
             </div>
         </div>
-    </div>
+    <style>
+    .canvas-grid-bg {
+        background-image: 
+            linear-gradient(to right, rgba(99, 102, 241, 0.07) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(99, 102, 241, 0.07) 1px, transparent 1px);
+        background-size: 10px 10px;
+    }
+    </style>
 </div>
-
-<style>
-.canvas-grid-bg {
-    background-image: 
-        linear-gradient(to right, rgba(99, 102, 241, 0.07) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(99, 102, 241, 0.07) 1px, transparent 1px);
-    background-size: 10px 10px;
-}
-</style>
