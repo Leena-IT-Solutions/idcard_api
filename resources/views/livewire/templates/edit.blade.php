@@ -467,7 +467,6 @@ new class extends Component {
                     const coords = this.getClientCoords(event);
                     const dx = (coords.x - this.startX) / scale;
                     const dy = (coords.y - this.startY) / scale;
-                    console.log('Alpine onDrag coords', { clientX: coords.x, startX: this.startX, dx: dx });
 
                     if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
                         this.hasMoved = true;
@@ -566,7 +565,6 @@ new class extends Component {
                     const coords = this.getClientCoords(event);
                     const dx = (coords.x - this.startX) / scale;
                     const dy = (coords.y - this.startY) / scale;
-                    console.log('Alpine onResize coords', { clientX: coords.x, startX: this.startX, dx: dx });
 
                     const isText = this.isText;
                     const h = this.resizeHandle;
@@ -600,7 +598,6 @@ new class extends Component {
                         }
                     }
 
-                    console.log('Alpine onResize values calculated', { newW, newH, newX, newY, newFontSize });
 
                     this.curW = newW;
                     this.curH = newH;
@@ -617,7 +614,7 @@ new class extends Component {
                         if (!isText) {
                             innerContent.style.width = newW + 'px';
                             innerContent.style.height = newH + 'px';
-                            console.log('onResize image styles set', { width: innerContent.style.width, height: innerContent.style.height });
+
                         } else {
                             const textDiv = innerContent.querySelector('div');
                             if (textDiv) {
@@ -626,7 +623,7 @@ new class extends Component {
                                     textDiv.style.whiteSpace = 'normal';
                                     textDiv.style.width = newW + 'px';
                                 }
-                                console.log('onResize text styles set', { fontSize: textDiv.style.fontSize, width: textDiv.style.width });
+
                             }
                         }
                     }
@@ -662,7 +659,7 @@ new class extends Component {
                     
                     // Mouse event listeners
                     window.addEventListener('mousemove', (e) => {
-                        console.log('Window mousemove event', { dragging: this.draggingIndex, resizing: this.resizingIndex, clientX: e.clientX, clientY: e.clientY });
+
                         if (this.resizingIndex !== null) {
                             this.onResize(e);
                         } else if (this.draggingIndex !== null) {
@@ -682,7 +679,7 @@ new class extends Component {
                     // Touch event listeners
                     window.addEventListener('touchmove', (e) => {
                         const coords = (e.touches && e.touches.length > 0) ? e.touches[0] : (e.changedTouches ? e.changedTouches[0] : null);
-                        console.log('Window touchmove event', { dragging: this.draggingIndex, resizing: this.resizingIndex, clientX: coords ? coords.clientX : null, clientY: coords ? coords.clientY : null });
+
                         if (this.resizingIndex !== null) {
                             this.onResize(e);
                         } else if (this.draggingIndex !== null) {
