@@ -107,6 +107,42 @@ new class extends Component {
         $this->selectedLayerIndex = $newIndex;
     }
 
+    public function addPhotoLayer()
+    {
+        $newIndex = count($this->layers);
+        $this->layers[] = [
+            'id' => 'photo_' . microtime(true) . '_' . rand(1000, 9999),
+            'type' => 'photo',
+            'label' => 'Student Photo',
+            'x' => 24,
+            'y' => 80,
+            'width' => 90,
+            'height' => 110,
+            'border_radius' => 12,
+            'border_color' => '#818cf8',
+            'border_width' => 2,
+            'rotation' => 0,
+        ];
+        $this->selectedLayerIndex = $newIndex;
+    }
+
+    public function addLogoLayer()
+    {
+        $newIndex = count($this->layers);
+        $this->layers[] = [
+            'id' => 'logo_' . microtime(true) . '_' . rand(1000, 9999),
+            'type' => 'logo',
+            'label' => 'School Logo',
+            'x' => 24,
+            'y' => 20,
+            'width' => 45,
+            'height' => 45,
+            'border_radius' => 8,
+            'rotation' => 0,
+        ];
+        $this->selectedLayerIndex = $newIndex;
+    }
+
     public function removeLayer(int $index)
     {
         if (isset($this->layers[$index])) {
@@ -171,6 +207,15 @@ new class extends Component {
 
     public function appendVariableToSelected(string $tag)
     {
+        if ($tag === '{School Logo}') {
+            $this->addLogoLayer();
+            return;
+        }
+        if ($tag === '{Student Photo}') {
+            $this->addPhotoLayer();
+            return;
+        }
+
         if ($this->selectedLayerIndex !== null && isset($this->layers[$this->selectedLayerIndex])) {
             if (($this->layers[$this->selectedLayerIndex]['type'] ?? '') === 'text') {
                 $this->layers[$this->selectedLayerIndex]['text'] .= ' ' . $tag;
@@ -453,13 +498,19 @@ new class extends Component {
                                 $borderColor = $layer['border_color'] ?? '#818cf8';
                                 $borderWidth = $layer['border_width'] ?? 2;
                             @endphp
-                            <div style="width: {{ $w }}px; height: {{ $h }}px; border-radius: {{ $borderRadius }}px; border: {{ $borderWidth }}px solid {{ $borderColor }}; overflow: hidden; background: #1e293b;">
-                                <img src="https://ui-avatars.com/api/?name=Aaditya+Thakur&background=6366f1&color=fff&size=200" style="width: 100%; height: 100%; object-fit: cover;" />
+                            <div style="width: {{ $w }}px; height: {{ $h }}px; border-radius: {{ $borderRadius }}px; border: {{ $borderWidth }}px solid {{ $borderColor }}; overflow: hidden; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
+                                <svg viewBox="0 0 24 24" style="width: 40%; height: 40%; color: #818cf8;" fill="currentColor">
+                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                </svg>
+                                <span style="font-size: 8px; font-weight: 800; color: #a5b4fc; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">STUDENT PHOTO</span>
                             </div>
 
                         @elseif($type === 'logo')
-                            <div style="width: {{ $w }}px; height: {{ $h }}px; border-radius: 8px; background: rgba(99, 102, 241, 0.2); display: flex; align-items: center; justify-content: center; color: #818cf8; font-weight: bold; font-size: 11px;">
-                                LOGO
+                            <div style="width: {{ $w }}px; height: {{ $h }}px; border-radius: 10px; background: linear-gradient(135deg, #312e81 0%, #4338ca 100%); border: 1.5px dashed #818cf8; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ffffff; padding: 2px; box-sizing: border-box;">
+                                <svg viewBox="0 0 24 24" style="width: 40%; height: 40%; color: #fbbf24;" fill="currentColor">
+                                    <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM3.82 9L12 4.54 20.18 9 12 13.46 3.82 9zM5 14.45v3.55l7 3.82 7-3.82v-3.55l-7 3.81-7-3.81z"/>
+                                </svg>
+                                <span style="font-size: 7px; font-weight: 800; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; text-align: center;">SCHOOL LOGO</span>
                             </div>
 
                         @elseif($type === 'qr')
@@ -484,12 +535,12 @@ new class extends Component {
                     <div class="flex flex-wrap gap-1.5">
                         @php
                             $schoolVars = [
-                                '{School Name}', '{Registration Code}', '{Principal Name}',
+                                '{School Logo}', '{School Name}', '{Registration Code}', '{Principal Name}',
                                 '{School Contact}', '{School Email}', '{School Website}', '{School Address}'
                             ];
                         @endphp
                         @foreach($schoolVars as $v)
-                            <button type="button" wire:click="appendVariableToSelected('{{ $v }}')" class="px-2.5 py-1 bg-indigo-500/10 hover:bg-indigo-600 text-indigo-300 hover:text-white rounded-lg text-xs font-semibold transition border border-indigo-500/20 shadow-sm">
+                            <button type="button" wire:click="appendVariableToSelected('{{ $v }}')" class="px-2.5 py-1 {{ $v === '{School Logo}' ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-indigo-500/10 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/20' }} rounded-lg text-xs font-bold transition shadow-sm">
                                 + {{ $v }}
                             </button>
                         @endforeach
@@ -501,14 +552,14 @@ new class extends Component {
                     <div class="flex flex-wrap gap-1.5">
                         @php
                             $studentVars = [
-                                '{First Name}', '{Middle Name}', '{Last Name}',
+                                '{Student Photo}', '{First Name}', '{Middle Name}', '{Last Name}',
                                 '{Roll No}', '{Ref No}', '{Campaign}', '{Standard}', '{Division}',
                                 'Grade ({grade}) Div ({division})', '{Blood Group}', '{Gender}',
                                 '{DOB}', '{Contact Number}', '{Address}', '{Pincode}'
                             ];
                         @endphp
                         @foreach($studentVars as $v)
-                            <button type="button" wire:click="appendVariableToSelected('{{ $v }}')" class="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-600 text-amber-300 hover:text-white rounded-lg text-xs font-semibold transition border border-amber-500/20 shadow-sm">
+                            <button type="button" wire:click="appendVariableToSelected('{{ $v }}')" class="px-2.5 py-1 {{ $v === '{Student Photo}' ? 'bg-amber-600 text-white hover:bg-amber-700' : 'bg-amber-500/10 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/20' }} rounded-lg text-xs font-bold transition shadow-sm">
                                 + {{ $v }}
                             </button>
                         @endforeach
@@ -660,9 +711,17 @@ new class extends Component {
             <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                     <h3 class="text-sm font-black text-white">Template Layers List</h3>
-                    <button type="button" wire:click="addTextLayer" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center">
-                        + Add Custom Text Layer
-                    </button>
+                    <div class="flex items-center space-x-1.5">
+                        <button type="button" wire:click="addTextLayer" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-sm">
+                            + Text
+                        </button>
+                        <button type="button" wire:click="addPhotoLayer" class="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-sm">
+                            + Photo
+                        </button>
+                        <button type="button" wire:click="addLogoLayer" class="px-2.5 py-1.5 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 rounded-xl text-xs font-bold transition flex items-center border border-indigo-500/30">
+                            + Logo
+                        </button>
+                    </div>
                 </div>
 
                 <div class="space-y-2 max-h-60 overflow-y-auto pr-1">
