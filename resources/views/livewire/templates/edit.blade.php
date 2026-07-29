@@ -121,6 +121,45 @@ new class extends Component {
 
 
 
+    public function duplicateSelected()
+    {
+        if (empty($this->selectedLayerIndices)) {
+            if ($this->selectedLayerIndex !== null) {
+                $this->selectedLayerIndices = [$this->selectedLayerIndex];
+            } else {
+                return;
+            }
+        }
+
+        $newIndices = [];
+        $sortedIndices = $this->selectedLayerIndices;
+        sort($sortedIndices);
+
+        foreach ($sortedIndices as $idx) {
+            if (!isset($this->layers[$idx])) continue;
+
+            $layer = $this->layers[$idx];
+            $duplicate = $layer;
+            $duplicate['id'] = $layer['type'] . '_' . microtime(true) . '_' . rand(1000, 9999);
+            $duplicate['x'] = ($layer['x'] ?? 50) + 15;
+            $duplicate['y'] = ($layer['y'] ?? 50) + 15;
+            
+            if (isset($duplicate['label'])) {
+                $duplicate['label'] .= ' (Copy)';
+            }
+
+            $this->layers[] = $duplicate;
+            $newIndices[] = count($this->layers) - 1;
+        }
+
+        $this->selectedLayerIndices = $newIndices;
+        if (count($newIndices) === 1) {
+            $this->selectedLayerIndex = $newIndices[0];
+        } else {
+            $this->selectedLayerIndex = null;
+        }
+    }
+
     public function updateCommonProperty(string $property, $value)
     {
         if (empty($this->selectedLayerIndices)) return;
@@ -1345,12 +1384,23 @@ new class extends Component {
         });
         window.addEventListener('keydown', (e) => {
             const indices = this.$wire.selectedLayerIndices || [];
-            if (indices.length === 0) return;
+            const singleIdx = this.$wire.selectedLayerIndex;
 
             const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
             if (['input', 'textarea', 'select'].includes(tag) || (document.activeElement && document.activeElement.isContentEditable)) {
                 return;
             }
+
+            // Ctrl + D / Cmd + D duplication shortcut
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
+                if (indices.length > 0 || singleIdx !== null) {
+                    e.preventDefault();
+                    this.$wire.duplicateSelected();
+                    return;
+                }
+            }
+
+            if (indices.length === 0) return;
 
             const keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
             if (!keys.includes(e.key)) return;
@@ -1910,13 +1960,21 @@ new class extends Component {
                     </div>
 
                     <div class="flex items-center justify-between pt-3 border-t border-slate-800">
-                        <span class="text-[10px] text-slate-500 font-medium">Bulk operations affect all selected elements.</span>
-                        <button type="button" 
-                            wire:click="removeLayer(-1)" 
-                            class="px-3.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl text-xs font-bold transition flex items-center shadow-sm"
-                        >
-                            Delete Selected
-                        </button>
+                        <span class="text-[10px] text-slate-500 font-medium">Bulk operations affect selection.</span>
+                        <div class="flex items-center space-x-2">
+                            <button type="button" 
+                                wire:click="duplicateSelected" 
+                                class="px-3.5 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-xl text-xs font-bold transition flex items-center shadow-sm"
+                            >
+                                Duplicate
+                            </button>
+                            <button type="button" 
+                                wire:click="removeLayer(-1)" 
+                                class="px-3.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl text-xs font-bold transition flex items-center shadow-sm"
+                            >
+                                Delete Selected
+                            </button>
+                        </div>
                     </div>
                 </div>
             @endif
@@ -2037,6 +2095,7 @@ new class extends Component {
                         <div class="flex space-x-2">
                             <button type="button" wire:click="moveLayer({{ $selectedLayerIndex }}, 'up')" class="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-bold">Move Up</button>
                             <button type="button" wire:click="moveLayer({{ $selectedLayerIndex }}, 'down')" class="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-bold">Move Down</button>
+                            <button type="button" wire:click="duplicateSelected" class="px-2.5 py-1 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-lg text-xs font-bold">Duplicate</button>
                         </div>
                         <button type="button" wire:click="removeLayer({{ $selectedLayerIndex }})" class="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-bold">Delete Layer</button>
                     </div>
