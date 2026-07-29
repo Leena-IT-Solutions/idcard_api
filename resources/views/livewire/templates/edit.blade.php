@@ -473,8 +473,17 @@ new class extends Component {
                     const layer = ($wire.layers && $wire.layers[idx]) ? $wire.layers[idx] : {};
                     this.origX = parseInt(layer.x) || 0;
                     this.origY = parseInt(layer.y) || 0;
-                    this.startW = parseInt(layer.width) || (this.resizeEl ? this.resizeEl.offsetWidth : 100);
-                    this.startH = parseInt(layer.height) || (this.resizeEl ? this.resizeEl.offsetHeight : 30);
+
+                    const contentEl = this.resizeEl ? this.resizeEl.querySelector('[data-layer-content]') : null;
+                    const realW = contentEl ? contentEl.offsetWidth : (this.resizeEl ? this.resizeEl.offsetWidth : 100);
+                    const realH = contentEl ? contentEl.offsetHeight : (this.resizeEl ? this.resizeEl.offsetHeight : 30);
+
+                    this.startW = parseInt(layer.width) || realW;
+                    if (this.startW < 20) this.startW = realW;
+
+                    this.startH = parseInt(layer.height) || realH;
+                    if (this.startH < 10) this.startH = realH;
+
                     this.startFontSize = parseInt(layer.font_size) || 14;
 
                     this.curX = this.origX;
@@ -492,14 +501,13 @@ new class extends Component {
 
                     const layer = ($wire.layers && $wire.layers[this.resizingIndex]) ? $wire.layers[this.resizingIndex] : {};
                     const isText = (layer.type === 'text');
+                    const h = this.resizeHandle;
 
                     let newW = this.startW;
                     let newH = this.startH;
                     let newX = this.origX;
                     let newY = this.origY;
                     let newFontSize = this.startFontSize;
-
-                    const h = this.resizeHandle;
 
                     if (h.includes('r')) newW = Math.max(15, Math.round(this.startW + dx));
                     if (h.includes('l')) {
@@ -515,7 +523,12 @@ new class extends Component {
                     if (isText) {
                         if (h === 'se' || h === 'sw' || h === 'ne' || h === 'nw') {
                             const ratio = newW / (this.startW || 1);
-                            newFontSize = Math.max(6, Math.min(120, Math.round(this.startFontSize * ratio)));
+                            newFontSize = Math.max(6, Math.min(140, Math.round(this.startFontSize * ratio)));
+                        }
+                    } else {
+                        if (h === 'se' || h === 'sw' || h === 'ne' || h === 'nw') {
+                            const aspect = (this.startW || 1) / (this.startH || 1);
+                            newH = Math.round(newW / aspect);
                         }
                     }
 
@@ -530,8 +543,12 @@ new class extends Component {
                     this.resizeEl.style.top = newY + 'px';
                     const innerContent = this.resizeEl.querySelector('[data-layer-content]');
                     if (innerContent) {
-                        innerContent.style.width = newW + 'px';
-                        innerContent.style.height = newH + 'px';
+                        if (!isText || (isText && (h === 'e' || h === 'w'))) {
+                            innerContent.style.width = newW + 'px';
+                        }
+                        if (!isText) {
+                            innerContent.style.height = newH + 'px';
+                        }
                         if (isText) {
                             const textDiv = innerContent.querySelector('div');
                             if (textDiv) textDiv.style.fontSize = newFontSize + 'pt';
@@ -612,10 +629,10 @@ new class extends Component {
                                 wire:click="selectLayer({{ $idx }})"
                                 @mousedown="startDrag({{ $idx }}, $event)"
                                 data-layer-box
-                                class="absolute cursor-move select-none transition-shadow group {{ $isSelected ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-slate-900 z-30' : 'hover:ring-1 hover:ring-indigo-400/50 z-10' }}"
+                                class="absolute cursor-move select-none transition-shadow group {{ $isSelected ? 'ring-2 ring-indigo-500 ring-offset-1 ring-offset-slate-900 z-30' : 'hover:ring-1 hover:ring-indigo-400/50 z-10' }}"
                                 style="left: {{ $x }}px; top: {{ $y }}px; transform: rotate({{ $rot }}deg); transform-origin: top left;"
                             >
-                                <div data-layer-content style="width: {{ $w === 'auto' ? 'auto' : $w . 'px' }}; height: {{ $h === 'auto' ? 'auto' : $h . 'px' }};">
+                                <div data-layer-content style="width: {{ ($type === 'text') ? 'max-content' : ($w . 'px') }}; height: {{ ($type === 'text') ? 'max-content' : ($h . 'px') }}; max-width: 100%;">
                                     @if($type === 'text')
                                         @php
                                             $rawText = $layer['text'] ?? '';
@@ -650,7 +667,7 @@ new class extends Component {
                                             $color = $layer['color'] ?? '#ffffff';
                                             $align = $layer['align'] ?? 'left';
                                         @endphp
-                                        <div style="font-size: {{ $fontSize }}pt; font-weight: {{ $fontWeight }}; font-family: {{ $fontFamily }}, sans-serif; color: {{ $color }}; text-align: {{ $align }}; white-space: nowrap; padding: 2px 4px; border-radius: 4px; width: 100%; height: 100%; box-sizing: border-box; background: {{ $isSelected ? 'rgba(99, 102, 241, 0.15)' : 'transparent' }};">
+                                        <div style="font-size: {{ $fontSize }}pt; font-weight: {{ $fontWeight }}; font-family: {{ $fontFamily }}, sans-serif; color: {{ $color }}; text-align: {{ $align }}; white-space: nowrap; padding: 2px 4px; border-radius: 4px; width: max-content; box-sizing: border-box; background: {{ $isSelected ? 'rgba(99, 102, 241, 0.15)' : 'transparent' }};">
                                             {{ $displayText }}
                                         </div>
 
@@ -690,16 +707,16 @@ new class extends Component {
                                 <!-- Canva 8 Interactive Resize Handles (Rendered on Selection) -->
                                 @if($isSelected)
                                     <!-- 4 Corner Handles -->
-                                    <div @mousedown.stop="startResize({{ $idx }}, 'nw', $event)" title="Resize Top-Left" class="absolute -top-1.5 -left-1.5 w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full shadow-lg hover:scale-125 cursor-nwse-resize z-50 transition-transform"></div>
-                                    <div @mousedown.stop="startResize({{ $idx }}, 'ne', $event)" title="Resize Top-Right" class="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full shadow-lg hover:scale-125 cursor-nesw-resize z-50 transition-transform"></div>
-                                    <div @mousedown.stop="startResize({{ $idx }}, 'sw', $event)" title="Resize Bottom-Left" class="absolute -bottom-1.5 -left-1.5 w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full shadow-lg hover:scale-125 cursor-nesw-resize z-50 transition-transform"></div>
-                                    <div @mousedown.stop="startResize({{ $idx }}, 'se', $event)" title="Resize Bottom-Right" class="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full shadow-lg hover:scale-125 cursor-nwse-resize z-50 transition-transform"></div>
+                                    <div @mousedown.stop="startResize({{ $idx }}, 'nw', $event)" title="Resize Top-Left" class="absolute w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full shadow-lg hover:scale-125 cursor-nwse-resize z-50 transition-transform" style="top: 0; left: 0; transform: translate(-50%, -50%);"></div>
+                                    <div @mousedown.stop="startResize({{ $idx }}, 'ne', $event)" title="Resize Top-Right" class="absolute w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full shadow-lg hover:scale-125 cursor-nesw-resize z-50 transition-transform" style="top: 0; left: 100%; transform: translate(-50%, -50%);"></div>
+                                    <div @mousedown.stop="startResize({{ $idx }}, 'sw', $event)" title="Resize Bottom-Left" class="absolute w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full shadow-lg hover:scale-125 cursor-nesw-resize z-50 transition-transform" style="top: 100%; left: 0; transform: translate(-50%, -50%);"></div>
+                                    <div @mousedown.stop="startResize({{ $idx }}, 'se', $event)" title="Resize Bottom-Right" class="absolute w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full shadow-lg hover:scale-125 cursor-nwse-resize z-50 transition-transform" style="top: 100%; left: 100%; transform: translate(-50%, -50%);"></div>
 
                                     <!-- 4 Side Handles -->
-                                    <div @mousedown.stop="startResize({{ $idx }}, 'n', $event)" title="Stretch Top" class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-2.5 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ns-resize z-50 transition-transform"></div>
-                                    <div @mousedown.stop="startResize({{ $idx }}, 's', $event)" title="Stretch Bottom" class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-2.5 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ns-resize z-50 transition-transform"></div>
-                                    <div @mousedown.stop="startResize({{ $idx }}, 'w', $event)" title="Stretch Left" class="absolute top-1/2 -left-1.5 -translate-y-1/2 w-2.5 h-3 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ew-resize z-50 transition-transform"></div>
-                                    <div @mousedown.stop="startResize({{ $idx }}, 'e', $event)" title="Stretch Right" class="absolute top-1/2 -right-1.5 -translate-y-1/2 w-2.5 h-3 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ew-resize z-50 transition-transform"></div>
+                                    <div @mousedown.stop="startResize({{ $idx }}, 'n', $event)" title="Stretch Top" class="absolute w-3 h-2.5 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ns-resize z-50 transition-transform" style="top: 0; left: 50%; transform: translate(-50%, -50%);"></div>
+                                    <div @mousedown.stop="startResize({{ $idx }}, 's', $event)" title="Stretch Bottom" class="absolute w-3 h-2.5 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ns-resize z-50 transition-transform" style="top: 100%; left: 50%; transform: translate(-50%, -50%);"></div>
+                                    <div @mousedown.stop="startResize({{ $idx }}, 'w', $event)" title="Stretch Left" class="absolute w-2.5 h-3 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ew-resize z-50 transition-transform" style="top: 50%; left: 0; transform: translate(-50%, -50%);"></div>
+                                    <div @mousedown.stop="startResize({{ $idx }}, 'e', $event)" title="Stretch Right" class="absolute w-2.5 h-3 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ew-resize z-50 transition-transform" style="top: 50%; left: 100%; transform: translate(-50%, -50%);"></div>
                                 @endif
                             </div>
                         @endforeach
