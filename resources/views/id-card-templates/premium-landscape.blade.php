@@ -18,7 +18,7 @@
     $serialNumber = $enrollment->serial_number ?? 'N/A';
 @endphp
 
-<div class="w-[480px] h-[300px] bg-white border border-slate-200 rounded-[2rem] overflow-hidden flex flex-col justify-between shadow-2xl relative select-none font-sans">
+<div class="w-[480px] h-[300px] bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col justify-between shadow-2xl relative select-none font-sans">
     <!-- Official Background Vector Artwork Overlay (Inline SVG from user svg/1.svg) -->
     {!! file_get_contents(public_path('svg/card-template-background.svg')) !!}
 
