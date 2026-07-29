@@ -386,10 +386,18 @@ new class extends Component {
                                         '{contact_number}' => '9730777244', '{Contact Number}' => '9730777244',
                                         '{address}' => 'Sarvodhya Nagar Flat 704', '{Address}' => 'Sarvodhya Nagar Flat 704',
                                         '{pincode}' => '400001', '{Pincode}' => '400001',
-                                        '{grade}' => 'V', '{Grade}' => 'V', '{division}' => 'B', '{Division}' => 'B',
+                                        '{grade}' => 'V', '{Grade}' => 'V', '{Standard}' => 'V',
+                                        '{division}' => 'B', '{Division}' => 'B', '{Div}' => 'B',
                                         '{roll_no}' => '202', '{Roll No}' => '202', '{serial_number}' => '202', '{Ref No}' => '202',
+                                        '{Campaign}' => 'iCard 2026-27',
                                         '{School Name}' => ($activeSchool->name ?? 'Sarvodya Vidyalay'),
                                         '{School Code}' => ($activeSchool->school_code ?? 'SV-2026'),
+                                        '{Registration Code}' => ($activeSchool->school_code ?? 'SV-2026'),
+                                        '{Principal Name}' => 'Dr. R. K. Sharma',
+                                        '{School Contact}' => '9820198201',
+                                        '{School Email}' => 'info@sarvodya.edu.in',
+                                        '{School Website}' => 'www.sarvodya.edu.in',
+                                        '{School Address}' => 'Station Road, Mumbai',
                                       ])
                                     : $rawText;
 
@@ -433,22 +441,41 @@ new class extends Component {
             </div>
 
             <!-- Clickable Variable Inserter Toolbar Pills -->
-            <div class="w-full mt-6 space-y-2">
-                <span class="text-[11px] font-bold text-slate-400 block">Click to Insert Dynamic Variable Tag:</span>
-                <div class="flex flex-wrap gap-2">
-                    @php
-                        $vars = [
-                            '{First Name}', '{Middle Name}', '{Last Name}',
-                            'Grade ({grade}) Div ({division})', '{Roll No}', '{Ref No}',
-                            '{DOB}', '{Blood Group}', '{Gender}', '{Contact Number}',
-                            '{Address}', '{Pincode}', '{School Name}', '{School Code}'
-                        ];
-                    @endphp
-                    @foreach($vars as $v)
-                        <button type="button" wire:click="appendVariableToSelected('{{ $v }}')" class="px-2.5 py-1 bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white rounded-lg text-xs font-semibold transition border border-slate-700/60 shadow-sm">
-                            + {{ $v }}
-                        </button>
-                    @endforeach
+            <div class="w-full mt-6 space-y-3 bg-slate-950/60 border border-slate-800 rounded-2xl p-4">
+                <div>
+                    <span class="text-[11px] font-extrabold text-indigo-400 uppercase tracking-wider block mb-2">🏫 School Variable Tags:</span>
+                    <div class="flex flex-wrap gap-1.5">
+                        @php
+                            $schoolVars = [
+                                '{School Name}', '{Registration Code}', '{Principal Name}',
+                                '{School Contact}', '{School Email}', '{School Website}', '{School Address}'
+                            ];
+                        @endphp
+                        @foreach($schoolVars as $v)
+                            <button type="button" wire:click="appendVariableToSelected('{{ $v }}')" class="px-2.5 py-1 bg-indigo-500/10 hover:bg-indigo-600 text-indigo-300 hover:text-white rounded-lg text-xs font-semibold transition border border-indigo-500/20 shadow-sm">
+                                + {{ $v }}
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div>
+                    <span class="text-[11px] font-extrabold text-amber-400 uppercase tracking-wider block mb-2">🎓 Student Variable Tags:</span>
+                    <div class="flex flex-wrap gap-1.5">
+                        @php
+                            $studentVars = [
+                                '{First Name}', '{Middle Name}', '{Last Name}',
+                                '{Roll No}', '{Ref No}', '{Campaign}', '{Standard}', '{Division}',
+                                'Grade ({grade}) Div ({division})', '{Blood Group}', '{Gender}',
+                                '{DOB}', '{Contact Number}', '{Address}', '{Pincode}'
+                            ];
+                        @endphp
+                        @foreach($studentVars as $v)
+                            <button type="button" wire:click="appendVariableToSelected('{{ $v }}')" class="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-600 text-amber-300 hover:text-white rounded-lg text-xs font-semibold transition border border-amber-500/20 shadow-sm">
+                                + {{ $v }}
+                            </button>
+                        @endforeach
+                    </div>
                 </div>
             </div>
         </div>

@@ -55,9 +55,26 @@
         }
     }
 
+    // Campaign name
+    $campaignName = 'iCard 2026-27';
+    if (!empty($enrollments)) {
+        $firstE = is_object($enrollments) ? $enrollments->first() : ($enrollments[0] ?? null);
+        if ($firstE) {
+            $cObj = is_object($firstE) ? ($firstE->campaign ?? null) : ($firstE['campaign'] ?? null);
+            if ($cObj) {
+                $campaignName = is_object($cObj) ? ($cObj->name ?? $campaignName) : ($cObj['name'] ?? $campaignName);
+            }
+        }
+    }
+
     // School details
     $schoolName = $school->name ?? ($school['name'] ?? 'Sarvodya Vidyalay');
     $schoolCode = $school->school_code ?? ($school['school_code'] ?? 'SV-2026');
+    $principalName = $school->principal_name ?? ($school['principal_name'] ?? 'Dr. R. K. Sharma');
+    $schoolContact = $school->contact_number ?? ($school['contact_number'] ?? '9820198201');
+    $schoolEmail = $school->email ?? ($school['email'] ?? 'info@sarvodya.edu.in');
+    $schoolWebsite = $school->website ?? ($school['website'] ?? 'www.sarvodya.edu.in');
+    $schoolAddress = $school->address ?? ($school['address'] ?? 'Station Road, Mumbai');
     $schoolLogo = $school->logo_path ?? ($school['logo_path'] ?? null);
     $schoolLogoUrl = $schoolLogo 
         ? (str_starts_with($schoolLogo, 'http') ? $schoolLogo : asset('storage/' . $schoolLogo)) 
@@ -84,14 +101,23 @@
         '{Pincode}' => $pincode,
         '{grade}' => $gradeName,
         '{Grade}' => $gradeName,
+        '{Standard}' => $gradeName,
         '{division}' => $divName,
         '{Division}' => $divName,
+        '{Div}' => $divName,
         '{roll_no}' => $rollNo,
         '{Roll No}' => $rollNo,
         '{serial_number}' => $serialNo,
         '{Ref No}' => $serialNo,
+        '{Campaign}' => $campaignName,
         '{School Name}' => $schoolName,
         '{School Code}' => $schoolCode,
+        '{Registration Code}' => $schoolCode,
+        '{Principal Name}' => $principalName,
+        '{School Contact}' => $schoolContact,
+        '{School Email}' => $schoolEmail,
+        '{School Website}' => $schoolWebsite,
+        '{School Address}' => $schoolAddress,
     ];
 @endphp
 
