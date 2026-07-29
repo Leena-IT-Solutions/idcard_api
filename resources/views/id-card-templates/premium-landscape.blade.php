@@ -19,8 +19,8 @@
 @endphp
 
 <div class="w-[480px] h-[300px] bg-white border border-slate-200 rounded-[2rem] overflow-hidden flex flex-col justify-between shadow-2xl relative select-none font-sans">
-    <!-- Official Background Vector Artwork Overlay (from user svg/1.svg) -->
-    <img src="{{ asset('svg/card-template-background.svg') }}" class="absolute inset-0 w-full h-full object-cover pointer-events-none z-0">
+    <!-- Official Background Vector Artwork Overlay (Inline SVG from user svg/1.svg) -->
+    {!! file_get_contents(public_path('svg/card-template-background.svg')) !!}
 
     <!-- Card Content -->
     <div class="flex-1 p-6 pb-2 z-10 flex flex-col justify-between">
