@@ -23,11 +23,6 @@ class School extends Model
         'template_id',
     ];
 
-    public function template()
-    {
-        return $this->belongsTo(Template::class);
-    }
-
     public function grades()
     {
         return $this->hasMany(Grade::class);

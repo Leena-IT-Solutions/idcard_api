@@ -20,11 +20,6 @@ class Grade extends Model
         return $this->belongsTo(School::class);
     }
 
-    public function template()
-    {
-        return $this->belongsTo(Template::class);
-    }
-
     public function divisions()
     {
         return $this->hasMany(Division::class);

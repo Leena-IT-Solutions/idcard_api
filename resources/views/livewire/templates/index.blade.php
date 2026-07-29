@@ -1,7 +1,6 @@
 <?php
 
 use Livewire\Volt\Component;
-use App\Models\Template;
 use App\Models\School;
 use App\Models\Grade;
 
@@ -11,7 +10,7 @@ new class extends Component {
 
     // Modal properties
     public bool $isAssignModalOpen = false;
-    public ?Template $selectedTemplateForAssign = null;
+    public $selectedTemplateForAssign = null;
     public $schoolGrades = [];
 
     public function mount()
@@ -63,8 +62,20 @@ new class extends Component {
             'school_code' => 'SV-99',
         ];
 
+        // Define static templates list
+        $templates = collect([
+            (object)[
+                'id' => 'premium-landscape',
+                'name' => 'Premium Landscape Student ID',
+                'view_path' => 'id-card-templates.premium-landscape',
+                'orientation' => 'Landscape (54 x 85.6 mm)',
+                'category' => 'student',
+                'thumbnail_color' => 'from-blue-900 to-indigo-950',
+            ]
+        ]);
+
         return [
-            'templates' => Template::all(),
+            'templates' => $templates,
             'activeSchool' => $activeSchool,
             'mockStudent' => $mockStudent,
             'mockSchool' => $mockSchool,
@@ -88,7 +99,10 @@ new class extends Component {
 
     public function openAssignModal($templateId)
     {
-        $this->selectedTemplateForAssign = Template::find($templateId);
+        $this->selectedTemplateForAssign = (object)[
+            'id' => 'premium-landscape',
+            'name' => 'Premium Landscape Student ID',
+        ];
         $this->loadGrades();
         $this->isAssignModalOpen = true;
     }
@@ -248,10 +262,7 @@ new class extends Component {
                                             @if($grade->template_id == $selectedTemplateForAssign->id)
                                                 <span class="text-indigo-400 font-semibold">Active Class Override</span>
                                             @elseif($grade->template_id)
-                                                @php
-                                                    $assignedTpl = App\Models\Template::find($grade->template_id);
-                                                @endphp
-                                                <span>Overridden by: <span class="text-slate-300 font-semibold">{{ $assignedTpl?->name ?? 'Another template' }}</span></span>
+                                                <span>Overridden by: <span class="text-slate-300 font-semibold">{{ $grade->template_id == 'premium-landscape' ? 'Premium Landscape Student ID' : $grade->template_id }}</span></span>
                                             @else
                                                 <span class="text-slate-600">Using School Default</span>
                                             @endif

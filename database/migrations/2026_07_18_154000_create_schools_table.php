@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('website')->nullable();
             $table->string('school_code')->nullable();
             $table->string('principal_name')->nullable();
+            $table->string('template_id')->nullable();
             $table->timestamps();
         });
     }

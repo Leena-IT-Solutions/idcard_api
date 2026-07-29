@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('school_id')->constrained()->cascadeOnDelete();
             $table->string('name');
+            $table->string('template_id')->nullable();
             $table->timestamps();
 
             $table->unique(['school_id', 'name']);
