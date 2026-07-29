@@ -178,11 +178,12 @@ new class extends Component {
         }
     }
 
-    public function updateLayerCoordinates(int $index, int $x, int $y)
+    public function updateLayerCoordinates($index, $x = 0, $y = 0)
     {
-        if (isset($this->layers[$index])) {
-            $this->layers[$index]['x'] = max(0, $x);
-            $this->layers[$index]['y'] = max(0, $y);
+        $idx = (int)($index ?? -1);
+        if ($idx >= 0 && isset($this->layers[$idx])) {
+            $this->layers[$idx]['x'] = max(0, (int)round((float)($x ?? 0)));
+            $this->layers[$idx]['y'] = max(0, (int)round((float)($y ?? 0)));
         }
     }
 
@@ -321,33 +322,52 @@ new class extends Component {
                     style="width: {{ $canvasW }}px; height: {{ $canvasH }}px;"
                     x-data="{
                         draggingIndex: null,
+                        draggingEl: null,
                         startX: 0,
                         startY: 0,
                         origX: 0,
                         origY: 0,
+                        curX: 0,
+                        curY: 0,
                         startDrag(idx, event) {
                             this.draggingIndex = idx;
+                            this.draggingEl = event.currentTarget;
                             this.startX = event.clientX;
                             this.startY = event.clientY;
-                            const layer = $wire.layers[idx];
-                            this.origX = layer.x || 0;
-                            this.origY = layer.y || 0;
+                            const layer = ($wire.layers && $wire.layers[idx]) ? $wire.layers[idx] : {};
+                            this.origX = parseInt(layer.x) || 0;
+                            this.origY = parseInt(layer.y) || 0;
+                            this.curX = this.origX;
+                            this.curY = this.origY;
                         },
                         onDrag(event) {
-                            if (this.draggingIndex === null) return;
+                            if (this.draggingIndex === null || !this.draggingEl) return;
                             const dx = event.clientX - this.startX;
                             const dy = event.clientY - this.startY;
-                            let newX = Math.max(0, this.origX + dx);
-                            let newY = Math.max(0, this.origY + dy);
+                            let newX = Math.max(0, Math.round(this.origX + dx));
+                            let newY = Math.max(0, Math.round(this.origY + dy));
 
                             // Magnetic snap to center (within 10px)
                             const centerH = Math.round(({{ $canvasW }} - 150) / 2);
                             if (Math.abs(newX - centerH) < 10) newX = centerH;
 
-                            $wire.updateLayerCoordinates(this.draggingIndex, Math.round(newX), Math.round(newY));
+                            this.curX = newX;
+                            this.curY = newY;
+
+                            // Direct DOM manipulation for zero latency 60fps dragging
+                            this.draggingEl.style.left = newX + 'px';
+                            this.draggingEl.style.top = newY + 'px';
                         },
                         stopDrag() {
-                            this.draggingIndex = null;
+                            if (this.draggingIndex !== null) {
+                                const idx = this.draggingIndex;
+                                const finalX = parseInt(this.curX) || 0;
+                                const finalY = parseInt(this.curY) || 0;
+                                this.draggingIndex = null;
+                                this.draggingEl = null;
+                                // Single Livewire POST sync on mouse release!
+                                $wire.updateLayerCoordinates(idx, finalX, finalY);
+                            }
                         }
                     }"
                     @mousemove.window="onDrag($event)"
