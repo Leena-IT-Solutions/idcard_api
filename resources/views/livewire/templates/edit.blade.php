@@ -233,6 +233,20 @@ new class extends Component {
         }
     }
 
+    public function updateLayerDimensions($index, $width = null, $height = null, $fontSize = null, $x = null, $y = null)
+    {
+        $idx = (int)($index ?? -1);
+        if ($idx >= 0 && isset($this->layers[$idx])) {
+            if ($x !== null) $this->layers[$idx]['x'] = max(0, (int)round((float)$x));
+            if ($y !== null) $this->layers[$idx]['y'] = max(0, (int)round((float)$y));
+            if ($width !== null && (float)$width > 0) $this->layers[$idx]['width'] = max(10, (int)round((float)$width));
+            if ($height !== null && (float)$height > 0) $this->layers[$idx]['height'] = max(10, (int)round((float)$height));
+            if ($fontSize !== null && (float)$fontSize > 0 && ($this->layers[$idx]['type'] ?? '') === 'text') {
+                $this->layers[$idx]['font_size'] = max(4, (int)round((float)$fontSize));
+            }
+        }
+    }
+
     public function deleteBackgroundImage()
     {
         if (!$this->template) return;
@@ -383,18 +397,29 @@ new class extends Component {
                 $bgUrl = $bgPath ? (str_starts_with($bgPath, 'http') ? $bgPath : asset('storage/' . $bgPath)) : null;
             @endphp
 
-            <!-- Canvas Outer Interactive Container with Zoom State -->
+            <!-- Canvas Outer Interactive Container with Zoom & Resize State -->
             <div class="w-full space-y-4" x-data="{
                 zoomLevel: 100,
                 draggingIndex: null,
                 draggingEl: null,
+                resizingIndex: null,
+                resizeHandle: null,
+                resizeEl: null,
                 startX: 0,
                 startY: 0,
                 origX: 0,
                 origY: 0,
+                startW: 0,
+                startH: 0,
+                startFontSize: 0,
                 curX: 0,
                 curY: 0,
+                curW: 0,
+                curH: 0,
+                curFontSize: 0,
+
                 startDrag(idx, event) {
+                    if (this.resizingIndex !== null) return;
                     this.draggingIndex = idx;
                     this.draggingEl = event.currentTarget;
                     this.startX = event.clientX;
@@ -405,6 +430,7 @@ new class extends Component {
                     this.curX = this.origX;
                     this.curY = this.origY;
                 },
+
                 onDrag(event) {
                     if (this.draggingIndex === null || !this.draggingEl) return;
                     const scale = (parseFloat(this.zoomLevel) || 100) / 100;
@@ -424,6 +450,7 @@ new class extends Component {
                     this.draggingEl.style.left = newX + 'px';
                     this.draggingEl.style.top = newY + 'px';
                 },
+
                 stopDrag() {
                     if (this.draggingIndex !== null) {
                         const idx = this.draggingIndex;
@@ -433,10 +460,121 @@ new class extends Component {
                         this.draggingEl = null;
                         $wire.updateLayerCoordinates(idx, finalX, finalY);
                     }
+                },
+
+                startResize(idx, handle, event) {
+                    event.stopPropagation();
+                    this.resizingIndex = idx;
+                    this.resizeHandle = handle;
+                    this.resizeEl = event.currentTarget.closest('[data-layer-box]');
+                    this.startX = event.clientX;
+                    this.startY = event.clientY;
+
+                    const layer = ($wire.layers && $wire.layers[idx]) ? $wire.layers[idx] : {};
+                    this.origX = parseInt(layer.x) || 0;
+                    this.origY = parseInt(layer.y) || 0;
+                    this.startW = parseInt(layer.width) || (this.resizeEl ? this.resizeEl.offsetWidth : 100);
+                    this.startH = parseInt(layer.height) || (this.resizeEl ? this.resizeEl.offsetHeight : 30);
+                    this.startFontSize = parseInt(layer.font_size) || 14;
+
+                    this.curX = this.origX;
+                    this.curY = this.origY;
+                    this.curW = this.startW;
+                    this.curH = this.startH;
+                    this.curFontSize = this.startFontSize;
+                },
+
+                onResize(event) {
+                    if (this.resizingIndex === null || !this.resizeEl) return;
+                    const scale = (parseFloat(this.zoomLevel) || 100) / 100;
+                    const dx = (event.clientX - this.startX) / scale;
+                    const dy = (event.clientY - this.startY) / scale;
+
+                    const layer = ($wire.layers && $wire.layers[this.resizingIndex]) ? $wire.layers[this.resizingIndex] : {};
+                    const isText = (layer.type === 'text');
+
+                    let newW = this.startW;
+                    let newH = this.startH;
+                    let newX = this.origX;
+                    let newY = this.origY;
+                    let newFontSize = this.startFontSize;
+
+                    const h = this.resizeHandle;
+
+                    if (h.includes('r')) newW = Math.max(15, Math.round(this.startW + dx));
+                    if (h.includes('l')) {
+                        newW = Math.max(15, Math.round(this.startW - dx));
+                        newX = Math.round(this.origX + dx);
+                    }
+                    if (h.includes('b')) newH = Math.max(10, Math.round(this.startH + dy));
+                    if (h.includes('t')) {
+                        newH = Math.max(10, Math.round(this.startH - dy));
+                        newY = Math.round(this.origY + dy);
+                    }
+
+                    if (isText) {
+                        if (h === 'se' || h === 'sw' || h === 'ne' || h === 'nw') {
+                            const ratio = newW / (this.startW || 1);
+                            newFontSize = Math.max(6, Math.min(120, Math.round(this.startFontSize * ratio)));
+                        }
+                    }
+
+                    this.curW = newW;
+                    this.curH = newH;
+                    this.curX = newX;
+                    this.curY = newY;
+                    this.curFontSize = newFontSize;
+
+                    // Direct DOM manipulation for zero latency 60fps resizing
+                    this.resizeEl.style.left = newX + 'px';
+                    this.resizeEl.style.top = newY + 'px';
+                    const innerContent = this.resizeEl.querySelector('[data-layer-content]');
+                    if (innerContent) {
+                        innerContent.style.width = newW + 'px';
+                        innerContent.style.height = newH + 'px';
+                        if (isText) {
+                            const textDiv = innerContent.querySelector('div');
+                            if (textDiv) textDiv.style.fontSize = newFontSize + 'pt';
+                        }
+                    }
+                },
+
+                stopResize() {
+                    if (this.resizingIndex !== null) {
+                        const idx = this.resizingIndex;
+                        const finalW = parseInt(this.curW) || 0;
+                        const finalH = parseInt(this.curH) || 0;
+                        const finalFontSize = parseInt(this.curFontSize) || 14;
+                        const finalX = parseInt(this.curX) || 0;
+                        const finalY = parseInt(this.curY) || 0;
+
+                        this.resizingIndex = null;
+                        this.resizeHandle = null;
+                        this.resizeEl = null;
+
+                        $wire.updateLayerDimensions(idx, finalW, finalH, finalFontSize, finalX, finalY);
+                    }
+                },
+
+                onMouseMove(event) {
+                    if (this.resizingIndex !== null) {
+                        this.onResize(event);
+                    } else if (this.draggingIndex !== null) {
+                        this.onDrag(event);
+                    }
+                },
+
+                onMouseUp(event) {
+                    if (this.resizingIndex !== null) {
+                        this.stopResize();
+                    }
+                    if (this.draggingIndex !== null) {
+                        this.stopDrag();
+                    }
                 }
             }"
-            @mousemove.window="onDrag($event)"
-            @mouseup.window="stopDrag()">
+            @mousemove.window="onMouseMove($event)"
+            @mouseup.window="onMouseUp($event)">
 
                 <!-- Scrollable Canvas Viewport -->
                 <div class="w-full flex items-center justify-center overflow-auto p-4 min-h-[460px] bg-slate-950/40 rounded-2xl border border-slate-800/60 shadow-inner">
@@ -463,8 +601,8 @@ new class extends Component {
                                 $type = $layer['type'] ?? 'text';
                                 $x = $layer['x'] ?? 0;
                                 $y = $layer['y'] ?? 0;
-                                $w = $layer['width'] ?? 'auto';
-                                $h = $layer['height'] ?? 'auto';
+                                $w = $layer['width'] ?? 150;
+                                $h = $layer['height'] ?? 30;
                                 $rot = $layer['rotation'] ?? 0;
                                 $isSelected = ($selectedLayerIndex === $idx);
                             @endphp
@@ -473,77 +611,95 @@ new class extends Component {
                                 wire:key="canvas-layer-{{ $layer['id'] ?? $idx }}"
                                 wire:click="selectLayer({{ $idx }})"
                                 @mousedown="startDrag({{ $idx }}, $event)"
-                                class="absolute cursor-move transition-shadow {{ $isSelected ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-slate-900 z-30' : 'hover:ring-1 hover:ring-indigo-400/50 z-10' }}"
+                                data-layer-box
+                                class="absolute cursor-move select-none transition-shadow group {{ $isSelected ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-slate-900 z-30' : 'hover:ring-1 hover:ring-indigo-400/50 z-10' }}"
                                 style="left: {{ $x }}px; top: {{ $y }}px; transform: rotate({{ $rot }}deg); transform-origin: top left;"
                             >
-                                @if($type === 'text')
-                                    @php
-                                        $rawText = $layer['text'] ?? '';
-                                        $displayText = $livePreviewMode 
-                                            ? strtr($rawText, [
-                                                '{first_name}' => 'Aaditya', '{middle_name}' => 'Sonu', '{last_name}' => 'Thakur',
-                                                '{First Name}' => 'Aaditya', '{Middle Name}' => 'Sonu', '{Last Name}' => 'Thakur',
-                                                '{dob}' => '2017-10-27', '{DOB}' => '2017-10-27',
-                                                '{blood_group}' => 'AB+', '{Blood Group}' => 'AB+',
-                                                '{gender}' => 'Male', '{Gender}' => 'Male',
-                                                '{contact_number}' => '9730777244', '{Contact Number}' => '9730777244',
-                                                '{address}' => 'Sarvodhya Nagar Flat 704', '{Address}' => 'Sarvodhya Nagar Flat 704',
-                                                '{pincode}' => '400001', '{Pincode}' => '400001',
-                                                '{grade}' => 'V', '{Grade}' => 'V', '{Standard}' => 'V',
-                                                '{division}' => 'B', '{Division}' => 'B', '{Div}' => 'B',
-                                                '{roll_no}' => '202', '{Roll No}' => '202', '{serial_number}' => '202', '{Ref No}' => '202',
-                                                '{Campaign}' => 'iCard 2026-27',
-                                                '{School Name}' => ($activeSchool->name ?? 'Sarvodya Vidyalay'),
-                                                '{School Code}' => ($activeSchool->school_code ?? 'SV-2026'),
-                                                '{Registration Code}' => ($activeSchool->school_code ?? 'SV-2026'),
-                                                '{Principal Name}' => 'Dr. R. K. Sharma',
-                                                '{School Contact}' => '9820198201',
-                                                '{School Email}' => 'info@sarvodya.edu.in',
-                                                '{School Website}' => 'www.sarvodya.edu.in',
-                                                '{School Address}' => 'Station Road, Mumbai',
-                                              ])
-                                            : $rawText;
+                                <div data-layer-content style="width: {{ $w === 'auto' ? 'auto' : $w . 'px' }}; height: {{ $h === 'auto' ? 'auto' : $h . 'px' }};">
+                                    @if($type === 'text')
+                                        @php
+                                            $rawText = $layer['text'] ?? '';
+                                            $displayText = $livePreviewMode 
+                                                ? strtr($rawText, [
+                                                    '{first_name}' => 'Aaditya', '{middle_name}' => 'Sonu', '{last_name}' => 'Thakur',
+                                                    '{First Name}' => 'Aaditya', '{Middle Name}' => 'Sonu', '{Last Name}' => 'Thakur',
+                                                    '{dob}' => '2017-10-27', '{DOB}' => '2017-10-27',
+                                                    '{blood_group}' => 'AB+', '{Blood Group}' => 'AB+',
+                                                    '{gender}' => 'Male', '{Gender}' => 'Male',
+                                                    '{contact_number}' => '9730777244', '{Contact Number}' => '9730777244',
+                                                    '{address}' => 'Sarvodhya Nagar Flat 704', '{Address}' => 'Sarvodhya Nagar Flat 704',
+                                                    '{pincode}' => '400001', '{Pincode}' => '400001',
+                                                    '{grade}' => 'V', '{Grade}' => 'V', '{Standard}' => 'V',
+                                                    '{division}' => 'B', '{Division}' => 'B', '{Div}' => 'B',
+                                                    '{roll_no}' => '202', '{Roll No}' => '202', '{serial_number}' => '202', '{Ref No}' => '202',
+                                                    '{Campaign}' => 'iCard 2026-27',
+                                                    '{School Name}' => ($activeSchool->name ?? 'Sarvodya Vidyalay'),
+                                                    '{School Code}' => ($activeSchool->school_code ?? 'SV-2026'),
+                                                    '{Registration Code}' => ($activeSchool->school_code ?? 'SV-2026'),
+                                                    '{Principal Name}' => 'Dr. R. K. Sharma',
+                                                    '{School Contact}' => '9820198201',
+                                                    '{School Email}' => 'info@sarvodya.edu.in',
+                                                    '{School Website}' => 'www.sarvodya.edu.in',
+                                                    '{School Address}' => 'Station Road, Mumbai',
+                                                  ])
+                                                : $rawText;
 
-                                        $fontSize = $layer['font_size'] ?? 14;
-                                        $fontWeight = $layer['font_weight'] ?? 'normal';
-                                        $fontFamily = $layer['font_family'] ?? 'Inter';
-                                        $color = $layer['color'] ?? '#ffffff';
-                                        $align = $layer['align'] ?? 'left';
-                                    @endphp
-                                    <div style="font-size: {{ $fontSize }}pt; font-weight: {{ $fontWeight }}; font-family: {{ $fontFamily }}, sans-serif; color: {{ $color }}; text-align: {{ $align }}; white-space: nowrap; padding: 2px 4px; border-radius: 4px; background: {{ $isSelected ? 'rgba(99, 102, 241, 0.15)' : 'transparent' }};">
-                                        {{ $displayText }}
-                                    </div>
+                                            $fontSize = $layer['font_size'] ?? 14;
+                                            $fontWeight = $layer['font_weight'] ?? 'normal';
+                                            $fontFamily = $layer['font_family'] ?? 'Inter';
+                                            $color = $layer['color'] ?? '#ffffff';
+                                            $align = $layer['align'] ?? 'left';
+                                        @endphp
+                                        <div style="font-size: {{ $fontSize }}pt; font-weight: {{ $fontWeight }}; font-family: {{ $fontFamily }}, sans-serif; color: {{ $color }}; text-align: {{ $align }}; white-space: nowrap; padding: 2px 4px; border-radius: 4px; width: 100%; height: 100%; box-sizing: border-box; background: {{ $isSelected ? 'rgba(99, 102, 241, 0.15)' : 'transparent' }};">
+                                            {{ $displayText }}
+                                        </div>
 
-                                @elseif($type === 'photo')
-                                    @php
-                                        $borderRadius = $layer['border_radius'] ?? 12;
-                                        $borderColor = $layer['border_color'] ?? '#818cf8';
-                                        $borderWidth = $layer['border_width'] ?? 2;
-                                    @endphp
-                                    <div style="width: {{ $w }}px; height: {{ $h }}px; border-radius: {{ $borderRadius }}px; border: {{ $borderWidth }}px solid {{ $borderColor }}; overflow: hidden; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
-                                        <svg viewBox="0 0 24 24" style="width: 40%; height: 40%; color: #818cf8;" fill="currentColor">
-                                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                                        </svg>
-                                        <span style="font-size: 8px; font-weight: 800; color: #a5b4fc; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">STUDENT PHOTO</span>
-                                    </div>
+                                    @elseif($type === 'photo')
+                                        @php
+                                            $borderRadius = $layer['border_radius'] ?? 12;
+                                            $borderColor = $layer['border_color'] ?? '#818cf8';
+                                            $borderWidth = $layer['border_width'] ?? 2;
+                                        @endphp
+                                        <div style="width: 100%; height: 100%; border-radius: {{ $borderRadius }}px; border: {{ $borderWidth }}px solid {{ $borderColor }}; overflow: hidden; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; box-sizing: border-box;">
+                                            <svg viewBox="0 0 24 24" style="width: 40%; height: 40%; color: #818cf8;" fill="currentColor">
+                                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                            </svg>
+                                            <span style="font-size: 8px; font-weight: 800; color: #a5b4fc; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">STUDENT PHOTO</span>
+                                        </div>
 
-                                @elseif($type === 'logo')
-                                    <div style="width: {{ $w }}px; height: {{ $h }}px; border-radius: 10px; background: linear-gradient(135deg, #312e81 0%, #4338ca 100%); border: 1.5px dashed #818cf8; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ffffff; padding: 2px; box-sizing: border-box;">
-                                        <svg viewBox="0 0 24 24" style="width: 40%; height: 40%; color: #fbbf24;" fill="currentColor">
-                                            <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM3.82 9L12 4.54 20.18 9 12 13.46 3.82 9zM5 14.45v3.55l7 3.82 7-3.82v-3.55l-7 3.81-7-3.81z"/>
-                                        </svg>
-                                        <span style="font-size: 7px; font-weight: 800; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; text-align: center;">SCHOOL LOGO</span>
-                                    </div>
+                                    @elseif($type === 'logo')
+                                        <div style="width: 100%; height: 100%; border-radius: 10px; background: linear-gradient(135deg, #312e81 0%, #4338ca 100%); border: 1.5px dashed #818cf8; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ffffff; padding: 2px; box-sizing: border-box;">
+                                            <svg viewBox="0 0 24 24" style="width: 40%; height: 40%; color: #fbbf24;" fill="currentColor">
+                                                <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM3.82 9L12 4.54 20.18 9 12 13.46 3.82 9zM5 14.45v3.55l7 3.82 7-3.82v-3.55l-7 3.81-7-3.81z"/>
+                                            </svg>
+                                            <span style="font-size: 7px; font-weight: 800; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; text-align: center;">SCHOOL LOGO</span>
+                                        </div>
 
-                                @elseif($type === 'qr')
-                                    <div style="width: {{ $w }}px; height: {{ $h }}px; background: white; padding: 4px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                                        <svg viewBox="0 0 24 24" style="width: 100%; height: 100%;" fill="#0f172a">
-                                            <rect x="3" y="3" width="7" height="7" rx="1"/>
-                                            <rect x="14" y="3" width="7" height="7" rx="1"/>
-                                            <rect x="3" y="14" width="7" height="7" rx="1"/>
-                                            <path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 18h3v3h-3z"/>
-                                        </svg>
-                                    </div>
+                                    @elseif($type === 'qr')
+                                        <div style="width: 100%; height: 100%; background: white; padding: 4px; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
+                                            <svg viewBox="0 0 24 24" style="width: 100%; height: 100%;" fill="#0f172a">
+                                                <rect x="3" y="3" width="7" height="7" rx="1"/>
+                                                <rect x="14" y="3" width="7" height="7" rx="1"/>
+                                                <rect x="3" y="14" width="7" height="7" rx="1"/>
+                                                <path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 18h3v3h-3z"/>
+                                            </svg>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <!-- Canva 8 Interactive Resize Handles (Rendered on Selection) -->
+                                @if($isSelected)
+                                    <!-- 4 Corner Handles -->
+                                    <div @mousedown.stop="startResize({{ $idx }}, 'nw', $event)" title="Resize Top-Left" class="absolute -top-1.5 -left-1.5 w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full shadow-lg hover:scale-125 cursor-nwse-resize z-50 transition-transform"></div>
+                                    <div @mousedown.stop="startResize({{ $idx }}, 'ne', $event)" title="Resize Top-Right" class="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full shadow-lg hover:scale-125 cursor-nesw-resize z-50 transition-transform"></div>
+                                    <div @mousedown.stop="startResize({{ $idx }}, 'sw', $event)" title="Resize Bottom-Left" class="absolute -bottom-1.5 -left-1.5 w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full shadow-lg hover:scale-125 cursor-nesw-resize z-50 transition-transform"></div>
+                                    <div @mousedown.stop="startResize({{ $idx }}, 'se', $event)" title="Resize Bottom-Right" class="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full shadow-lg hover:scale-125 cursor-nwse-resize z-50 transition-transform"></div>
+
+                                    <!-- 4 Side Handles -->
+                                    <div @mousedown.stop="startResize({{ $idx }}, 'n', $event)" title="Stretch Top" class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-2.5 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ns-resize z-50 transition-transform"></div>
+                                    <div @mousedown.stop="startResize({{ $idx }}, 's', $event)" title="Stretch Bottom" class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-2.5 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ns-resize z-50 transition-transform"></div>
+                                    <div @mousedown.stop="startResize({{ $idx }}, 'w', $event)" title="Stretch Left" class="absolute top-1/2 -left-1.5 -translate-y-1/2 w-2.5 h-3 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ew-resize z-50 transition-transform"></div>
+                                    <div @mousedown.stop="startResize({{ $idx }}, 'e', $event)" title="Stretch Right" class="absolute top-1/2 -right-1.5 -translate-y-1/2 w-2.5 h-3 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ew-resize z-50 transition-transform"></div>
                                 @endif
                             </div>
                         @endforeach
