@@ -901,6 +901,48 @@ new class extends Component {
                 this.stopDrag();
             }
         });
+        window.addEventListener('keydown', (e) => {
+            const idx = this.$wire.selectedLayerIndex;
+            if (idx === null) return;
+
+            const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+            if (['input', 'textarea', 'select'].includes(tag) || (document.activeElement && document.activeElement.isContentEditable)) {
+                return;
+            }
+
+            const keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+            if (!keys.includes(e.key)) return;
+
+            e.preventDefault();
+
+            const step = e.shiftKey ? 10 : 1;
+            const el = document.querySelector('[data-layer-index="' + idx + '"]');
+            if (!el) return;
+
+            if (e.key === 'ArrowLeft') this.curX = Math.max(0, this.curX - step);
+            if (e.key === 'ArrowRight') this.curX = this.curX + step;
+            if (e.key === 'ArrowUp') this.curY = Math.max(0, this.curY - step);
+            if (e.key === 'ArrowDown') this.curY = this.curY + step;
+
+            el.style.left = this.curX + 'px';
+            el.style.top = this.curY + 'px';
+
+            this.$wire.layers[idx].x = this.curX;
+            this.$wire.layers[idx].y = this.curY;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            const idx = this.$wire.selectedLayerIndex;
+            if (idx === null) return;
+
+            const keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+            if (!keys.includes(e.key)) return;
+
+            const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+            if (['input', 'textarea', 'select'].includes(tag)) return;
+
+            this.$wire.updateLayerCoordinates(idx, this.curX, this.curY);
+        });
     }
 }">
     @if(session()->has('message'))
@@ -1026,6 +1068,7 @@ new class extends Component {
                                 @dragstart.prevent
                                 @selectstart.prevent
                                 data-layer-box
+                                data-layer-index="{{ $idx }}"
                                 data-layer-type="{{ $type }}"
                                 class="absolute cursor-move select-none transition-shadow group {{ $isSelected ? 'ring-2 ring-indigo-500 ring-offset-1 ring-offset-slate-900 z-30' : 'hover:ring-1 hover:ring-indigo-400/50 z-10' }}"
                                 style="left: {{ $x }}px; top: {{ $y }}px; transform: rotate({{ $rot }}deg); transform-origin: top left;"
