@@ -421,6 +421,8 @@ new class extends Component {
 
                 startDrag(idx, event) {
                     if (this.resizingIndex !== null) return;
+                    if (event) event.preventDefault();
+
                     this.draggingIndex = idx;
                     this.draggingEl = event.currentTarget;
                     this.startX = event.clientX;
@@ -479,7 +481,10 @@ new class extends Component {
                 },
 
                 startResize(idx, handle, event) {
-                    event.stopPropagation();
+                    if (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
                     this.resizingIndex = idx;
                     this.resizeHandle = handle;
                     this.resizeEl = event.currentTarget.closest('[data-layer-box]');
@@ -643,6 +648,7 @@ new class extends Component {
                             <div 
                                 wire:key="canvas-layer-{{ $layer['id'] ?? $idx }}"
                                 @mousedown="startDrag({{ $idx }}, $event)"
+                                @dragstart.prevent
                                 data-layer-box
                                 class="absolute cursor-move select-none transition-shadow group {{ $isSelected ? 'ring-2 ring-indigo-500 ring-offset-1 ring-offset-slate-900 z-30' : 'hover:ring-1 hover:ring-indigo-400/50 z-10' }}"
                                 style="left: {{ $x }}px; top: {{ $y }}px; transform: rotate({{ $rot }}deg); transform-origin: top left;"
