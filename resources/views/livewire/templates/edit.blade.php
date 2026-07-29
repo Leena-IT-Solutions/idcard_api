@@ -27,6 +27,7 @@ new class extends Component {
     public bool $enableSnapping = true;
     public bool $livePreviewMode = true; // Show mock data vs placeholder text
     public ?int $selectedLayerIndex = null;
+    public array $selectedLayerIndices = [];
 
     public function mount($templateId, $type = 'master')
     {
@@ -79,12 +80,180 @@ new class extends Component {
         unset($l);
     }
 
-    public function selectLayer(?int $index = null)
+    public function selectLayer(?int $index = null, bool $shift = false)
     {
-        if ($index !== null && isset($this->layers[$index])) {
-            $this->selectedLayerIndex = $index;
+        if ($index === null) {
+            $this->selectedLayerIndices = [];
+            $this->selectedLayerIndex = null;
+            return;
+        }
+
+        if ($shift) {
+            if (in_array($index, $this->selectedLayerIndices)) {
+                $this->selectedLayerIndices = array_diff($this->selectedLayerIndices, [$index]);
+            } else {
+                $this->selectedLayerIndices[] = $index;
+            }
+            $this->selectedLayerIndices = array_values($this->selectedLayerIndices);
+        } else {
+            $this->selectedLayerIndices = [$index];
+        }
+
+        if (count($this->selectedLayerIndices) === 1) {
+            $this->selectedLayerIndex = $this->selectedLayerIndices[0];
         } else {
             $this->selectedLayerIndex = null;
+        }
+    }
+
+    public function updateMultipleLayersCoordinates(array $updates)
+    {
+        foreach ($updates as $update) {
+            $idx = $update['index'];
+            if (isset($this->layers[$idx])) {
+                $this->layers[$idx]['x'] = $update['x'];
+                $this->layers[$idx]['y'] = $update['y'];
+            }
+        }
+    }
+
+    public function alignSelectedToPage(string $alignment)
+    {
+        if (empty($this->selectedLayerIndices)) return;
+
+        $isPortrait = $this->orientation === 'portrait';
+        $canvasW = $isPortrait ? 638 : 1011;
+        $canvasH = $isPortrait ? 1011 : 638;
+
+        foreach ($this->selectedLayerIndices as $idx) {
+            if (!isset($this->layers[$idx])) continue;
+
+            $w = $this->layers[$idx]['width'] ?? 150;
+            $h = $this->layers[$idx]['height'] ?? 30;
+
+            switch ($alignment) {
+                case 'top':
+                    $this->layers[$idx]['y'] = 0;
+                    break;
+                case 'left':
+                    $this->layers[$idx]['x'] = 0;
+                    break;
+                case 'middle':
+                    $this->layers[$idx]['y'] = round(($canvasH - $h) / 2);
+                    break;
+                case 'center':
+                    $this->layers[$idx]['x'] = round(($canvasW - $w) / 2);
+                    break;
+                case 'bottom':
+                    $this->layers[$idx]['y'] = $canvasH - $h;
+                    break;
+                case 'right':
+                    $this->layers[$idx]['x'] = $canvasW - $w;
+                    break;
+            }
+        }
+    }
+
+    public function spaceSelectedEvenly(string $direction)
+    {
+        $indices = $this->selectedLayerIndices;
+        $count = count($indices);
+        if ($count <= 2) return;
+
+        if ($direction === 'vertical') {
+            usort($indices, function($a, $b) {
+                return ($this->layers[$a]['y'] ?? 0) <=> ($this->layers[$b]['y'] ?? 0);
+            });
+
+            $firstIdx = $indices[0];
+            $lastIdx = $indices[$count - 1];
+
+            $firstY = $this->layers[$firstIdx]['y'] ?? 0;
+            $lastY = $this->layers[$lastIdx]['y'] ?? 0;
+
+            $totalHeights = 0;
+            for ($i = 0; $i < $count; $i++) {
+                $totalHeights += $this->layers[$indices[$i]]['height'] ?? 30;
+            }
+
+            $span = ($lastY + ($this->layers[$lastIdx]['height'] ?? 30)) - $firstY;
+            $totalGaps = $span - $totalHeights;
+            $gap = $totalGaps / ($count - 1);
+
+            $currentY = $firstY;
+            for ($i = 0; $i < $count; $i++) {
+                $idx = $indices[$i];
+                $this->layers[$idx]['y'] = round($currentY);
+                $currentY += ($this->layers[$idx]['height'] ?? 30) + $gap;
+            }
+        } elseif ($direction === 'horizontal') {
+            usort($indices, function($a, $b) {
+                return ($this->layers[$a]['x'] ?? 0) <=> ($this->layers[$b]['x'] ?? 0);
+            });
+
+            $firstIdx = $indices[0];
+            $lastIdx = $indices[$count - 1];
+
+            $firstX = $this->layers[$firstIdx]['x'] ?? 0;
+            $lastX = $this->layers[$lastIdx]['x'] ?? 0;
+
+            $totalWidths = 0;
+            for ($i = 0; $i < $count; $i++) {
+                $totalWidths += $this->layers[$indices[$i]]['width'] ?? 150;
+            }
+
+            $span = ($lastX + ($this->layers[$lastIdx]['width'] ?? 150)) - $firstX;
+            $totalGaps = $span - $totalWidths;
+            $gap = $totalGaps / ($count - 1);
+
+            $currentX = $firstX;
+            for ($i = 0; $i < $count; $i++) {
+                $idx = $indices[$i];
+                $this->layers[$idx]['x'] = round($currentX);
+                $currentX += ($this->layers[$idx]['width'] ?? 150) + $gap;
+            }
+        }
+    }
+
+    public function tidyUpSelected()
+    {
+        $indices = $this->selectedLayerIndices;
+        $count = count($indices);
+        if ($count <= 1) return;
+
+        $sumX = 0;
+        foreach ($indices as $idx) {
+            $sumX += $this->layers[$idx]['x'] ?? 0;
+        }
+        $avgX = round($sumX / $count);
+
+        foreach ($indices as $idx) {
+            $this->layers[$idx]['x'] = $avgX;
+        }
+
+        if ($count >= 3) {
+            $this->spaceSelectedEvenly('vertical');
+        }
+    }
+
+    public function updateCommonProperty(string $property, $value)
+    {
+        if (empty($this->selectedLayerIndices)) return;
+
+        foreach ($this->selectedLayerIndices as $idx) {
+            if (!isset($this->layers[$idx])) continue;
+
+            if ($property === 'width') {
+                $this->layers[$idx]['width'] = round(floatval($value));
+            } elseif ($property === 'height') {
+                $this->layers[$idx]['height'] = round(floatval($value));
+            } elseif ($property === 'x') {
+                $this->layers[$idx]['x'] = round(floatval($value));
+            } elseif ($property === 'y') {
+                $this->layers[$idx]['y'] = round(floatval($value));
+            } elseif ($property === 'rotation') {
+                $this->layers[$idx]['rotation'] = round(floatval($value));
+            }
         }
     }
 
@@ -128,7 +297,7 @@ new class extends Component {
             'align' => $align,
             'rotation' => $rotation,
         ];
-        $this->selectedLayerIndex = $newIndex;
+        $this->selectLayer($newIndex, false);
     }
 
     public function addPhotoLayer()
@@ -170,7 +339,7 @@ new class extends Component {
             'border_width' => $borderWidth,
             'rotation' => $rotation,
         ];
-        $this->selectedLayerIndex = $newIndex;
+        $this->selectLayer($newIndex, false);
     }
 
     public function addLogoLayer()
@@ -208,18 +377,26 @@ new class extends Component {
             'border_radius' => $borderRadius,
             'rotation' => $rotation,
         ];
-        $this->selectedLayerIndex = $newIndex;
+        $this->selectLayer($newIndex, false);
     }
 
     public function removeLayer(int $index)
     {
+        if ($index === -1) {
+            $sorted = $this->selectedLayerIndices;
+            rsort($sorted);
+            foreach ($sorted as $idx) {
+                if (isset($this->layers[$idx])) {
+                    array_splice($this->layers, $idx, 1);
+                }
+            }
+            $this->selectLayer(null);
+            return;
+        }
+
         if (isset($this->layers[$index])) {
             array_splice($this->layers, $index, 1);
-            if ($this->selectedLayerIndex === $index) {
-                $this->selectedLayerIndex = null;
-            } elseif ($this->selectedLayerIndex > $index) {
-                $this->selectedLayerIndex--;
-            }
+            $this->selectLayer(null);
         }
     }
 
@@ -420,6 +597,8 @@ new class extends Component {
     hasMoved: false,
     isText: false,
     snapLines: { x: null, y: null },
+    isShiftPressed: false,
+    draggedLayers: [],
 
     getClientCoords(e) {
         if (e.touches && e.touches.length > 0) {
@@ -457,6 +636,8 @@ new class extends Component {
         this.draggingEl = event.currentTarget ? (event.currentTarget.closest('[data-layer-box]') || event.currentTarget) : null;
         if (!this.draggingEl) return;
 
+        this.isShiftPressed = event.shiftKey;
+
         const coords = this.getClientCoords(event);
         this.startX = coords.x;
         this.startY = coords.y;
@@ -476,10 +657,28 @@ new class extends Component {
         this.origY = parseY;
         this.curX = this.origX;
         this.curY = this.origY;
+
+        this.draggedLayers = [];
+        const isMulti = this.$wire.selectedLayerIndices && this.$wire.selectedLayerIndices.includes(idx);
+        const indicesToDrag = isMulti ? this.$wire.selectedLayerIndices : [idx];
+
+        indicesToDrag.forEach((dIdx) => {
+            const el = document.querySelector('[data-layer-index=\'' + dIdx + '\']');
+            if (el) {
+                const px = parseFloat(el.style.left) || 0;
+                const py = parseFloat(el.style.top) || 0;
+                this.draggedLayers.push({
+                    idx: dIdx,
+                    origX: px,
+                    origY: py,
+                    el: el
+                });
+            }
+        });
     },
 
     onDrag(event) {
-        if (this.draggingIndex === null || !this.draggingEl) return;
+        if (this.draggingIndex === null || !this.draggingEl || this.draggedLayers.length === 0) return;
         const scale = (parseFloat(this.zoomLevel) || 100) / 100;
         const coords = this.getClientCoords(event);
         const dx = (coords.x - this.startX) / scale;
@@ -588,19 +787,26 @@ new class extends Component {
         this.snapLines.x = snapX !== null ? Math.round(snapX) : null;
         this.snapLines.y = snapY !== null ? Math.round(snapY) : null;
 
-        this.curX = newX;
-        this.curY = newY;
+        const deltaX = newX - this.origX;
+        const deltaY = newY - this.origY;
 
-        this.draggingEl.style.left = newX + 'px';
-        this.draggingEl.style.top = newY + 'px';
+        this.draggedLayers.forEach((layer) => {
+            const lx = Math.round(layer.origX + deltaX);
+            const ly = Math.round(layer.origY + deltaY);
+            layer.el.style.left = lx + 'px';
+            layer.el.style.top = ly + 'px';
+
+            if (layer.idx === this.draggingIndex) {
+                this.curX = lx;
+                this.curY = ly;
+            }
+        });
     },
 
     stopDrag() {
         this.snapLines = { x: null, y: null };
         if (this.draggingIndex !== null) {
             const idx = this.draggingIndex;
-            const finalX = parseInt(this.curX) || 0;
-            const finalY = parseInt(this.curY) || 0;
             const moved = this.hasMoved;
 
             this.draggingIndex = null;
@@ -608,10 +814,23 @@ new class extends Component {
             this.hasMoved = false;
 
             if (moved) {
-                this.$wire.updateLayerCoordinates(idx, finalX, finalY);
+                const updates = [];
+                this.draggedLayers.forEach((layer) => {
+                    const lx = parseInt(layer.el.style.left) || 0;
+                    const ly = parseInt(layer.el.style.top) || 0;
+                    updates.push({
+                        index: layer.idx,
+                        x: lx,
+                        y: ly
+                    });
+                    this.$wire.layers[layer.idx].x = lx;
+                    this.$wire.layers[layer.idx].y = ly;
+                });
+                this.$wire.updateMultipleLayersCoordinates(updates);
             } else {
-                this.$wire.selectLayer(idx);
+                this.$wire.selectLayer(idx, this.isShiftPressed);
             }
+            this.draggedLayers = [];
         }
     },
 
@@ -908,8 +1127,8 @@ new class extends Component {
             }
         });
         window.addEventListener('keydown', (e) => {
-            const idx = this.$wire.selectedLayerIndex;
-            if (idx === null) return;
+            const indices = this.$wire.selectedLayerIndices || [];
+            if (indices.length === 0) return;
 
             const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
             if (['input', 'textarea', 'select'].includes(tag) || (document.activeElement && document.activeElement.isContentEditable)) {
@@ -922,24 +1141,36 @@ new class extends Component {
             e.preventDefault();
 
             const step = e.shiftKey ? 10 : 1;
-            const el = document.querySelector('[data-layer-index=\'' + idx + '\']');
-            if (!el) return;
 
-            if (e.key === 'ArrowLeft') this.curX = Math.max(0, this.curX - step);
-            if (e.key === 'ArrowRight') this.curX = this.curX + step;
-            if (e.key === 'ArrowUp') this.curY = Math.max(0, this.curY - step);
-            if (e.key === 'ArrowDown') this.curY = this.curY + step;
+            indices.forEach((idx) => {
+                const el = document.querySelector('[data-layer-index=\'' + idx + '\']');
+                if (!el) return;
 
-            el.style.left = this.curX + 'px';
-            el.style.top = this.curY + 'px';
+                let curX = parseFloat(el.style.left) || 0;
+                let curY = parseFloat(el.style.top) || 0;
 
-            this.$wire.layers[idx].x = this.curX;
-            this.$wire.layers[idx].y = this.curY;
+                if (e.key === 'ArrowLeft') curX = Math.max(0, curX - step);
+                if (e.key === 'ArrowRight') curX = curX + step;
+                if (e.key === 'ArrowUp') curY = Math.max(0, curY - step);
+                if (e.key === 'ArrowDown') curY = curY + step;
+
+                el.style.left = curX + 'px';
+                el.style.top = curY + 'px';
+
+                this.$wire.layers[idx].x = curX;
+                this.$wire.layers[idx].y = curY;
+
+                // Sync the local binding variables for single selection sidebar if selected
+                if (idx === this.$wire.selectedLayerIndex) {
+                    this.curX = curX;
+                    this.curY = curY;
+                }
+            });
         });
 
         window.addEventListener('keyup', (e) => {
-            const idx = this.$wire.selectedLayerIndex;
-            if (idx === null) return;
+            const indices = this.$wire.selectedLayerIndices || [];
+            if (indices.length === 0) return;
 
             const keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
             if (!keys.includes(e.key)) return;
@@ -947,7 +1178,18 @@ new class extends Component {
             const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
             if (['input', 'textarea', 'select'].includes(tag)) return;
 
-            this.$wire.updateLayerCoordinates(idx, this.curX, this.curY);
+            const updates = [];
+            indices.forEach((idx) => {
+                const el = document.querySelector('[data-layer-index=\'' + idx + '\']');
+                if (el) {
+                    updates.push({
+                        index: idx,
+                        x: parseInt(el.style.left) || 0,
+                        y: parseInt(el.style.top) || 0
+                    });
+                }
+            });
+            this.$wire.updateMultipleLayersCoordinates(updates);
         });
     }
 }">
@@ -1067,7 +1309,7 @@ new class extends Component {
                                 $w = $layer['width'] ?? 150;
                                 $h = $layer['height'] ?? 30;
                                 $rot = $layer['rotation'] ?? 0;
-                                $isSelected = ($selectedLayerIndex === $idx);
+                                $isSelected = in_array($idx, $selectedLayerIndices);
                             @endphp
 
                             <div 
@@ -1250,6 +1492,209 @@ new class extends Component {
         <!-- Right: Canva Element Control Panel (5 Cols) -->
         <div class="lg:col-span-5 space-y-5">
             <!-- Alignment & Layer Tools -->
+            @if(count($selectedLayerIndices) > 1)
+                <div wire:key="controls-panel-multi" class="bg-slate-900 border border-indigo-500/40 rounded-3xl p-6 shadow-xl space-y-5">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-indigo-400"></span>
+                            <h3 class="text-sm font-black text-white flex items-center">
+                                Multiple Selection
+                                <span class="ml-2 text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full">
+                                    {{ count($selectedLayerIndices) }} elements
+                                </span>
+                            </h3>
+                        </div>
+                        <button type="button" wire:click="selectLayer(null)" class="text-xs font-bold text-slate-400 hover:text-white">Deselect</button>
+                    </div>
+
+                    <!-- Align to Page Section -->
+                    <div class="space-y-2">
+                        <span class="text-xs font-bold text-slate-300 block">Align to page</span>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button type="button" wire:click="alignSelectedToPage('top')" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-xs font-bold transition">
+                                <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="4" y1="4" x2="20" y2="4"></line>
+                                    <rect x="6" y="8" width="12" height="12" rx="1.5"></rect>
+                                </svg>
+                                <span>Top</span>
+                            </button>
+                            <button type="button" wire:click="alignSelectedToPage('left')" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-xs font-bold transition">
+                                <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="4" y1="4" x2="4" y2="20"></line>
+                                    <rect x="8" y="6" width="12" height="12" rx="1.5"></rect>
+                                </svg>
+                                <span>Left</span>
+                            </button>
+                            <button type="button" wire:click="alignSelectedToPage('middle')" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-xs font-bold transition">
+                                <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="4" y1="12" x2="20" y2="12"></line>
+                                    <rect x="6" y="6" width="12" height="4" rx="1"></rect>
+                                    <rect x="8" y="14" width="8" height="4" rx="1"></rect>
+                                </svg>
+                                <span>Middle</span>
+                            </button>
+                            <button type="button" wire:click="alignSelectedToPage('center')" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-xs font-bold transition">
+                                <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="4" x2="12" y2="20"></line>
+                                    <rect x="6" y="6" width="4" height="12" rx="1"></rect>
+                                    <rect x="14" y="8" width="4" height="8" rx="1"></rect>
+                                </svg>
+                                <span>Center</span>
+                            </button>
+                            <button type="button" wire:click="alignSelectedToPage('bottom')" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-xs font-bold transition">
+                                <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="4" y1="20" x2="20" y2="20"></line>
+                                    <rect x="6" y="4" width="12" height="12" rx="1.5"></rect>
+                                </svg>
+                                <span>Bottom</span>
+                            </button>
+                            <button type="button" wire:click="alignSelectedToPage('right')" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-xs font-bold transition">
+                                <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="20" y1="4" x2="20" y2="20"></line>
+                                    <rect x="4" y="6" width="12" height="12" rx="1.5"></rect>
+                                </svg>
+                                <span>Right</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Space Evenly Section -->
+                    <div class="space-y-2">
+                        <span class="text-xs font-bold text-slate-300 block">Space evenly</span>
+                        <div class="grid grid-cols-3 gap-2.5">
+                            <button type="button" wire:click="spaceSelectedEvenly('vertical')" class="flex flex-col items-center justify-center p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-[10px] font-bold transition space-y-1">
+                                <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="4" y1="6" x2="20" y2="6"></line>
+                                    <line x1="4" y1="12" x2="20" y2="12"></line>
+                                    <line x1="4" y1="18" x2="20" y2="18"></line>
+                                </svg>
+                                <span>Vertically</span>
+                            </button>
+                            <button type="button" wire:click="spaceSelectedEvenly('horizontal')" class="flex flex-col items-center justify-center p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-[10px] font-bold transition space-y-1">
+                                <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="6" y1="4" x2="6" y2="20"></line>
+                                    <line x1="12" y1="4" x2="12" y2="20"></line>
+                                    <line x1="18" y1="4" x2="18" y2="20"></line>
+                                </svg>
+                                <span>Horizontally</span>
+                            </button>
+                            <button type="button" wire:click="tidyUpSelected" class="flex flex-col items-center justify-center p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-[10px] font-bold transition space-y-1">
+                                <svg class="w-4 h-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="14" width="7" height="7"></rect>
+                                    <rect x="3" y="14" width="7" height="7"></rect>
+                                </svg>
+                                <span class="text-indigo-400">Tidy up</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Section (Common values) -->
+                    @php
+                        $commonW = null;
+                        $commonH = null;
+                        $commonX = null;
+                        $commonY = null;
+                        $commonRot = null;
+
+                        foreach($selectedLayerIndices as $sIdx) {
+                            if(isset($layers[$sIdx])) {
+                                $lay = $layers[$sIdx];
+                                if ($commonW === null) $commonW = $lay['width'] ?? 0;
+                                elseif ($commonW !== ($lay['width'] ?? 0)) $commonW = '';
+
+                                if ($commonH === null) $commonH = $lay['height'] ?? 0;
+                                elseif ($commonH !== ($lay['height'] ?? 0)) $commonH = '';
+
+                                if ($commonX === null) $commonX = $lay['x'] ?? 0;
+                                elseif ($commonX !== ($lay['x'] ?? 0)) $commonX = '';
+
+                                if ($commonY === null) $commonY = $lay['y'] ?? 0;
+                                elseif ($commonY !== ($lay['y'] ?? 0)) $commonY = '';
+
+                                if ($commonRot === null) $commonRot = $lay['rotation'] ?? 0;
+                                elseif ($commonRot !== ($lay['rotation'] ?? 0)) $commonRot = '';
+                            }
+                        }
+                    @endphp
+
+                    <div class="space-y-4 pt-3 border-t border-slate-800">
+                        <span class="text-xs font-bold text-slate-300 block">Advanced</span>
+                        
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Width</label>
+                                <input type="number" step="0.1" 
+                                    value="{{ $commonW !== '' && $commonW !== null ? round($commonW / 11.8128 * 10) / 10 : '' }}"
+                                    placeholder="--"
+                                    @input="$wire.updateCommonProperty('width', Math.round((parseFloat($event.target.value) || 0) * 11.8128))"
+                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500"
+                                >
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Height</label>
+                                <input type="number" step="0.1" 
+                                    value="{{ $commonH !== '' && $commonH !== null ? round($commonH / 11.8128 * 10) / 10 : '' }}"
+                                    placeholder="--"
+                                    @input="$wire.updateCommonProperty('height', Math.round((parseFloat($event.target.value) || 0) * 11.8128))"
+                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500"
+                                >
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Ratio</label>
+                                <div class="flex items-center justify-center w-full h-8 bg-slate-950 border border-slate-800 rounded-xl text-slate-400">
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">X</label>
+                                <input type="number" step="0.1" 
+                                    value="{{ $commonX !== '' && $commonX !== null ? round($commonX / 11.8128 * 10) / 10 : '' }}"
+                                    placeholder="--"
+                                    @input="$wire.updateCommonProperty('x', Math.round((parseFloat($event.target.value) || 0) * 11.8128))"
+                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500"
+                                >
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Y</label>
+                                <input type="number" step="0.1" 
+                                    value="{{ $commonY !== '' && $commonY !== null ? round($commonY / 11.8128 * 10) / 10 : '' }}"
+                                    placeholder="--"
+                                    @input="$wire.updateCommonProperty('y', Math.round((parseFloat($event.target.value) || 0) * 11.8128))"
+                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500"
+                                >
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Rotate</label>
+                                <input type="number" 
+                                    value="{{ $commonRot !== '' && $commonRot !== null ? $commonRot : '' }}"
+                                    placeholder="--"
+                                    @input="$wire.updateCommonProperty('rotation', parseInt($event.target.value) || 0)"
+                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500"
+                                >
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-3 border-t border-slate-800">
+                        <span class="text-[10px] text-slate-500 font-medium">Bulk operations affect all selected elements.</span>
+                        <button type="button" 
+                            wire:click="removeLayer(-1)" 
+                            class="px-3.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl text-xs font-bold transition flex items-center shadow-sm"
+                        >
+                            Delete Selected
+                        </button>
+                    </div>
+                </div>
+            @endif
+
             @if($selectedLayerIndex !== null && isset($layers[$selectedLayerIndex]))
                 @php $selectedLayer = $layers[$selectedLayerIndex]; @endphp
                 <div wire:key="controls-panel-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? 'layer' }}" class="bg-slate-900 border border-indigo-500/40 rounded-3xl p-6 shadow-xl space-y-4">
@@ -1393,8 +1838,8 @@ new class extends Component {
                     @foreach($layers as $idx => $layer)
                         <div 
                             wire:key="list-layer-{{ $layer['id'] ?? $idx }}"
-                            wire:click="selectLayer({{ $idx }})"
-                            class="p-3 rounded-2xl border transition flex items-center justify-between cursor-pointer {{ $selectedLayerIndex === $idx ? 'bg-indigo-500/10 border-indigo-500/40 text-white' : 'bg-slate-950/60 border-slate-800 text-slate-300 hover:border-slate-700' }}"
+                            @click.prevent="$wire.selectLayer({{ $idx }}, $event.shiftKey)"
+                            class="p-3 rounded-2xl border transition flex items-center justify-between cursor-pointer {{ in_array($idx, $selectedLayerIndices) ? 'bg-indigo-500/10 border-indigo-500/40 text-white' : 'bg-slate-950/60 border-slate-800 text-slate-300 hover:border-slate-700' }}"
                         >
                             <div class="flex items-center space-x-3">
                                 <span class="text-[10px] font-black uppercase tracking-wider text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md">
