@@ -605,12 +605,12 @@ new class extends Component {
                 </div>
 
                 @if($assignSuccessMessage)
-                    <div class="bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-300 p-3.5 rounded-2xl flex items-center justify-between text-xs font-bold shadow-md">
+                    <div class="bg-emerald-900/90 border border-emerald-500/60 text-emerald-100 p-3.5 rounded-2xl flex items-center justify-between text-xs font-bold shadow-lg">
                         <div class="flex items-center space-x-2">
-                            <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                            <span>{{ $assignSuccessMessage }}</span>
+                            <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                            <span class="text-emerald-100 font-extrabold">{{ $assignSuccessMessage }}</span>
                         </div>
-                        <button type="button" wire:click="$set('assignSuccessMessage', null)" class="text-emerald-600 dark:text-emerald-400 hover:text-gray-900 dark:hover:text-white transition">&times;</button>
+                        <button type="button" wire:click="$set('assignSuccessMessage', null)" class="text-emerald-300 hover:text-white transition">&times;</button>
                     </div>
                 @endif
 
@@ -621,9 +621,9 @@ new class extends Component {
                         <span class="text-[11px] text-gray-600 dark:text-slate-400">Applies to all grades unless overridden</span>
                     </div>
                     @if($isSchoolDefault)
-                        <span class="px-4 py-2 bg-emerald-50 dark:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-400 rounded-xl text-xs font-black flex items-center space-x-1.5 shadow-sm">
-                            <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                            <span>✓ Active Default</span>
+                        <span class="px-4 py-2 bg-emerald-900/80 border border-emerald-500/60 text-emerald-300 rounded-xl text-xs font-black flex items-center space-x-1.5 shadow-sm">
+                            <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                            <span class="text-emerald-300 font-black">✓ Active Default</span>
                         </span>
                     @else
                         <button type="button" wire:click="assignToSchool('{{ $selectedTemplateForAssign->id }}', {{ $isSchoolTemplate ? 'true' : 'false' }})" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-extrabold transition shadow-md shadow-indigo-600/20 active:scale-95">
@@ -646,13 +646,13 @@ new class extends Component {
                                 <div>
                                     <span class="text-xs font-bold text-gray-900 dark:text-white">Grade {{ $g->name }}</span>
                                     @if($isAssigned)
-                                        <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold ml-2">● Currently Assigned</span>
+                                        <span class="text-[10px] text-emerald-400 font-bold ml-2">● Currently Assigned</span>
                                     @endif
                                 </div>
                                 @if($isAssigned)
-                                    <button type="button" wire:click="assignToGrade({{ $g->id }}, '{{ $selectedTemplateForAssign->id }}', {{ $isSchoolTemplate ? 'true' : 'false' }})" class="px-3.5 py-1.5 bg-emerald-50 dark:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-400 rounded-xl text-xs font-bold transition flex items-center space-x-1">
-                                        <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                        <span>✓ Assigned</span>
+                                    <button type="button" wire:click="assignToGrade({{ $g->id }}, '{{ $selectedTemplateForAssign->id }}', {{ $isSchoolTemplate ? 'true' : 'false' }})" class="px-3.5 py-1.5 bg-emerald-900/80 border border-emerald-500/60 text-emerald-300 rounded-xl text-xs font-bold transition flex items-center space-x-1">
+                                        <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                        <span class="text-emerald-300 font-bold">✓ Assigned</span>
                                     </button>
                                 @else
                                     <button type="button" wire:click="assignToGrade({{ $g->id }}, '{{ $selectedTemplateForAssign->id }}', {{ $isSchoolTemplate ? 'true' : 'false' }})" class="px-3.5 py-1.5 bg-gray-200 dark:bg-slate-800 hover:bg-gray-300 dark:hover:bg-slate-700 text-gray-800 dark:text-slate-200 rounded-xl text-xs font-semibold transition active:scale-95">
