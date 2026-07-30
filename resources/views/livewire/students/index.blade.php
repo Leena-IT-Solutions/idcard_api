@@ -358,6 +358,75 @@ new class extends Component
         $this->isModalOpen = true;
     }
 
+    public $activeStep = 1;
+
+    public function setStep($step)
+    {
+        $this->activeStep = $step;
+    }
+
+    public function nextStep()
+    {
+        if ($this->activeStep === 1) {
+            if (empty($this->contact_number)) {
+                $this->addError('contact_number', 'Contact number is required.');
+                return;
+            }
+        } elseif ($this->activeStep === 2) {
+            $this->validate([
+                'first_name' => ['required', 'string', 'max:255'],
+                'last_name' => ['required', 'string', 'max:255'],
+                'address' => ['required', 'string'],
+                'pincode' => ['required', 'string', 'max:20'],
+            ]);
+        } elseif ($this->activeStep === 3) {
+            $this->validate([
+                'campaignId' => ['required', 'exists:campaigns,id'],
+                'gradeId' => ['required', 'exists:grades,id'],
+                'divisionId' => ['required', 'exists:divisions,id'],
+            ]);
+
+            if ($this->isAlreadyEnrolled) {
+                $this->addError('campaignId', 'This student is already enrolled in the selected campaign.');
+                return;
+            }
+        }
+
+        if ($this->activeStep < 4) {
+            $this->activeStep++;
+        }
+    }
+
+    public function prevStep()
+    {
+        if ($this->activeStep > 1) {
+            $this->activeStep--;
+        }
+    }
+
+    public function getIsAlreadyEnrolledProperty()
+    {
+        if (!$this->campaignId) {
+            return false;
+        }
+
+        $targetStudentId = $this->studentId;
+        if (!$targetStudentId && !empty($this->contact_number) && !empty($this->first_name) && !empty($this->last_name)) {
+            $matched = Student::findExisting($this->contact_number, $this->first_name, $this->last_name, $this->dob);
+            if ($matched) {
+                $targetStudentId = $matched->id;
+            }
+        }
+
+        if (!$targetStudentId) {
+            return false;
+        }
+
+        return \App\Models\CampaignStudent::where('campaign_id', $this->campaignId)
+            ->where('student_id', $targetStudentId)
+            ->exists();
+    }
+
     public function getMatchingStudentsProperty()
     {
         if (empty($this->contact_number)) {
@@ -388,10 +457,12 @@ new class extends Component
         $this->pincode = $student->pincode;
         $this->contact_number = $student->contact_number;
         $this->currentPhotoPath = $student->photo_path;
+        $this->activeStep = 2; // Advance to Student Details step
     }
 
     public function resetForm()
     {
+        $this->activeStep = 1;
         $this->studentId = null;
         $this->first_name = '';
         $this->middle_name = '';
@@ -443,6 +514,12 @@ new class extends Component
         ];
 
         $validated = $this->validate($rules);
+
+        if ($this->isAlreadyEnrolled && !$this->studentId) {
+            $this->addError('campaignId', 'This student is already enrolled in the selected campaign. Double enrollment is not allowed.');
+            $this->activeStep = 3;
+            return;
+        }
 
         $scopes = $this->getPermittedScopes();
         if ($scopes['restricted']) {
@@ -1252,7 +1329,7 @@ new class extends Component
         </div>
     @endif
 
-    <!-- Create/Edit Modal -->
+    <!-- Create/Edit Modal (4-Step Wizard) -->
     @if ($isModalOpen)
         <div class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
             <!-- Backdrop -->
@@ -1267,7 +1344,7 @@ new class extends Component
                             <h3 class="text-lg font-black text-gray-900 dark:text-gray-100">
                                 {{ $studentId ? __('Edit Student Record') : __('Add New Student') }}
                             </h3>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Fill in student details and enrollment parameters</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Complete the 4-part student profile setup</p>
                         </div>
                         <button type="button" wire:click="$set('isModalOpen', false)" class="p-2 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1276,260 +1353,348 @@ new class extends Component
                         </button>
                     </div>
 
-                    <!-- Scrollable Modal Body -->
-                    <div class="p-6 sm:p-8 overflow-y-auto flex-1 space-y-6">
-                        <!-- Step 1: Parent Mobile Number Lookup & Matching Students -->
-                        <div class="bg-gradient-to-r from-indigo-50/80 via-purple-50/50 to-indigo-50/80 dark:from-indigo-950/40 dark:via-purple-950/30 dark:to-indigo-950/40 p-5 rounded-2xl border border-indigo-100 dark:border-indigo-900/60">
-                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                <div class="flex-1">
-                                    <x-input-label for="contact_number" :value="__('Step 1: Check Parent / Contact Mobile Number')" class="text-indigo-900 dark:text-indigo-200 font-extrabold text-sm" />
-                                    <div class="relative mt-1.5">
-                                        <x-text-input wire:model.live.debounce.300ms="contact_number" id="contact_number" type="text" class="block w-full pl-10 pr-4 py-2.5 text-base font-bold tracking-wide" placeholder="Enter 10-digit mobile number to check existing students..." required />
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-indigo-500">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                                        </div>
-                                    </div>
-                                    <x-input-error :messages="$errors->get('contact_number')" class="mt-1" />
+                    <!-- 4-Step Progress Header -->
+                    <div class="px-6 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/40 shrink-0">
+                        <div class="flex items-center justify-between max-w-2xl mx-auto">
+                            <!-- Step 1 -->
+                            <button type="button" wire:click="setStep(1)" class="flex items-center gap-2 cursor-pointer">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center font-black text-xs transition {{ $activeStep === 1 ? 'bg-indigo-600 text-white shadow-md' : ($activeStep > 1 ? 'bg-emerald-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500') }}">
+                                    @if ($activeStep > 1) ✓ @else 1 @endif
                                 </div>
-                            </div>
+                                <span class="text-xs font-extrabold hidden sm:inline {{ $activeStep === 1 ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500' }}">1. Mobile Check</span>
+                            </button>
 
-                            @if ($this->matchingStudents->count() > 0 && !$studentId)
-                                <div class="mt-4 pt-4 border-t border-indigo-200/60 dark:border-indigo-800/60">
-                                    <div class="flex items-center justify-between mb-3">
-                                        <span class="text-xs font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
-                                            <svg class="w-4 h-4 text-amber-500 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.57l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.57l7-10a1 1 0 011.12-.384z"/></svg>
-                                            {{ $this->matchingStudents->count() }} Existing Student Profile(s) Found Under {{ $contact_number }}
-                                        </span>
-                                        <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400">Select student to enroll into a new campaign</span>
-                                    </div>
+                            <div class="flex-1 h-0.5 mx-2 {{ $activeStep > 1 ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-gray-700' }}"></div>
 
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        @foreach ($this->matchingStudents as $mStudent)
-                                            <div class="bg-white dark:bg-gray-800 p-3.5 rounded-xl border border-indigo-200 dark:border-gray-700 shadow-sm flex items-center justify-between gap-3 hover:border-indigo-500 transition">
-                                                <div class="flex items-center gap-3 min-w-0">
-                                                    @if ($mStudent->photo_path)
-                                                        <img src="{{ asset('storage/' . $mStudent->photo_path) }}" class="w-10 h-10 rounded-full object-cover shrink-0 border border-gray-200" />
-                                                    @else
-                                                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-xs shrink-0">
-                                                            {{ strtoupper(substr($mStudent->first_name, 0, 1) . substr($mStudent->last_name, 0, 1)) }}
-                                                        </div>
-                                                    @endif
-                                                    <div class="min-w-0">
-                                                        <h5 class="font-extrabold text-sm text-gray-900 dark:text-gray-100 truncate">
-                                                            {{ $mStudent->first_name }} {{ $mStudent->middle_name ? $mStudent->middle_name . ' ' : '' }}{{ $mStudent->last_name }}
-                                                        </h5>
-                                                        <p class="text-[11px] text-gray-500 dark:text-gray-400 truncate">
-                                                            DOB: {{ $mStudent->dob ? \Carbon\Carbon::parse($mStudent->dob)->format('M d, Y') : 'N/A' }} • ST-ID #{{ $mStudent->id }}
-                                                        </p>
-                                                    </div>
-                                                </div>
-
-                                                <button type="button" wire:click="selectExistingStudent({{ $mStudent->id }})" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shrink-0 transition shadow-sm cursor-pointer">
-                                                    Select Student
-                                                </button>
-                                            </div>
-                                        @endforeach
-                                    </div>
+                            <!-- Step 2 -->
+                            <button type="button" wire:click="setStep(2)" class="flex items-center gap-2 cursor-pointer">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center font-black text-xs transition {{ $activeStep === 2 ? 'bg-indigo-600 text-white shadow-md' : ($activeStep > 2 ? 'bg-emerald-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500') }}">
+                                    @if ($activeStep > 2) ✓ @else 2 @endif
                                 </div>
-                            @elseif ($studentId)
-                                <div class="mt-3 flex items-center justify-between bg-emerald-50 dark:bg-emerald-950/40 p-3 rounded-xl border border-emerald-200 dark:border-emerald-800">
-                                    <div class="flex items-center gap-2 text-xs font-bold text-emerald-800 dark:text-emerald-300">
-                                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                        <span>Selected Existing Student: <strong>{{ $first_name }} {{ $last_name }}</strong> (ST-ID #{{ $studentId }})</span>
-                                    </div>
-                                    <button type="button" wire:click="$set('studentId', null)" class="text-xs text-rose-600 dark:text-rose-400 font-bold hover:underline cursor-pointer">
-                                        Clear / Create New
-                                    </button>
+                                <span class="text-xs font-extrabold hidden sm:inline {{ $activeStep === 2 ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500' }}">2. Student Details</span>
+                            </button>
+
+                            <div class="flex-1 h-0.5 mx-2 {{ $activeStep > 2 ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-gray-700' }}"></div>
+
+                            <!-- Step 3 -->
+                            <button type="button" wire:click="setStep(3)" class="flex items-center gap-2 cursor-pointer">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center font-black text-xs transition {{ $activeStep === 3 ? 'bg-indigo-600 text-white shadow-md' : ($activeStep > 3 ? 'bg-emerald-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500') }}">
+                                    @if ($activeStep > 3) ✓ @else 3 @endif
                                 </div>
-                            @elseif (strlen($contact_number) >= 10)
-                                <div class="mt-3 flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-                                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                    <span>No existing profile found under {{ $contact_number }}. Fill in details below to register a new student.</span>
+                                <span class="text-xs font-extrabold hidden sm:inline {{ $activeStep === 3 ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500' }}">3. Campaign</span>
+                            </button>
+
+                            <div class="flex-1 h-0.5 mx-2 {{ $activeStep > 3 ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-gray-700' }}"></div>
+
+                            <!-- Step 4 -->
+                            <button type="button" wire:click="setStep(4)" class="flex items-center gap-2 cursor-pointer">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center font-black text-xs transition {{ $activeStep === 4 ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-200 dark:bg-gray-700 text-gray-500' }}">
+                                    4
                                 </div>
-                            @endif
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
-                            <!-- Row 1: Names & Roll No -->
-                            <div>
-                                <x-input-label for="first_name" :value="__('First Name')" />
-                                <x-text-input wire:model="first_name" id="first_name" type="text" class="mt-1 block w-full" placeholder="First Name" required />
-                                <x-input-error :messages="$errors->get('first_name')" class="mt-2" />
-                            </div>
-
-                            <div>
-                                <x-input-label for="middle_name" :value="__('Middle Name')" />
-                                <x-text-input wire:model="middle_name" id="middle_name" type="text" class="mt-1 block w-full" placeholder="Middle Name" />
-                                <x-input-error :messages="$errors->get('middle_name')" class="mt-2" />
-                            </div>
-
-                            <div>
-                                <x-input-label for="last_name" :value="__('Last Name')" />
-                                <x-text-input wire:model="last_name" id="last_name" type="text" class="mt-1 block w-full" placeholder="Last Name" required />
-                                <x-input-error :messages="$errors->get('last_name')" class="mt-2" />
-                            </div>
-
-                            <div>
-                                <x-input-label for="roll_no" :value="__('Roll No')" />
-                                <x-text-input wire:model="roll_no" id="roll_no" type="text" class="mt-1 block w-full" placeholder="e.g. 101" />
-                                <x-input-error :messages="$errors->get('roll_no')" class="mt-2" />
-                            </div>
-
-                            <!-- Row 2: Ref No & Academic Enrollment -->
-                            <div>
-                                <x-input-label for="serial_number" :value="__('Serial / Ref No')" />
-                                <x-text-input wire:model="serial_number" id="serial_number" type="text" class="mt-1 block w-full" placeholder="e.g. REF-1001" />
-                                <x-input-error :messages="$errors->get('serial_number')" class="mt-2" />
-                            </div>
-
-                            <div>
-                                <x-input-label for="campaignId" :value="__('Campaign')" />
-                                <select wire:model.live="campaignId" id="campaignId" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm" required>
-                                    <option value="">Select Campaign</option>
-                                    @foreach (\App\Models\Campaign::where('school_id', session('active_school_id'))->orderBy('created_at', 'desc')->get() as $camp)
-                                        <option value="{{ $camp->id }}">{{ $camp->name }}</option>
-                                    @endforeach
-                                </select>
-                                <x-input-error :messages="$errors->get('campaignId')" class="mt-2" />
-                            </div>
-
-                            <div>
-                                <x-input-label for="gradeId" :value="__('Standard / Class')" />
-                                <select wire:model.live="gradeId" id="gradeId" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm" required>
-                                    <option value="">Select Standard</option>
-                                    @php
-                                        $scopes = $this->getPermittedScopes();
-                                        $gradesQuery = \App\Models\Grade::where('school_id', session('active_school_id'))->orderBy('name', 'asc');
-                                        if ($scopes['restricted']) {
-                                            $gradesQuery->whereIn('id', $scopes['grades']);
-                                        }
-                                        $formGradesList = $gradesQuery->get();
-                                    @endphp
-                                    @foreach ($formGradesList as $grade)
-                                        <option value="{{ $grade->id }}">{{ $grade->name }}</option>
-                                    @endforeach
-                                </select>
-                                <x-input-error :messages="$errors->get('gradeId')" class="mt-2" />
-                            </div>
-
-                            <div>
-                                <x-input-label for="divisionId" :value="__('Division / Section')" />
-                                <select wire:model="divisionId" id="divisionId" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm" required>
-                                    <option value="">Select Division</option>
-                                    @php
-                                        if ($gradeId) {
-                                            $divsQuery = \App\Models\Division::where('grade_id', $gradeId);
-                                            if ($scopes['restricted']) {
-                                                $divsQuery->whereIn('id', $scopes['divisions']);
-                                            }
-                                            $divisions = $divsQuery->get();
-                                        } else {
-                                            $divisions = collect();
-                                        }
-                                    @endphp
-                                    @foreach ($divisions as $div)
-                                        <option value="{{ $div->id }}">{{ $div->name }}</option>
-                                    @endforeach
-                                </select>
-                                <x-input-error :messages="$errors->get('divisionId')" class="mt-2" />
-                            </div>
-
-                            <!-- Row 3: Personal & Contact Attributes -->
-                            <div>
-                                <x-input-label for="blood_group" :value="__('Blood Group')" />
-                                <select wire:model="blood_group" id="blood_group" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm">
-                                    <option value="">Select Blood Group</option>
-                                    <option value="A+">A+</option>
-                                    <option value="A-">A-</option>
-                                    <option value="B+">B+</option>
-                                    <option value="B-">B-</option>
-                                    <option value="AB+">AB+</option>
-                                    <option value="AB-">AB-</option>
-                                    <option value="O+">O+</option>
-                                    <option value="O-">O-</option>
-                                </select>
-                                <x-input-error :messages="$errors->get('blood_group')" class="mt-2" />
-                            </div>
-
-                            <div>
-                                <x-input-label for="gender" :value="__('Gender')" />
-                                <select wire:model="gender" id="gender" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-xl shadow-sm">
-                                    <option value="">Select Gender</option>
-                                    <option value="Male">Male</option>
-                                    <option value="Female">Female</option>
-                                    <option value="Other">Other</option>
-                                </select>
-                                <x-input-error :messages="$errors->get('gender')" class="mt-2" />
-                            </div>
-
-                            <div>
-                                <x-input-label for="dob" :value="__('Date of Birth')" />
-                                <x-text-input wire:model="dob" id="dob" type="date" class="mt-1 block w-full" />
-                                <x-input-error :messages="$errors->get('dob')" class="mt-2" />
-                            </div>
-
-                            <div>
-                                <x-input-label for="contact_number" :value="__('Contact Number')" />
-                                <x-text-input wire:model="contact_number" id="contact_number" type="text" class="mt-1 block w-full" placeholder="e.g. 9876543210" required />
-                                <x-input-error :messages="$errors->get('contact_number')" class="mt-2" />
-                            </div>
-
-                            <!-- Row 4: Full Address (Text Input) & Pincode -->
-                            <div class="md:col-span-3">
-                                <x-input-label for="address" :value="__('Full Address')" />
-                                <x-text-input wire:model="address" id="address" type="text" class="mt-1 block w-full" placeholder="e.g. 123 Main Street, Sector 4, City" required />
-                                <x-input-error :messages="$errors->get('address')" class="mt-2" />
-                            </div>
-
-                            <div class="md:col-span-1">
-                                <x-input-label for="pincode" :value="__('Pincode')" />
-                                <x-text-input wire:model="pincode" id="pincode" type="text" class="mt-1 block w-full" placeholder="e.g. 400001" required />
-                                <x-input-error :messages="$errors->get('pincode')" class="mt-2" />
-                            </div>
-
-                            <!-- Row 5: Photo Upload Card -->
-                            <div class="md:col-span-4 border-t border-gray-100 dark:border-gray-700 pt-4">
-                                <x-input-label :value="__('Student Photo')" />
-                                <div class="mt-2 flex items-center gap-5 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-2xl border border-gray-200 dark:border-gray-700/80">
-                                    @if ($photo)
-                                        <img src="{{ $photo->temporaryUrl() }}" class="h-16 w-16 object-cover rounded-xl border border-indigo-200 dark:border-indigo-800 shadow-sm shrink-0" />
-                                    @elseif ($currentPhotoPath)
-                                        <img src="{{ asset('storage/' . $currentPhotoPath) }}" class="h-16 w-16 object-cover rounded-xl border border-indigo-200 dark:border-indigo-800 shadow-sm shrink-0" />
-                                    @else
-                                        <div class="h-16 w-16 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-400 shrink-0 shadow-sm">
-                                            <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                            </svg>
-                                        </div>
-                                    @endif
-
-                                    <div class="flex-1">
-                                        <input type="file" wire:model="photo" id="photo" class="hidden" accept="image/*" />
-                                        <label for="photo" class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold text-xs uppercase rounded-xl transition shadow-sm">
-                                            <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                                            </svg>
-                                            {{ __('Choose Photo') }}
-                                        </label>
-                                        <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5 font-medium">JPEG, PNG up to 2MB (Square ratio recommended)</p>
-                                    </div>
-                                </div>
-                                <x-input-error :messages="$errors->get('photo')" class="mt-2" />
-                            </div>
+                                <span class="text-xs font-extrabold hidden sm:inline {{ $activeStep === 4 ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500' }}">4. Photo</span>
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Sticky Modal Footer with Clear Action Buttons -->
-                    <div class="flex items-center justify-end gap-3 p-4 sm:px-8 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60 shrink-0">
-                        <button type="button" wire:click="$set('isModalOpen', false)" class="px-5 py-2.5 border border-gray-200 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-800 rounded-xl font-bold text-xs uppercase text-gray-700 dark:text-gray-300 transition cursor-pointer">
-                            {{ __('Cancel') }}
-                        </button>
-                        <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-indigo-600/20 transition cursor-pointer flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                            <span>{{ $studentId ? __('Update Student') : __('Save Student') }}</span>
-                        </button>
+                    <!-- Scrollable Modal Body -->
+                    <div class="p-6 sm:p-8 overflow-y-auto flex-1 space-y-6">
+                        <!-- PART 1: MOBILE NUMBER CHECK -->
+                        @if ($activeStep === 1)
+                            <div class="space-y-5">
+                                <div class="bg-gradient-to-r from-indigo-50/80 via-purple-50/50 to-indigo-50/80 dark:from-indigo-950/40 dark:via-purple-950/30 dark:to-indigo-950/40 p-6 rounded-2xl border border-indigo-100 dark:border-indigo-900/60">
+                                    <h4 class="text-sm font-black text-indigo-900 dark:text-indigo-200 uppercase tracking-wider mb-2">Part 1: Mobile Number Lookup</h4>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-4">Enter parent or guardian contact number to check for existing student profiles.</p>
+                                    
+                                    <div class="relative">
+                                        <x-input-label for="contact_number" :value="__('Parent / Guardian Contact Number')" class="font-bold text-xs uppercase" />
+                                        <div class="relative mt-1">
+                                            <x-text-input wire:model.live.debounce.300ms="contact_number" id="contact_number" type="text" class="block w-full pl-10 text-lg font-bold" placeholder="e.g. 9876543210" required />
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-indigo-500">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                                            </div>
+                                        </div>
+                                        <x-input-error :messages="$errors->get('contact_number')" class="mt-1" />
+                                    </div>
+
+                                    @if ($this->matchingStudents->count() > 0 && !$studentId)
+                                        <div class="mt-5 pt-4 border-t border-indigo-200/60 dark:border-indigo-800/60">
+                                            <div class="flex items-center justify-between mb-3">
+                                                <span class="text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                                                    <svg class="w-4 h-4 text-amber-500 animate-bounce" fill="currentColor" viewBox="0 0 20 20"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.57l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.57l7-10a1 1 0 011.12-.384z"/></svg>
+                                                    {{ $this->matchingStudents->count() }} Existing Student Profile(s) Linked to {{ $contact_number }}
+                                                </span>
+                                            </div>
+
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                @foreach ($this->matchingStudents as $mStudent)
+                                                    <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-indigo-200 dark:border-gray-700 shadow-sm flex items-center justify-between gap-3">
+                                                        <div class="flex items-center gap-3 min-w-0">
+                                                            @if ($mStudent->photo_path)
+                                                                <img src="{{ asset('storage/' . $mStudent->photo_path) }}" class="w-10 h-10 rounded-full object-cover shrink-0 border" />
+                                                            @else
+                                                                <div class="w-10 h-10 rounded-full bg-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0">
+                                                                    {{ strtoupper(substr($mStudent->first_name, 0, 1) . substr($mStudent->last_name, 0, 1)) }}
+                                                                </div>
+                                                            @endif
+                                                            <div class="min-w-0">
+                                                                <h5 class="font-extrabold text-sm text-gray-900 dark:text-gray-100 truncate">{{ $mStudent->first_name }} {{ $mStudent->last_name }}</h5>
+                                                                <p class="text-[11px] text-gray-500 dark:text-gray-400">DOB: {{ $mStudent->dob ?? 'N/A' }} • ID #{{ $mStudent->id }}</p>
+                                                            </div>
+                                                        </div>
+
+                                                        <button type="button" wire:click="selectExistingStudent({{ $mStudent->id }})" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shrink-0 shadow-sm cursor-pointer">
+                                                            Select & Continue
+                                                        </button>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @elseif ($studentId)
+                                        <div class="mt-4 flex items-center justify-between bg-emerald-50 dark:bg-emerald-950/40 p-3 rounded-xl border border-emerald-200 dark:border-emerald-800">
+                                            <span class="text-xs font-bold text-emerald-800 dark:text-emerald-300">✓ Reusing Profile: <strong>{{ $first_name }} {{ $last_name }}</strong> (#{{ $studentId }})</span>
+                                            <button type="button" wire:click="$set('studentId', null)" class="text-xs text-rose-600 font-bold hover:underline cursor-pointer">Clear</button>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <div class="flex justify-end pt-3">
+                                    <button type="button" wire:click="nextStep" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition cursor-pointer flex items-center gap-2">
+                                        <span>Next: Student Details</span>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- PART 2: STUDENT DETAILS -->
+                        @if ($activeStep === 2)
+                            <div class="space-y-5">
+                                <h4 class="text-sm font-black text-gray-900 dark:text-gray-100 uppercase tracking-wider">Part 2: Personal Student Information</h4>
+
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                    <div>
+                                        <x-input-label for="first_name" :value="__('First Name')" />
+                                        <x-text-input wire:model="first_name" id="first_name" type="text" class="mt-1 block w-full" placeholder="First Name" required />
+                                        <x-input-error :messages="$errors->get('first_name')" class="mt-2" />
+                                    </div>
+
+                                    <div>
+                                        <x-input-label for="middle_name" :value="__('Middle Name')" />
+                                        <x-text-input wire:model="middle_name" id="middle_name" type="text" class="mt-1 block w-full" placeholder="Middle Name" />
+                                        <x-input-error :messages="$errors->get('middle_name')" class="mt-2" />
+                                    </div>
+
+                                    <div>
+                                        <x-input-label for="last_name" :value="__('Last Name')" />
+                                        <x-text-input wire:model="last_name" id="last_name" type="text" class="mt-1 block w-full" placeholder="Last Name" required />
+                                        <x-input-error :messages="$errors->get('last_name')" class="mt-2" />
+                                    </div>
+
+                                    <div>
+                                        <x-input-label for="dob" :value="__('Date of Birth')" />
+                                        <x-text-input wire:model="dob" id="dob" type="date" class="mt-1 block w-full" />
+                                        <x-input-error :messages="$errors->get('dob')" class="mt-2" />
+                                    </div>
+
+                                    <div>
+                                        <x-input-label for="gender" :value="__('Gender')" />
+                                        <select wire:model="gender" id="gender" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 rounded-xl shadow-sm">
+                                            <option value="">Select Gender</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                        <x-input-error :messages="$errors->get('gender')" class="mt-2" />
+                                    </div>
+
+                                    <div>
+                                        <x-input-label for="blood_group" :value="__('Blood Group')" />
+                                        <select wire:model="blood_group" id="blood_group" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 rounded-xl shadow-sm">
+                                            <option value="">Select Blood Group</option>
+                                            <option value="A+">A+</option>
+                                            <option value="A-">A-</option>
+                                            <option value="B+">B+</option>
+                                            <option value="B-">B-</option>
+                                            <option value="AB+">AB+</option>
+                                            <option value="AB-">AB-</option>
+                                            <option value="O+">O+</option>
+                                            <option value="O-">O-</option>
+                                        </select>
+                                        <x-input-error :messages="$errors->get('blood_group')" class="mt-2" />
+                                    </div>
+
+                                    <div class="md:col-span-2">
+                                        <x-input-label for="address" :value="__('Full Address')" />
+                                        <x-text-input wire:model="address" id="address" type="text" class="mt-1 block w-full" placeholder="Full residential address" required />
+                                        <x-input-error :messages="$errors->get('address')" class="mt-2" />
+                                    </div>
+
+                                    <div>
+                                        <x-input-label for="pincode" :value="__('Pincode')" />
+                                        <x-text-input wire:model="pincode" id="pincode" type="text" class="mt-1 block w-full" placeholder="e.g. 400001" required />
+                                        <x-input-error :messages="$errors->get('pincode')" class="mt-2" />
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
+                                    <button type="button" wire:click="prevStep" class="px-5 py-2.5 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/60 rounded-xl font-bold text-xs uppercase text-gray-700 dark:text-gray-300 transition cursor-pointer">
+                                        ← Back: Mobile Check
+                                    </button>
+                                    <button type="button" wire:click="nextStep" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition cursor-pointer flex items-center gap-2">
+                                        <span>Next: Campaign Details</span>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- PART 3: CAMPAIGN DETAILS -->
+                        @if ($activeStep === 3)
+                            <div class="space-y-5">
+                                <h4 class="text-sm font-black text-gray-900 dark:text-gray-100 uppercase tracking-wider">Part 3: Academic & Campaign Enrollment</h4>
+
+                                <!-- Campaign Duplicate Warning Alert -->
+                                @if ($this->isAlreadyEnrolled)
+                                    <div class="p-4 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 rounded-2xl flex items-center gap-3">
+                                        <svg class="w-6 h-6 text-rose-600 dark:text-rose-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                        <div>
+                                            <h5 class="text-xs font-black text-rose-800 dark:text-rose-300 uppercase tracking-wider">Student Already Enrolled in this Campaign</h5>
+                                            <p class="text-xs text-rose-700 dark:text-rose-400 mt-0.5 font-medium">This student is already enrolled in the selected Campaign. Double enrollment for the same campaign is not allowed.</p>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                    <div>
+                                        <x-input-label for="campaignId" :value="__('Campaign')" />
+                                        <select wire:model.live="campaignId" id="campaignId" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 rounded-xl shadow-sm" required>
+                                            <option value="">Select Campaign</option>
+                                            @foreach (\App\Models\Campaign::where('school_id', session('active_school_id'))->orderBy('created_at', 'desc')->get() as $camp)
+                                                <option value="{{ $camp->id }}">{{ $camp->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <x-input-error :messages="$errors->get('campaignId')" class="mt-2" />
+                                    </div>
+
+                                    <div>
+                                        <x-input-label for="gradeId" :value="__('Standard / Class')" />
+                                        <select wire:model.live="gradeId" id="gradeId" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 rounded-xl shadow-sm" required>
+                                            <option value="">Select Standard</option>
+                                            @php
+                                                $scopes = $this->getPermittedScopes();
+                                                $gradesQuery = \App\Models\Grade::where('school_id', session('active_school_id'))->orderBy('name', 'asc');
+                                                if ($scopes['restricted']) {
+                                                    $gradesQuery->whereIn('id', $scopes['grades']);
+                                                }
+                                                $formGradesList = $gradesQuery->get();
+                                            @endphp
+                                            @foreach ($formGradesList as $grade)
+                                                <option value="{{ $grade->id }}">{{ $grade->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <x-input-error :messages="$errors->get('gradeId')" class="mt-2" />
+                                    </div>
+
+                                    <div>
+                                        <x-input-label for="divisionId" :value="__('Division / Section')" />
+                                        <select wire:model="divisionId" id="divisionId" class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 rounded-xl shadow-sm" required>
+                                            <option value="">Select Division</option>
+                                            @php
+                                                if ($gradeId) {
+                                                    $divsQuery = \App\Models\Division::where('grade_id', $gradeId);
+                                                    if ($scopes['restricted']) {
+                                                        $divsQuery->whereIn('id', $scopes['divisions']);
+                                                    }
+                                                    $divisions = $divsQuery->get();
+                                                } else {
+                                                    $divisions = collect();
+                                                }
+                                            @endphp
+                                            @foreach ($divisions as $div)
+                                                <option value="{{ $div->id }}">{{ $div->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <x-input-error :messages="$errors->get('divisionId')" class="mt-2" />
+                                    </div>
+
+                                    <div>
+                                        <x-input-label for="roll_no" :value="__('Roll No')" />
+                                        <x-text-input wire:model="roll_no" id="roll_no" type="text" class="mt-1 block w-full" placeholder="e.g. 101" />
+                                        <x-input-error :messages="$errors->get('roll_no')" class="mt-2" />
+                                    </div>
+
+                                    <div>
+                                        <x-input-label for="serial_number" :value="__('Serial / Ref No')" />
+                                        <x-text-input wire:model="serial_number" id="serial_number" type="text" class="mt-1 block w-full" placeholder="e.g. REF-1001" />
+                                        <x-input-error :messages="$errors->get('serial_number')" class="mt-2" />
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
+                                    <button type="button" wire:click="prevStep" class="px-5 py-2.5 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/60 rounded-xl font-bold text-xs uppercase text-gray-700 dark:text-gray-300 transition cursor-pointer">
+                                        ← Back: Student Details
+                                    </button>
+                                    <button type="button" wire:click="nextStep" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition cursor-pointer flex items-center gap-2">
+                                        <span>Next: Photo</span>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- PART 4: PHOTO & SUMMARY REVIEW -->
+                        @if ($activeStep === 4)
+                            <div class="space-y-6">
+                                <h4 class="text-sm font-black text-gray-900 dark:text-gray-100 uppercase tracking-wider">Part 4: Student Photo & Final Review</h4>
+
+                                <div class="bg-gray-50 dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-200 dark:border-gray-700">
+                                    <x-input-label :value="__('Student Photo')" class="font-bold text-xs uppercase" />
+                                    <div class="mt-3 flex items-center gap-5">
+                                        @if ($photo)
+                                            <img src="{{ $photo->temporaryUrl() }}" class="h-20 w-20 object-cover rounded-2xl border-2 border-indigo-500 shadow-md shrink-0" />
+                                        @elseif ($currentPhotoPath)
+                                            <img src="{{ asset('storage/' . $currentPhotoPath) }}" class="h-20 w-20 object-cover rounded-2xl border-2 border-indigo-500 shadow-md shrink-0" />
+                                        @else
+                                            <div class="h-20 w-20 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-400 shrink-0 shadow-sm">
+                                                <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                            </div>
+                                        @endif
+
+                                        <div class="flex-1">
+                                            <input type="file" wire:model="photo" id="photo" class="hidden" accept="image/*" />
+                                            <label for="photo" class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-indigo-50 text-gray-700 dark:text-gray-300 font-bold text-xs uppercase rounded-xl transition shadow-sm">
+                                                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                                {{ __('Choose Photo') }}
+                                            </label>
+                                            <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5 font-medium">JPEG, PNG up to 2MB (Square ratio recommended)</p>
+                                        </div>
+                                    </div>
+                                    <x-input-error :messages="$errors->get('photo')" class="mt-2" />
+                                </div>
+
+                                <!-- Summary Box -->
+                                <div class="bg-indigo-50/50 dark:bg-indigo-950/30 p-4 rounded-2xl border border-indigo-100 dark:border-indigo-900/40 text-xs space-y-2">
+                                    <h5 class="font-extrabold text-indigo-900 dark:text-indigo-200 uppercase tracking-wider text-[11px]">Enrollment Summary</h5>
+                                    <div class="grid grid-cols-2 gap-2 text-gray-700 dark:text-gray-300">
+                                        <div><span class="text-gray-400 font-bold">Student:</span> {{ $first_name }} {{ $last_name }}</div>
+                                        <div><span class="text-gray-400 font-bold">Contact:</span> {{ $contact_number }}</div>
+                                        <div><span class="text-gray-400 font-bold">DOB:</span> {{ $dob ?: 'N/A' }}</div>
+                                        <div><span class="text-gray-400 font-bold">Address:</span> {{ $address }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
+                                    <button type="button" wire:click="prevStep" class="px-5 py-2.5 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/60 rounded-xl font-bold text-xs uppercase text-gray-700 dark:text-gray-300 transition cursor-pointer">
+                                        ← Back: Campaign
+                                    </button>
+
+                                    <button type="submit" @if($this->isAlreadyEnrolled && !$studentId) disabled @endif class="px-7 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-indigo-600/30 transition cursor-pointer flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                        <span>{{ $studentId ? __('Update Student Record') : __('Save & Complete Enrollment') }}</span>
+                                    </button>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </form>
             </div>
