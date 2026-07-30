@@ -5,32 +5,6 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'welcome');
 Route::view('privacy-policy', 'privacy')->name('privacy');
 
-Route::get('/debug-template/{schoolId}', function($schoolId) {
-    try {
-        $st = \App\Models\SchoolTemplate::where('school_id', $schoolId)->get();
-        $school = \App\Models\School::find($schoolId);
-        $masterTemplates = \App\Models\Template::all();
-        $controller = new \App\Http\Controllers\Api\SchoolAdminController();
-        $reflection = new \ReflectionClass($controller);
-        $method = $reflection->getMethod('getEffectiveTemplateForGradeOrSchool');
-        $method->setAccessible(true);
-        $eff = $method->invoke($controller, $schoolId, null);
-        
-        return response()->json([
-            'school' => $school,
-            'school_templates' => $st,
-            'effective_template' => $eff,
-            'master_templates' => $masterTemplates,
-        ]);
-    } catch (\Throwable $e) {
-        return response()->json([
-            'error' => $e->getMessage(),
-            'line' => $e->getLine(),
-            'file' => $e->getFile(),
-        ], 500);
-    }
-});
-
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');

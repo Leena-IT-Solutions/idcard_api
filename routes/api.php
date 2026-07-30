@@ -11,26 +11,6 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 
-Route::get('/debug-template/{schoolId}', function($schoolId) {
-    try {
-        $st = \App\Models\SchoolTemplate::where('school_id', $schoolId)->get();
-        $school = \App\Models\School::find($schoolId);
-        $masterTemplates = \App\Models\Template::all();
-        
-        return response()->json([
-            'school' => $school,
-            'school_templates' => $st,
-            'master_templates' => $masterTemplates,
-        ]);
-    } catch (\Throwable $e) {
-        return response()->json([
-            'error' => $e->getMessage(),
-            'line' => $e->getLine(),
-            'file' => $e->getFile(),
-        ], 500);
-    }
-});
-
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::put('/user/profile', [AuthController::class, 'updateProfile']);
