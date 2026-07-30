@@ -256,6 +256,57 @@ new class extends Component {
             session()->flash('message', 'All child profiles are already up to date.');
         }
     }
+
+    public function getEffectiveTemplate($schoolId, $gradeId = null)
+    {
+        $tpl = null;
+        if ($gradeId) {
+            $grade = \App\Models\Grade::find($gradeId);
+            if ($grade) {
+                if ($grade->school_template_id && ($st = \App\Models\SchoolTemplate::find($grade->school_template_id))) {
+                    $tpl = $st;
+                } elseif ($grade->template_id) {
+                    if ($st = \App\Models\SchoolTemplate::find($grade->template_id)) $tpl = $st;
+                    elseif ($mt = \App\Models\Template::find($grade->template_id)) $tpl = $mt;
+                    elseif ($mt = \App\Models\Template::where('slug', $grade->template_id)->first()) $tpl = $mt;
+                }
+            }
+        }
+
+        if (!$tpl && $schoolId) {
+            $school = \App\Models\School::find($schoolId);
+            if ($school) {
+                if ($school->school_template_id && ($st = \App\Models\SchoolTemplate::find($school->school_template_id))) {
+                    $tpl = $st;
+                } elseif ($school->template_id) {
+                    if ($st = \App\Models\SchoolTemplate::find($school->template_id)) $tpl = $st;
+                    elseif ($mt = \App\Models\Template::find($school->template_id)) $tpl = $mt;
+                    elseif ($mt = \App\Models\Template::where('slug', $school->template_id)->first()) $tpl = $mt;
+                }
+                if (!$tpl) {
+                    $tpl = \App\Models\SchoolTemplate::where('school_id', $schoolId)->where('is_default', true)->first();
+                }
+                if (!$tpl) {
+                    $tpl = \App\Models\SchoolTemplate::where('school_id', $schoolId)->first();
+                }
+            }
+        }
+
+        if (!$tpl) {
+            $tpl = \App\Models\Template::first();
+        }
+
+        if ($tpl && $tpl instanceof \App\Models\SchoolTemplate) {
+            if (empty($tpl->background_image) && $tpl->template_id) {
+                $master = \App\Models\Template::find($tpl->template_id);
+                if ($master && !empty($master->background_image)) {
+                    $tpl->setAttribute('background_image', $master->background_image);
+                }
+            }
+        }
+
+        return $tpl;
+    }
 };
 
 ?>
@@ -293,67 +344,129 @@ new class extends Component {
                 </p>
             </div>
         @else
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-6">
                 @foreach ($campaigns as $camp)
-                    <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 flex flex-col justify-between shadow-sm relative overflow-hidden">
-                        <div>
-                            <div class="flex items-start justify-between mb-4">
+                    @php
+                        $enrolledPivots = $camp->campaignStudents()->whereIn('student_id', $this->children->pluck('id'))->with(['student', 'grade', 'division'])->get();
+                        $firstEnrolledPivot = $enrolledPivots->first();
+                        $effectiveTemplate = $this->getEffectiveTemplate(
+                            $camp->school_id,
+                            $firstEnrolledPivot ? $firstEnrolledPivot->grade_id : null
+                        );
+                        $isPortrait = $effectiveTemplate ? ($effectiveTemplate->orientation ?? 'landscape') === 'portrait' : false;
+                    @endphp
+
+                    <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-8 border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                            <!-- Left Column: Details & Enrollment -->
+                            <div class="lg:col-span-7 flex flex-col justify-between h-full space-y-6">
                                 <div>
-                                    <span class="text-[9px] uppercase font-black tracking-widest text-indigo-600 dark:text-indigo-400 block mb-0.5">{{ $camp->school->name }}</span>
-                                    <h4 class="font-extrabold text-gray-900 dark:text-gray-100 text-lg leading-tight">{{ $camp->name }}</h4>
+                                    <div class="flex items-center justify-between gap-3 mb-3">
+                                        <span class="text-xs font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-3 py-1 rounded-full">
+                                            {{ $camp->school->name }}
+                                        </span>
+                                        <span class="px-3 py-1 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-full text-xs font-black uppercase tracking-wider">
+                                            {{ __('Active') }}
+                                        </span>
+                                    </div>
+                                    <h4 class="font-extrabold text-gray-900 dark:text-gray-100 text-2xl leading-tight mb-2">
+                                        {{ $camp->name }}
+                                    </h4>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                                        {{ __('Registration Period:') }}
+                                        <span class="font-bold text-gray-700 dark:text-gray-300">{{ $camp->registration_start_date->format('d M, Y') }}</span>
+                                        {{ __('to') }}
+                                        <span class="font-bold text-gray-700 dark:text-gray-300">{{ $camp->registration_end_date->format('d M, Y') }}</span>
+                                    </p>
                                 </div>
-                                <span class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-xl text-[9px] font-black uppercase tracking-wider">
-                                    {{ __('Active') }}
-                                </span>
+
+                                <!-- Enrolled Children -->
+                                <div class="space-y-3">
+                                    <h5 class="text-xs font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5">
+                                        <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                        </svg>
+                                        {{ __('Enrolled Children:') }}
+                                    </h5>
+
+                                    @if ($enrolledPivots->isEmpty())
+                                        <div class="p-3.5 bg-gray-50 dark:bg-gray-900/60 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700 text-xs text-gray-400 italic">
+                                            {{ __('No children enrolled in this campaign yet.') }}
+                                        </div>
+                                    @else
+                                        <div class="space-y-2">
+                                            @foreach ($enrolledPivots as $piv)
+                                                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-700">
+                                                    <div class="flex items-center space-x-2.5">
+                                                        <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                                                        <span class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ $piv->student->first_name }} {{ $piv->student->last_name }}</span>
+                                                    </div>
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 text-xs font-bold">
+                                                            {{ $piv->grade->name }} - {{ $piv->division->name }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <!-- Action Button -->
+                                <div class="pt-2">
+                                    @php
+                                        $unenrolledChildren = $this->children->filter(function($child) use ($enrolledPivots) {
+                                            return !$enrolledPivots->pluck('student_id')->contains($child->id);
+                                        });
+                                    @endphp
+
+                                    @if ($unenrolledChildren->isEmpty() && !$this->children->isEmpty())
+                                        <button disabled class="w-full py-3 bg-gray-100 dark:bg-gray-900 text-gray-400 dark:text-gray-500 font-bold text-xs uppercase tracking-wider rounded-2xl cursor-not-allowed text-center">
+                                            {{ __('All children enrolled') }}
+                                        </button>
+                                    @else
+                                        <button wire:click="openEnrollModal({{ $camp->id }})" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-wider rounded-2xl transition shadow-lg shadow-indigo-600/20 text-center cursor-pointer">
+                                            {{ __('Enroll a Child') }}
+                                        </button>
+                                    @endif
+                                </div>
                             </div>
 
-                            <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-normal mb-5">
-                                {{ __('Registration Period:') }} <span class="font-bold text-gray-700 dark:text-gray-300">{{ $camp->registration_start_date->format('d M, Y') }}</span> {{ __('to') }} <span class="font-bold text-gray-700 dark:text-gray-300">{{ $camp->registration_end_date->format('d M, Y') }}</span>
-                            </p>
+                            <!-- Right Column: Actual iCard Template Design Preview -->
+                            <div class="lg:col-span-5 flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-900/80 rounded-2xl border border-gray-100 dark:border-gray-700/80 min-h-[260px] relative group overflow-hidden">
+                                <div class="w-full flex items-center justify-between mb-3 px-1">
+                                    <span class="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        {{ $firstEnrolledPivot ? __('Class iCard Template Design') : __('School iCard Template Design') }}
+                                    </span>
+                                    <span class="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded-md">
+                                        {{ $effectiveTemplate->name ?? __('Template') }}
+                                    </span>
+                                </div>
 
-                            <!-- Enrolled Children -->
-                            <div class="space-y-2 mb-6">
-                                <h5 class="text-[10px] font-black uppercase text-gray-400 tracking-wider">{{ __('Enrolled Children:') }}</h5>
-                                @php
-                                    $enrolledPivots = $camp->campaignStudents()->whereIn('student_id', $this->children->pluck('id'))->with(['student', 'grade', 'division'])->get();
-                                @endphp
-
-                                @if ($enrolledPivots->isEmpty())
-                                    <p class="text-xs text-gray-400 italic">{{ __('No children enrolled in this campaign yet.') }}</p>
+                                @if ($effectiveTemplate)
+                                    <div class="relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 shadow-md flex items-center justify-center bg-white dark:bg-gray-950 my-auto p-2"
+                                         style="width: 100%; max-width: {{ $isPortrait ? '230px' : '360px' }}; height: {{ $isPortrait ? '340px' : '230px' }};">
+                                        <div class="transform origin-center transition-transform duration-300 scale-95" style="transform: scale({{ $isPortrait ? 0.32 : 0.34 }}); width: {{ $isPortrait ? '638px' : '1011px' }}; height: {{ $isPortrait ? '1011px' : '638px' }};">
+                                            <x-id-card-renderer
+                                                :template="$effectiveTemplate"
+                                                :student="$firstEnrolledPivot ? $firstEnrolledPivot->student : null"
+                                                :school="$camp->school"
+                                                :previewMode="$firstEnrolledPivot ? false : true"
+                                            />
+                                        </div>
+                                    </div>
                                 @else
-                                    <div class="space-y-1.5">
-                                        @foreach ($enrolledPivots as $piv)
-                                            <div class="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700">
-                                                <div class="flex items-center space-x-2">
-                                                    <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
-                                                    <span class="text-xs font-bold text-gray-800 dark:text-gray-200">{{ $piv->student->first_name }} {{ $piv->student->last_name }}</span>
-                                                </div>
-                                                <span class="px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 text-[9px] font-bold">
-                                                    {{ $piv->grade->name }} - {{ $piv->division->name }}
-                                                </span>
-                                            </div>
-                                        @endforeach
+                                    <div class="flex flex-col items-center justify-center p-8 text-center text-gray-400">
+                                        <svg class="w-10 h-10 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                                        </svg>
+                                        <span class="text-xs font-semibold">{{ __('No Template Assigned') }}</span>
                                     </div>
                                 @endif
                             </div>
-                        </div>
-
-                        <div class="pt-4 border-t border-gray-100 dark:border-gray-800">
-                            @php
-                                $unenrolledChildren = $this->children->filter(function($child) use ($enrolledPivots) {
-                                    return !$enrolledPivots->pluck('student_id')->contains($child->id);
-                                });
-                            @endphp
-
-                            @if ($unenrolledChildren->isEmpty() && !$this->children->isEmpty())
-                                <button disabled class="w-full py-2.5 bg-gray-100 dark:bg-gray-900 text-gray-400 dark:text-gray-500 font-bold text-xs uppercase tracking-wider rounded-xl cursor-not-allowed text-center">
-                                    {{ __('All children enrolled') }}
-                                </button>
-                            @else
-                                <button wire:click="openEnrollModal({{ $camp->id }})" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition shadow-md shadow-indigo-600/10 text-center cursor-pointer">
-                                    {{ __('Enroll a Child') }}
-                                </button>
-                            @endif
                         </div>
                     </div>
                 @endforeach
