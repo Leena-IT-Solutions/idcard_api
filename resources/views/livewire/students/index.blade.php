@@ -614,8 +614,8 @@ new class extends Component
             $activeSchoolId = session('active_school_id');
             $query = \App\Models\CampaignStudent::where('student_id', $student->id);
 
-            if ($this->selectedCampaignId) {
-                $query->where('campaign_id', $this->selectedCampaignId);
+            if ($this->filterCampaign) {
+                $query->where('campaign_id', $this->filterCampaign);
             } else if ($activeSchoolId) {
                 $query->whereHas('campaign', function($q) use ($activeSchoolId) {
                     $q->where('school_id', $activeSchoolId);
