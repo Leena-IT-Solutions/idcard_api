@@ -32,6 +32,8 @@ new class extends Component {
     public $enrollCampaignId = '';
     public $enrollGradeId = '';
     public $enrollDivisionId = '';
+    public string $enrollRollNo = '';
+    public string $enrollSerialNumber = '';
 
     // Modal states
     public bool $isChildModalOpen = false;
@@ -202,6 +204,8 @@ new class extends Component {
         $this->enrollStudentId = '';
         $this->enrollGradeId = '';
         $this->enrollDivisionId = '';
+        $this->enrollRollNo = '';
+        $this->enrollSerialNumber = '';
         $this->resetValidation();
     }
 
@@ -213,6 +217,8 @@ new class extends Component {
             'enrollStudentId' => ['required', 'exists:students,id'],
             'enrollGradeId' => ['required', 'exists:grades,id'],
             'enrollDivisionId' => ['required', 'exists:divisions,id'],
+            'enrollRollNo' => ['nullable', 'string', 'max:100'],
+            'enrollSerialNumber' => ['nullable', 'string', 'max:100'],
         ];
 
         $this->validate($rules);
@@ -230,6 +236,8 @@ new class extends Component {
             [
                 'grade_id' => $grade->id,
                 'division_id' => $division->id,
+                'roll_no' => $this->enrollRollNo ?: null,
+                'serial_number' => $this->enrollSerialNumber ?: null,
             ]
         );
 
@@ -653,6 +661,20 @@ new class extends Component {
                             @endif
                         </select>
                         <x-input-error :messages="$errors->get('enrollDivisionId')" class="mt-2" />
+                    </div>
+
+                    <!-- Roll No & Serial/Ref No (Optional) -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <x-input-label for="enroll_roll_no" :value="__('Roll No (Optional)')" />
+                            <x-text-input wire:model="enrollRollNo" id="enroll_roll_no" type="text" class="mt-1 block w-full" placeholder="e.g. 15" />
+                            <x-input-error :messages="$errors->get('enrollRollNo')" class="mt-1" />
+                        </div>
+                        <div>
+                            <x-input-label for="enroll_serial_number" :value="__('Ref / Serial No (Optional)')" />
+                            <x-text-input wire:model="enrollSerialNumber" id="enroll_serial_number" type="text" class="mt-1 block w-full" placeholder="e.g. REF-101" />
+                            <x-input-error :messages="$errors->get('enrollSerialNumber')" class="mt-1" />
+                        </div>
                     </div>
 
                     <!-- Actions -->
