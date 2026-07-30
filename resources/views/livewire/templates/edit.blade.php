@@ -165,6 +165,30 @@ new class extends Component {
 
     }
 
+    public function selectLayerBatch(array $indices)
+    {
+        $this->selectedLayerIndices = array_values(array_unique(array_map('intval', $indices)));
+        if (count($this->selectedLayerIndices) === 1) {
+            $this->selectedLayerIndex = $this->selectedLayerIndices[0];
+        } else {
+            $this->selectedLayerIndex = null;
+        }
+    }
+
+    public function setOrientation(string $newOrientation)
+    {
+        if (!in_array($newOrientation, ['landscape', 'portrait'])) return;
+        $this->orientation = $newOrientation;
+        if ($newOrientation === 'portrait') {
+            $this->widthMm = 54.00;
+            $this->heightMm = 85.60;
+        } else {
+            $this->widthMm = 85.60;
+            $this->heightMm = 54.00;
+        }
+        $this->saveStudioDesign();
+    }
+
     public function updateMultipleLayersCoordinates(array $updates)
     {
         $this->recordHistory();
@@ -641,6 +665,25 @@ new class extends Component {
     draggedLayers: [],
     alignMode: 'page',
 
+    // Studio Tool Mode & Viewport Panning State
+    activeTool: 'select', // 'select' or 'pan'
+    isSpacePressed: false,
+    isPanning: false,
+    panStartX: 0,
+    panStartY: 0,
+    scrollStartX: 0,
+    scrollStartY: 0,
+
+    // Marquee Drag-to-Select State
+    isSelectingBox: false,
+    boxStartCanvasX: 0,
+    boxStartCanvasY: 0,
+    boxRect: { left: 0, top: 0, width: 0, height: 0 },
+
+    toggleTool(tool) {
+        this.activeTool = tool;
+    },
+
     getSelectedIndices() {
         const val = this.$wire.selectedLayerIndices;
         if (!val) return [];
@@ -671,8 +714,118 @@ new class extends Component {
     },
 
     onViewportMouseDown(event) {
-        if (!event.target.closest('[data-layer-box]')) {
+        // Pan Mode / Spacebar / Middle Click Panning
+        if (this.activeTool === 'pan' || this.isSpacePressed || event.button === 1) {
+            const viewport = document.getElementById('canvas-viewport-container');
+            if (viewport) {
+                this.isPanning = true;
+                this.panStartX = event.clientX;
+                this.panStartY = event.clientY;
+                this.scrollStartX = viewport.scrollLeft;
+                this.scrollStartY = viewport.scrollTop;
+            }
+            if (event.cancelable) event.preventDefault();
+            return;
+        }
+
+        // Clicked on a layer or resize handle
+        if (event.target.closest('[data-layer-box]')) {
+            return;
+        }
+
+        // Start Drag-to-Select Marquee Rectangle Box
+        const canvasEl = document.getElementById('canva-studio-canvas');
+        if (!canvasEl) return;
+        const rect = canvasEl.getBoundingClientRect();
+        const scale = (parseFloat(this.zoomLevel) || 100) / 100;
+
+        const startX = (event.clientX - rect.left) / scale;
+        const startY = (event.clientY - rect.top) / scale;
+
+        this.isSelectingBox = true;
+        this.boxStartCanvasX = startX;
+        this.boxStartCanvasY = startY;
+        this.boxRect = { left: startX, top: startY, width: 0, height: 0 };
+
+        if (!event.shiftKey) {
             this.$wire.selectLayer(null);
+        }
+    },
+
+    onViewportMouseMove(event) {
+        const viewport = document.getElementById('canvas-viewport-container');
+
+        if (this.isPanning && viewport) {
+            const dx = event.clientX - this.panStartX;
+            const dy = event.clientY - this.panStartY;
+            viewport.scrollLeft = this.scrollStartX - dx;
+            viewport.scrollTop = this.scrollStartY - dy;
+            return;
+        }
+
+        if (this.isSelectingBox) {
+            const canvasEl = document.getElementById('canva-studio-canvas');
+            if (!canvasEl) return;
+            const rect = canvasEl.getBoundingClientRect();
+            const scale = (parseFloat(this.zoomLevel) || 100) / 100;
+
+            const curX = (event.clientX - rect.left) / scale;
+            const curY = (event.clientY - rect.top) / scale;
+
+            const left = Math.min(this.boxStartCanvasX, curX);
+            const top = Math.min(this.boxStartCanvasY, curY);
+            const width = Math.abs(curX - this.boxStartCanvasX);
+            const height = Math.abs(curY - this.boxStartCanvasY);
+
+            this.boxRect = { left: Math.round(left), top: Math.round(top), width: Math.round(width), height: Math.round(height) };
+        }
+    },
+
+    onViewportMouseUp(event) {
+        if (this.isPanning) {
+            this.isPanning = false;
+        }
+
+        if (this.isSelectingBox) {
+            this.isSelectingBox = false;
+
+            if (this.boxRect.width > 4 && this.boxRect.height > 4) {
+                const boxL = this.boxRect.left;
+                const boxR = this.boxRect.left + this.boxRect.width;
+                const boxT = this.boxRect.top;
+                const boxB = this.boxRect.top + this.boxRect.height;
+
+                const intersected = [];
+                document.querySelectorAll('#canva-studio-canvas [data-layer-box]').forEach(el => {
+                    const idxStr = el.getAttribute('data-layer-index');
+                    if (idxStr !== null && idxStr !== undefined) {
+                        const idx = parseInt(idxStr);
+                        const lX = parseFloat(el.style.left) || 0;
+                        const lY = parseFloat(el.style.top) || 0;
+                        const lW = el.offsetWidth || 0;
+                        const lH = el.offsetHeight || 0;
+                        const lR = lX + lW;
+                        const lB = lY + lH;
+
+                        // Check box overlap
+                        if (lX < boxR && lR > boxL && lY < boxB && lB > boxT) {
+                            intersected.push(idx);
+                        }
+                    }
+                });
+
+                if (intersected.length > 0) {
+                    if (event.shiftKey) {
+                        const current = this.getSelectedIndices();
+                        const merged = Array.from(new Set([...current, ...intersected]));
+                        this.$wire.selectLayerBatch(merged);
+                    } else {
+                        this.$wire.selectLayerBatch(intersected);
+                    }
+                }
+            }
+
+            this.boxRect = { left: 0, top: 0, width: 0, height: 0 };
         }
     },
 
@@ -1540,6 +1693,13 @@ new class extends Component {
                 return;
             }
 
+            // Spacebar: Pan Mode
+            if (e.code === 'Space') {
+                e.preventDefault();
+                this.isSpacePressed = true;
+                return;
+            }
+
             // Ctrl + Z / Cmd + Z: Undo
             if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
                 e.preventDefault();
@@ -1622,6 +1782,10 @@ new class extends Component {
         });
 
         window.addEventListener('keyup', (e) => {
+            if (e.code === 'Space') {
+                this.isSpacePressed = false;
+            }
+
             const indices = this.getSelectedIndices();
             if (indices.length === 0) return;
 
@@ -1674,6 +1838,18 @@ new class extends Component {
 
         <!-- Studio Quick Tools Bar -->
         <div class="flex items-center space-x-3">
+            <!-- Orientation Switcher -->
+            <div class="flex items-center bg-slate-950 border border-slate-800 p-1 rounded-xl">
+                <button type="button" wire:click="setOrientation('landscape')" title="Landscape Orientation (85.6mm x 54mm)" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center {{ $orientation === 'landscape' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white' }}">
+                    <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 18h16"/></svg>
+                    Landscape
+                </button>
+                <button type="button" wire:click="setOrientation('portrait')" title="Portrait Orientation (54mm x 85.6mm)" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center {{ $orientation === 'portrait' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white' }}">
+                    <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 4v16M18 4v16"/></svg>
+                    Portrait
+                </button>
+            </div>
+
             <button type="button" wire:click="$toggle('showGrid')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center {{ $showGrid ? 'bg-indigo-600/20 border border-indigo-500/30 text-indigo-400' : 'bg-slate-800 text-slate-400' }}">
                 <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
@@ -1745,10 +1921,14 @@ new class extends Component {
             <!-- Canvas Outer Interactive Container with Zoom & Resize State -->
             <div class="w-full space-y-4">
 
-                <!-- Scrollable Canvas Viewport -->
+                <!-- Scrollable Canvas Viewport Container -->
                 <div 
+                    id="canvas-viewport-container"
                     @mousedown="onViewportMouseDown($event)"
-                    class="w-full flex items-center overflow-auto p-4 min-h-[460px] bg-slate-950/40 rounded-2xl border border-slate-800/60 shadow-inner"
+                    @mousemove="onViewportMouseMove($event)"
+                    @mouseup="onViewportMouseUp($event)"
+                    :class="(activeTool === 'pan' || isSpacePressed || isPanning) ? (isPanning ? 'cursor-grabbing' : 'cursor-grab') : ''"
+                    class="w-full flex items-center overflow-auto p-4 min-h-[460px] max-h-[700px] bg-slate-950/40 rounded-2xl border border-slate-800/60 shadow-inner select-none relative"
                 >
                     <div 
                         id="canva-studio-canvas"
@@ -1756,6 +1936,12 @@ new class extends Component {
                         :class="$wire.showGrid ? 'canvas-grid-bg' : ''"
                         :style="'width: {{ $canvasW }}px; height: {{ $canvasH }}px; transform: scale(' + ((parseFloat(zoomLevel) || 100) / 100) + '); transform-origin: center center;'"
                     >
+                        <!-- Drag-to-Select Marquee Rectangle Overlay -->
+                        <div 
+                            x-show="isSelectingBox"
+                            class="absolute border border-indigo-500 bg-indigo-500/15 rounded shadow-sm z-50 pointer-events-none transition-none"
+                            :style="'left: ' + boxRect.left + 'px; top: ' + boxRect.top + 'px; width: ' + boxRect.width + 'px; height: ' + boxRect.height + 'px;'"
+                        ></div>
                         @if($bgUrl)
                             <img src="{{ $bgUrl }}" class="absolute inset-0 w-full h-full object-fill pointer-events-none z-0 rounded-2xl" alt="Background Graphic" />
                         @endif
@@ -1893,25 +2079,53 @@ new class extends Component {
 
                 <!-- Canvas Bottom Toolbar: Zoom Controls & Presets Bar -->
                 <div class="w-full bg-slate-950/90 border border-slate-800 rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 shadow-inner">
-                    <div class="flex items-center space-x-3">
-                        <span class="text-xs font-bold text-slate-300 flex items-center">
-                            <svg class="w-4 h-4 mr-1.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"></path>
-                            </svg>
-                            Canvas Zoom:
-                        </span>
-                        <div class="flex items-center space-x-2">
-                            <button type="button" @click="zoomLevel = Math.max(30, parseInt(zoomLevel) - 10)" title="Zoom Out" class="w-7 h-7 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold flex items-center justify-center transition">
-                                &minus;
+                    <div class="flex items-center space-x-4">
+                        <!-- Mode Selector (Select vs Pan Tool) -->
+                        <div class="flex items-center bg-slate-900 border border-slate-800 p-1 rounded-xl">
+                            <button 
+                                type="button" 
+                                @click="toggleTool('select')"
+                                :class="activeTool === 'select' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'"
+                                class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center"
+                                title="Select Tool (V)"
+                            >
+                                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/></svg>
+                                Select
                             </button>
-                            <input type="range" min="30" max="200" step="5" x-model="zoomLevel" class="w-28 sm:w-40 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
-                            <button type="button" @click="zoomLevel = Math.min(200, parseInt(zoomLevel) + 10)" title="Zoom In" class="w-7 h-7 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold flex items-center justify-center transition">
-                                &#43;
+                            <button 
+                                type="button" 
+                                @click="toggleTool('pan')"
+                                :class="(activeTool === 'pan' || isSpacePressed) ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'"
+                                class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center"
+                                title="Pan Tool (Hold Spacebar)"
+                            >
+                                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0 0v-2.5m0 2.5l3.5 3.5m0 0l3.5-3.5m-3.5 3.5V6a2 2 0 012-2h0a2 2 0 012 2v6.5"/></svg>
+                                Pan
                             </button>
                         </div>
-                        <span class="text-xs font-black text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-md font-mono" x-text="zoomLevel + '%'">
-                            100%
-                        </span>
+
+                        <div class="h-4 w-[1px] bg-slate-800"></div>
+
+                        <div class="flex items-center space-x-3">
+                            <span class="text-xs font-bold text-slate-300 flex items-center">
+                                <svg class="w-4 h-4 mr-1.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"></path>
+                                </svg>
+                                Zoom:
+                            </span>
+                            <div class="flex items-center space-x-2">
+                                <button type="button" @click="zoomLevel = Math.max(30, parseInt(zoomLevel) - 10)" title="Zoom Out" class="w-7 h-7 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold flex items-center justify-center transition">
+                                    &minus;
+                                </button>
+                                <input type="range" min="30" max="200" step="5" x-model="zoomLevel" class="w-24 sm:w-32 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+                                <button type="button" @click="zoomLevel = Math.min(200, parseInt(zoomLevel) + 10)" title="Zoom In" class="w-7 h-7 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold flex items-center justify-center transition">
+                                    &#43;
+                                </button>
+                            </div>
+                            <span class="text-xs font-black text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-md font-mono" x-text="zoomLevel + '%'">
+                                100%
+                            </span>
+                        </div>
                     </div>
 
                     <!-- Quick Zoom Preset Buttons -->
@@ -2299,16 +2513,112 @@ new class extends Component {
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-400 mb-1">Font Family</label>
                                     <select wire:key="select-font-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.font_family" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
-                                        <option value="Inter">Inter</option>
-                                        <option value="Poppins">Poppins</option>
-                                        <option value="Outfit">Outfit</option>
-                                        <option value="Roboto">Roboto</option>
-                                        <option value="Montserrat">Montserrat</option>
-                                        <option value="Oswald">Oswald</option>
-                                        <option value="Playfair Display">Playfair Display</option>
-                                        <option value="Lora">Lora</option>
-                                        <option value="Cinzel">Cinzel</option>
-                                        <option value="Fira Code">Fira Code</option>
+                                        <optgroup label="Sans-Serif (Modern & Clean)">
+                                            <option value="Inter">Inter</option>
+                                            <option value="Poppins">Poppins</option>
+                                            <option value="Roboto">Roboto</option>
+                                            <option value="Outfit">Outfit</option>
+                                            <option value="Montserrat">Montserrat</option>
+                                            <option value="Lato">Lato</option>
+                                            <option value="Open Sans">Open Sans</option>
+                                            <option value="Raleway">Raleway</option>
+                                            <option value="Nunito">Nunito</option>
+                                            <option value="Work Sans">Work Sans</option>
+                                            <option value="Rubik">Rubik</option>
+                                            <option value="DM Sans">DM Sans</option>
+                                            <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
+                                            <option value="Urbanist">Urbanist</option>
+                                            <option value="Kanit">Kanit</option>
+                                            <option value="Quicksand">Quicksand</option>
+                                            <option value="Barlow">Barlow</option>
+                                            <option value="Manrope">Manrope</option>
+                                            <option value="Jost">Jost</option>
+                                            <option value="Mulish">Mulish</option>
+                                            <option value="Cabin">Cabin</option>
+                                            <option value="Noto Sans">Noto Sans</option>
+                                            <option value="Syne">Syne</option>
+                                            <option value="Space Grotesk">Space Grotesk</option>
+                                            <option value="Lexend">Lexend</option>
+                                            <option value="Figtree">Figtree</option>
+                                        </optgroup>
+                                        <optgroup label="Serif (Classic & Elegant)">
+                                            <option value="Playfair Display">Playfair Display</option>
+                                            <option value="Lora">Lora</option>
+                                            <option value="Merriweather">Merriweather</option>
+                                            <option value="Cinzel">Cinzel</option>
+                                            <option value="Cormorant Garamond">Cormorant Garamond</option>
+                                            <option value="EB Garamond">EB Garamond</option>
+                                            <option value="PT Serif">PT Serif</option>
+                                            <option value="Libre Baskerville">Libre Baskerville</option>
+                                            <option value="Bodoni Moda">Bodoni Moda</option>
+                                            <option value="Spectral">Spectral</option>
+                                            <option value="Prata">Prata</option>
+                                            <option value="Marcellus">Marcellus</option>
+                                            <option value="Noto Serif">Noto Serif</option>
+                                            <option value="Volkhov">Volkhov</option>
+                                            <option value="Bitter">Bitter</option>
+                                            <option value="Cardo">Cardo</option>
+                                            <option value="Arvo">Arvo</option>
+                                            <option value="Crimson Text">Crimson Text</option>
+                                            <option value="Domine">Domine</option>
+                                            <option value="Sorts Mill Goudy">Sorts Mill Goudy</option>
+                                        </optgroup>
+                                        <optgroup label="Script & Handwriting">
+                                            <option value="Dancing Script">Dancing Script</option>
+                                            <option value="Pacifico">Pacifico</option>
+                                            <option value="Great Vibes">Great Vibes</option>
+                                            <option value="Alex Brush">Alex Brush</option>
+                                            <option value="Sacramento">Sacramento</option>
+                                            <option value="Caveat">Caveat</option>
+                                            <option value="Satisfy">Satisfy</option>
+                                            <option value="Kalam">Kalam</option>
+                                            <option value="Yellowtail">Yellowtail</option>
+                                            <option value="Shadows Into Light">Shadows Into Light</option>
+                                            <option value="Allura">Allura</option>
+                                            <option value="Parisienne">Parisienne</option>
+                                            <option value="Cookie">Cookie</option>
+                                            <option value="Kaushan Script">Kaushan Script</option>
+                                            <option value="Marck Script">Marck Script</option>
+                                            <option value="Courgette">Courgette</option>
+                                            <option value="Tangerine">Tangerine</option>
+                                            <option value="Bad Script">Bad Script</option>
+                                            <option value="Damion">Damion</option>
+                                            <option value="Reenie Beanie">Reenie Beanie</option>
+                                        </optgroup>
+                                        <optgroup label="Display & Impact">
+                                            <option value="Oswald">Oswald</option>
+                                            <option value="Bebas Neue">Bebas Neue</option>
+                                            <option value="Anton">Anton</option>
+                                            <option value="Lobster">Lobster</option>
+                                            <option value="Abril Fatface">Abril Fatface</option>
+                                            <option value="Righteous">Righteous</option>
+                                            <option value="Play">Play</option>
+                                            <option value="Changa One">Changa One</option>
+                                            <option value="Permanent Marker">Permanent Marker</option>
+                                            <option value="Bungee">Bungee</option>
+                                            <option value="Monoton">Monoton</option>
+                                            <option value="Press Start 2P">Press Start 2P</option>
+                                            <option value="Creepster">Creepster</option>
+                                            <option value="Special Elite">Special Elite</option>
+                                            <option value="Titan One">Titan One</option>
+                                            <option value="Bangers">Bangers</option>
+                                            <option value="Shrikhand">Shrikhand</option>
+                                            <option value="Ultra">Ultra</option>
+                                            <option value="UnifrakturMaguntia">UnifrakturMaguntia</option>
+                                            <option value="Rubik Mono One">Rubik Mono One</option>
+                                        </optgroup>
+                                        <optgroup label="Monospace & Tech">
+                                            <option value="Fira Code">Fira Code</option>
+                                            <option value="JetBrains Mono">JetBrains Mono</option>
+                                            <option value="Source Code Pro">Source Code Pro</option>
+                                            <option value="Space Mono">Space Mono</option>
+                                            <option value="Inconsolata">Inconsolata</option>
+                                            <option value="Roboto Mono">Roboto Mono</option>
+                                            <option value="IBM Plex Mono">IBM Plex Mono</option>
+                                            <option value="VT323">VT323</option>
+                                            <option value="Share Tech Mono">Share Tech Mono</option>
+                                            <option value="Cousine">Cousine</option>
+                                        </optgroup>
                                     </select>
                                 </div>
                                 <div>
@@ -2455,9 +2765,7 @@ new class extends Component {
                 </div>
             </div>
         </div>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Fira+Code:wght@300..700&family=Inter:wght@100..900&family=Lora:ital,wght@0,400..700;1,400..700&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Oswald:wght@200..700&family=Outfit:wght@100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/fonts.css') }}">
     <style>
     .canvas-grid-bg {
         background-image: 

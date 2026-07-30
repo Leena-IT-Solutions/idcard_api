@@ -28,6 +28,9 @@ new class extends Component {
     public $importFile = null;
     public string $importName = '';
 
+    // Create Modal properties
+    public bool $isCreateModalOpen = false;
+
     public function mount()
     {
         $this->loadGrades();
@@ -76,7 +79,7 @@ new class extends Component {
         return redirect()->route('templates.edit', ['template' => $schoolTemplate->id, 'type' => 'school']);
     }
 
-    public function createBlankSchoolTemplate()
+    public function createBlankSchoolTemplate($orientation = 'landscape')
     {
         $activeSchoolId = session('active_school_id');
         if (!$activeSchoolId) {
@@ -84,16 +87,20 @@ new class extends Component {
             return;
         }
 
-        $defaultMaster = Template::first();
+        $isPortrait = $orientation === 'portrait';
+        $width = $isPortrait ? 54.00 : 85.60;
+        $height = $isPortrait ? 85.60 : 54.00;
+
+        $defaultMaster = Template::where('orientation', $orientation)->first() ?? Template::first();
         $defaultConfig = $defaultMaster ? $defaultMaster->layout_config : [];
 
         $schoolTemplate = SchoolTemplate::create([
             'school_id' => $activeSchoolId,
             'template_id' => $defaultMaster ? $defaultMaster->id : null,
-            'name' => 'Custom ID Card Template',
-            'orientation' => 'landscape',
-            'width_mm' => 85.60,
-            'height_mm' => 54.00,
+            'name' => 'Custom ' . ucfirst($orientation) . ' ID Card',
+            'orientation' => $orientation,
+            'width_mm' => $width,
+            'height_mm' => $height,
             'background_image' => null,
             'layout_config' => $defaultConfig,
             'is_default' => false,
@@ -297,7 +304,7 @@ new class extends Component {
                 Import JSON Template
             </button>
 
-            <button type="button" wire:click="createBlankSchoolTemplate" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-lg shadow-indigo-600/20">
+            <button type="button" wire:click="$set('isCreateModalOpen', true)" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-lg shadow-indigo-600/20">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -520,6 +527,49 @@ new class extends Component {
                         </button>
                     </div>
                 </form>
+    @endif
+
+    <!-- Create Custom Design Orientation Selection Modal -->
+    @if($isCreateModalOpen)
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-6">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                    <div>
+                        <h3 class="text-base font-extrabold text-white">Select Template Orientation</h3>
+                        <p class="text-xs text-slate-400 mt-0.5">Choose layout dimensions for your new custom ID card design</p>
+                    </div>
+                    <button type="button" wire:click="$set('isCreateModalOpen', false)" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Landscape Option -->
+                    <button type="button" wire:click="createBlankSchoolTemplate('landscape')" class="group text-left bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-5 transition relative overflow-hidden flex flex-col items-center justify-center text-center space-y-3">
+                        <div class="w-32 h-20 bg-indigo-950/40 border-2 border-indigo-500/40 group-hover:border-indigo-400 rounded-xl flex items-center justify-center transition shadow-inner">
+                            <span class="text-[10px] font-mono font-bold text-indigo-300">85.6mm × 54mm</span>
+                        </div>
+                        <div>
+                            <span class="text-sm font-extrabold text-white group-hover:text-indigo-400 transition block">Landscape (Horizontal)</span>
+                            <span class="text-[11px] text-slate-400 mt-1 block">Standard horizontal layout for student & staff cards</span>
+                        </div>
+                    </button>
+
+                    <!-- Portrait Option -->
+                    <button type="button" wire:click="createBlankSchoolTemplate('portrait')" class="group text-left bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-5 transition relative overflow-hidden flex flex-col items-center justify-center text-center space-y-3">
+                        <div class="w-20 h-32 bg-indigo-950/40 border-2 border-indigo-500/40 group-hover:border-indigo-400 rounded-xl flex items-center justify-center transition shadow-inner">
+                            <span class="text-[10px] font-mono font-bold text-indigo-300">54mm × 85.6mm</span>
+                        </div>
+                        <div>
+                            <span class="text-sm font-extrabold text-white group-hover:text-indigo-400 transition block">Portrait (Vertical)</span>
+                            <span class="text-[11px] text-slate-400 mt-1 block">Vertical orientation for lanyard clip student cards</span>
+                        </div>
+                    </button>
+                </div>
+
+                <div class="flex items-center justify-end border-t border-slate-800 pt-4">
+                    <button type="button" wire:click="$set('isCreateModalOpen', false)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition">
+                        Cancel
+                    </button>
+                </div>
             </div>
         </div>
     @endif
