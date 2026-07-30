@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
+use App\Support\PhoneNumber;
 
 #[Fillable(['name', 'email', 'mobile', 'password'])]
 #[Hidden(['password', 'remember_token'])]
@@ -21,12 +22,34 @@ class User extends Authenticatable
     protected static function booted()
     {
         static::created(function ($user) {
-            if ($user->mobile) {
-                \App\Models\Student::where('contact_number', $user->mobile)
-                    ->whereNull('user_id')
-                    ->update(['user_id' => $user->id]);
+            $user->linkUnlinkedStudents();
+        });
+    }
+
+    public function students()
+    {
+        return $this->hasMany(Student::class);
+    }
+
+    public function linkUnlinkedStudents(): int
+    {
+        $normalizedMobile = PhoneNumber::normalize($this->mobile);
+        if (!$normalizedMobile) {
+            return 0;
+        }
+
+        $linked = 0;
+
+        Student::whereNull('user_id')->chunkById(200, function ($students) use (&$linked, $normalizedMobile) {
+            foreach ($students as $student) {
+                if (PhoneNumber::normalize($student->contact_number) === $normalizedMobile) {
+                    $student->update(['user_id' => $this->id]);
+                    $linked++;
+                }
             }
         });
+
+        return $linked;
     }
 
     /**

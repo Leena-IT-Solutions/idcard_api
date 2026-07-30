@@ -130,4 +130,15 @@ class StudentController extends Controller
             'message' => 'No photo file provided.',
         ], 400);
     }
+
+    public function sync(Request $request)
+    {
+        $user = $request->user();
+        $linked = $user->linkUnlinkedStudents();
+
+        return response()->json([
+            'linked_count' => $linked,
+            'students' => $user->students()->get(),
+        ]);
+    }
 }

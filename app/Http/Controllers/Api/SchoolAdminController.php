@@ -495,6 +495,8 @@ class SchoolAdminController extends Controller
         } else {
             $student = Student::create($studentData);
         }
+
+        $student->attemptParentLink();
  
         \App\Models\CampaignStudent::updateOrCreate(
             [

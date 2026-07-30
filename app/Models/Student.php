@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 
+use App\Support\PhoneNumber;
+
 #[Fillable(['user_id', 'first_name', 'middle_name', 'last_name', 'gender', 'blood_group', 'dob', 'address', 'pincode', 'contact_number', 'photo_path'])]
 class Student extends Model
 {
@@ -28,5 +30,29 @@ class Student extends Model
             ->using(CampaignStudent::class)
             ->withPivot(['grade_id', 'division_id', 'roll_no', 'serial_number'])
             ->withTimestamps();
+    }
+
+    public function attemptParentLink(): bool
+    {
+        if ($this->user_id) {
+            return false;
+        }
+
+        $normalizedContact = PhoneNumber::normalize($this->contact_number);
+        if (!$normalizedContact) {
+            return false;
+        }
+
+        $user = User::query()
+            ->get(['id', 'mobile'])
+            ->first(fn ($u) => PhoneNumber::normalize($u->mobile) === $normalizedContact);
+
+        if (!$user) {
+            return false;
+        }
+
+        $this->update(['user_id' => $user->id]);
+
+        return true;
     }
 }

@@ -19,6 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     
     Route::post('/students/upload-photo', [StudentController::class, 'uploadPhoto']);
+    Route::post('/students/sync', [StudentController::class, 'sync']);
     Route::apiResource('students', StudentController::class);
 
     // Campaigns & Enrollments

@@ -448,6 +448,8 @@ new class extends Component
             $student = Student::create($studentData);
         }
 
+        $student->attemptParentLink();
+
         // Sync Campaign Student enrollment
         \App\Models\CampaignStudent::updateOrCreate(
             [
@@ -751,6 +753,8 @@ new class extends Component
                                 'photo_path' => $photoPath,
                             ]);
                         }
+
+                        $student->attemptParentLink();
 
                         // Create campaign enrollment
                         CampaignStudent::create([
