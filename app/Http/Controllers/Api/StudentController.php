@@ -42,6 +42,22 @@ class StudentController extends Controller
             'photo_path' => 'nullable|string',
         ]);
 
+        $existing = Student::findExisting(
+            $validated['contact_number'],
+            $validated['first_name'],
+            $validated['last_name'],
+            $validated['dob'] ?? null
+        );
+
+        // Only reuse the match if it's unowned, or already owned by this same parent.
+        // Never attach to a student that belongs to a different parent.
+        if ($existing && (is_null($existing->user_id) || $existing->user_id === auth()->id())) {
+            if (is_null($existing->user_id)) {
+                $existing->update(['user_id' => auth()->id()]);
+            }
+            return response()->json($existing, 200);
+        }
+
         $validated['user_id'] = auth()->id();
 
         $student = Student::create($validated);

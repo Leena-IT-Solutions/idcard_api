@@ -441,11 +441,23 @@ new class extends Component
             'photo_path' => $photoPath,
         ];
 
+        $matchedExisting = false;
+
         if ($this->studentId) {
             $student = Student::findOrFail($this->studentId);
             $student->update($studentData);
         } else {
-            $student = Student::create($studentData);
+            $student = Student::findExisting($this->contact_number, $this->first_name, $this->last_name, $this->dob);
+
+            if ($student) {
+                $matchedExisting = true;
+                // Matched an existing student — do not overwrite their data.
+                if ($photoPath && Storage::disk('public')->exists($photoPath)) {
+                    Storage::disk('public')->delete($photoPath);
+                }
+            } else {
+                $student = Student::create($studentData);
+            }
         }
 
         $student->attemptParentLink();
@@ -467,7 +479,13 @@ new class extends Component
         $this->isModalOpen = false;
         $this->resetForm();
 
-        session()->flash('message', $this->studentId ? 'Student updated successfully.' : 'Student created successfully.');
+        if ($this->studentId) {
+            session()->flash('message', 'Student updated successfully.');
+        } elseif ($matchedExisting) {
+            session()->flash('message', 'Matched an existing student profile — enrolled in this campaign.');
+        } else {
+            session()->flash('message', 'Student created successfully.');
+        }
     }
 
     public function confirmDelete($id)
@@ -607,6 +625,7 @@ new class extends Component
         }
 
         $insertedCount = 0;
+        $matchedCount = 0;
         $skippedCount = 0;
         $errorCount = 0;
         $errorsLog = [];
@@ -717,15 +736,13 @@ new class extends Component
                             }
                         }
 
-                        // Check if student profile matches
-                        $existingStudentQuery = Student::where('first_name', $data['first_name'])
-                            ->where('last_name', $data['last_name']);
-                        if (!empty($data['dob'])) {
-                            $existingStudentQuery->where('dob', $data['dob']);
-                        } else {
-                            $existingStudentQuery->whereNull('dob');
-                        }
-                        $existingStudent = $existingStudentQuery->first();
+                        // Check if student profile matches (mobile + name + DOB)
+                        $existingStudent = Student::findExisting(
+                            $data['contact_number'] ?? null,
+                            $data['first_name'],
+                            $data['last_name'],
+                            $data['dob'] ?? null
+                        );
 
                         if ($existingStudent) {
                             // Check if already enrolled in this campaign
@@ -737,7 +754,15 @@ new class extends Component
                                 $skippedCount++;
                                 continue;
                             }
+
+                            // Matched an existing student — don't overwrite their data;
+                            // clean up the extracted photo since it won't be attached.
+                            if ($photoPath && Storage::disk('public')->exists($photoPath)) {
+                                Storage::disk('public')->delete($photoPath);
+                            }
+
                             $student = $existingStudent;
+                            $matchedCount++;
                         } else {
                             // Create new student
                             $student = Student::create([
@@ -781,9 +806,12 @@ new class extends Component
         $this->isBulkModalOpen = false;
         $this->reset(['bulkCsvs', 'bulkZip']);
 
-        $message = "Import complete! Added {$insertedCount} student(s) successfully.";
+        $message = "Import complete! Added {$insertedCount} new student(s).";
+        if ($matchedCount > 0) {
+            $message .= " Matched and enrolled {$matchedCount} existing student(s).";
+        }
         if ($skippedCount > 0) {
-            $message .= " Skipped {$skippedCount} duplicate(s).";
+            $message .= " Skipped {$skippedCount} already-enrolled duplicate(s).";
         }
         if ($errorCount > 0) {
             $message .= " Failed {$errorCount} row(s). Check format details.";

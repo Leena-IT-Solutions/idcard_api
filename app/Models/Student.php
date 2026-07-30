@@ -55,4 +55,19 @@ class Student extends Model
 
         return true;
     }
+
+    public static function findExisting(?string $contactNumber, string $firstName, string $lastName, ?string $dob): ?self
+    {
+        $normalizedContact = PhoneNumber::normalize($contactNumber);
+        if (!$normalizedContact) {
+            return null;
+        }
+
+        return static::query()
+            ->whereRaw('LOWER(TRIM(first_name)) = ?', [mb_strtolower(trim($firstName))])
+            ->whereRaw('LOWER(TRIM(last_name)) = ?', [mb_strtolower(trim($lastName))])
+            ->when($dob, fn ($q) => $q->whereDate('dob', $dob), fn ($q) => $q->whereNull('dob'))
+            ->get()
+            ->first(fn ($s) => PhoneNumber::normalize($s->contact_number) === $normalizedContact);
+    }
 }

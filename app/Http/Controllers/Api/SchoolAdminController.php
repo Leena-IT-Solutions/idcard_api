@@ -484,6 +484,8 @@ class SchoolAdminController extends Controller
             $studentData['photo_path'] = $request->photo_path;
         }
  
+        $wasMatched = false;
+
         if ($request->student_id) {
             $student = Student::findOrFail($request->student_id);
             if ($request->photo_path && $student->photo_path && $student->photo_path !== $request->photo_path) {
@@ -493,7 +495,18 @@ class SchoolAdminController extends Controller
             }
             $student->update($studentData);
         } else {
-            $student = Student::create($studentData);
+            $student = Student::findExisting($request->contact_number, $request->first_name, $request->last_name, $request->dob);
+
+            if ($student) {
+                $wasMatched = true;
+                // Matched an existing student — do not overwrite their data.
+                // Clean up the just-uploaded photo, if any, since it won't be attached.
+                if ($request->photo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($request->photo_path)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($request->photo_path);
+                }
+            } else {
+                $student = Student::create($studentData);
+            }
         }
 
         $student->attemptParentLink();
@@ -511,11 +524,13 @@ class SchoolAdminController extends Controller
             ]
         );
  
-        return response()->json($student->load(['campaignStudents' => function($q) use ($schoolId) {
+        $student->load(['campaignStudents' => function($q) use ($schoolId) {
             $q->whereHas('campaign', function($inner) use ($schoolId) {
                 $inner->where('school_id', $schoolId);
             })->with(['grade', 'division', 'campaign']);
-        }]));
+        }]);
+
+        return response()->json($student->setAttribute('matched_existing', $wasMatched));
     }
  
     public function deleteStudent(Request $request, string $id)
