@@ -699,9 +699,27 @@ new class extends Component {
     boxStartCanvasY: 0,
     boxRect: { left: 0, top: 0, width: 0, height: 0 },
 
+    setZoom(val) {
+        const num = parseInt(val);
+        if (!isNaN(num) && num >= 25 && num <= 300) {
+            this.zoomLevel = num;
+            try {
+                localStorage.setItem('canva_studio_zoom', num.toString());
+            } catch (e) {}
+        }
+    },
+
     init() {
-        // Restore Livewire server-controlled canvas settings from browser localStorage
+        // Restore canvas settings from browser localStorage
         try {
+            const savedZoom = localStorage.getItem('canva_studio_zoom');
+            if (savedZoom !== null) {
+                const parsedZoom = parseInt(savedZoom);
+                if (!isNaN(parsedZoom) && parsedZoom >= 25 && parsedZoom <= 300) {
+                    this.zoomLevel = parsedZoom;
+                }
+            }
+
             const savedShowGrid = localStorage.getItem('canva_studio_show_grid');
             if (savedShowGrid !== null) {
                 this.$wire.showGrid = (savedShowGrid === 'true');
@@ -720,11 +738,7 @@ new class extends Component {
             console.warn('LocalStorage error reading canvas settings:', e);
         }
 
-        // Set up watchers to save settings dynamically whenever changed
-        this.$watch('zoomLevel', (val) => {
-            try { localStorage.setItem('canva_studio_zoom', val); } catch (e) {}
-        });
-
+        // Set up watchers for non-zoom state changes
         this.$watch('activeTool', (val) => {
             try { localStorage.setItem('canva_studio_tool', val); } catch (e) {}
         });
@@ -2191,11 +2205,11 @@ new class extends Component {
                                 Zoom:
                             </span>
                             <div class="flex items-center space-x-2">
-                                <button type="button" @click="zoomLevel = Math.max(30, parseInt(zoomLevel) - 10)" title="Zoom Out" class="w-7 h-7 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold flex items-center justify-center transition">
+                                <button type="button" @click="setZoom(Math.max(30, parseInt(zoomLevel) - 10))" title="Zoom Out" class="w-7 h-7 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold flex items-center justify-center transition">
                                     &minus;
                                 </button>
-                                <input type="range" min="30" max="200" step="5" x-model="zoomLevel" class="w-24 sm:w-32 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
-                                <button type="button" @click="zoomLevel = Math.min(200, parseInt(zoomLevel) + 10)" title="Zoom In" class="w-7 h-7 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold flex items-center justify-center transition">
+                                <input type="range" min="30" max="200" step="5" :value="zoomLevel" @input="setZoom($event.target.value)" class="w-24 sm:w-32 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+                                <button type="button" @click="setZoom(Math.min(200, parseInt(zoomLevel) + 10))" title="Zoom In" class="w-7 h-7 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold flex items-center justify-center transition">
                                     &#43;
                                 </button>
                             </div>
@@ -2207,11 +2221,11 @@ new class extends Component {
 
                     <!-- Quick Zoom Preset Buttons & LocalStorage Badge -->
                     <div class="flex items-center space-x-1.5">
-                        <button type="button" @click="zoomLevel = 50" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 50 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">50%</button>
-                        <button type="button" @click="zoomLevel = 75" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 75 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">75%</button>
-                        <button type="button" @click="zoomLevel = 100" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 100 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">100%</button>
-                        <button type="button" @click="zoomLevel = 125" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 125 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">125%</button>
-                        <button type="button" @click="zoomLevel = 150" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 150 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">150%</button>
+                        <button type="button" @click="setZoom(50)" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 50 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">50%</button>
+                        <button type="button" @click="setZoom(75)" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 75 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">75%</button>
+                        <button type="button" @click="setZoom(100)" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 100 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">100%</button>
+                        <button type="button" @click="setZoom(125)" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 125 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">125%</button>
+                        <button type="button" @click="setZoom(150)" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 150 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">150%</button>
 
                         <span title="Your preferred zoom, tool, grid, and snapping preferences are saved automatically in your browser" class="text-[10px] text-emerald-400 font-extrabold bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md flex items-center ml-2">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>
