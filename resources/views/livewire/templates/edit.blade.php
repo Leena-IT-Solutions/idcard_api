@@ -2761,6 +2761,10 @@ new class extends Component {
                                     <label class="block text-[11px] font-bold text-slate-400 mb-1">Rotation Angle (°)</label>
                                     <input type="number" wire:key="input-rot-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.rotation" min="0" max="360" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
                                 </div>
+                            </div>
+                        </div>
+                    @endif
+
                     <!-- Photo Specific Shape & Frame Formatting Controls -->
                     @if(($selectedLayer['type'] ?? '') === 'photo')
                         <div class="space-y-3 pt-2">
