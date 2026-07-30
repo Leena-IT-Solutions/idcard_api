@@ -682,6 +682,62 @@ new class extends Component {
     boxStartCanvasY: 0,
     boxRect: { left: 0, top: 0, width: 0, height: 0 },
 
+    init() {
+        // Restore canvas settings from browser localStorage
+        try {
+            const savedZoom = localStorage.getItem('canva_studio_zoom');
+            if (savedZoom !== null) {
+                const parsedZoom = parseInt(savedZoom);
+                if (parsedZoom >= 25 && parsedZoom <= 300) {
+                    this.zoomLevel = parsedZoom;
+                }
+            }
+
+            const savedTool = localStorage.getItem('canva_studio_tool');
+            if (savedTool === 'select' || savedTool === 'pan') {
+                this.activeTool = savedTool;
+            }
+
+            const savedShowGrid = localStorage.getItem('canva_studio_show_grid');
+            if (savedShowGrid !== null) {
+                this.$wire.showGrid = (savedShowGrid === 'true');
+            }
+
+            const savedSnapping = localStorage.getItem('canva_studio_enable_snapping');
+            if (savedSnapping !== null) {
+                this.$wire.enableSnapping = (savedSnapping === 'true');
+            }
+
+            const savedPreviewMode = localStorage.getItem('canva_studio_preview_mode');
+            if (savedPreviewMode !== null) {
+                this.$wire.livePreviewMode = (savedPreviewMode === 'true');
+            }
+        } catch (e) {
+            console.warn('LocalStorage error reading canvas settings:', e);
+        }
+
+        // Set up watchers to save settings dynamically whenever changed
+        this.$watch('zoomLevel', (val) => {
+            try { localStorage.setItem('canva_studio_zoom', val); } catch (e) {}
+        });
+
+        this.$watch('activeTool', (val) => {
+            try { localStorage.setItem('canva_studio_tool', val); } catch (e) {}
+        });
+
+        this.$watch('$wire.showGrid', (val) => {
+            try { localStorage.setItem('canva_studio_show_grid', val); } catch (e) {}
+        });
+
+        this.$watch('$wire.enableSnapping', (val) => {
+            try { localStorage.setItem('canva_studio_enable_snapping', val); } catch (e) {}
+        });
+
+        this.$watch('$wire.livePreviewMode', (val) => {
+            try { localStorage.setItem('canva_studio_preview_mode', val); } catch (e) {}
+        });
+    },
+
     toggleTool(tool) {
         this.activeTool = tool;
     },
@@ -2145,13 +2201,18 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <!-- Quick Zoom Preset Buttons -->
+                    <!-- Quick Zoom Preset Buttons & LocalStorage Badge -->
                     <div class="flex items-center space-x-1.5">
                         <button type="button" @click="zoomLevel = 50" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 50 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">50%</button>
                         <button type="button" @click="zoomLevel = 75" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 75 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">75%</button>
                         <button type="button" @click="zoomLevel = 100" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 100 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">100%</button>
                         <button type="button" @click="zoomLevel = 125" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 125 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">125%</button>
                         <button type="button" @click="zoomLevel = 150" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 150 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">150%</button>
+
+                        <span title="Your preferred zoom, tool, grid, and snapping preferences are saved automatically in your browser" class="text-[10px] text-emerald-400 font-extrabold bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md flex items-center ml-2">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>
+                            Saved in Browser ⚡
+                        </span>
                     </div>
                 </div>
             </div>
