@@ -28,9 +28,11 @@ new class extends Component {
     public bool $isImportModalOpen = false;
     public $importFile = null;
     public string $importName = '';
+    public bool $importAsMaster = false;
 
     // Create Modal properties
     public bool $isCreateModalOpen = false;
+    public string $createTarget = 'school'; // 'school' or 'master'
 
     public function mount()
     {
@@ -78,6 +80,66 @@ new class extends Component {
         ]);
 
         return redirect()->route('templates.edit', ['template' => $schoolTemplate->id, 'type' => 'school']);
+    }
+
+    public function createBlankMasterTemplate($orientation = 'landscape')
+    {
+        if (!auth()->user()->hasRole('saas_admin')) {
+            $this->addError('general', 'Only SaaS Admin can create System Master Templates.');
+            return;
+        }
+
+        $isPortrait = $orientation === 'portrait';
+        $width = $isPortrait ? 54.00 : 85.60;
+        $height = $isPortrait ? 85.60 : 54.00;
+
+        $defaultMaster = Template::where('orientation', $orientation)->first() ?? Template::first();
+        $defaultConfig = $defaultMaster ? $defaultMaster->layout_config : [
+            [
+                'id' => 'student_name',
+                'type' => 'text',
+                'label' => 'Student Name',
+                'text' => '{First Name} {Middle Name} {Last Name}',
+                'x' => 130,
+                'y' => 82,
+                'font_size' => 16,
+                'font_weight' => 'bold',
+                'font_family' => 'Inter',
+                'color' => '#ffffff',
+                'align' => 'left',
+                'rotation' => 0,
+            ]
+        ];
+
+        $name = 'System Master ' . ucfirst($orientation) . ' Preset ' . rand(100, 999);
+        $id = \Illuminate\Support\Str::slug($name) . '-' . \Illuminate\Support\Str::random(6);
+
+        $master = Template::create([
+            'id' => $id,
+            'name' => $name,
+            'orientation' => $orientation,
+            'width_mm' => $width,
+            'height_mm' => $height,
+            'background_image' => null,
+            'layout_config' => $defaultConfig,
+            'is_active' => true,
+        ]);
+
+        return redirect()->route('templates.edit', ['template' => $master->id, 'type' => 'master']);
+    }
+
+    public function deleteMasterTemplate($templateId)
+    {
+        if (!auth()->user()->hasRole('saas_admin')) {
+            $this->addError('general', 'Only SaaS Admin can delete System Master Templates.');
+            return;
+        }
+
+        $tpl = Template::find($templateId);
+        if ($tpl) {
+            $tpl->delete();
+            session()->flash('message', 'System Master Template deleted successfully!');
+        }
     }
 
     public function createBlankSchoolTemplate($orientation = 'landscape')
@@ -227,12 +289,6 @@ new class extends Component {
             'importFile' => 'required|file|mimes:json,txt',
         ]);
 
-        $activeSchoolId = session('active_school_id');
-        if (!$activeSchoolId) {
-            $this->addError('general', 'No active school selected.');
-            return;
-        }
-
         $jsonContent = file_get_contents($this->importFile->getRealPath());
         $parsed = json_decode($jsonContent, true);
 
@@ -245,6 +301,33 @@ new class extends Component {
         $width = $parsed['width_mm'] ?? ($orientation === 'portrait' ? 54.00 : 85.60);
         $height = $parsed['height_mm'] ?? ($orientation === 'portrait' ? 85.60 : 54.00);
         $layoutConfig = $parsed['layout_config'] ?? [];
+
+        if ($this->importAsMaster && auth()->user()->hasRole('saas_admin')) {
+            $id = \Illuminate\Support\Str::slug($this->importName) . '-' . \Illuminate\Support\Str::random(6);
+            $master = Template::create([
+                'id' => $id,
+                'name' => $this->importName,
+                'orientation' => $orientation,
+                'width_mm' => $width,
+                'height_mm' => $height,
+                'layout_config' => $layoutConfig,
+                'is_active' => true,
+            ]);
+
+            $this->isImportModalOpen = false;
+            $this->importFile = null;
+            $this->importName = '';
+            $this->importAsMaster = false;
+
+            session()->flash('message', 'System Master Template imported successfully!');
+            return redirect()->route('templates.edit', ['template' => $master->id, 'type' => 'master']);
+        }
+
+        $activeSchoolId = session('active_school_id');
+        if (!$activeSchoolId) {
+            $this->addError('general', 'No active school selected.');
+            return;
+        }
 
         $schoolTemplate = SchoolTemplate::create([
             'school_id' => $activeSchoolId,
@@ -259,6 +342,7 @@ new class extends Component {
         $this->isImportModalOpen = false;
         $this->importFile = null;
         $this->importName = '';
+        $this->importAsMaster = false;
 
         session()->flash('message', 'Template imported successfully!');
         return redirect()->route('templates.edit', ['template' => $schoolTemplate->id, 'type' => 'school']);
@@ -524,12 +608,30 @@ new class extends Component {
 
                     <!-- Actions (Stays pinned to bottom) -->
                     <div class="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800/80 shrink-0">
+                        @if(auth()->user()->hasRole('saas_admin'))
+                            <div class="grid grid-cols-2 gap-2 pb-1">
+                                <a href="{{ route('templates.edit', ['template' => $tpl->id, 'type' => 'master']) }}" class="py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black transition flex items-center justify-center shadow-md shadow-purple-600/20">
+                                    <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                    Edit Master
+                                </a>
+
+                                <button type="button" wire:click="deleteMasterTemplate('{{ $tpl->id }}')" wire:confirm="Are you sure you want to delete this System Master Template?" class="py-2.5 bg-rose-500/10 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 dark:border-rose-800/60 rounded-xl text-xs font-bold transition flex items-center justify-center">
+                                    <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                    Delete
+                                </button>
+                            </div>
+                        @endif
+
                         <div class="grid grid-cols-2 gap-2">
                             <button type="button" wire:click="customizeMasterTemplate('{{ $tpl->id }}')" class="py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition flex items-center justify-center shadow-md shadow-indigo-600/20">
                                 <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                                 </svg>
-                                Customize
+                                Copy to School
                             </button>
 
                             <button type="button" wire:click="openAssignModal('{{ $tpl->id }}', false)" class="py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700/60 rounded-xl text-xs font-extrabold transition flex items-center justify-center">
@@ -695,6 +797,15 @@ new class extends Component {
                         @error('importFile') <span class="text-xs text-red-500 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
+                    @if(auth()->user()->hasRole('saas_admin'))
+                        <div class="flex items-center space-x-2.5 bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 p-3 rounded-xl">
+                            <input type="checkbox" id="importAsMaster" wire:model="importAsMaster" class="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 border-slate-300 dark:bg-slate-900 dark:border-slate-700">
+                            <label for="importAsMaster" class="text-xs font-bold text-purple-900 dark:text-purple-300 cursor-pointer select-none">
+                                Import as System Master Template (Global)
+                            </label>
+                        </div>
+                    @endif
+
                     <div class="flex items-center justify-end space-x-3 pt-2">
                         <button type="button" wire:click="$set('isImportModalOpen', false)" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition">
                             Cancel
@@ -714,15 +825,29 @@ new class extends Component {
             <div class="bg-white border border-slate-200 text-slate-900 shadow-2xl dark:bg-slate-900 dark:border-slate-800 dark:text-white rounded-3xl max-w-xl w-full p-6 space-y-6">
                 <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
                     <div>
-                        <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Select Template Orientation</h3>
-                        <p class="text-xs text-slate-600 dark:text-slate-400 mt-0.5">Choose layout dimensions for your new custom ID card design</p>
+                        <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Create New ID Template</h3>
+                        <p class="text-xs text-slate-600 dark:text-slate-400 mt-0.5">Select target type and orientation layout for your new design</p>
                     </div>
                     <button type="button" wire:click="$set('isCreateModalOpen', false)" class="text-slate-400 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-xl font-bold">&times;</button>
                 </div>
 
+                @if(auth()->user()->hasRole('saas_admin'))
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-extrabold text-slate-700 dark:text-slate-300">Destination Template Type</label>
+                        <div class="grid grid-cols-2 gap-2 bg-slate-100 dark:bg-slate-950 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+                            <button type="button" wire:click="$set('createTarget', 'school')" class="py-2 text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1.5 {{ $createTarget === 'school' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white' }}">
+                                <span>School Template</span>
+                            </button>
+                            <button type="button" wire:click="$set('createTarget', 'master')" class="py-2 text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1.5 {{ $createTarget === 'master' ? 'bg-purple-600 text-white shadow-md font-black' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white' }}">
+                                <span>⚡ System Master Preset (Global)</span>
+                            </button>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Landscape Option -->
-                    <button type="button" wire:click="createBlankSchoolTemplate('landscape')" class="group text-left bg-slate-50 hover:bg-indigo-50/50 border border-slate-200 hover:border-indigo-500/50 dark:bg-slate-950 dark:hover:bg-slate-900 dark:border-slate-800 dark:hover:border-indigo-500/50 rounded-2xl p-5 transition relative overflow-hidden flex flex-col items-center justify-center text-center space-y-3">
+                    <button type="button" wire:click="{{ (auth()->user()->hasRole('saas_admin') && $createTarget === 'master') ? "createBlankMasterTemplate('landscape')" : "createBlankSchoolTemplate('landscape')" }}" class="group text-left bg-slate-50 hover:bg-indigo-50/50 border border-slate-200 hover:border-indigo-500/50 dark:bg-slate-950 dark:hover:bg-slate-900 dark:border-slate-800 dark:hover:border-indigo-500/50 rounded-2xl p-5 transition relative overflow-hidden flex flex-col items-center justify-center text-center space-y-3">
                         <div class="w-32 h-20 bg-indigo-50 border-2 border-indigo-300 dark:bg-indigo-950/40 dark:border-indigo-500/40 group-hover:border-indigo-500 rounded-xl flex items-center justify-center transition shadow-inner">
                             <span class="text-[10px] font-mono font-bold text-indigo-700 dark:text-indigo-300">85.6mm × 54mm</span>
                         </div>
@@ -733,7 +858,7 @@ new class extends Component {
                     </button>
 
                     <!-- Portrait Option -->
-                    <button type="button" wire:click="createBlankSchoolTemplate('portrait')" class="group text-left bg-slate-50 hover:bg-indigo-50/50 border border-slate-200 hover:border-indigo-500/50 dark:bg-slate-950 dark:hover:bg-slate-900 dark:border-slate-800 dark:hover:border-indigo-500/50 rounded-2xl p-5 transition relative overflow-hidden flex flex-col items-center justify-center text-center space-y-3">
+                    <button type="button" wire:click="{{ (auth()->user()->hasRole('saas_admin') && $createTarget === 'master') ? "createBlankMasterTemplate('portrait')" : "createBlankSchoolTemplate('portrait')" }}" class="group text-left bg-slate-50 hover:bg-indigo-50/50 border border-slate-200 hover:border-indigo-500/50 dark:bg-slate-950 dark:hover:bg-slate-900 dark:border-slate-800 dark:hover:border-indigo-500/50 rounded-2xl p-5 transition relative overflow-hidden flex flex-col items-center justify-center text-center space-y-3">
                         <div class="w-20 h-32 bg-indigo-50 border-2 border-indigo-300 dark:bg-indigo-950/40 dark:border-indigo-500/40 group-hover:border-indigo-500 rounded-xl flex items-center justify-center transition shadow-inner">
                             <span class="text-[10px] font-mono font-bold text-indigo-700 dark:text-indigo-300">54mm × 85.6mm</span>
                         </div>
