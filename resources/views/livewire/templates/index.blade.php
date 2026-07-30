@@ -322,37 +322,37 @@ new class extends Component {
 
 <div class="space-y-8">
     @if(session()->has('message'))
-        <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-2xl flex items-center justify-between text-sm font-semibold shadow-lg backdrop-blur-md">
+        <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 p-4 rounded-2xl flex items-center justify-between text-sm font-semibold shadow-lg backdrop-blur-md">
             <div class="flex items-center space-x-2">
-                <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 <span>{{ session('message') }}</span>
             </div>
-            <button type="button" onclick="this.parentElement.remove()" class="text-emerald-400 hover:text-white transition">&times;</button>
+            <button type="button" onclick="this.parentElement.remove()" class="text-emerald-600 dark:text-emerald-400 hover:text-gray-900 dark:hover:text-white transition">&times;</button>
         </div>
     @endif
 
     <!-- Header & Action Bar -->
-    <div class="bg-gradient-to-r from-slate-900 via-slate-900/90 to-indigo-950/40 border border-slate-800 rounded-3xl p-6 md:p-8 flex flex-wrap items-center justify-between gap-6 shadow-2xl relative overflow-hidden backdrop-blur-xl">
+    <div class="bg-white dark:bg-gradient-to-r dark:from-slate-900 dark:via-slate-900/90 dark:to-indigo-950/40 border border-gray-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 flex flex-wrap items-center justify-between gap-6 shadow-xl relative overflow-hidden backdrop-blur-xl">
         <div class="absolute -right-16 -top-16 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
         <div class="relative z-10 space-y-2">
             <div class="flex items-center space-x-3">
-                <h1 class="text-2xl font-black text-white tracking-tight">ID Card Template Studio</h1>
-                <span class="text-xs font-black text-indigo-300 bg-indigo-500/20 border border-indigo-500/30 px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                <h1 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight">ID Card Template Studio</h1>
+                <span class="text-xs font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/20 border border-indigo-200 dark:border-indigo-500/30 px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
                     Canva Studio ⚡
                 </span>
             </div>
-            <p class="text-xs md:text-sm text-slate-400 max-w-xl">Design pixel-perfect ID card templates for your school, customize preset layouts, or import custom JSON configurations.</p>
+            <p class="text-xs md:text-sm text-gray-600 dark:text-slate-400 max-w-xl">Design pixel-perfect ID card templates for your school, customize preset layouts, or import custom JSON configurations.</p>
         </div>
 
         <div class="relative z-10 flex items-center space-x-3">
-            <button type="button" wire:click="$set('isImportModalOpen', true)" class="px-4 py-3 bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700/60 rounded-2xl text-xs font-extrabold transition-all duration-200 flex items-center shadow-lg hover:shadow-indigo-500/10">
-                <svg class="w-4 h-4 mr-2 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button type="button" wire:click="$set('isImportModalOpen', true)" class="px-4 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-gray-800 dark:text-slate-200 border border-gray-200 dark:border-slate-700/60 rounded-2xl text-xs font-extrabold transition-all duration-200 flex items-center shadow-sm">
+                <svg class="w-4 h-4 mr-2 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                 </svg>
                 Import JSON Template
             </button>
 
-            <button type="button" wire:click="$set('isCreateModalOpen', true)" class="px-5 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-2xl text-xs font-black transition-all duration-200 flex items-center shadow-lg shadow-indigo-600/30 hover:scale-105 active:scale-95">
+            <button type="button" wire:click="$set('isCreateModalOpen', true)" class="px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xs font-black transition-all duration-200 flex items-center shadow-lg shadow-indigo-600/30 hover:scale-105 active:scale-95">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -362,22 +362,22 @@ new class extends Component {
     </div>
 
     <!-- Filter & Search Toolbar -->
-    <div class="flex flex-wrap items-center justify-between gap-4 bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 backdrop-blur-md">
+    <div class="flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-slate-900/60 border border-gray-200 dark:border-slate-800/80 rounded-2xl p-4 shadow-sm backdrop-blur-md">
         <div class="flex items-center space-x-2 overflow-x-auto pb-1 md:pb-0">
-            <button type="button" wire:click="$set('selectedCategory', 'all')" class="px-4 py-2 rounded-xl text-xs font-bold transition {{ $selectedCategory === 'all' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'bg-slate-950/60 text-slate-400 hover:text-white hover:bg-slate-800' }}">
+            <button type="button" wire:click="$set('selectedCategory', 'all')" class="px-4 py-2 rounded-xl text-xs font-bold transition {{ $selectedCategory === 'all' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'bg-gray-100 dark:bg-slate-950/60 text-gray-700 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-slate-800' }}">
                 All Templates
             </button>
-            <button type="button" wire:click="$set('selectedCategory', 'landscape')" class="px-4 py-2 rounded-xl text-xs font-bold transition {{ $selectedCategory === 'landscape' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'bg-slate-950/60 text-slate-400 hover:text-white hover:bg-slate-800' }}">
+            <button type="button" wire:click="$set('selectedCategory', 'landscape')" class="px-4 py-2 rounded-xl text-xs font-bold transition {{ $selectedCategory === 'landscape' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'bg-gray-100 dark:bg-slate-950/60 text-gray-700 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-slate-800' }}">
                 Landscape 📐
             </button>
-            <button type="button" wire:click="$set('selectedCategory', 'portrait')" class="px-4 py-2 rounded-xl text-xs font-bold transition {{ $selectedCategory === 'portrait' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'bg-slate-950/60 text-slate-400 hover:text-white hover:bg-slate-800' }}">
+            <button type="button" wire:click="$set('selectedCategory', 'portrait')" class="px-4 py-2 rounded-xl text-xs font-bold transition {{ $selectedCategory === 'portrait' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'bg-gray-100 dark:bg-slate-950/60 text-gray-700 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-slate-800' }}">
                 Portrait 📱
             </button>
         </div>
 
         <div class="relative min-w-[240px]">
-            <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search templates by name..." class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
-            <svg class="w-4 h-4 text-slate-500 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search templates by name..." class="w-full bg-gray-50 dark:bg-slate-950 border border-gray-200 dark:border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs font-bold text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition">
+            <svg class="w-4 h-4 text-gray-400 dark:text-slate-500 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
         </div>
     </div>
 
@@ -385,11 +385,11 @@ new class extends Component {
     @if($schoolTemplates->isNotEmpty())
         <div class="space-y-4">
             <div class="flex items-center justify-between">
-                <h2 class="text-base font-black text-white flex items-center space-x-2">
+                <h2 class="text-base font-black text-gray-900 dark:text-white flex items-center space-x-2">
                     <span class="w-3 h-3 rounded-full bg-amber-400 shadow-sm shadow-amber-400/50"></span>
                     <span>Your School Custom Templates</span>
                 </h2>
-                <span class="text-xs text-slate-400 font-bold bg-slate-900 border border-slate-800 px-3 py-1 rounded-full">{{ $schoolTemplates->count() }} Custom Template(s)</span>
+                <span class="text-xs text-gray-600 dark:text-slate-400 font-bold bg-gray-100 dark:bg-slate-900 border border-gray-200 dark:border-slate-800 px-3 py-1 rounded-full">{{ $schoolTemplates->count() }} Custom Template(s)</span>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -399,36 +399,36 @@ new class extends Component {
                         $isDefault = ($activeSchool && $activeSchool->template_id == $st->id) || $st->is_default;
                         $scale = $isPortrait ? 0.25 : 0.31;
                     @endphp
-                    <div class="bg-slate-900/90 border border-slate-800 hover:border-indigo-500/50 rounded-3xl p-5 shadow-xl hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden">
+                    <div class="bg-white dark:bg-slate-900/90 border border-gray-200 dark:border-slate-800 hover:border-indigo-500/50 dark:hover:border-indigo-500/50 rounded-3xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col justify-between group relative overflow-hidden">
                         <div>
                             <!-- Header Info -->
                             <div class="flex items-start justify-between mb-4">
                                 <div class="space-y-1">
-                                    <h3 class="text-sm font-black text-white group-hover:text-indigo-400 transition leading-snug">{{ $st->name }}</h3>
+                                    <h3 class="text-sm font-black text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition leading-snug">{{ $st->name }}</h3>
                                     <div class="flex items-center space-x-2">
-                                        <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800">
+                                        <span class="text-[10px] text-gray-600 dark:text-slate-400 font-extrabold uppercase tracking-wider bg-gray-100 dark:bg-slate-950 px-2 py-0.5 rounded-md border border-gray-200 dark:border-slate-800">
                                             {{ $st->orientation }} • {{ $st->width_mm }}×{{ $st->height_mm }}mm
                                         </span>
                                     </div>
                                 </div>
                                 @if($isDefault)
-                                    <span class="text-[10px] font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider shrink-0 shadow-sm">
+                                    <span class="text-[10px] font-black text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider shrink-0 shadow-sm">
                                         Default ⚡
                                     </span>
                                 @endif
                             </div>
 
                             <!-- Canvas Stage & Card Thumbnail -->
-                            <div class="relative w-full bg-slate-950/80 rounded-2xl p-4 mb-4 flex items-center justify-center border border-slate-800/80 min-h-[220px] overflow-hidden group-hover:border-indigo-500/40 transition-all duration-300 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:16px_16px]">
+                            <div class="relative w-full bg-gray-100 dark:bg-slate-950/80 rounded-2xl p-4 mb-4 flex items-center justify-center border border-gray-200 dark:border-slate-800/80 min-h-[220px] overflow-hidden group-hover:border-indigo-500/40 transition-all duration-300 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] dark:bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:16px_16px]">
                                 <x-id-card-renderer :template="$st" :student="$mockStudent" :school="$activeSchool" :scale="$scale" />
 
                                 <!-- Hover Quick Overlay -->
-                                <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center space-y-2.5 p-4 z-10">
-                                    <a href="{{ route('templates.edit', ['template' => $st->id, 'type' => 'school']) }}" class="w-36 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-black transition flex items-center justify-center shadow-lg shadow-indigo-600/30">
+                                <div class="absolute inset-0 bg-gray-900/80 dark:bg-slate-950/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center space-y-2.5 p-4 z-10">
+                                    <a href="{{ route('templates.edit', ['template' => $st->id, 'type' => 'school']) }}" class="w-36 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition flex items-center justify-center shadow-lg shadow-indigo-600/30">
                                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                         Edit Studio
                                     </a>
-                                    <button type="button" wire:click="openPreviewModal({{ $st->id }}, true)" class="w-36 py-2 bg-slate-800/90 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition flex items-center justify-center border border-slate-700/60">
+                                    <button type="button" wire:click="openPreviewModal({{ $st->id }}, true)" class="w-36 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition flex items-center justify-center border border-slate-700">
                                         <svg class="w-3.5 h-3.5 mr-1.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                         Full Preview
                                     </button>
@@ -437,17 +437,17 @@ new class extends Component {
                         </div>
 
                         <!-- Card Action Buttons -->
-                        <div class="space-y-2 pt-3 border-t border-slate-800/80">
+                        <div class="space-y-2 pt-3 border-t border-gray-100 dark:border-slate-800/80">
                             <div class="grid grid-cols-2 gap-2">
-                                <a href="{{ route('templates.edit', ['template' => $st->id, 'type' => 'school']) }}" class="py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-black transition flex items-center justify-center shadow-md shadow-indigo-600/20">
+                                <a href="{{ route('templates.edit', ['template' => $st->id, 'type' => 'school']) }}" class="py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition flex items-center justify-center shadow-md shadow-indigo-600/20">
                                     <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
                                     Edit Studio
                                 </a>
 
-                                <button type="button" wire:click="openAssignModal({{ $st->id }}, true)" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-extrabold transition flex items-center justify-center border border-slate-700/60">
-                                    <svg class="w-3.5 h-3.5 mr-1.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <button type="button" wire:click="openAssignModal({{ $st->id }}, true)" class="py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-800 dark:text-slate-200 rounded-xl text-xs font-extrabold transition flex items-center justify-center border border-gray-200 dark:border-slate-700/60">
+                                    <svg class="w-3.5 h-3.5 mr-1.5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
                                     </svg>
                                     Assign Grade
@@ -455,14 +455,14 @@ new class extends Component {
                             </div>
 
                             <div class="flex items-center justify-between space-x-2 pt-1">
-                                <button type="button" wire:click="exportJson({{ $st->id }}, true)" class="flex-1 py-1.5 bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl text-[11px] font-semibold transition flex items-center justify-center border border-slate-800">
-                                    <svg class="w-3.5 h-3.5 mr-1 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <button type="button" wire:click="exportJson({{ $st->id }}, true)" class="flex-1 py-1.5 bg-gray-50 hover:bg-gray-100 dark:bg-slate-950 dark:hover:bg-slate-800 text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white rounded-xl text-[11px] font-semibold transition flex items-center justify-center border border-gray-200 dark:border-slate-800">
+                                    <svg class="w-3.5 h-3.5 mr-1 text-gray-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                                     </svg>
                                     Export JSON
                                 </button>
 
-                                <button type="button" wire:click="deleteSchoolTemplate({{ $st->id }})" wire:confirm="Are you sure you want to delete this template?" class="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl text-[11px] font-bold transition flex items-center border border-red-500/20" title="Delete Template">
+                                <button type="button" wire:click="deleteSchoolTemplate({{ $st->id }})" wire:confirm="Are you sure you want to delete this template?" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-xl text-[11px] font-bold transition flex items-center border border-red-200 dark:border-red-500/20" title="Delete Template">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                 </button>
                             </div>
@@ -476,11 +476,11 @@ new class extends Component {
     <!-- System Master Presets Section -->
     <div class="space-y-4">
         <div class="flex items-center justify-between">
-            <h2 class="text-base font-black text-white flex items-center space-x-2">
+            <h2 class="text-base font-black text-gray-900 dark:text-white flex items-center space-x-2">
                 <span class="w-3 h-3 rounded-full bg-indigo-500 shadow-sm shadow-indigo-500/50"></span>
                 <span>System Master ID Presets</span>
             </h2>
-            <span class="text-xs text-slate-400 font-bold bg-slate-900 border border-slate-800 px-3 py-1 rounded-full">Standard Presets</span>
+            <span class="text-xs text-gray-600 dark:text-slate-400 font-bold bg-gray-100 dark:bg-slate-900 border border-gray-200 dark:border-slate-800 px-3 py-1 rounded-full">Standard Presets</span>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -489,32 +489,32 @@ new class extends Component {
                     $isPortrait = $tpl->orientation === 'portrait';
                     $scale = $isPortrait ? 0.25 : 0.31;
                 @endphp
-                <div class="bg-slate-900/90 border border-slate-800 hover:border-indigo-500/50 rounded-3xl p-5 shadow-xl hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden">
+                <div class="bg-white dark:bg-slate-900/90 border border-gray-200 dark:border-slate-800 hover:border-indigo-500/50 dark:hover:border-indigo-500/50 rounded-3xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col justify-between group relative overflow-hidden">
                     <div>
                         <!-- Header Info -->
                         <div class="flex items-start justify-between mb-4">
                             <div class="space-y-1">
-                                <h3 class="text-sm font-black text-white group-hover:text-indigo-400 transition leading-snug">{{ $tpl->name }}</h3>
-                                <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800">
+                                <h3 class="text-sm font-black text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition leading-snug">{{ $tpl->name }}</h3>
+                                <span class="text-[10px] text-gray-600 dark:text-slate-400 font-extrabold uppercase tracking-wider bg-gray-100 dark:bg-slate-950 px-2 py-0.5 rounded-md border border-gray-200 dark:border-slate-800">
                                     {{ $tpl->orientation }} • {{ $tpl->width_mm }}×{{ $tpl->height_mm }}mm
                                 </span>
                             </div>
-                            <span class="text-[10px] font-black text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider shrink-0 shadow-sm">
+                            <span class="text-[10px] font-black text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider shrink-0 shadow-sm">
                                 Master
                             </span>
                         </div>
 
                         <!-- Canvas Stage & Card Thumbnail -->
-                        <div class="relative w-full bg-slate-950/80 rounded-2xl p-4 mb-4 flex items-center justify-center border border-slate-800/80 min-h-[220px] overflow-hidden group-hover:border-indigo-500/40 transition-all duration-300 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:16px_16px]">
+                        <div class="relative w-full bg-gray-100 dark:bg-slate-950/80 rounded-2xl p-4 mb-4 flex items-center justify-center border border-gray-200 dark:border-slate-800/80 min-h-[220px] overflow-hidden group-hover:border-indigo-500/40 transition-all duration-300 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] dark:bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:16px_16px]">
                             <x-id-card-renderer :template="$tpl" :student="$mockStudent" :school="$activeSchool" :scale="$scale" />
 
                             <!-- Hover Quick Overlay -->
-                            <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center space-y-2.5 p-4 z-10">
-                                <button type="button" wire:click="customizeMasterTemplate('{{ $tpl->id }}')" class="w-36 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-black transition flex items-center justify-center shadow-lg shadow-indigo-600/30">
+                            <div class="absolute inset-0 bg-gray-900/80 dark:bg-slate-950/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center space-y-2.5 p-4 z-10">
+                                <button type="button" wire:click="customizeMasterTemplate('{{ $tpl->id }}')" class="w-36 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition flex items-center justify-center shadow-lg shadow-indigo-600/30">
                                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                     Customize
                                 </button>
-                                <button type="button" wire:click="openPreviewModal('{{ $tpl->id }}', false)" class="w-36 py-2 bg-slate-800/90 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition flex items-center justify-center border border-slate-700/60">
+                                <button type="button" wire:click="openPreviewModal('{{ $tpl->id }}', false)" class="w-36 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition flex items-center justify-center border border-slate-700">
                                     <svg class="w-3.5 h-3.5 mr-1.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                     Full Preview
                                 </button>
@@ -523,25 +523,25 @@ new class extends Component {
                     </div>
 
                     <!-- Actions -->
-                    <div class="space-y-2 pt-3 border-t border-slate-800/80">
+                    <div class="space-y-2 pt-3 border-t border-gray-100 dark:border-slate-800/80">
                         <div class="grid grid-cols-2 gap-2">
-                            <button type="button" wire:click="customizeMasterTemplate('{{ $tpl->id }}')" class="py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-black transition flex items-center justify-center shadow-md shadow-indigo-600/20">
+                            <button type="button" wire:click="customizeMasterTemplate('{{ $tpl->id }}')" class="py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition flex items-center justify-center shadow-md shadow-indigo-600/20">
                                 <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
                                 Customize
                             </button>
 
-                            <button type="button" wire:click="openAssignModal('{{ $tpl->id }}', false)" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-extrabold transition flex items-center justify-center border border-slate-700/60">
-                                <svg class="w-3.5 h-3.5 mr-1.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <button type="button" wire:click="openAssignModal('{{ $tpl->id }}', false)" class="py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-800 dark:text-slate-200 rounded-xl text-xs font-extrabold transition flex items-center justify-center border border-gray-200 dark:border-slate-700/60">
+                                <svg class="w-3.5 h-3.5 mr-1.5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
                                 </svg>
                                 Assign Grade
                             </button>
                         </div>
 
-                        <button type="button" wire:click="exportJson('{{ $tpl->id }}', false)" class="w-full text-center py-1.5 bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl text-[11px] font-semibold transition flex items-center justify-center border border-slate-800">
-                            <svg class="w-3.5 h-3.5 mr-1 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <button type="button" wire:click="exportJson('{{ $tpl->id }}', false)" class="w-full text-center py-1.5 bg-gray-50 hover:bg-gray-100 dark:bg-slate-950 dark:hover:bg-slate-800 text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white rounded-xl text-[11px] font-semibold transition flex items-center justify-center border border-gray-200 dark:border-slate-800">
+                            <svg class="w-3.5 h-3.5 mr-1 text-gray-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                             </svg>
                             Export JSON Layout
@@ -558,23 +558,23 @@ new class extends Component {
             $isPortrait = $selectedTemplateForPreview->orientation === 'portrait';
             $previewScale = $isPortrait ? 0.45 : 0.65;
         @endphp
-        <div class="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-6">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 dark:bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-6">
+                <div class="flex items-center justify-between border-b border-gray-200 dark:border-slate-800 pb-4">
                     <div>
-                        <h3 class="text-base font-extrabold text-white">{{ $selectedTemplateForPreview->name }}</h3>
-                        <p class="text-xs text-slate-400 mt-0.5">{{ $selectedTemplateForPreview->orientation }} • {{ $selectedTemplateForPreview->width_mm }}×{{ $selectedTemplateForPreview->height_mm }}mm</p>
+                        <h3 class="text-base font-extrabold text-gray-900 dark:text-white">{{ $selectedTemplateForPreview->name }}</h3>
+                        <p class="text-xs text-gray-600 dark:text-slate-400 mt-0.5">{{ $selectedTemplateForPreview->orientation }} • {{ $selectedTemplateForPreview->width_mm }}×{{ $selectedTemplateForPreview->height_mm }}mm</p>
                     </div>
-                    <button type="button" wire:click="closePreviewModal" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+                    <button type="button" wire:click="closePreviewModal" class="text-gray-400 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white text-xl font-bold">&times;</button>
                 </div>
 
-                <div class="bg-slate-950 rounded-2xl p-6 border border-slate-800 flex items-center justify-center min-h-[320px] overflow-hidden bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:16px_16px]">
+                <div class="bg-gray-100 dark:bg-slate-950 rounded-2xl p-6 border border-gray-200 dark:border-slate-800 flex items-center justify-center min-h-[320px] overflow-hidden bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] dark:bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:16px_16px]">
                     <x-id-card-renderer :template="$selectedTemplateForPreview" :student="$mockStudent" :school="$activeSchool" :scale="$previewScale" />
                 </div>
 
-                <div class="flex items-center justify-between border-t border-slate-800 pt-4">
-                    <button type="button" wire:click="exportJson({{ $selectedTemplateForPreview->id }}, {{ $isSchoolTemplate ? 'true' : 'false' }})" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition flex items-center">
-                        <svg class="w-4 h-4 mr-1.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <div class="flex items-center justify-between border-t border-gray-200 dark:border-slate-800 pt-4">
+                    <button type="button" wire:click="exportJson({{ $selectedTemplateForPreview->id }}, {{ $isSchoolTemplate ? 'true' : 'false' }})" class="px-4 py-2 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center">
+                        <svg class="w-4 h-4 mr-1.5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                         Export JSON
                     </button>
                     <button type="button" wire:click="closePreviewModal" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition">
@@ -594,39 +594,39 @@ new class extends Component {
                     : ($activeSchool->template_id == $selectedTemplateForAssign->id)
             );
         @endphp
-        <div class="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 dark:bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5">
+                <div class="flex items-center justify-between border-b border-gray-200 dark:border-slate-800 pb-4">
                     <div>
-                        <h3 class="text-base font-extrabold text-white">Assign Template</h3>
-                        <p class="text-xs text-slate-400 mt-0.5">{{ $selectedTemplateForAssign->name }}</p>
+                        <h3 class="text-base font-extrabold text-gray-900 dark:text-white">Assign Template</h3>
+                        <p class="text-xs text-gray-600 dark:text-slate-400 mt-0.5">{{ $selectedTemplateForAssign->name }}</p>
                     </div>
-                    <button type="button" wire:click="closeAssignModal" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+                    <button type="button" wire:click="closeAssignModal" class="text-gray-400 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white text-xl font-bold">&times;</button>
                 </div>
 
                 @if($assignSuccessMessage)
-                    <div class="bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 p-3.5 rounded-2xl flex items-center justify-between text-xs font-bold shadow-md">
+                    <div class="bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-300 p-3.5 rounded-2xl flex items-center justify-between text-xs font-bold shadow-md">
                         <div class="flex items-center space-x-2">
-                            <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                            <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                             <span>{{ $assignSuccessMessage }}</span>
                         </div>
-                        <button type="button" wire:click="$set('assignSuccessMessage', null)" class="text-emerald-400 hover:text-white transition">&times;</button>
+                        <button type="button" wire:click="$set('assignSuccessMessage', null)" class="text-emerald-600 dark:text-emerald-400 hover:text-gray-900 dark:hover:text-white transition">&times;</button>
                     </div>
                 @endif
 
                 <!-- Option 1: School Default -->
-                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex items-center justify-between">
+                <div class="bg-gray-50 dark:bg-slate-950 border border-gray-200 dark:border-slate-800 rounded-2xl p-4 flex items-center justify-between">
                     <div>
-                        <span class="text-xs font-bold text-white block">Make Default School Template</span>
-                        <span class="text-[11px] text-slate-400">Applies to all grades unless overridden</span>
+                        <span class="text-xs font-bold text-gray-900 dark:text-white block">Make Default School Template</span>
+                        <span class="text-[11px] text-gray-600 dark:text-slate-400">Applies to all grades unless overridden</span>
                     </div>
                     @if($isSchoolDefault)
-                        <span class="px-4 py-2 bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 rounded-xl text-xs font-black flex items-center space-x-1.5 shadow-sm">
-                            <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                        <span class="px-4 py-2 bg-emerald-50 dark:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-400 rounded-xl text-xs font-black flex items-center space-x-1.5 shadow-sm">
+                            <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                             <span>✓ Active Default</span>
                         </span>
                     @else
-                        <button type="button" wire:click="assignToSchool('{{ $selectedTemplateForAssign->id }}', {{ $isSchoolTemplate ? 'true' : 'false' }})" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-extrabold transition shadow-md shadow-indigo-600/20 active:scale-95">
+                        <button type="button" wire:click="assignToSchool('{{ $selectedTemplateForAssign->id }}', {{ $isSchoolTemplate ? 'true' : 'false' }})" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-extrabold transition shadow-md shadow-indigo-600/20 active:scale-95">
                             Set School Default
                         </button>
                     @endif
@@ -634,7 +634,7 @@ new class extends Component {
 
                 <!-- Option 2: Grade Specific -->
                 <div class="space-y-3">
-                    <span class="text-xs font-bold text-slate-300 block">Or Assign to Specific Grade:</span>
+                    <span class="text-xs font-bold text-gray-800 dark:text-slate-300 block">Or Assign to Specific Grade:</span>
                     <div class="max-h-60 overflow-y-auto space-y-2 pr-1">
                         @foreach($schoolGrades as $g)
                             @php
@@ -642,20 +642,20 @@ new class extends Component {
                                     ? ($g->school_template_id == $selectedTemplateForAssign->id)
                                     : ($g->template_id == $selectedTemplateForAssign->id);
                             @endphp
-                            <div class="bg-slate-950/70 border border-slate-800/80 rounded-2xl p-3 flex items-center justify-between">
+                            <div class="bg-gray-50 dark:bg-slate-950/70 border border-gray-200 dark:border-slate-800/80 rounded-2xl p-3 flex items-center justify-between">
                                 <div>
-                                    <span class="text-xs font-bold text-white">Grade {{ $g->name }}</span>
+                                    <span class="text-xs font-bold text-gray-900 dark:text-white">Grade {{ $g->name }}</span>
                                     @if($isAssigned)
-                                        <span class="text-[10px] text-emerald-400 font-bold ml-2">● Currently Assigned</span>
+                                        <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold ml-2">● Currently Assigned</span>
                                     @endif
                                 </div>
                                 @if($isAssigned)
-                                    <button type="button" wire:click="assignToGrade({{ $g->id }}, '{{ $selectedTemplateForAssign->id }}', {{ $isSchoolTemplate ? 'true' : 'false' }})" class="px-3.5 py-1.5 bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 rounded-xl text-xs font-bold transition flex items-center space-x-1">
-                                        <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    <button type="button" wire:click="assignToGrade({{ $g->id }}, '{{ $selectedTemplateForAssign->id }}', {{ $isSchoolTemplate ? 'true' : 'false' }})" class="px-3.5 py-1.5 bg-emerald-50 dark:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-400 rounded-xl text-xs font-bold transition flex items-center space-x-1">
+                                        <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                                         <span>✓ Assigned</span>
                                     </button>
                                 @else
-                                    <button type="button" wire:click="assignToGrade({{ $g->id }}, '{{ $selectedTemplateForAssign->id }}', {{ $isSchoolTemplate ? 'true' : 'false' }})" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition active:scale-95">
+                                    <button type="button" wire:click="assignToGrade({{ $g->id }}, '{{ $selectedTemplateForAssign->id }}', {{ $isSchoolTemplate ? 'true' : 'false' }})" class="px-3.5 py-1.5 bg-gray-200 dark:bg-slate-800 hover:bg-gray-300 dark:hover:bg-slate-700 text-gray-800 dark:text-slate-200 rounded-xl text-xs font-semibold transition active:scale-95">
                                         Assign to Grade {{ $g->name }}
                                     </button>
                                 @endif
@@ -665,7 +665,7 @@ new class extends Component {
                 </div>
 
                 <div class="flex justify-end pt-2">
-                    <button type="button" wire:click="closeAssignModal" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition">
+                    <button type="button" wire:click="closeAssignModal" class="px-5 py-2 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 rounded-xl text-xs font-bold transition">
                         Done / Close
                     </button>
                 </div>
@@ -675,31 +675,31 @@ new class extends Component {
 
     <!-- Modal: Import JSON Template -->
     @if($isImportModalOpen)
-        <div class="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
-                    <h3 class="text-base font-extrabold text-white">Import JSON Template</h3>
-                    <button type="button" wire:click="$set('isImportModalOpen', false)" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 dark:bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5">
+                <div class="flex items-center justify-between border-b border-gray-200 dark:border-slate-800 pb-4">
+                    <h3 class="text-base font-extrabold text-gray-900 dark:text-white">Import JSON Template</h3>
+                    <button type="button" wire:click="$set('isImportModalOpen', false)" class="text-gray-400 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white text-xl font-bold">&times;</button>
                 </div>
 
                 <form wire:submit.prevent="importJsonTemplate" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-400 mb-1">Template Name</label>
-                        <input type="text" wire:model="importName" placeholder="e.g. Custom Science ID Card" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
-                        @error('importName') <span class="text-xs text-red-400 mt-1 block">{{ $message }}</span> @enderror
+                        <label class="block text-xs font-bold text-gray-700 dark:text-slate-400 mb-1">Template Name</label>
+                        <input type="text" wire:model="importName" placeholder="e.g. Custom Science ID Card" class="w-full bg-gray-50 dark:bg-slate-950 border border-gray-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-gray-900 dark:text-white focus:outline-none focus:border-indigo-500 transition">
+                        @error('importName') <span class="text-xs text-red-500 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-400 mb-1">JSON Template File (.json)</label>
-                        <input type="file" wire:model="importFile" accept=".json" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
-                        @error('importFile') <span class="text-xs text-red-400 mt-1 block">{{ $message }}</span> @enderror
+                        <label class="block text-xs font-bold text-gray-700 dark:text-slate-400 mb-1">JSON Template File (.json)</label>
+                        <input type="file" wire:model="importFile" accept=".json" class="w-full bg-gray-50 dark:bg-slate-950 border border-gray-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-gray-900 dark:text-white focus:outline-none focus:border-indigo-500 transition">
+                        @error('importFile') <span class="text-xs text-red-500 dark:text-red-400 mt-1 block">{{ $message }}</span> @enderror
                     </div>
 
                     <div class="flex items-center justify-end space-x-3 pt-2">
-                        <button type="button" wire:click="$set('isImportModalOpen', false)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition">
+                        <button type="button" wire:click="$set('isImportModalOpen', false)" class="px-4 py-2 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 rounded-xl text-xs font-bold transition">
                             Cancel
                         </button>
-                        <button type="submit" class="px-5 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-black transition shadow-lg shadow-indigo-600/20">
+                        <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition shadow-lg shadow-indigo-600/20">
                             Import & Open Studio
                         </button>
                     </div>
@@ -710,42 +710,42 @@ new class extends Component {
 
     <!-- Create Custom Design Orientation Selection Modal -->
     @if($isCreateModalOpen)
-        <div class="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-6">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 dark:bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-6">
+                <div class="flex items-center justify-between border-b border-gray-200 dark:border-slate-800 pb-4">
                     <div>
-                        <h3 class="text-base font-extrabold text-white">Select Template Orientation</h3>
-                        <p class="text-xs text-slate-400 mt-0.5">Choose layout dimensions for your new custom ID card design</p>
+                        <h3 class="text-base font-extrabold text-gray-900 dark:text-white">Select Template Orientation</h3>
+                        <p class="text-xs text-gray-600 dark:text-slate-400 mt-0.5">Choose layout dimensions for your new custom ID card design</p>
                     </div>
-                    <button type="button" wire:click="$set('isCreateModalOpen', false)" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+                    <button type="button" wire:click="$set('isCreateModalOpen', false)" class="text-gray-400 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white text-xl font-bold">&times;</button>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Landscape Option -->
-                    <button type="button" wire:click="createBlankSchoolTemplate('landscape')" class="group text-left bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-5 transition relative overflow-hidden flex flex-col items-center justify-center text-center space-y-3">
-                        <div class="w-32 h-20 bg-indigo-950/40 border-2 border-indigo-500/40 group-hover:border-indigo-400 rounded-xl flex items-center justify-center transition shadow-inner">
-                            <span class="text-[10px] font-mono font-bold text-indigo-300">85.6mm × 54mm</span>
+                    <button type="button" wire:click="createBlankSchoolTemplate('landscape')" class="group text-left bg-gray-50 dark:bg-slate-950 hover:bg-indigo-50/50 dark:hover:bg-slate-900 border border-gray-200 dark:border-slate-800 hover:border-indigo-500/50 rounded-2xl p-5 transition relative overflow-hidden flex flex-col items-center justify-center text-center space-y-3">
+                        <div class="w-32 h-20 bg-indigo-50 dark:bg-indigo-950/40 border-2 border-indigo-300 dark:border-indigo-500/40 group-hover:border-indigo-500 rounded-xl flex items-center justify-center transition shadow-inner">
+                            <span class="text-[10px] font-mono font-bold text-indigo-700 dark:text-indigo-300">85.6mm × 54mm</span>
                         </div>
                         <div>
-                            <span class="text-sm font-extrabold text-white group-hover:text-indigo-400 transition block">Landscape (Horizontal)</span>
-                            <span class="text-[11px] text-slate-400 mt-1 block">Standard horizontal layout for student & staff cards</span>
+                            <span class="text-sm font-extrabold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition block">Landscape (Horizontal)</span>
+                            <span class="text-[11px] text-gray-600 dark:text-slate-400 mt-1 block">Standard horizontal layout for student & staff cards</span>
                         </div>
                     </button>
 
                     <!-- Portrait Option -->
-                    <button type="button" wire:click="createBlankSchoolTemplate('portrait')" class="group text-left bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-5 transition relative overflow-hidden flex flex-col items-center justify-center text-center space-y-3">
-                        <div class="w-20 h-32 bg-indigo-950/40 border-2 border-indigo-500/40 group-hover:border-indigo-400 rounded-xl flex items-center justify-center transition shadow-inner">
-                            <span class="text-[10px] font-mono font-bold text-indigo-300">54mm × 85.6mm</span>
+                    <button type="button" wire:click="createBlankSchoolTemplate('portrait')" class="group text-left bg-gray-50 dark:bg-slate-950 hover:bg-indigo-50/50 dark:hover:bg-slate-900 border border-gray-200 dark:border-slate-800 hover:border-indigo-500/50 rounded-2xl p-5 transition relative overflow-hidden flex flex-col items-center justify-center text-center space-y-3">
+                        <div class="w-20 h-32 bg-indigo-50 dark:bg-indigo-950/40 border-2 border-indigo-300 dark:border-indigo-500/40 group-hover:border-indigo-500 rounded-xl flex items-center justify-center transition shadow-inner">
+                            <span class="text-[10px] font-mono font-bold text-indigo-700 dark:text-indigo-300">54mm × 85.6mm</span>
                         </div>
                         <div>
-                            <span class="text-sm font-extrabold text-white group-hover:text-indigo-400 transition block">Portrait (Vertical)</span>
-                            <span class="text-[11px] text-slate-400 mt-1 block">Vertical orientation for lanyard clip student cards</span>
+                            <span class="text-sm font-extrabold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition block">Portrait (Vertical)</span>
+                            <span class="text-[11px] text-gray-600 dark:text-slate-400 mt-1 block">Vertical orientation for lanyard clip student cards</span>
                         </div>
                     </button>
                 </div>
 
-                <div class="flex items-center justify-end border-t border-slate-800 pt-4">
-                    <button type="button" wire:click="$set('isCreateModalOpen', false)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition">
+                <div class="flex items-center justify-end border-t border-gray-200 dark:border-slate-800 pt-4">
+                    <button type="button" wire:click="$set('isCreateModalOpen', false)" class="px-4 py-2 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 rounded-xl text-xs font-bold transition">
                         Cancel
                     </button>
                 </div>
