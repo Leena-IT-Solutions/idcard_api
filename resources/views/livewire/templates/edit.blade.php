@@ -643,6 +643,13 @@ new class extends Component {
     draggedLayers: [],
     alignMode: 'page',
 
+    getSelectedIndices() {
+        const val = this.$wire.selectedLayerIndices;
+        if (!val) return [];
+        if (Array.isArray(val)) return val;
+        return Object.values(val).map(v => parseInt(v));
+    },
+
     getClientCoords(e) {
         if (e.touches && e.touches.length > 0) {
             return { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -672,7 +679,7 @@ new class extends Component {
     },
 
     alignSelectedToPage(alignment) {
-        const indices = this.$wire.selectedLayerIndices || [];
+        const indices = this.getSelectedIndices();
         const count = indices.length;
         if (count === 0) return;
 
@@ -741,7 +748,7 @@ new class extends Component {
     },
 
     alignSelectedToSelection(alignment) {
-        const indices = this.$wire.selectedLayerIndices || [];
+        const indices = this.getSelectedIndices();
         const count = indices.length;
         if (count <= 1) return;
 
@@ -826,7 +833,7 @@ new class extends Component {
     },
 
     spaceSelectedEvenly(direction) {
-        const indices = this.$wire.selectedLayerIndices || [];
+        const indices = this.getSelectedIndices();
         const count = indices.length;
         if (count <= 2) return;
 
@@ -923,7 +930,7 @@ new class extends Component {
     },
 
     tidyUpSelected() {
-        const indices = this.$wire.selectedLayerIndices || [];
+        const indices = this.getSelectedIndices();
         const count = indices.length;
         if (count <= 1) return;
 
@@ -1033,8 +1040,9 @@ new class extends Component {
         this.curY = this.origY;
 
         this.draggedLayers = [];
-        const isMulti = this.$wire.selectedLayerIndices && this.$wire.selectedLayerIndices.includes(idx);
-        const indicesToDrag = isMulti ? this.$wire.selectedLayerIndices : [idx];
+        const indices = this.getSelectedIndices();
+        const isMulti = indices.includes(idx);
+        const indicesToDrag = isMulti ? indices : [idx];
 
         indicesToDrag.forEach((dIdx) => {
             const el = document.querySelector('[data-layer-index=\'' + dIdx + '\']');
@@ -1512,7 +1520,7 @@ new class extends Component {
             }
         });
         window.addEventListener('keydown', (e) => {
-            const indices = this.$wire.selectedLayerIndices || [];
+            const indices = this.getSelectedIndices();
             const singleIdx = this.$wire.selectedLayerIndex;
 
             const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
@@ -1600,7 +1608,7 @@ new class extends Component {
         });
 
         window.addEventListener('keyup', (e) => {
-            const indices = this.$wire.selectedLayerIndices || [];
+            const indices = this.getSelectedIndices();
             if (indices.length === 0) return;
 
             const keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
