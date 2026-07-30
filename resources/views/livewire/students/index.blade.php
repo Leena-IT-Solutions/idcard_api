@@ -806,6 +806,32 @@ new class extends Component
         }
         return rmdir($dirPath);
     }
+
+    public function syncParentLinks()
+    {
+        $usersByMobile = \App\Models\User::query()
+            ->get(['id', 'mobile'])
+            ->filter(fn ($u) => \App\Support\PhoneNumber::normalize($u->mobile) !== null)
+            ->keyBy(fn ($u) => \App\Support\PhoneNumber::normalize($u->mobile));
+
+        $linkedCount = 0;
+
+        Student::whereNull('user_id')->chunkById(200, function ($students) use ($usersByMobile, &$linkedCount) {
+            foreach ($students as $student) {
+                $normalized = \App\Support\PhoneNumber::normalize($student->contact_number);
+                if ($normalized && $usersByMobile->has($normalized)) {
+                    $student->update(['user_id' => $usersByMobile->get($normalized)->id]);
+                    $linkedCount++;
+                }
+            }
+        });
+
+        if ($linkedCount > 0) {
+            session()->flash('message', "Successfully linked {$linkedCount} student record(s) to parent accounts.");
+        } else {
+            session()->flash('message', "All student records are already synced with parent accounts.");
+        }
+    }
 }; ?>
 
 @php
@@ -863,6 +889,12 @@ new class extends Component
             </div>
         </div>
         <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+            <button wire:click="syncParentLinks" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-indigo-600 dark:text-indigo-400 font-bold text-xs uppercase tracking-wider rounded-xl transition shadow hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
+                <svg class="w-4 h-4 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>{{ __('Sync Links') }}</span>
+            </button>
             <button wire:click="openBulkModal" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold text-xs uppercase tracking-wider rounded-xl transition shadow hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />

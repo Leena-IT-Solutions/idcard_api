@@ -237,6 +237,17 @@ new class extends Component {
         $this->resetEnrollmentForm();
         session()->flash('message', "{$student->first_name} has been enrolled in {$campaign->name} successfully.");
     }
+
+    public function syncChildren()
+    {
+        $linked = auth()->user()->linkUnlinkedStudents();
+
+        if ($linked > 0) {
+            session()->flash('message', "Successfully linked {$linked} new profile" . ($linked === 1 ? '' : 's') . '.');
+        } else {
+            session()->flash('message', 'All child profiles are already up to date.');
+        }
+    }
 };
 
 ?>
@@ -348,12 +359,20 @@ new class extends Component {
             <h3 class="text-base font-black uppercase text-gray-400 dark:text-gray-500 tracking-wider">
                 {{ __('My Children Profiles') }}
             </h3>
-            <button wire:click="openCreateChildModal" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition shadow flex items-center gap-1.5 cursor-pointer">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
-                </svg>
-                {{ __('Add Profile') }}
-            </button>
+            <div class="flex items-center gap-2">
+                <button wire:click="syncChildren" class="px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-indigo-600 dark:text-indigo-400 font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition shadow flex items-center gap-1.5 cursor-pointer">
+                    <svg class="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    {{ __('Sync') }}
+                </button>
+                <button wire:click="openCreateChildModal" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition shadow flex items-center gap-1.5 cursor-pointer">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                    </svg>
+                    {{ __('Add Profile') }}
+                </button>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
