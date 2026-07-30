@@ -446,39 +446,83 @@ new class extends Component {
                                 </div>
                             </div>
 
-                            <!-- Right Column: Actual iCard Template Design Preview -->
+                            <!-- Right Column: Actual iCard Template Design Preview (All Enrolled Students or Default Template) -->
                             <div class="lg:col-span-5 flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-900/80 rounded-2xl border border-gray-100 dark:border-gray-700/80 min-h-[260px] relative group overflow-hidden">
-                                <div class="w-full flex items-center justify-between mb-3 px-1">
-                                    <span class="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 flex items-center gap-1">
-                                        <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                        {{ $firstEnrolledPivot ? __('Class iCard Template Design') : __('School iCard Template Design') }}
-                                    </span>
-                                    <span class="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded-md">
-                                        {{ $effectiveTemplate->name ?? __('Template') }}
-                                    </span>
-                                </div>
+                                @if ($enrolledPivots->isNotEmpty())
+                                    <div class="w-full space-y-5 max-h-[500px] overflow-y-auto pr-1">
+                                        @foreach ($enrolledPivots as $piv)
+                                            @php
+                                                $studentTemplate = $this->getEffectiveTemplate($camp->school_id, $piv->grade_id);
+                                                $studentIsPortrait = $studentTemplate ? ($studentTemplate->orientation ?? 'landscape') === 'portrait' : false;
+                                            @endphp
+                                            <div class="w-full flex flex-col items-center border-b border-gray-200/60 dark:border-gray-700/60 pb-4 last:border-0 last:pb-0">
+                                                <div class="w-full flex items-center justify-between mb-2 px-1">
+                                                    <span class="text-[11px] font-extrabold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+                                                        <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                                                        {{ $piv->student->first_name }} {{ $piv->student->last_name }}'s iCard
+                                                    </span>
+                                                    <span class="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded-md">
+                                                        {{ $studentTemplate->name ?? __('Template') }}
+                                                    </span>
+                                                </div>
 
-                                @if ($effectiveTemplate)
-                                    <div class="relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 shadow-md flex items-center justify-center bg-white dark:bg-gray-950 my-auto p-2"
-                                         style="width: 100%; max-width: {{ $isPortrait ? '230px' : '360px' }}; height: {{ $isPortrait ? '340px' : '230px' }};">
-                                        <div class="transform origin-center transition-transform duration-300 scale-95" style="transform: scale({{ $isPortrait ? 0.32 : 0.34 }}); width: {{ $isPortrait ? '638px' : '1011px' }}; height: {{ $isPortrait ? '1011px' : '638px' }};">
-                                            <x-id-card-renderer
-                                                :template="$effectiveTemplate"
-                                                :student="$firstEnrolledPivot ? $firstEnrolledPivot->student : null"
-                                                :school="$camp->school"
-                                                :previewMode="$firstEnrolledPivot ? false : true"
-                                            />
-                                        </div>
+                                                @if ($studentTemplate)
+                                                    <div class="relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 shadow-md flex items-center justify-center bg-white dark:bg-gray-950 p-2"
+                                                         style="width: 100%; max-width: {{ $studentIsPortrait ? '230px' : '360px' }}; height: {{ $studentIsPortrait ? '340px' : '230px' }};">
+                                                        <div class="transform origin-center transition-transform duration-300 scale-95" style="transform: scale({{ $studentIsPortrait ? 0.32 : 0.34 }}); width: {{ $studentIsPortrait ? '638px' : '1011px' }}; height: {{ $studentIsPortrait ? '1011px' : '638px' }};">
+                                                            <x-id-card-renderer
+                                                                :template="$studentTemplate"
+                                                                :student="$piv->student"
+                                                                :school="$camp->school"
+                                                                :previewMode="false"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                @else
+                                                    <div class="flex flex-col items-center justify-center p-4 text-center text-gray-400">
+                                                        <span class="text-xs font-semibold">{{ __('No Template Assigned') }}</span>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @endforeach
                                     </div>
                                 @else
-                                    <div class="flex flex-col items-center justify-center p-8 text-center text-gray-400">
-                                        <svg class="w-10 h-10 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
-                                        </svg>
-                                        <span class="text-xs font-semibold">{{ __('No Template Assigned') }}</span>
+                                    @php
+                                        $defaultTemplate = $this->getEffectiveTemplate($camp->school_id, null);
+                                        $defaultIsPortrait = $defaultTemplate ? ($defaultTemplate->orientation ?? 'landscape') === 'portrait' : false;
+                                    @endphp
+                                    <div class="w-full flex items-center justify-between mb-3 px-1">
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 flex items-center gap-1">
+                                            <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                            {{ __('School iCard Template Design') }}
+                                        </span>
+                                        <span class="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded-md">
+                                            {{ $defaultTemplate->name ?? __('Template') }}
+                                        </span>
                                     </div>
+
+                                    @if ($defaultTemplate)
+                                        <div class="relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 shadow-md flex items-center justify-center bg-white dark:bg-gray-950 my-auto p-2"
+                                             style="width: 100%; max-width: {{ $defaultIsPortrait ? '230px' : '360px' }}; height: {{ $defaultIsPortrait ? '340px' : '230px' }};">
+                                            <div class="transform origin-center transition-transform duration-300 scale-95" style="transform: scale({{ $defaultIsPortrait ? 0.32 : 0.34 }}); width: {{ $defaultIsPortrait ? '638px' : '1011px' }}; height: {{ $defaultIsPortrait ? '1011px' : '638px' }};">
+                                                <x-id-card-renderer
+                                                    :template="$defaultTemplate"
+                                                    :student="null"
+                                                    :school="$camp->school"
+                                                    :previewMode="true"
+                                                />
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div class="flex flex-col items-center justify-center p-8 text-center text-gray-400">
+                                            <svg class="w-10 h-10 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                                            </svg>
+                                            <span class="text-xs font-semibold">{{ __('No Template Assigned') }}</span>
+                                        </div>
+                                    @endif
                                 @endif
                             </div>
                         </div>
