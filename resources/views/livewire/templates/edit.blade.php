@@ -640,7 +640,18 @@ new class extends Component {
 @endphp
 
 <div class="space-y-6 notranslate" translate="no" x-data="{
-    zoomLevel: 100,
+    zoomLevel: (function() {
+        try {
+            const savedZoom = localStorage.getItem('canva_studio_zoom');
+            if (savedZoom !== null) {
+                const parsed = parseInt(savedZoom);
+                if (!isNaN(parsed) && parsed >= 25 && parsed <= 300) {
+                    return parsed;
+                }
+            }
+        } catch(e) {}
+        return 100;
+    })(),
     draggingIndex: null,
     draggingEl: null,
     resizingIndex: null,
@@ -666,7 +677,13 @@ new class extends Component {
     alignMode: 'page',
 
     // Studio Tool Mode & Viewport Panning State
-    activeTool: 'select', // 'select' or 'pan'
+    activeTool: (function() {
+        try {
+            const savedTool = localStorage.getItem('canva_studio_tool');
+            if (savedTool === 'select' || savedTool === 'pan') return savedTool;
+        } catch(e) {}
+        return 'select';
+    })(),
     isSpacePressed: false,
     isPanning: false,
     panStartX: 0,
@@ -683,21 +700,8 @@ new class extends Component {
     boxRect: { left: 0, top: 0, width: 0, height: 0 },
 
     init() {
-        // Restore canvas settings from browser localStorage
+        // Restore Livewire server-controlled canvas settings from browser localStorage
         try {
-            const savedZoom = localStorage.getItem('canva_studio_zoom');
-            if (savedZoom !== null) {
-                const parsedZoom = parseInt(savedZoom);
-                if (parsedZoom >= 25 && parsedZoom <= 300) {
-                    this.zoomLevel = parsedZoom;
-                }
-            }
-
-            const savedTool = localStorage.getItem('canva_studio_tool');
-            if (savedTool === 'select' || savedTool === 'pan') {
-                this.activeTool = savedTool;
-            }
-
             const savedShowGrid = localStorage.getItem('canva_studio_show_grid');
             if (savedShowGrid !== null) {
                 this.$wire.showGrid = (savedShowGrid === 'true');
