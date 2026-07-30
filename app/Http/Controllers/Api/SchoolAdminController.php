@@ -325,6 +325,25 @@ class SchoolAdminController extends Controller
         return response()->json(['success' => true, 'message' => 'Invitation revoked successfully.']);
     }
  
+    public function lookupByMobile(Request $request)
+    {
+        $request->validate([
+            'mobile' => 'required|string',
+        ]);
+
+        $normalized = \App\Support\PhoneNumber::normalize($request->mobile);
+        if (!$normalized || strlen($normalized) < 10) {
+            return response()->json([]);
+        }
+
+        $students = Student::query()
+            ->get()
+            ->filter(fn ($s) => \App\Support\PhoneNumber::normalize($s->contact_number) === $normalized)
+            ->values();
+
+        return response()->json($students);
+    }
+
     public function students(Request $request)
     {
         $request->validate(['school_id' => 'required|exists:schools,id']);

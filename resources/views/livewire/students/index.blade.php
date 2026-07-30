@@ -358,6 +358,38 @@ new class extends Component
         $this->isModalOpen = true;
     }
 
+    public function getMatchingStudentsProperty()
+    {
+        if (empty($this->contact_number)) {
+            return collect();
+        }
+        $normalized = \App\Support\PhoneNumber::normalize($this->contact_number);
+        if (!$normalized || strlen($normalized) < 10) {
+            return collect();
+        }
+
+        return Student::query()
+            ->get()
+            ->filter(fn ($s) => \App\Support\PhoneNumber::normalize($s->contact_number) === $normalized)
+            ->values();
+    }
+
+    public function selectExistingStudent($id)
+    {
+        $student = Student::findOrFail($id);
+        $this->studentId = $student->id;
+        $this->first_name = $student->first_name;
+        $this->middle_name = $student->middle_name ?? '';
+        $this->last_name = $student->last_name;
+        $this->blood_group = $student->blood_group ?? '';
+        $this->gender = $student->gender ?? '';
+        $this->dob = $student->dob ?? '';
+        $this->address = $student->address;
+        $this->pincode = $student->pincode;
+        $this->contact_number = $student->contact_number;
+        $this->currentPhotoPath = $student->photo_path;
+    }
+
     public function resetForm()
     {
         $this->studentId = null;
@@ -1246,6 +1278,77 @@ new class extends Component
 
                     <!-- Scrollable Modal Body -->
                     <div class="p-6 sm:p-8 overflow-y-auto flex-1 space-y-6">
+                        <!-- Step 1: Parent Mobile Number Lookup & Matching Students -->
+                        <div class="bg-gradient-to-r from-indigo-50/80 via-purple-50/50 to-indigo-50/80 dark:from-indigo-950/40 dark:via-purple-950/30 dark:to-indigo-950/40 p-5 rounded-2xl border border-indigo-100 dark:border-indigo-900/60">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div class="flex-1">
+                                    <x-input-label for="contact_number" :value="__('Step 1: Check Parent / Contact Mobile Number')" class="text-indigo-900 dark:text-indigo-200 font-extrabold text-sm" />
+                                    <div class="relative mt-1.5">
+                                        <x-text-input wire:model.live.debounce.300ms="contact_number" id="contact_number" type="text" class="block w-full pl-10 pr-4 py-2.5 text-base font-bold tracking-wide" placeholder="Enter 10-digit mobile number to check existing students..." required />
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-indigo-500">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                                        </div>
+                                    </div>
+                                    <x-input-error :messages="$errors->get('contact_number')" class="mt-1" />
+                                </div>
+                            </div>
+
+                            @if ($this->matchingStudents->count() > 0 && !$studentId)
+                                <div class="mt-4 pt-4 border-t border-indigo-200/60 dark:border-indigo-800/60">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="text-xs font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
+                                            <svg class="w-4 h-4 text-amber-500 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.57l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.57l7-10a1 1 0 011.12-.384z"/></svg>
+                                            {{ $this->matchingStudents->count() }} Existing Student Profile(s) Found Under {{ $contact_number }}
+                                        </span>
+                                        <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400">Select student to enroll into a new campaign</span>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        @foreach ($this->matchingStudents as $mStudent)
+                                            <div class="bg-white dark:bg-gray-800 p-3.5 rounded-xl border border-indigo-200 dark:border-gray-700 shadow-sm flex items-center justify-between gap-3 hover:border-indigo-500 transition">
+                                                <div class="flex items-center gap-3 min-w-0">
+                                                    @if ($mStudent->photo_path)
+                                                        <img src="{{ asset('storage/' . $mStudent->photo_path) }}" class="w-10 h-10 rounded-full object-cover shrink-0 border border-gray-200" />
+                                                    @else
+                                                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-xs shrink-0">
+                                                            {{ strtoupper(substr($mStudent->first_name, 0, 1) . substr($mStudent->last_name, 0, 1)) }}
+                                                        </div>
+                                                    @endif
+                                                    <div class="min-w-0">
+                                                        <h5 class="font-extrabold text-sm text-gray-900 dark:text-gray-100 truncate">
+                                                            {{ $mStudent->first_name }} {{ $mStudent->middle_name ? $mStudent->middle_name . ' ' : '' }}{{ $mStudent->last_name }}
+                                                        </h5>
+                                                        <p class="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                                                            DOB: {{ $mStudent->dob ? \Carbon\Carbon::parse($mStudent->dob)->format('M d, Y') : 'N/A' }} • ST-ID #{{ $mStudent->id }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <button type="button" wire:click="selectExistingStudent({{ $mStudent->id }})" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shrink-0 transition shadow-sm cursor-pointer">
+                                                    Select Student
+                                                </button>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @elseif ($studentId)
+                                <div class="mt-3 flex items-center justify-between bg-emerald-50 dark:bg-emerald-950/40 p-3 rounded-xl border border-emerald-200 dark:border-emerald-800">
+                                    <div class="flex items-center gap-2 text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                        <span>Selected Existing Student: <strong>{{ $first_name }} {{ $last_name }}</strong> (ST-ID #{{ $studentId }})</span>
+                                    </div>
+                                    <button type="button" wire:click="$set('studentId', null)" class="text-xs text-rose-600 dark:text-rose-400 font-bold hover:underline cursor-pointer">
+                                        Clear / Create New
+                                    </button>
+                                </div>
+                            @elseif (strlen($contact_number) >= 10)
+                                <div class="mt-3 flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span>No existing profile found under {{ $contact_number }}. Fill in details below to register a new student.</span>
+                                </div>
+                            @endif
+                        </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
                             <!-- Row 1: Names & Roll No -->
                             <div>

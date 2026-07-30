@@ -37,6 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/school-admin/members/{id}', [\App\Http\Controllers\Api\SchoolAdminController::class, 'updateMember']);
     Route::delete('/school-admin/members/{id}', [\App\Http\Controllers\Api\SchoolAdminController::class, 'deleteMember']);
     Route::delete('/school-admin/invitations/{id}', [\App\Http\Controllers\Api\SchoolAdminController::class, 'revokeInvitation']);
+    Route::get('/school-admin/students/lookup-mobile', [\App\Http\Controllers\Api\SchoolAdminController::class, 'lookupByMobile']);
     Route::get('/school-admin/students', [\App\Http\Controllers\Api\SchoolAdminController::class, 'students']);
     Route::post('/school-admin/students', [\App\Http\Controllers\Api\SchoolAdminController::class, 'saveStudent']);
     Route::delete('/school-admin/students/{id}', [\App\Http\Controllers\Api\SchoolAdminController::class, 'deleteStudent']);
