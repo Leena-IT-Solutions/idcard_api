@@ -128,6 +128,18 @@ new class extends Component {
         }
     }
 
+    public function deleteSchoolTemplate($templateId)
+    {
+        $activeSchoolId = session('active_school_id');
+        if (!$activeSchoolId) return;
+
+        $st = SchoolTemplate::where('school_id', $activeSchoolId)->where('id', $templateId)->first();
+        if ($st) {
+            $st->delete();
+            session()->flash('message', 'School template deleted successfully!');
+        }
+    }
+
     public function openAssignModal($templateId, $isSchoolTpl = false)
     {
         $this->isSchoolTemplate = $isSchoolTpl;
@@ -178,54 +190,57 @@ new class extends Component {
 
     public function exportJson($templateId, $isSchoolTpl = false)
     {
-        $template = $isSchoolTpl ? SchoolTemplate::find($templateId) : Template::find($templateId);
-        if (!$template) return;
+        $tpl = $isSchoolTpl ? SchoolTemplate::find($templateId) : Template::find($templateId);
+        if (!$tpl) return;
 
-        $exportData = [
-            'name' => $template->name,
-            'orientation' => $template->orientation,
-            'width_mm' => $template->width_mm,
-            'height_mm' => $template->height_mm,
-            'layout_config' => $template->layout_config,
+        $data = [
+            'name' => $tpl->name,
+            'orientation' => $tpl->orientation,
+            'width_mm' => $tpl->width_mm,
+            'height_mm' => $tpl->height_mm,
+            'layout_config' => $tpl->layout_config,
+            'exported_at' => now()->toIso8601String(),
         ];
 
-        $jsonContent = json_encode($exportData, JSON_PRETTY_PRINT);
-        $filename = \Illuminate\Support\Str::slug($template->name) . '-template.json';
-
-        return response()->streamDownload(function() use ($jsonContent) {
-            echo $jsonContent;
+        $filename = \Illuminate\Support\Str::slug($tpl->name) . '-template.json';
+        return response()->streamDownload(function() use ($data) {
+            echo json_encode($data, JSON_PRETTY_PRINT);
         }, $filename, ['Content-Type' => 'application/json']);
     }
 
     public function importJsonTemplate()
     {
         $this->validate([
-            'importFile' => 'required|file|mimes:json,txt|max:2048',
-            'importName' => 'required|string|max:100',
+            'importName' => 'required|string|max:255',
+            'importFile' => 'required|file|mimes:json,txt',
         ]);
 
         $activeSchoolId = session('active_school_id');
         if (!$activeSchoolId) {
-            $this->addError('importFile', 'Please select an active school first.');
+            $this->addError('general', 'No active school selected.');
             return;
         }
 
-        $jsonStr = file_get_contents($this->importFile->getRealPath());
-        $data = json_decode($jsonStr, true);
+        $jsonContent = file_get_contents($this->importFile->getRealPath());
+        $parsed = json_decode($jsonContent, true);
 
-        if (!$data || !isset($data['layout_config'])) {
-            $this->addError('importFile', 'Invalid JSON template format. Must contain layout_config.');
+        if (!$parsed || !is_array($parsed)) {
+            $this->addError('importFile', 'Invalid JSON file structure.');
             return;
         }
+
+        $orientation = $parsed['orientation'] ?? 'landscape';
+        $width = $parsed['width_mm'] ?? ($orientation === 'portrait' ? 54.00 : 85.60);
+        $height = $parsed['height_mm'] ?? ($orientation === 'portrait' ? 85.60 : 54.00);
+        $layoutConfig = $parsed['layout_config'] ?? [];
 
         $schoolTemplate = SchoolTemplate::create([
             'school_id' => $activeSchoolId,
             'name' => $this->importName,
-            'orientation' => $data['orientation'] ?? 'landscape',
-            'width_mm' => $data['width_mm'] ?? 85.60,
-            'height_mm' => $data['height_mm'] ?? 54.00,
-            'background_image' => null,
-            'layout_config' => $data['layout_config'],
+            'orientation' => $orientation,
+            'width_mm' => $width,
+            'height_mm' => $height,
+            'layout_config' => $layoutConfig,
             'is_default' => false,
         ]);
 
@@ -242,8 +257,25 @@ new class extends Component {
         $activeSchoolId = session('active_school_id');
         $activeSchool = $activeSchoolId ? School::find($activeSchoolId) : null;
 
-        $masterTemplates = Template::where('is_active', true)->get();
-        $schoolTemplates = $activeSchoolId ? SchoolTemplate::where('school_id', $activeSchoolId)->get() : collect();
+        $masterQuery = Template::where('is_active', true);
+        $schoolQuery = $activeSchoolId ? SchoolTemplate::where('school_id', $activeSchoolId) : SchoolTemplate::whereRaw('1 = 0');
+
+        if ($this->search) {
+            $s = '%' . $this->search . '%';
+            $masterQuery->where('name', 'like', $s);
+            $schoolQuery->where('name', 'like', $s);
+        }
+
+        if ($this->selectedCategory === 'landscape') {
+            $masterQuery->where('orientation', 'landscape');
+            $schoolQuery->where('orientation', 'landscape');
+        } elseif ($this->selectedCategory === 'portrait') {
+            $masterQuery->where('orientation', 'portrait');
+            $schoolQuery->where('orientation', 'portrait');
+        }
+
+        $masterTemplates = $masterQuery->get();
+        $schoolTemplates = $schoolQuery->get();
 
         // Sample student mock data for previews
         $mockStudent = (object)[
@@ -278,38 +310,62 @@ new class extends Component {
 
 <div class="space-y-8">
     @if(session()->has('message'))
-        <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-2xl flex items-center justify-between text-sm font-semibold">
-            <span>{{ session('message') }}</span>
-            <button type="button" onclick="this.parentElement.remove()" class="text-emerald-400 hover:text-white">&times;</button>
+        <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-2xl flex items-center justify-between text-sm font-semibold shadow-lg backdrop-blur-md">
+            <div class="flex items-center space-x-2">
+                <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span>{{ session('message') }}</span>
+            </div>
+            <button type="button" onclick="this.parentElement.remove()" class="text-emerald-400 hover:text-white transition">&times;</button>
         </div>
     @endif
 
     <!-- Header & Action Bar -->
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-wrap items-center justify-between gap-4 shadow-xl">
-        <div>
+    <div class="bg-gradient-to-r from-slate-900 via-slate-900/90 to-indigo-950/40 border border-slate-800 rounded-3xl p-6 md:p-8 flex flex-wrap items-center justify-between gap-6 shadow-2xl relative overflow-hidden backdrop-blur-xl">
+        <div class="absolute -right-16 -top-16 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="relative z-10 space-y-2">
             <div class="flex items-center space-x-3">
-                <h1 class="text-xl font-black text-white">ID Card Template Studio</h1>
-                <span class="text-xs font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-full">
-                    Canva-Style Visual Editor
+                <h1 class="text-2xl font-black text-white tracking-tight">ID Card Template Studio</h1>
+                <span class="text-xs font-black text-indigo-300 bg-indigo-500/20 border border-indigo-500/30 px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                    Canva Studio ⚡
                 </span>
             </div>
-            <p class="text-xs text-slate-400 mt-1">Select a master template preset or customize your school's unique ID card designs</p>
+            <p class="text-xs md:text-sm text-slate-400 max-w-xl">Design pixel-perfect ID card templates for your school, customize preset layouts, or import custom JSON configurations.</p>
         </div>
 
-        <div class="flex items-center space-x-3">
-            <button type="button" wire:click="$set('isImportModalOpen', true)" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition flex items-center shadow">
+        <div class="relative z-10 flex items-center space-x-3">
+            <button type="button" wire:click="$set('isImportModalOpen', true)" class="px-4 py-3 bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700/60 rounded-2xl text-xs font-extrabold transition-all duration-200 flex items-center shadow-lg hover:shadow-indigo-500/10">
                 <svg class="w-4 h-4 mr-2 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                 </svg>
                 Import JSON Template
             </button>
 
-            <button type="button" wire:click="$set('isCreateModalOpen', true)" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-lg shadow-indigo-600/20">
+            <button type="button" wire:click="$set('isCreateModalOpen', true)" class="px-5 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-2xl text-xs font-black transition-all duration-200 flex items-center shadow-lg shadow-indigo-600/30 hover:scale-105 active:scale-95">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
                 </svg>
-                Create Custom Design
+                + Create Custom Design
             </button>
+        </div>
+    </div>
+
+    <!-- Filter & Search Toolbar -->
+    <div class="flex flex-wrap items-center justify-between gap-4 bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 backdrop-blur-md">
+        <div class="flex items-center space-x-2 overflow-x-auto pb-1 md:pb-0">
+            <button type="button" wire:click="$set('selectedCategory', 'all')" class="px-4 py-2 rounded-xl text-xs font-bold transition {{ $selectedCategory === 'all' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'bg-slate-950/60 text-slate-400 hover:text-white hover:bg-slate-800' }}">
+                All Templates
+            </button>
+            <button type="button" wire:click="$set('selectedCategory', 'landscape')" class="px-4 py-2 rounded-xl text-xs font-bold transition {{ $selectedCategory === 'landscape' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'bg-slate-950/60 text-slate-400 hover:text-white hover:bg-slate-800' }}">
+                Landscape 📐
+            </button>
+            <button type="button" wire:click="$set('selectedCategory', 'portrait')" class="px-4 py-2 rounded-xl text-xs font-bold transition {{ $selectedCategory === 'portrait' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'bg-slate-950/60 text-slate-400 hover:text-white hover:bg-slate-800' }}">
+                Portrait 📱
+            </button>
+        </div>
+
+        <div class="relative min-w-[240px]">
+            <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search templates by name..." class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
+            <svg class="w-4 h-4 text-slate-500 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
         </div>
     </div>
 
@@ -318,59 +374,86 @@ new class extends Component {
         <div class="space-y-4">
             <div class="flex items-center justify-between">
                 <h2 class="text-base font-black text-white flex items-center space-x-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                    <span class="w-3 h-3 rounded-full bg-amber-400 shadow-sm shadow-amber-400/50"></span>
                     <span>Your School Custom Templates</span>
                 </h2>
-                <span class="text-xs text-slate-400 font-semibold">{{ $schoolTemplates->count() }} Custom Template(s)</span>
+                <span class="text-xs text-slate-400 font-bold bg-slate-900 border border-slate-800 px-3 py-1 rounded-full">{{ $schoolTemplates->count() }} Custom Template(s)</span>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @foreach($schoolTemplates as $st)
-                    <div class="bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-3xl p-5 shadow-xl transition-all duration-300 flex flex-col justify-between group relative">
+                    @php
+                        $isPortrait = $st->orientation === 'portrait';
+                        $isDefault = ($activeSchool && $activeSchool->template_id == $st->id) || $st->is_default;
+                        $scale = $isPortrait ? 0.25 : 0.31;
+                    @endphp
+                    <div class="bg-slate-900/90 border border-slate-800 hover:border-indigo-500/50 rounded-3xl p-5 shadow-xl hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden">
                         <div>
                             <!-- Header Info -->
-                            <div class="flex items-center justify-between mb-4">
-                                <div>
-                                    <h3 class="text-sm font-extrabold text-white group-hover:text-indigo-400 transition">{{ $st->name }}</h3>
-                                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{{ $st->orientation }} • {{ $st->width_mm }}x{{ $st->height_mm }}mm</span>
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="space-y-1">
+                                    <h3 class="text-sm font-black text-white group-hover:text-indigo-400 transition leading-snug">{{ $st->name }}</h3>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800">
+                                            {{ $st->orientation }} • {{ $st->width_mm }}×{{ $st->height_mm }}mm
+                                        </span>
+                                    </div>
                                 </div>
-                                @if($activeSchool && $activeSchool->template_id == $st->id || $st->is_default)
-                                    <span class="text-[10px] font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider">Default</span>
+                                @if($isDefault)
+                                    <span class="text-[10px] font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider shrink-0 shadow-sm">
+                                        Default ⚡
+                                    </span>
                                 @endif
                             </div>
 
-                            <!-- Render Card Thumbnail -->
-                            <div class="w-full bg-slate-950/50 rounded-2xl p-3 mb-4 flex items-center justify-center border border-slate-800/80 min-h-[160px]">
-                                <div class="transform scale-[0.3] origin-center">
-                                    <x-id-card-renderer :template="$st" :student="$mockStudent" :school="$activeSchool" />
+                            <!-- Canvas Stage & Card Thumbnail -->
+                            <div class="relative w-full bg-slate-950/80 rounded-2xl p-4 mb-4 flex items-center justify-center border border-slate-800/80 min-h-[220px] overflow-hidden group-hover:border-indigo-500/40 transition-all duration-300 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:16px_16px]">
+                                <x-id-card-renderer :template="$st" :student="$mockStudent" :school="$activeSchool" :scale="$scale" />
+
+                                <!-- Hover Quick Overlay -->
+                                <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center space-y-2.5 p-4 z-10">
+                                    <a href="{{ route('templates.edit', ['template' => $st->id, 'type' => 'school']) }}" class="w-36 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-black transition flex items-center justify-center shadow-lg shadow-indigo-600/30">
+                                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                        Edit Studio
+                                    </a>
+                                    <button type="button" wire:click="openPreviewModal({{ $st->id }}, true)" class="w-36 py-2 bg-slate-800/90 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition flex items-center justify-center border border-slate-700/60">
+                                        <svg class="w-3.5 h-3.5 mr-1.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                        Full Preview
+                                    </button>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Card Action Buttons -->
-                        <div class="space-y-2 pt-2 border-t border-slate-800/60">
+                        <div class="space-y-2 pt-3 border-t border-slate-800/80">
                             <div class="grid grid-cols-2 gap-2">
-                                <a href="{{ route('templates.edit', ['template' => $st->id, 'type' => 'school']) }}" class="text-center py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center">
-                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <a href="{{ route('templates.edit', ['template' => $st->id, 'type' => 'school']) }}" class="py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-black transition flex items-center justify-center shadow-md shadow-indigo-600/20">
+                                    <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
-                                    Canva Studio
+                                    Edit Studio
                                 </a>
 
-                                <button type="button" wire:click="openAssignModal({{ $st->id }}, true)" class="py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition flex items-center justify-center">
-                                    <svg class="w-3.5 h-3.5 mr-1 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <button type="button" wire:click="openAssignModal({{ $st->id }}, true)" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-extrabold transition flex items-center justify-center border border-slate-700/60">
+                                    <svg class="w-3.5 h-3.5 mr-1.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
                                     </svg>
-                                    Assign
+                                    Assign Grade
                                 </button>
                             </div>
 
-                            <button type="button" wire:click="exportJson({{ $st->id }}, true)" class="w-full text-center py-1.5 bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg text-[11px] font-semibold transition flex items-center justify-center">
-                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                                </svg>
-                                Export JSON Layout
-                            </button>
+                            <div class="flex items-center justify-between space-x-2 pt-1">
+                                <button type="button" wire:click="exportJson({{ $st->id }}, true)" class="flex-1 py-1.5 bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl text-[11px] font-semibold transition flex items-center justify-center border border-slate-800">
+                                    <svg class="w-3.5 h-3.5 mr-1 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                    </svg>
+                                    Export JSON
+                                </button>
+
+                                <button type="button" wire:click="deleteSchoolTemplate({{ $st->id }})" wire:confirm="Are you sure you want to delete this template?" class="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl text-[11px] font-bold transition flex items-center border border-red-500/20" title="Delete Template">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 @endforeach
@@ -382,53 +465,71 @@ new class extends Component {
     <div class="space-y-4">
         <div class="flex items-center justify-between">
             <h2 class="text-base font-black text-white flex items-center space-x-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
-                <span>System Master ID Templates</span>
+                <span class="w-3 h-3 rounded-full bg-indigo-500 shadow-sm shadow-indigo-500/50"></span>
+                <span>System Master ID Presets</span>
             </h2>
-            <span class="text-xs text-slate-400 font-semibold">Standard Presets</span>
+            <span class="text-xs text-slate-400 font-bold bg-slate-900 border border-slate-800 px-3 py-1 rounded-full">Standard Presets</span>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach($masterTemplates as $tpl)
-                <div class="bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-3xl p-5 shadow-xl transition-all duration-300 flex flex-col justify-between group">
+                @php
+                    $isPortrait = $tpl->orientation === 'portrait';
+                    $scale = $isPortrait ? 0.25 : 0.31;
+                @endphp
+                <div class="bg-slate-900/90 border border-slate-800 hover:border-indigo-500/50 rounded-3xl p-5 shadow-xl hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden">
                     <div>
                         <!-- Header Info -->
-                        <div class="flex items-center justify-between mb-4">
-                            <div>
-                                <h3 class="text-sm font-extrabold text-white group-hover:text-indigo-400 transition">{{ $tpl->name }}</h3>
-                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{{ $tpl->orientation }} • {{ $tpl->width_mm }}x{{ $tpl->height_mm }}mm</span>
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="space-y-1">
+                                <h3 class="text-sm font-black text-white group-hover:text-indigo-400 transition leading-snug">{{ $tpl->name }}</h3>
+                                <span class="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800">
+                                    {{ $tpl->orientation }} • {{ $tpl->width_mm }}×{{ $tpl->height_mm }}mm
+                                </span>
                             </div>
-                            <span class="text-[10px] font-black text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider">System Master</span>
+                            <span class="text-[10px] font-black text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider shrink-0 shadow-sm">
+                                Master
+                            </span>
                         </div>
 
-                        <!-- Render Card Thumbnail -->
-                        <div class="w-full bg-slate-950/50 rounded-2xl p-3 mb-4 flex items-center justify-center border border-slate-800/80 min-h-[160px]">
-                            <div class="transform scale-[0.3] origin-center">
-                                <x-id-card-renderer :template="$tpl" :student="$mockStudent" :school="$activeSchool" />
+                        <!-- Canvas Stage & Card Thumbnail -->
+                        <div class="relative w-full bg-slate-950/80 rounded-2xl p-4 mb-4 flex items-center justify-center border border-slate-800/80 min-h-[220px] overflow-hidden group-hover:border-indigo-500/40 transition-all duration-300 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:16px_16px]">
+                            <x-id-card-renderer :template="$tpl" :student="$mockStudent" :school="$activeSchool" :scale="$scale" />
+
+                            <!-- Hover Quick Overlay -->
+                            <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center space-y-2.5 p-4 z-10">
+                                <button type="button" wire:click="customizeMasterTemplate('{{ $tpl->id }}')" class="w-36 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-black transition flex items-center justify-center shadow-lg shadow-indigo-600/30">
+                                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    Customize
+                                </button>
+                                <button type="button" wire:click="openPreviewModal('{{ $tpl->id }}', false)" class="w-36 py-2 bg-slate-800/90 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition flex items-center justify-center border border-slate-700/60">
+                                    <svg class="w-3.5 h-3.5 mr-1.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    Full Preview
+                                </button>
                             </div>
                         </div>
                     </div>
 
                     <!-- Actions -->
-                    <div class="space-y-2 pt-2 border-t border-slate-800/60">
+                    <div class="space-y-2 pt-3 border-t border-slate-800/80">
                         <div class="grid grid-cols-2 gap-2">
-                            <button type="button" wire:click="customizeMasterTemplate('{{ $tpl->id }}')" class="py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center shadow">
-                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <button type="button" wire:click="customizeMasterTemplate('{{ $tpl->id }}')" class="py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-black transition flex items-center justify-center shadow-md shadow-indigo-600/20">
+                                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
                                 Customize
                             </button>
 
-                            <button type="button" wire:click="openAssignModal('{{ $tpl->id }}', false)" class="py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition flex items-center justify-center">
-                                <svg class="w-3.5 h-3.5 mr-1 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <button type="button" wire:click="openAssignModal('{{ $tpl->id }}', false)" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-extrabold transition flex items-center justify-center border border-slate-700/60">
+                                <svg class="w-3.5 h-3.5 mr-1.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
                                 </svg>
-                                Assign
+                                Assign Grade
                             </button>
                         </div>
 
-                        <button type="button" wire:click="exportJson('{{ $tpl->id }}', false)" class="w-full text-center py-1.5 bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg text-[11px] font-semibold transition flex items-center justify-center">
-                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <button type="button" wire:click="exportJson('{{ $tpl->id }}', false)" class="w-full text-center py-1.5 bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl text-[11px] font-semibold transition flex items-center justify-center border border-slate-800">
+                            <svg class="w-3.5 h-3.5 mr-1 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                             </svg>
                             Export JSON Layout
@@ -439,6 +540,39 @@ new class extends Component {
         </div>
     </div>
 
+    <!-- Modal: Preview Template -->
+    @if($isPreviewModalOpen && $selectedTemplateForPreview)
+        @php
+            $isPortrait = $selectedTemplateForPreview->orientation === 'portrait';
+            $previewScale = $isPortrait ? 0.45 : 0.65;
+        @endphp
+        <div class="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-6">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                    <div>
+                        <h3 class="text-base font-extrabold text-white">{{ $selectedTemplateForPreview->name }}</h3>
+                        <p class="text-xs text-slate-400 mt-0.5">{{ $selectedTemplateForPreview->orientation }} • {{ $selectedTemplateForPreview->width_mm }}×{{ $selectedTemplateForPreview->height_mm }}mm</p>
+                    </div>
+                    <button type="button" wire:click="closePreviewModal" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+                </div>
+
+                <div class="bg-slate-950 rounded-2xl p-6 border border-slate-800 flex items-center justify-center min-h-[320px] overflow-hidden bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:16px_16px]">
+                    <x-id-card-renderer :template="$selectedTemplateForPreview" :student="$mockStudent" :school="$activeSchool" :scale="$previewScale" />
+                </div>
+
+                <div class="flex items-center justify-between border-t border-slate-800 pt-4">
+                    <button type="button" wire:click="exportJson({{ $selectedTemplateForPreview->id }}, {{ $isSchoolTemplate ? 'true' : 'false' }})" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition flex items-center">
+                        <svg class="w-4 h-4 mr-1.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        Export JSON
+                    </button>
+                    <button type="button" wire:click="closePreviewModal" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition">
+                        Close Preview
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- Modal: Assign Template -->
     @if($isAssignModalOpen && $selectedTemplateForAssign)
         <div class="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
@@ -448,7 +582,7 @@ new class extends Component {
                         <h3 class="text-base font-extrabold text-white">Assign Template</h3>
                         <p class="text-xs text-slate-400 mt-0.5">{{ $selectedTemplateForAssign->name }}</p>
                     </div>
-                    <button type="button" wire:click="closeAssignModal" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
+                    <button type="button" wire:click="closeAssignModal" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
                 </div>
 
                 <!-- Option 1: School Default -->
@@ -457,7 +591,7 @@ new class extends Component {
                         <span class="text-xs font-bold text-white block">Make Default School Template</span>
                         <span class="text-[11px] text-slate-400">Applies to all grades unless overridden</span>
                     </div>
-                    <button type="button" wire:click="assignToSchool('{{ $selectedTemplateForAssign->id }}', {{ $isSchoolTemplate ? 'true' : 'false' }})" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition">
+                    <button type="button" wire:click="assignToSchool('{{ $selectedTemplateForAssign->id }}', {{ $isSchoolTemplate ? 'true' : 'false' }})" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-extrabold transition shadow-md shadow-indigo-600/20">
                         Set School Default
                     </button>
                 </div>
@@ -502,7 +636,7 @@ new class extends Component {
             <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-4">
                     <h3 class="text-base font-extrabold text-white">Import JSON Template</h3>
-                    <button type="button" wire:click="$set('isImportModalOpen', false)" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
+                    <button type="button" wire:click="$set('isImportModalOpen', false)" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
                 </div>
 
                 <form wire:submit.prevent="importJsonTemplate" class="space-y-4">
@@ -522,11 +656,13 @@ new class extends Component {
                         <button type="button" wire:click="$set('isImportModalOpen', false)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition">
                             Cancel
                         </button>
-                        <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-indigo-600/20">
+                        <button type="submit" class="px-5 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-black transition shadow-lg shadow-indigo-600/20">
                             Import & Open Studio
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
     @endif
 
     <!-- Create Custom Design Orientation Selection Modal -->
