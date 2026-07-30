@@ -2107,17 +2107,19 @@ new class extends Component {
                                         </div>
 
                                     @elseif($type === 'photo')
-                                        @php
-                                            $borderRadius = $layer['border_radius'] ?? 12;
-                                            $borderColor = $layer['border_color'] ?? '#818cf8';
-                                            $borderWidth = $layer['border_width'] ?? 2;
-                                        @endphp
-                                        <div style="width: 100%; height: 100%; border-radius: {{ $borderRadius }}px; border: {{ $borderWidth }}px solid {{ $borderColor }}; overflow: hidden; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; box-sizing: border-box;">
-                                            <svg viewBox="0 0 24 24" style="width: 40%; height: 40%; color: #818cf8;" fill="currentColor">
-                                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                                            </svg>
-                                            <span style="font-size: 8px; font-weight: 800; color: #a5b4fc; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">STUDENT PHOTO</span>
-                                        </div>
+                                         @php
+                                             $borderRadius = $layer['border_radius'] ?? 12;
+                                             $borderColor = $layer['border_color'] ?? '#818cf8';
+                                             $borderWidth = $layer['border_width'] ?? 2;
+                                             $shape = $layer['shape'] ?? (($borderRadius >= 999) ? 'round' : 'square');
+                                             $radiusStyle = ($borderRadius >= 999 || $shape === 'round') ? '50%' : ($borderRadius . 'px');
+                                         @endphp
+                                         <div style="width: 100%; height: 100%; border-radius: {{ $radiusStyle }}; border: {{ $borderWidth }}px solid {{ $borderColor }}; overflow: hidden; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; box-sizing: border-box;">
+                                             <svg viewBox="0 0 24 24" style="width: 40%; height: 40%; color: #818cf8;" fill="currentColor">
+                                                 <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                             </svg>
+                                             <span style="font-size: 8px; font-weight: 800; color: #a5b4fc; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">STUDENT PHOTO</span>
+                                         </div>
 
                                     @elseif($type === 'logo')
                                         <div style="width: 100%; height: 100%; border-radius: 10px; background: linear-gradient(135deg, #312e81 0%, #4338ca 100%); border: 1.5px dashed #818cf8; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ffffff; padding: 2px; box-sizing: border-box;">
@@ -2758,6 +2760,82 @@ new class extends Component {
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-400 mb-1">Rotation Angle (°)</label>
                                     <input type="number" wire:key="input-rot-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.rotation" min="0" max="360" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                </div>
+                    <!-- Photo Specific Shape & Frame Formatting Controls -->
+                    @if(($selectedLayer['type'] ?? '') === 'photo')
+                        <div class="space-y-3 pt-2">
+                            <div>
+                                <label class="block text-[11px] font-bold text-indigo-400 mb-1.5">Photo Frame Shape & Aspect Ratio</label>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <!-- 1:1 Square Option -->
+                                    <button 
+                                        type="button" 
+                                        @click="
+                                            curH = curW;
+                                            $wire.layers[{{ $selectedLayerIndex }}].shape = 'square';
+                                            $wire.layers[{{ $selectedLayerIndex }}].height = curW;
+                                            $wire.layers[{{ $selectedLayerIndex }}].border_radius = 12;
+                                            $wire.updateLayerDimensions({{ $selectedLayerIndex }}, curW, curW, curFontSize, curX, curY);
+                                        "
+                                        class="py-2.5 px-2 rounded-xl border text-xs font-extrabold flex flex-col items-center justify-center space-y-1 transition active:scale-95"
+                                        :class="($wire.layers[{{ $selectedLayerIndex }}].shape === 'square' || ($wire.layers[{{ $selectedLayerIndex }}].border_radius < 999 && Math.abs(curW - curH) < 5)) ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/30' : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'"
+                                    >
+                                        <span class="w-4 h-4 rounded-md border-2 border-current block"></span>
+                                        <span>1:1 Square</span>
+                                    </button>
+
+                                    <!-- 3:4 Portrait Option -->
+                                    <button 
+                                        type="button" 
+                                        @click="
+                                            curH = Math.round(curW * 4 / 3);
+                                            $wire.layers[{{ $selectedLayerIndex }}].shape = 'portrait';
+                                            $wire.layers[{{ $selectedLayerIndex }}].height = curH;
+                                            $wire.layers[{{ $selectedLayerIndex }}].border_radius = 12;
+                                            $wire.updateLayerDimensions({{ $selectedLayerIndex }}, curW, curH, curFontSize, curX, curY);
+                                        "
+                                        class="py-2.5 px-2 rounded-xl border text-xs font-extrabold flex flex-col items-center justify-center space-y-1 transition active:scale-95"
+                                        :class="($wire.layers[{{ $selectedLayerIndex }}].shape === 'portrait' || ($wire.layers[{{ $selectedLayerIndex }}].border_radius < 999 && curH > curW)) ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/30' : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'"
+                                    >
+                                        <span class="w-3.5 h-4.5 rounded-md border-2 border-current block"></span>
+                                        <span>3:4 Portrait</span>
+                                    </button>
+
+                                    <!-- Round / Circle Option -->
+                                    <button 
+                                        type="button" 
+                                        @click="
+                                            curH = curW;
+                                            $wire.layers[{{ $selectedLayerIndex }}].shape = 'round';
+                                            $wire.layers[{{ $selectedLayerIndex }}].height = curW;
+                                            $wire.layers[{{ $selectedLayerIndex }}].border_radius = 9999;
+                                            $wire.updateLayerDimensions({{ $selectedLayerIndex }}, curW, curW, curFontSize, curX, curY);
+                                        "
+                                        class="py-2.5 px-2 rounded-xl border text-xs font-extrabold flex flex-col items-center justify-center space-y-1 transition active:scale-95"
+                                        :class="($wire.layers[{{ $selectedLayerIndex }}].shape === 'round' || $wire.layers[{{ $selectedLayerIndex }}].border_radius >= 999) ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/30' : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'"
+                                    >
+                                        <span class="w-4 h-4 rounded-full border-2 border-current block"></span>
+                                        <span>Round ⭕</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Border Radius (px)</label>
+                                    <input type="number" min="0" max="9999" wire:key="input-radius-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.border_radius" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Border Width (px)</label>
+                                    <input type="number" min="0" max="20" wire:key="input-bwidth-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.border_width" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Border Color (Hex)</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="color" wire:key="input-bcolor-picker-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.border_color" class="w-8 h-8 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer">
+                                    <input type="text" wire:key="input-bcolor-text-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.border_color" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 uppercase">
                                 </div>
                             </div>
                         </div>

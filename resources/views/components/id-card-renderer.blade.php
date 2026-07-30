@@ -208,7 +208,9 @@
                     $borderRadius = $layer['border_radius'] ?? 12;
                     $borderColor = $layer['border_color'] ?? '#818cf8';
                     $borderWidth = $layer['border_width'] ?? 2;
-                    $boxStyle = $style . " width: {$w}px; height: {$h}px; border-radius: {$borderRadius}px; border: {$borderWidth}px solid {$borderColor}; overflow: hidden; box-sizing: border-box;";
+                    $shape = $layer['shape'] ?? (($borderRadius >= 999) ? 'round' : 'square');
+                    $radiusStyle = ($borderRadius >= 999 || $shape === 'round') ? '50%' : ($borderRadius . 'px');
+                    $boxStyle = $style . " width: {$w}px; height: {$h}px; border-radius: {$radiusStyle}; border: {$borderWidth}px solid {$borderColor}; overflow: hidden; box-sizing: border-box;";
                 @endphp
                 <div style="{{ $boxStyle }}">
                     @if($photoUrl)
