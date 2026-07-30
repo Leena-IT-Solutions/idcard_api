@@ -734,8 +734,10 @@ new class extends Component {
             item.el.style.left = finalX + 'px';
             item.el.style.top = finalY + 'px';
 
-            this.$wire.layers[item.idx].x = finalX;
-            this.$wire.layers[item.idx].y = finalY;
+            if (this.$wire.layers && this.$wire.layers[item.idx]) {
+                this.$wire.layers[item.idx].x = finalX;
+                this.$wire.layers[item.idx].y = finalY;
+            }
 
             updates.push({
                 index: item.idx,
@@ -819,8 +821,10 @@ new class extends Component {
             item.el.style.left = finalX + 'px';
             item.el.style.top = finalY + 'px';
 
-            this.$wire.layers[item.idx].x = finalX;
-            this.$wire.layers[item.idx].y = finalY;
+            if (this.$wire.layers && this.$wire.layers[item.idx]) {
+                this.$wire.layers[item.idx].x = finalX;
+                this.$wire.layers[item.idx].y = finalY;
+            }
 
             updates.push({
                 index: item.idx,
@@ -880,7 +884,9 @@ new class extends Component {
                 item.el.style.top = finalY + 'px';
                 
                 // Keep local client state updated
-                this.$wire.layers[item.idx].y = finalY;
+                if (this.$wire.layers && this.$wire.layers[item.idx]) {
+                    this.$wire.layers[item.idx].y = finalY;
+                }
 
                 updates.push({
                     index: item.idx,
@@ -913,7 +919,9 @@ new class extends Component {
                 item.el.style.left = finalX + 'px';
                 
                 // Keep local client state updated
-                this.$wire.layers[item.idx].x = finalX;
+                if (this.$wire.layers && this.$wire.layers[item.idx]) {
+                    this.$wire.layers[item.idx].x = finalX;
+                }
 
                 updates.push({
                     index: item.idx,
@@ -972,7 +980,9 @@ new class extends Component {
             // Vertical Layout: align left edges to minX
             items.forEach(item => {
                 item.el.style.left = Math.round(minX) + 'px';
-                this.$wire.layers[item.idx].x = Math.round(minX);
+                if (this.$wire.layers && this.$wire.layers[item.idx]) {
+                    this.$wire.layers[item.idx].x = Math.round(minX);
+                }
             });
 
             // Distribute vertically if 3 or more elements
@@ -991,7 +1001,9 @@ new class extends Component {
             // Horizontal Layout: align top edges to minY
             items.forEach(item => {
                 item.el.style.top = Math.round(minY) + 'px';
-                this.$wire.layers[item.idx].y = Math.round(minY);
+                if (this.$wire.layers && this.$wire.layers[item.idx]) {
+                    this.$wire.layers[item.idx].y = Math.round(minY);
+                }
             });
 
             // Distribute horizontally if 3 or more elements
@@ -1205,8 +1217,10 @@ new class extends Component {
                         x: lx,
                         y: ly
                     });
-                    this.$wire.layers[layer.idx].x = lx;
-                    this.$wire.layers[layer.idx].y = ly;
+                    if (this.$wire.layers && this.$wire.layers[layer.idx]) {
+                        this.$wire.layers[layer.idx].x = lx;
+                        this.$wire.layers[layer.idx].y = ly;
+                    }
                 });
                 this.$wire.updateMultipleLayersCoordinates(updates);
             } else {
@@ -1596,8 +1610,10 @@ new class extends Component {
                 el.style.left = curX + 'px';
                 el.style.top = curY + 'px';
 
-                this.$wire.layers[idx].x = curX;
-                this.$wire.layers[idx].y = curY;
+                if (this.$wire.layers && this.$wire.layers[idx]) {
+                    this.$wire.layers[idx].x = curX;
+                    this.$wire.layers[idx].y = curY;
+                }
 
                 // Sync the local binding variables for single selection sidebar if selected
                 if (idx === this.$wire.selectedLayerIndex) {
