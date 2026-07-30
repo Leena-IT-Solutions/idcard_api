@@ -646,8 +646,8 @@ new class extends Component {
     getSelectedIndices() {
         const val = this.$wire.selectedLayerIndices;
         if (!val) return [];
-        if (Array.isArray(val)) return val;
-        return Object.values(val).map(v => parseInt(v));
+        const arr = Array.isArray(val) ? val : Object.values(val);
+        return arr.map(v => parseInt(v));
     },
 
     getClientCoords(e) {
@@ -1734,11 +1734,11 @@ new class extends Component {
                 <!-- Scrollable Canvas Viewport -->
                 <div 
                     @mousedown="onViewportMouseDown($event)"
-                    class="w-full flex items-center justify-center overflow-auto p-4 min-h-[460px] bg-slate-950/40 rounded-2xl border border-slate-800/60 shadow-inner"
+                    class="w-full flex items-center overflow-auto p-4 min-h-[460px] bg-slate-950/40 rounded-2xl border border-slate-800/60 shadow-inner"
                 >
                     <div 
                         id="canva-studio-canvas"
-                        class="relative select-none shadow-2xl rounded-2xl bg-slate-950 overflow-hidden shrink-0 my-auto transform transition-transform duration-200"
+                        class="relative mx-auto select-none shadow-2xl rounded-2xl bg-slate-950 overflow-hidden shrink-0 my-auto transform transition-transform duration-200"
                         :class="$wire.showGrid ? 'canvas-grid-bg' : ''"
                         :style="'width: {{ $canvasW }}px; height: {{ $canvasH }}px; transform: scale(' + ((parseFloat(zoomLevel) || 100) / 100) + '); transform-origin: center center;'"
                     >
