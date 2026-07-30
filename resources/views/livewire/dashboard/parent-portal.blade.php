@@ -40,6 +40,8 @@ new class extends Component {
     public bool $isEnrollModalOpen = false;
     public bool $isConfirmDeleteOpen = false;
     public $studentToDeleteId = null;
+    public bool $isPreviewIdCardOpen = false;
+    public $previewStudentId = null;
 
     public function mount()
     {
@@ -255,6 +257,18 @@ new class extends Component {
         } else {
             session()->flash('message', 'All child profiles are already up to date.');
         }
+    }
+
+    public function openPreviewIdCard($studentId)
+    {
+        $this->previewStudentId = $studentId;
+        $this->isPreviewIdCardOpen = true;
+    }
+
+    public function closePreviewIdCard()
+    {
+        $this->isPreviewIdCardOpen = false;
+        $this->previewStudentId = null;
     }
 
     public function getEffectiveTemplate($schoolId, $gradeId = null)
@@ -496,78 +510,102 @@ new class extends Component {
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="space-y-4">
             @forelse ($this->children as $child)
-                <div class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col justify-between group hover:shadow-md transition">
-                    <div>
-                        <!-- Photo Header -->
-                        <div class="relative h-44 bg-gray-100 dark:bg-gray-900 overflow-hidden shrink-0">
-                            @if ($child->photo_path)
-                                <img src="{{ asset('storage/' . $child->photo_path) }}" alt="{{ $child->first_name }}" class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
-                            @else
-                                <div class="w-full h-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-2xl">
-                                    {{ strtoupper(substr($child->first_name, 0, 1) . substr($child->last_name, 0, 1)) }}
-                                </div>
-                            @endif
+                @php
+                    $childEnrollment = $child->campaignStudents()->with(['campaign.school', 'grade', 'division'])->first();
+                    $childSchool = $childEnrollment ? $childEnrollment->campaign->school : null;
+                    $childTemplate = $childSchool ? $this->getEffectiveTemplate($childSchool->id, $childEnrollment->grade_id) : null;
+                @endphp
+                <div class="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700 hover:border-indigo-500/30 dark:hover:border-indigo-400/20 transition-all duration-300 flex flex-col md:flex-row group">
+                    <!-- Left Side Photo / Initials Avatar -->
+                    <div class="relative w-full md:w-52 h-48 md:h-auto md:aspect-square bg-gray-100 dark:bg-gray-900 overflow-hidden shrink-0 border-r border-gray-100 dark:border-gray-700">
+                        @if ($child->photo_path)
+                            <img src="{{ asset('storage/' . $child->photo_path) }}" alt="{{ $child->first_name }}" class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
+                        @else
+                            <div class="w-full h-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-black text-4xl">
+                                {{ strtoupper(substr($child->first_name, 0, 1) . substr($child->last_name, 0, 1)) }}
+                            </div>
+                        @endif
+                    </div>
 
-                            <!-- Floating Action Buttons on Photo -->
-                            <div class="absolute top-3 right-3 flex items-center gap-2">
-                                <button wire:click="openEditChildModal({{ $child->id }})" class="p-2 bg-white/90 dark:bg-gray-900/90 hover:bg-white dark:hover:bg-gray-900 text-indigo-600 dark:text-indigo-400 rounded-xl shadow-lg border border-gray-200/80 dark:border-gray-700/80 transition cursor-pointer backdrop-blur-sm" title="{{ __('Edit Child') }}">
-                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                    </svg>
-                                </button>
-                                <button wire:click="confirmDeleteChild({{ $child->id }})" class="p-2 bg-white/90 dark:bg-gray-900/90 hover:bg-white dark:hover:bg-gray-900 text-rose-600 dark:text-rose-400 rounded-xl shadow-lg border border-gray-200/80 dark:border-gray-700/80 transition cursor-pointer backdrop-blur-sm" title="{{ __('Delete Child') }}">
-                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                    </svg>
-                                </button>
+                    <!-- Right Side Details & Actions -->
+                    <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                <h4 class="text-xl font-extrabold text-gray-900 dark:text-gray-100">
+                                    {{ $child->first_name }} {{ $child->middle_name ? $child->middle_name . ' ' : '' }}{{ $child->last_name }}
+                                </h4>
+                                @if ($childEnrollment)
+                                    <span class="px-3 py-1 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-xl text-xs font-bold">
+                                        {{ $childEnrollment->grade->name ?? '' }} - {{ $childEnrollment->division->name ?? '' }} ({{ $childEnrollment->campaign->name ?? '' }})
+                                    </span>
+                                @endif
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs text-gray-600 dark:text-gray-400 mt-3">
+                                <div>
+                                    <span class="font-bold text-gray-400 uppercase text-[9px] block tracking-wider">Contact</span>
+                                    <span class="font-semibold text-gray-800 dark:text-gray-200">{{ $child->contact_number }}</span>
+                                </div>
+                                @if ($child->dob)
+                                    <div>
+                                        <span class="font-bold text-gray-400 uppercase text-[9px] block tracking-wider">Date of Birth</span>
+                                        <span class="font-semibold text-gray-800 dark:text-gray-200">{{ \Carbon\Carbon::parse($child->dob)->format('d M, Y') }}</span>
+                                    </div>
+                                @endif
+                                @if ($child->blood_group)
+                                    <div>
+                                        <span class="font-bold text-gray-400 uppercase text-[9px] block tracking-wider">Blood Group</span>
+                                        <span class="font-semibold text-gray-800 dark:text-gray-200">{{ $child->blood_group }}</span>
+                                    </div>
+                                @endif
+                                @if ($child->address)
+                                    <div class="sm:col-span-2 md:col-span-3">
+                                        <span class="font-bold text-gray-400 uppercase text-[9px] block tracking-wider">Address</span>
+                                        <span class="font-semibold text-gray-800 dark:text-gray-200">{{ $child->address }}, {{ $child->pincode }}</span>
+                                    </div>
+                                @endif
                             </div>
                         </div>
 
-                        <!-- Card Body -->
-                        <div class="p-5 space-y-3">
-                            <h4 class="font-extrabold text-gray-905 dark:text-gray-100 text-lg leading-tight">
-                                {{ $child->first_name }} {{ $child->middle_name ? $child->middle_name . ' ' : '' }}{{ $child->last_name }}
-                            </h4>
-                            <div class="text-[10px] text-gray-400 dark:text-gray-500 font-semibold space-y-1">
-                                <p class="flex items-center gap-1">
-                                    <span>DOB:</span>
-                                    <span class="text-gray-700 dark:text-gray-300 font-bold">{{ \Carbon\Carbon::parse($child->dob)->format('d M, Y') }}</span>
-                                </p>
-                                @if ($child->gender)
-                                    <p class="flex items-center gap-1">
-                                        <span>Gender:</span>
-                                        <span class="text-gray-700 dark:text-gray-300 font-bold">{{ $child->gender }}</span>
-                                    </p>
+                        <!-- Bottom Card Actions -->
+                        <div class="pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+                            <span class="text-[10px] font-mono font-bold tracking-widest text-gray-500 dark:text-gray-400">
+                                ST-ID: #{{ $child->id }}
+                            </span>
+                            <div class="flex items-center gap-2">
+                                @if ($childTemplate)
+                                    <button wire:click="openPreviewIdCard({{ $child->id }})" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/80 text-indigo-600 dark:text-indigo-400 border border-indigo-200/80 dark:border-indigo-700/60 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer" title="{{ __('View ID Card') }}">
+                                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                        <span>{{ __('View ID Card') }}</span>
+                                    </button>
                                 @endif
-                                @if ($child->blood_group)
-                                    <p class="flex items-center gap-1">
-                                        <span>Blood Group:</span>
-                                        <span class="text-gray-700 dark:text-gray-300 font-bold">{{ $child->blood_group }}</span>
-                                    </p>
-                                @endif
-                                <p class="flex items-start gap-1">
-                                    <span>Address:</span>
-                                    <span class="text-gray-600 dark:text-gray-400 font-normal leading-tight">{{ $child->address }}, {{ $child->pincode }}</span>
-                                </p>
+                                <button wire:click="openEditChildModal({{ $child->id }})" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/80 text-indigo-600 dark:text-indigo-400 border border-indigo-200/80 dark:border-indigo-700/60 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer" title="{{ __('Edit Profile') }}">
+                                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                    <span>{{ __('Edit') }}</span>
+                                </button>
+                                <button wire:click="confirmDeleteChild({{ $child->id }})" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/80 text-rose-600 dark:text-rose-400 border border-rose-200/80 dark:border-rose-700/60 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer" title="{{ __('Delete Profile') }}">
+                                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                    <span>{{ __('Delete') }}</span>
+                                </button>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Footer Actions -->
-                    <div class="px-5 py-3.5 border-t border-gray-100 dark:border-gray-700/80 bg-gray-50/60 dark:bg-gray-900/50 flex items-center justify-between gap-2">
-                        <span class="text-[10px] font-mono font-bold tracking-wider text-gray-500 dark:text-gray-400 bg-gray-200/60 dark:bg-gray-700/60 px-2 py-0.5 rounded-md">
-                            ID: #{{ $child->id }}
-                        </span>
-                        <div class="flex items-center gap-2">
-                            <button wire:click="openEditChildModal({{ $child->id }})" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/80 text-indigo-600 dark:text-indigo-400 border border-indigo-200/80 dark:border-indigo-700/60 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer" title="{{ __('Edit Profile') }}">
-                                <svg class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                </svg>
-                                <span>{{ __('Edit') }}</span>
-                            </button>
-                            <button wire:click="confirmDeleteChild({{ $child->id }})" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/80 text-rose-600 dark:text-rose-400 border border-rose-200/80 dark:border-rose-700/60 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer" title="{{ __('Delete Profile') }}">
+                </div>
+            @empty
+                <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-100 dark:border-gray-700 text-center">
+                    <p class="text-xs text-gray-400 italic">{{ __('No child profiles added yet. Click "Add Profile" to create one.') }}</p>
+                </div>
+            @endforelse
+        </div>
                                 <svg class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                 </svg>
@@ -832,5 +870,53 @@ new class extends Component {
                 </div>
             </div>
         </div>
+    @endif
+
+    <!-- ID Card Preview Modal -->
+    @if ($isPreviewIdCardOpen && $previewStudentId)
+        @php
+            $targetStudent = \App\Models\Student::with('campaignStudents.grade', 'campaignStudents.division', 'campaignStudents.campaign.school')->find($previewStudentId);
+            $targetEnrollment = $targetStudent ? $targetStudent->campaignStudents->first() : null;
+            $targetSchool = $targetEnrollment ? $targetEnrollment->campaign->school : null;
+            $targetTemplate = $targetSchool ? $this->getEffectiveTemplate($targetSchool->id, $targetEnrollment->grade_id) : null;
+        @endphp
+        @if ($targetStudent && $targetTemplate)
+            <div class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
+                <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity" wire:click="closePreviewIdCard"></div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-4xl w-full p-6 sm:p-8 space-y-6 shadow-2xl relative z-10 text-white">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                        <div class="space-y-1">
+                            <h3 class="text-xl font-black text-white flex items-center gap-2">
+                                <span>🪪 Student ID Card Preview</span>
+                            </h3>
+                            <p class="text-xs text-slate-400">
+                                {{ $targetStudent->first_name }} {{ $targetStudent->last_name }} &bull; Template: <strong class="text-indigo-400">{{ $targetTemplate->name }}</strong>
+                            </p>
+                        </div>
+                        <button wire:click="closePreviewIdCard" class="text-slate-400 hover:text-white p-2 transition">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center justify-center p-8 bg-slate-950/80 rounded-2xl border border-slate-800/80 shadow-inner overflow-auto">
+                        <x-id-card-renderer 
+                            :template="$targetTemplate" 
+                            :student="$targetStudent" 
+                            :school="$targetSchool" 
+                            :scale="($targetTemplate->orientation ?? 'landscape') === 'portrait' ? 0.65 : 0.75" 
+                        />
+                    </div>
+
+                    <div class="flex items-center justify-end border-t border-slate-800 pt-4">
+                        <button type="button" wire:click="closePreviewIdCard" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold text-xs uppercase transition">
+                            {{ __('Close') }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        @endif
     @endif
 </div>
