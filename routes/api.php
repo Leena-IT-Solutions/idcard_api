@@ -14,16 +14,12 @@ Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::get('/debug-template/{schoolId}', function($schoolId) {
     $st = \App\Models\SchoolTemplate::where('school_id', $schoolId)->get();
     $school = \App\Models\School::find($schoolId);
-    $controller = new \App\Http\Controllers\Api\SchoolAdminController();
-    $reflection = new \ReflectionClass($controller);
-    $method = $reflection->getMethod('getEffectiveTemplateForGradeOrSchool');
-    $method->setAccessible(true);
-    $eff = $method->invoke($controller, $schoolId, null);
+    $masterTemplates = \App\Models\Template::all();
     
     return response()->json([
         'school' => $school,
         'school_templates' => $st,
-        'effective_template' => $eff,
+        'master_templates' => $masterTemplates,
     ]);
 });
 
