@@ -671,8 +671,10 @@ new class extends Component {
     isPanning: false,
     panStartX: 0,
     panStartY: 0,
-    scrollStartX: 0,
-    scrollStartY: 0,
+    panOffsetX: 0,
+    panOffsetY: 0,
+    panStartOffsetX: 0,
+    panStartOffsetY: 0,
 
     // Marquee Drag-to-Select State
     isSelectingBox: false,
@@ -682,6 +684,11 @@ new class extends Component {
 
     toggleTool(tool) {
         this.activeTool = tool;
+    },
+
+    resetPan() {
+        this.panOffsetX = 0;
+        this.panOffsetY = 0;
     },
 
     getSelectedIndices() {
@@ -716,14 +723,11 @@ new class extends Component {
     onViewportMouseDown(event) {
         // Pan Mode / Spacebar / Middle Click Panning
         if (this.activeTool === 'pan' || this.isSpacePressed || event.button === 1) {
-            const viewport = document.getElementById('canvas-viewport-container');
-            if (viewport) {
-                this.isPanning = true;
-                this.panStartX = event.clientX;
-                this.panStartY = event.clientY;
-                this.scrollStartX = viewport.scrollLeft;
-                this.scrollStartY = viewport.scrollTop;
-            }
+            this.isPanning = true;
+            this.panStartX = event.clientX;
+            this.panStartY = event.clientY;
+            this.panStartOffsetX = this.panOffsetX;
+            this.panStartOffsetY = this.panOffsetY;
             if (event.cancelable) event.preventDefault();
             return;
         }
@@ -753,13 +757,11 @@ new class extends Component {
     },
 
     onViewportMouseMove(event) {
-        const viewport = document.getElementById('canvas-viewport-container');
-
-        if (this.isPanning && viewport) {
+        if (this.isPanning) {
             const dx = event.clientX - this.panStartX;
             const dy = event.clientY - this.panStartY;
-            viewport.scrollLeft = this.scrollStartX - dx;
-            viewport.scrollTop = this.scrollStartY - dy;
+            this.panOffsetX = Math.round(this.panStartOffsetX + dx);
+            this.panOffsetY = Math.round(this.panStartOffsetY + dy);
             return;
         }
 
@@ -1651,13 +1653,18 @@ new class extends Component {
 
         // Mouse event listeners
         window.addEventListener('mousemove', (e) => {
-            if (this.resizingIndex !== null) {
+            if (this.isPanning || this.isSelectingBox) {
+                this.onViewportMouseMove(e);
+            } else if (this.resizingIndex !== null) {
                 this.onResize(e);
             } else if (this.draggingIndex !== null) {
                 this.onDrag(e);
             }
         });
         window.addEventListener('mouseup', (e) => {
+            if (this.isPanning || this.isSelectingBox) {
+                this.onViewportMouseUp(e);
+            }
             if (this.resizingIndex !== null) {
                 this.stopResize();
             }
@@ -1932,9 +1939,9 @@ new class extends Component {
                 >
                     <div 
                         id="canva-studio-canvas"
-                        class="relative mx-auto select-none shadow-2xl rounded-2xl bg-slate-950 overflow-hidden shrink-0 my-auto transform transition-transform duration-200"
+                        class="relative mx-auto select-none shadow-2xl rounded-2xl bg-slate-950 overflow-hidden shrink-0 my-auto transform"
                         :class="$wire.showGrid ? 'canvas-grid-bg' : ''"
-                        :style="'width: {{ $canvasW }}px; height: {{ $canvasH }}px; transform: scale(' + ((parseFloat(zoomLevel) || 100) / 100) + '); transform-origin: center center;'"
+                        :style="'width: {{ $canvasW }}px; height: {{ $canvasH }}px; transform: translate(' + panOffsetX + 'px, ' + panOffsetY + 'px) scale(' + ((parseFloat(zoomLevel) || 100) / 100) + '); transform-origin: center center;'"
                     >
                         <!-- Drag-to-Select Marquee Rectangle Overlay -->
                         <div 
@@ -2101,6 +2108,16 @@ new class extends Component {
                             >
                                 <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0 0v-2.5m0 2.5l3.5 3.5m0 0l3.5-3.5m-3.5 3.5V6a2 2 0 012-2h0a2 2 0 012 2v6.5"/></svg>
                                 Pan
+                            </button>
+                            <button 
+                                type="button" 
+                                x-show="panOffsetX !== 0 || panOffsetY !== 0"
+                                @click="resetPan()"
+                                class="px-2.5 py-1.5 rounded-lg text-xs font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 transition flex items-center"
+                                title="Reset View Offset"
+                            >
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                Center
                             </button>
                         </div>
 
