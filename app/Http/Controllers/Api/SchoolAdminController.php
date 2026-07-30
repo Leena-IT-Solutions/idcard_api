@@ -96,46 +96,62 @@ class SchoolAdminController extends Controller
         return response()->json($schools);
     }
  
+    private function formatTemplateForApi($template)
+    {
+        if (!$template) return null;
+        
+        if ($template instanceof \App\Models\SchoolTemplate) {
+            if (empty($template->background_image) && $template->template_id) {
+                $master = \App\Models\Template::find($template->template_id);
+                if ($master && !empty($master->background_image)) {
+                    $template->setAttribute('background_image', $master->background_image);
+                }
+            }
+        }
+        
+        return $template;
+    }
+
     private function getEffectiveTemplateForGradeOrSchool($schoolId, $gradeId = null)
     {
+        $tpl = null;
         if ($gradeId) {
             $grade = \App\Models\Grade::find($gradeId);
             if ($grade) {
                 if ($grade->school_template_id && ($st = \App\Models\SchoolTemplate::find($grade->school_template_id))) {
-                    return $st;
-                }
-                if ($grade->template_id) {
-                    if ($st = \App\Models\SchoolTemplate::find($grade->template_id)) return $st;
-                    if ($mt = \App\Models\Template::find($grade->template_id)) return $mt;
-                    if ($mt = \App\Models\Template::where('slug', $grade->template_id)->first()) return $mt;
+                    $tpl = $st;
+                } elseif ($grade->template_id) {
+                    if ($st = \App\Models\SchoolTemplate::find($grade->template_id)) $tpl = $st;
+                    elseif ($mt = \App\Models\Template::find($grade->template_id)) $tpl = $mt;
+                    elseif ($mt = \App\Models\Template::where('slug', $grade->template_id)->first()) $tpl = $mt;
                 }
             }
         }
 
-        if ($schoolId) {
+        if (!$tpl && $schoolId) {
             $school = \App\Models\School::find($schoolId);
             if ($school) {
                 if ($school->school_template_id && ($st = \App\Models\SchoolTemplate::find($school->school_template_id))) {
-                    return $st;
+                    $tpl = $st;
+                } elseif ($school->template_id) {
+                    if ($st = \App\Models\SchoolTemplate::find($school->template_id)) $tpl = $st;
+                    elseif ($mt = \App\Models\Template::find($school->template_id)) $tpl = $mt;
+                    elseif ($mt = \App\Models\Template::where('slug', $school->template_id)->first()) $tpl = $mt;
                 }
-                if ($school->template_id) {
-                    if ($st = \App\Models\SchoolTemplate::find($school->template_id)) return $st;
-                    if ($mt = \App\Models\Template::find($school->template_id)) return $mt;
-                    if ($mt = \App\Models\Template::where('slug', $school->template_id)->first()) return $mt;
+                if (!$tpl) {
+                    $tpl = \App\Models\SchoolTemplate::where('school_id', $schoolId)->where('is_default', true)->first();
                 }
-                $defaultSt = \App\Models\SchoolTemplate::where('school_id', $schoolId)->where('is_default', true)->first();
-                if ($defaultSt) return $defaultSt;
-
-                $anySt = \App\Models\SchoolTemplate::where('school_id', $schoolId)->first();
-                if ($anySt) return $anySt;
+                if (!$tpl) {
+                    $tpl = \App\Models\SchoolTemplate::where('school_id', $schoolId)->first();
+                }
             }
         }
 
-        // Fallback to Master Template
-        $defaultMaster = \App\Models\Template::where('is_default', true)->first();
-        if ($defaultMaster) return $defaultMaster;
+        if (!$tpl) {
+            $tpl = \App\Models\Template::where('is_default', true)->first() ?: \App\Models\Template::first();
+        }
 
-        return \App\Models\Template::first();
+        return $this->formatTemplateForApi($tpl);
     }
 
     public function options(Request $request)
