@@ -96,6 +96,37 @@ class SchoolAdminController extends Controller
         return response()->json($schools);
     }
  
+    private function getEffectiveTemplateForGradeOrSchool($schoolId, $gradeId = null)
+    {
+        if ($gradeId) {
+            $grade = \App\Models\Grade::find($gradeId);
+            if ($grade) {
+                if ($grade->school_template_id && ($st = \App\Models\SchoolTemplate::find($grade->school_template_id))) {
+                    return $st;
+                }
+                if ($grade->template_id && ($mt = \App\Models\Template::find($grade->template_id))) {
+                    return $mt;
+                }
+            }
+        }
+
+        if ($schoolId) {
+            $school = \App\Models\School::find($schoolId);
+            if ($school) {
+                if ($school->school_template_id && ($st = \App\Models\SchoolTemplate::find($school->school_template_id))) {
+                    return $st;
+                }
+                if ($school->template_id && ($mt = \App\Models\Template::find($school->template_id))) {
+                    return $mt;
+                }
+                $defaultSt = \App\Models\SchoolTemplate::where('school_id', $schoolId)->where('is_default', true)->first();
+                if ($defaultSt) return $defaultSt;
+            }
+        }
+
+        return null;
+    }
+
     public function options(Request $request)
     {
         $request->validate(['school_id' => 'required|exists:schools,id']);
@@ -116,10 +147,14 @@ class SchoolAdminController extends Controller
         }])->get();
             
         $campaigns = \App\Models\Campaign::where('school_id', $schoolId)->get();
+        $school = \App\Models\School::find($schoolId);
+        $effectiveTemplate = $this->getEffectiveTemplateForGradeOrSchool($schoolId);
 
         return response()->json([
             'grades' => $grades,
             'campaigns' => $campaigns,
+            'school' => $school,
+            'effective_template' => $effectiveTemplate,
         ]);
     }
  
@@ -349,6 +384,14 @@ class SchoolAdminController extends Controller
                 ->orderBy('last_name', 'asc');
         }
 
+        $mapStudentTemplate = function($student) use ($schoolId, $request) {
+            $firstE = $student->campaignStudents ? $student->campaignStudents->first() : null;
+            $gradeId = $request->filter_grade ?: ($firstE ? $firstE->grade_id : null);
+            $tpl = $this->getEffectiveTemplateForGradeOrSchool($schoolId, $gradeId);
+            $student->setAttribute('effective_template', $tpl);
+            return $student;
+        };
+
         if ($request->has('page')) {
             $studentsPaginator = $query->with(['campaignStudents' => function($q) use ($schoolId) {
                 $q->whereHas('campaign', function($inner) use ($schoolId) {
@@ -356,13 +399,14 @@ class SchoolAdminController extends Controller
                 })->with(['grade', 'division', 'campaign']);
             }])->simplePaginate($perPage);
             
-            return response()->json($studentsPaginator->items());
+            $items = collect($studentsPaginator->items())->map($mapStudentTemplate);
+            return response()->json($items);
         } else {
             $students = $query->with(['campaignStudents' => function($q) use ($schoolId) {
                 $q->whereHas('campaign', function($inner) use ($schoolId) {
                     $inner->where('school_id', $schoolId);
                 })->with(['grade', 'division', 'campaign']);
-            }])->get();
+            }])->get()->map($mapStudentTemplate);
             
             return response()->json($students);
         }
