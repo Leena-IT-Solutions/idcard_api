@@ -392,17 +392,17 @@ new class extends Component {
                 <span class="text-xs text-slate-600 dark:text-slate-400 font-bold bg-slate-100 border border-slate-200 dark:bg-slate-900 dark:border-slate-800 px-3 py-1 rounded-full">{{ $schoolTemplates->count() }} Custom Template(s)</span>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
                 @foreach($schoolTemplates as $st)
                     @php
                         $isPortrait = $st->orientation === 'portrait';
                         $isDefault = ($activeSchool && $activeSchool->template_id == $st->id) || $st->is_default;
                         $scale = $isPortrait ? 0.25 : 0.31;
                     @endphp
-                    <div class="bg-white border border-slate-200 hover:border-indigo-500/50 text-slate-900 shadow-md hover:shadow-xl dark:bg-slate-900 dark:border-slate-800 dark:hover:border-indigo-500/50 dark:text-white rounded-3xl p-5 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden">
-                        <div>
+                    <div class="bg-white border border-slate-200 hover:border-indigo-500/50 text-slate-900 shadow-md hover:shadow-xl dark:bg-slate-900 dark:border-slate-800 dark:hover:border-indigo-500/50 dark:text-white rounded-3xl p-5 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden h-full">
+                        <div class="flex flex-col flex-1 min-h-0">
                             <!-- Header Info -->
-                            <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-start justify-between mb-4 shrink-0">
                                 <div class="space-y-1">
                                     <h3 class="text-sm font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition leading-snug">{{ $st->name }}</h3>
                                     <div class="flex items-center space-x-2">
@@ -418,8 +418,8 @@ new class extends Component {
                                 @endif
                             </div>
 
-                            <!-- Canvas Stage & Card Thumbnail -->
-                            <div class="relative w-full bg-slate-100 border border-slate-200 dark:bg-slate-950 dark:border-slate-800/80 rounded-2xl p-4 mb-4 flex items-center justify-center min-h-[220px] overflow-hidden group-hover:border-indigo-500/40 transition-all duration-300 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] dark:bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:16px_16px]">
+                            <!-- Canvas Stage & Card Thumbnail - Expands 100% full height & floats ID card in dead center -->
+                            <div class="relative w-full flex-1 min-h-[260px] bg-slate-100 border border-slate-200 dark:bg-slate-950 dark:border-slate-800/80 rounded-2xl p-4 mb-4 flex items-center justify-center overflow-hidden group-hover:border-indigo-500/40 transition-all duration-300 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] dark:bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:16px_16px]">
                                 <x-id-card-renderer :template="$st" :student="$mockStudent" :school="$activeSchool" :scale="$scale" />
 
                                 <!-- Hover Quick Overlay -->
@@ -437,7 +437,7 @@ new class extends Component {
                         </div>
 
                         <!-- Card Action Buttons -->
-                        <div class="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800/80">
+                        <div class="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800/80 shrink-0">
                             <div class="grid grid-cols-2 gap-2">
                                 <a href="{{ route('templates.edit', ['template' => $st->id, 'type' => 'school']) }}" class="py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition flex items-center justify-center shadow-md shadow-indigo-600/20">
                                     <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -483,16 +483,16 @@ new class extends Component {
             <span class="text-xs text-slate-600 dark:text-slate-400 font-bold bg-slate-100 border border-slate-200 dark:bg-slate-900 dark:border-slate-800 px-3 py-1 rounded-full">Standard Presets</span>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
             @foreach($masterTemplates as $tpl)
                 @php
                     $isPortrait = $tpl->orientation === 'portrait';
                     $scale = $isPortrait ? 0.25 : 0.31;
                 @endphp
-                <div class="bg-white border border-slate-200 hover:border-indigo-500/50 text-slate-900 shadow-md hover:shadow-xl dark:bg-slate-900 dark:border-slate-800 dark:hover:border-indigo-500/50 dark:text-white rounded-3xl p-5 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden">
-                    <div>
+                <div class="bg-white border border-slate-200 hover:border-indigo-500/50 text-slate-900 shadow-md hover:shadow-xl dark:bg-slate-900 dark:border-slate-800 dark:hover:border-indigo-500/50 dark:text-white rounded-3xl p-5 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden h-full">
+                    <div class="flex flex-col flex-1 min-h-0">
                         <!-- Header Info -->
-                        <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-start justify-between mb-4 shrink-0">
                             <div class="space-y-1">
                                 <h3 class="text-sm font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition leading-snug">{{ $tpl->name }}</h3>
                                 <span class="text-[10px] text-slate-600 dark:text-slate-400 font-extrabold uppercase tracking-wider bg-slate-100 border border-slate-200 dark:bg-slate-950 dark:border-slate-800 px-2 py-0.5 rounded-md">
@@ -504,8 +504,8 @@ new class extends Component {
                             </span>
                         </div>
 
-                        <!-- Canvas Stage & Card Thumbnail -->
-                        <div class="relative w-full bg-slate-100 border border-slate-200 dark:bg-slate-950 dark:border-slate-800/80 rounded-2xl p-4 mb-4 flex items-center justify-center min-h-[220px] overflow-hidden group-hover:border-indigo-500/40 transition-all duration-300 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] dark:bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:16px_16px]">
+                        <!-- Canvas Stage & Card Thumbnail - Expands 100% full height & floats ID card in dead center -->
+                        <div class="relative w-full flex-1 min-h-[260px] bg-slate-100 border border-slate-200 dark:bg-slate-950 dark:border-slate-800/80 rounded-2xl p-4 mb-4 flex items-center justify-center overflow-hidden group-hover:border-indigo-500/40 transition-all duration-300 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] dark:bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:16px_16px]">
                             <x-id-card-renderer :template="$tpl" :student="$mockStudent" :school="$activeSchool" :scale="$scale" />
 
                             <!-- Hover Quick Overlay -->
@@ -522,8 +522,8 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <!-- Actions -->
-                    <div class="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800/80">
+                    <!-- Actions (Stays pinned to bottom) -->
+                    <div class="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800/80 shrink-0">
                         <div class="grid grid-cols-2 gap-2">
                             <button type="button" wire:click="customizeMasterTemplate('{{ $tpl->id }}')" class="py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition flex items-center justify-center shadow-md shadow-indigo-600/20">
                                 <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
