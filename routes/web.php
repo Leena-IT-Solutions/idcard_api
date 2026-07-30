@@ -185,6 +185,18 @@ Route::middleware(['auth'])->group(function () {
         }
     })->name('git.info');
 
+    Route::get('/check-env', function () {
+        if (! auth()->user()->hasRole('saas_admin')) {
+            abort(403);
+        }
+        return response()->json([
+            'app_url' => config('app.url'),
+            'livewire_asset_url' => config('livewire.asset_url'),
+            'app_env' => config('app.env'),
+            'app_debug' => config('app.debug'),
+        ]);
+    })->name('git.check-env');
+
     Route::post('/git-update', function () {
         if (! auth()->user()->hasAnyRole(['saas_admin', 'school_admin'])) {
             abort(403);
