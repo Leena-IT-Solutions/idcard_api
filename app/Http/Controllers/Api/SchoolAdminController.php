@@ -576,26 +576,38 @@ class SchoolAdminController extends Controller
         $request->validate(['school_id' => 'required|exists:schools,id']);
         $schoolId = $request->school_id;
         $scopes = $this->getPermittedScopes($schoolId);
- 
+
         $student = Student::findOrFail($id);
- 
-        $enrollment = \App\Models\CampaignStudent::where('student_id', $student->id)
-            ->whereHas('campaign', function($q) use ($schoolId) {
+
+        $query = \App\Models\CampaignStudent::where('student_id', $student->id);
+
+        if ($request->has('campaign_id') && $request->campaign_id) {
+            $query->where('campaign_id', $request->campaign_id);
+        } else {
+            $query->whereHas('campaign', function($q) use ($schoolId) {
                 $q->where('school_id', $schoolId);
-            })->firstOrFail();
- 
-        if ($scopes['restricted']) {
-            if (!in_array($enrollment->grade_id, $scopes['grades']) || !in_array($enrollment->division_id, $scopes['divisions'])) {
-                return response()->json(['message' => 'You do not have permission to delete this student.'], 403);
-            }
-        }
- 
-        if ($student->photo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($student->photo_path)) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($student->photo_path);
+            });
         }
 
-        $student->delete();
-        return response()->json(['success' => true, 'message' => 'Student deleted successfully.']);
+        $enrollments = $query->get();
+
+        if ($enrollments->isEmpty()) {
+            return response()->json(['message' => 'No active enrollment found for this campaign.'], 404);
+        }
+
+        if ($scopes['restricted']) {
+            foreach ($enrollments as $enrollment) {
+                if (!in_array($enrollment->grade_id, $scopes['grades']) || !in_array($enrollment->division_id, $scopes['divisions'])) {
+                    return response()->json(['message' => 'You do not have permission to remove this student enrollment.'], 403);
+                }
+            }
+        }
+
+        foreach ($enrollments as $enrollment) {
+            $enrollment->delete();
+        }
+
+        return response()->json(['success' => true, 'message' => 'Student enrollment removed from campaign successfully.']);
     }
 
     public function updateMember(Request $request, string $id)

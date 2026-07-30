@@ -612,25 +612,33 @@ new class extends Component
             $student = Student::findOrFail($this->studentToDeleteId);
 
             $activeSchoolId = session('active_school_id');
-            $enrollment = \App\Models\CampaignStudent::where('student_id', $student->id)
-                ->whereHas('campaign', function($q) use ($activeSchoolId) {
-                    $q->where('school_id', $activeSchoolId);
-                })->first();
+            $query = \App\Models\CampaignStudent::where('student_id', $student->id);
 
-            if ($enrollment) {
+            if ($this->selectedCampaignId) {
+                $query->where('campaign_id', $this->selectedCampaignId);
+            } else if ($activeSchoolId) {
+                $query->whereHas('campaign', function($q) use ($activeSchoolId) {
+                    $q->where('school_id', $activeSchoolId);
+                });
+            }
+
+            $enrollments = $query->get();
+
+            if ($enrollments->isNotEmpty()) {
                 $scopes = $this->getPermittedScopes();
                 if ($scopes['restricted']) {
-                    if (!in_array($enrollment->grade_id, $scopes['grades']) || !in_array($enrollment->division_id, $scopes['divisions'])) {
-                        abort(403, 'You do not have permission to delete this student.');
+                    foreach ($enrollments as $enrollment) {
+                        if (!in_array($enrollment->grade_id, $scopes['grades']) || !in_array($enrollment->division_id, $scopes['divisions'])) {
+                            abort(403, 'You do not have permission to remove this student from campaign.');
+                        }
                     }
                 }
-            }
 
-            if ($student->photo_path) {
-                Storage::disk('public')->delete($student->photo_path);
+                foreach ($enrollments as $enrollment) {
+                    $enrollment->delete();
+                }
+                session()->flash('message', 'Student removed from campaign successfully.');
             }
-            $student->delete();
-            session()->flash('message', 'Student deleted successfully.');
         }
         $this->isConfirmDeleteOpen = false;
     }
@@ -1718,16 +1726,16 @@ new class extends Component
                         </div>
                         <div>
                             <h3 class="text-base font-bold text-gray-900 dark:text-gray-100">
-                                {{ __('Delete Student') }}
+                                {{ __('Remove Student from Campaign') }}
                             </h3>
                             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                {{ __('Action Confirmation Required') }}
+                                {{ __('Campaign Enrollment Removal') }}
                             </p>
                         </div>
                     </div>
 
                     <p class="text-xs text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
-                        {{ __('Are you sure you want to permanently delete this student record? This action cannot be undone.') }}
+                        {{ __('Are you sure you want to remove this student from the campaign? Their enrollment in this campaign will be removed, but their master profile will remain intact.') }}
                     </p>
 
                     <div class="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
@@ -1735,7 +1743,7 @@ new class extends Component
                             {{ __('Cancel') }}
                         </button>
                         <button type="button" wire:click="deleteStudent" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-xs uppercase shadow transition cursor-pointer">
-                            {{ __('Delete') }}
+                            {{ __('Remove') }}
                         </button>
                     </div>
                 </div>
