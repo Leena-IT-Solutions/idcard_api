@@ -104,8 +104,10 @@ class SchoolAdminController extends Controller
                 if ($grade->school_template_id && ($st = \App\Models\SchoolTemplate::find($grade->school_template_id))) {
                     return $st;
                 }
-                if ($grade->template_id && ($mt = \App\Models\Template::find($grade->template_id))) {
-                    return $mt;
+                if ($grade->template_id) {
+                    if ($st = \App\Models\SchoolTemplate::find($grade->template_id)) return $st;
+                    if ($mt = \App\Models\Template::find($grade->template_id)) return $mt;
+                    if ($mt = \App\Models\Template::where('slug', $grade->template_id)->first()) return $mt;
                 }
             }
         }
@@ -116,15 +118,24 @@ class SchoolAdminController extends Controller
                 if ($school->school_template_id && ($st = \App\Models\SchoolTemplate::find($school->school_template_id))) {
                     return $st;
                 }
-                if ($school->template_id && ($mt = \App\Models\Template::find($school->template_id))) {
-                    return $mt;
+                if ($school->template_id) {
+                    if ($st = \App\Models\SchoolTemplate::find($school->template_id)) return $st;
+                    if ($mt = \App\Models\Template::find($school->template_id)) return $mt;
+                    if ($mt = \App\Models\Template::where('slug', $school->template_id)->first()) return $mt;
                 }
                 $defaultSt = \App\Models\SchoolTemplate::where('school_id', $schoolId)->where('is_default', true)->first();
                 if ($defaultSt) return $defaultSt;
+
+                $anySt = \App\Models\SchoolTemplate::where('school_id', $schoolId)->first();
+                if ($anySt) return $anySt;
             }
         }
 
-        return null;
+        // Fallback to Master Template
+        $defaultMaster = \App\Models\Template::where('is_default', true)->first();
+        if ($defaultMaster) return $defaultMaster;
+
+        return \App\Models\Template::first();
     }
 
     public function options(Request $request)
