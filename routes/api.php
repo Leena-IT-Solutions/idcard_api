@@ -11,6 +11,22 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 
+Route::get('/debug-template/{schoolId}', function($schoolId) {
+    $st = \App\Models\SchoolTemplate::where('school_id', $schoolId)->get();
+    $school = \App\Models\School::find($schoolId);
+    $controller = new \App\Http\Controllers\Api\SchoolAdminController();
+    $reflection = new \ReflectionClass($controller);
+    $method = $reflection->getMethod('getEffectiveTemplateForGradeOrSchool');
+    $method->setAccessible(true);
+    $eff = $method->invoke($controller, $schoolId, null);
+    
+    return response()->json([
+        'school' => $school,
+        'school_templates' => $st,
+        'effective_template' => $eff,
+    ]);
+});
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::put('/user/profile', [AuthController::class, 'updateProfile']);
