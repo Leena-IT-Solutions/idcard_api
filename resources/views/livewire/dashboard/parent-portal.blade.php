@@ -388,6 +388,20 @@ new class extends Component {
                                     {{ strtoupper(substr($child->first_name, 0, 1) . substr($child->last_name, 0, 1)) }}
                                 </div>
                             @endif
+
+                            <!-- Floating Action Buttons on Photo -->
+                            <div class="absolute top-3 right-3 flex items-center gap-2">
+                                <button wire:click="openEditChildModal({{ $child->id }})" class="p-2 bg-white/90 dark:bg-gray-900/90 hover:bg-white dark:hover:bg-gray-900 text-indigo-600 dark:text-indigo-400 rounded-xl shadow-lg border border-gray-200/80 dark:border-gray-700/80 transition cursor-pointer backdrop-blur-sm" title="{{ __('Edit Child') }}">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </button>
+                                <button wire:click="confirmDeleteChild({{ $child->id }})" class="p-2 bg-white/90 dark:bg-gray-900/90 hover:bg-white dark:hover:bg-gray-900 text-rose-600 dark:text-rose-400 rounded-xl shadow-lg border border-gray-200/80 dark:border-gray-700/80 transition cursor-pointer backdrop-blur-sm" title="{{ __('Delete Child') }}">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Card Body -->
@@ -421,20 +435,22 @@ new class extends Component {
                     </div>
 
                     <!-- Footer Actions -->
-                    <div class="p-5 pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                        <span class="text-[9px] uppercase font-black tracking-widest text-gray-400 dark:text-gray-500">
+                    <div class="px-5 py-3.5 border-t border-gray-100 dark:border-gray-700/80 bg-gray-50/60 dark:bg-gray-900/50 flex items-center justify-between gap-2">
+                        <span class="text-[10px] font-mono font-bold tracking-wider text-gray-500 dark:text-gray-400 bg-gray-200/60 dark:bg-gray-700/60 px-2 py-0.5 rounded-md">
                             ID: #{{ $child->id }}
                         </span>
-                        <div class="flex items-center gap-1">
-                            <button wire:click="openEditChildModal({{ $child->id }})" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-900 rounded-xl text-gray-400 hover:text-indigo-600 dark:text-gray-500 transition cursor-pointer">
-                                <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="flex items-center gap-2">
+                            <button wire:click="openEditChildModal({{ $child->id }})" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/80 text-indigo-600 dark:text-indigo-400 border border-indigo-200/80 dark:border-indigo-700/60 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer" title="{{ __('Edit Profile') }}">
+                                <svg class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
+                                <span>{{ __('Edit') }}</span>
                             </button>
-                            <button wire:click="confirmDeleteChild({{ $child->id }})" class="p-2 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl text-gray-400 hover:text-red-600 dark:text-gray-500 transition cursor-pointer">
-                                <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <button wire:click="confirmDeleteChild({{ $child->id }})" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/80 text-rose-600 dark:text-rose-400 border border-rose-200/80 dark:border-rose-700/60 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer" title="{{ __('Delete Profile') }}">
+                                <svg class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                 </svg>
+                                <span>{{ __('Delete') }}</span>
                             </button>
                         </div>
                     </div>
