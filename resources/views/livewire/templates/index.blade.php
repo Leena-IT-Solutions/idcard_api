@@ -18,6 +18,7 @@ new class extends Component {
     public $selectedTemplateForAssign = null; // Can be Template or SchoolTemplate
     public bool $isSchoolTemplate = false;
     public $schoolGrades = [];
+    public ?string $assignSuccessMessage = null;
 
     // Preview properties
     public bool $isPreviewModalOpen = false;
@@ -123,7 +124,13 @@ new class extends Component {
             if ($isSchoolTpl) {
                 SchoolTemplate::where('school_id', $activeSchoolId)->update(['is_default' => false]);
                 SchoolTemplate::where('id', $templateId)->update(['is_default' => true]);
+                $this->selectedTemplateForAssign = SchoolTemplate::find($templateId);
+            } else {
+                $this->selectedTemplateForAssign = Template::find($templateId);
             }
+
+            $templateName = $this->selectedTemplateForAssign ? $this->selectedTemplateForAssign->name : 'Template';
+            $this->assignSuccessMessage = '✓ Assigned "' . $templateName . '" as Default School Template for ' . $school->name . '!';
             session()->flash('message', 'Default school ID card template updated successfully!');
         }
     }
@@ -143,6 +150,7 @@ new class extends Component {
     public function openAssignModal($templateId, $isSchoolTpl = false)
     {
         $this->isSchoolTemplate = $isSchoolTpl;
+        $this->assignSuccessMessage = null;
         if ($isSchoolTpl) {
             $this->selectedTemplateForAssign = SchoolTemplate::find($templateId);
         } else {
@@ -156,6 +164,7 @@ new class extends Component {
     {
         $this->isAssignModalOpen = false;
         $this->selectedTemplateForAssign = null;
+        $this->assignSuccessMessage = null;
     }
 
     public function assignToGrade($gradeId, $templateId, $isSchoolTpl = false)
@@ -168,6 +177,9 @@ new class extends Component {
                 $grade->update(['template_id' => $templateId]);
             }
             $this->loadGrades();
+
+            $templateName = $this->selectedTemplateForAssign ? $this->selectedTemplateForAssign->name : 'Template';
+            $this->assignSuccessMessage = '✓ Assigned "' . $templateName . '" to Grade ' . $grade->name . ' successfully!';
             session()->flash('message', 'Template assigned to grade successfully!');
         }
     }
@@ -575,8 +587,15 @@ new class extends Component {
 
     <!-- Modal: Assign Template -->
     @if($isAssignModalOpen && $selectedTemplateForAssign)
+        @php
+            $isSchoolDefault = $activeSchool && (
+                $isSchoolTemplate 
+                    ? ($activeSchool->template_id == $selectedTemplateForAssign->id || $selectedTemplateForAssign->is_default)
+                    : ($activeSchool->template_id == $selectedTemplateForAssign->id)
+            );
+        @endphp
         <div class="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-4">
                     <div>
                         <h3 class="text-base font-extrabold text-white">Assign Template</h3>
@@ -585,15 +604,32 @@ new class extends Component {
                     <button type="button" wire:click="closeAssignModal" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
                 </div>
 
+                @if($assignSuccessMessage)
+                    <div class="bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 p-3.5 rounded-2xl flex items-center justify-between text-xs font-bold shadow-md">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                            <span>{{ $assignSuccessMessage }}</span>
+                        </div>
+                        <button type="button" wire:click="$set('assignSuccessMessage', null)" class="text-emerald-400 hover:text-white transition">&times;</button>
+                    </div>
+                @endif
+
                 <!-- Option 1: School Default -->
                 <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex items-center justify-between">
                     <div>
                         <span class="text-xs font-bold text-white block">Make Default School Template</span>
                         <span class="text-[11px] text-slate-400">Applies to all grades unless overridden</span>
                     </div>
-                    <button type="button" wire:click="assignToSchool('{{ $selectedTemplateForAssign->id }}', {{ $isSchoolTemplate ? 'true' : 'false' }})" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-extrabold transition shadow-md shadow-indigo-600/20">
-                        Set School Default
-                    </button>
+                    @if($isSchoolDefault)
+                        <span class="px-4 py-2 bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 rounded-xl text-xs font-black flex items-center space-x-1.5 shadow-sm">
+                            <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                            <span>✓ Active Default</span>
+                        </span>
+                    @else
+                        <button type="button" wire:click="assignToSchool('{{ $selectedTemplateForAssign->id }}', {{ $isSchoolTemplate ? 'true' : 'false' }})" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-xs font-extrabold transition shadow-md shadow-indigo-600/20 active:scale-95">
+                            Set School Default
+                        </button>
+                    @endif
                 </div>
 
                 <!-- Option 2: Grade Specific -->
@@ -606,24 +642,31 @@ new class extends Component {
                                     ? ($g->school_template_id == $selectedTemplateForAssign->id)
                                     : ($g->template_id == $selectedTemplateForAssign->id);
                             @endphp
-                            <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3 flex items-center justify-between">
+                            <div class="bg-slate-950/70 border border-slate-800/80 rounded-2xl p-3 flex items-center justify-between">
                                 <div>
                                     <span class="text-xs font-bold text-white">Grade {{ $g->name }}</span>
                                     @if($isAssigned)
                                         <span class="text-[10px] text-emerald-400 font-bold ml-2">● Currently Assigned</span>
                                     @endif
                                 </div>
-                                <button type="button" wire:click="assignToGrade({{ $g->id }}, '{{ $selectedTemplateForAssign->id }}', {{ $isSchoolTemplate ? 'true' : 'false' }})" class="px-3 py-1.5 {{ $isAssigned ? 'bg-slate-800 text-slate-400' : 'bg-slate-800 hover:bg-slate-700 text-slate-200' }} rounded-lg text-xs font-semibold transition">
-                                    {{ $isAssigned ? 'Re-assign' : 'Assign to Grade' }}
-                                </button>
+                                @if($isAssigned)
+                                    <button type="button" wire:click="assignToGrade({{ $g->id }}, '{{ $selectedTemplateForAssign->id }}', {{ $isSchoolTemplate ? 'true' : 'false' }})" class="px-3.5 py-1.5 bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 rounded-xl text-xs font-bold transition flex items-center space-x-1">
+                                        <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                        <span>✓ Assigned</span>
+                                    </button>
+                                @else
+                                    <button type="button" wire:click="assignToGrade({{ $g->id }}, '{{ $selectedTemplateForAssign->id }}', {{ $isSchoolTemplate ? 'true' : 'false' }})" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition active:scale-95">
+                                        Assign to Grade {{ $g->name }}
+                                    </button>
+                                @endif
                             </div>
                         @endforeach
                     </div>
                 </div>
 
                 <div class="flex justify-end pt-2">
-                    <button type="button" wire:click="closeAssignModal" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition">
-                        Close
+                    <button type="button" wire:click="closeAssignModal" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition">
+                        Done / Close
                     </button>
                 </div>
             </div>
