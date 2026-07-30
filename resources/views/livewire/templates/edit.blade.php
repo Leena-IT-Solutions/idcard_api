@@ -47,10 +47,10 @@ new class extends Component {
             return redirect()->route('templates');
         }
 
-        $this->templateName = $this->template->name;
-        $this->orientation = $this->template->orientation ?? 'landscape';
-        $this->widthMm = (float)($this->template->width_mm ?? 85.60);
-        $this->heightMm = (float)($this->template->height_mm ?? 54.00);
+        $this->templateName = $this->template->name ?? ($this->type === 'school' && $this->template->masterTemplate ? $this->template->masterTemplate->name : '');
+        $this->orientation = $this->template->orientation ?? ($this->type === 'school' && $this->template->masterTemplate ? $this->template->masterTemplate->orientation : 'landscape');
+        $this->widthMm = (float)($this->template->width_mm ?? ($this->type === 'school' && $this->template->masterTemplate ? $this->template->masterTemplate->width_mm : 85.60));
+        $this->heightMm = (float)($this->template->height_mm ?? ($this->type === 'school' && $this->template->masterTemplate ? $this->template->masterTemplate->height_mm : 54.00));
 
         $config = $this->template->layout_config;
         $this->layers = is_array($config) ? $config : (is_string($config) ? json_decode($config, true) : []);
@@ -124,6 +124,7 @@ new class extends Component {
 
     public function selectLayer(?int $index = null, bool $shift = false)
     {
+
         if ($index === null) {
             $this->selectedLayerIndices = [];
             $this->selectedLayerIndex = null;
@@ -161,6 +162,7 @@ new class extends Component {
         } else {
             $this->selectedLayerIndex = null;
         }
+
     }
 
     public function updateMultipleLayersCoordinates(array $updates)
@@ -604,10 +606,6 @@ new class extends Component {
         ];
     }
 }; ?>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Fira+Code:wght@300..700&family=Inter:wght@100..900&family=Lora:ital,wght@0,400..700;1,400..700&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Oswald:wght@200..700&family=Outfit:wght@100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 
 @php
     $isPortrait = $orientation === 'portrait';
@@ -2457,6 +2455,9 @@ new class extends Component {
                 </div>
             </div>
         </div>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=Fira+Code:wght@300..700&family=Inter:wght@100..900&family=Lora:ital,wght@0,400..700;1,400..700&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Oswald:wght@200..700&family=Outfit:wght@100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <style>
     .canvas-grid-bg {
         background-image: 
