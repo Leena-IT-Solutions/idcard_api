@@ -78,10 +78,19 @@ class CardRenderService
             @mkdir($crashDumpsDir, 0755, true);
         }
 
+        // --- Set HOME to writable dir for www-data (Chrome needs this) ---
+        $home = getenv('HOME');
+        if (!$home || !is_writable($home)) {
+            putenv("HOME={$chromeDataDir}");
+        }
+        putenv("XDG_CONFIG_HOME={$chromeDataDir}");
+        putenv("XDG_CACHE_HOME={$chromeDataDir}");
+
         // --- Chrome args ---
         $browsershot->setOption('args', [
             '--no-sandbox',
             '--disable-setuid-sandbox',
+            '--headless=new',
             '--allow-file-access-from-files',
             '--disable-web-security',
             '--disable-dev-shm-usage',
@@ -89,8 +98,11 @@ class CardRenderService
             '--user-data-dir=' . $chromeDataDir,
             '--crash-dumps-dir=' . $crashDumpsDir,
             '--disable-crash-reporter',
+            '--disable-breakpad',
             '--no-first-run',
             '--disable-extensions',
+            '--disable-component-update',
+            '--disable-default-apps',
         ]);
 
         // --- Chrome binary ---
