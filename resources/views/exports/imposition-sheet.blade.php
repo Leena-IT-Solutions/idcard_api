@@ -140,7 +140,30 @@
                     <div class="bleed-box">
                         <!-- Background Extension Bleed -->
                         @if ($template && $template->background_image)
-                            <img src="{{ str_starts_with($template->background_image, 'http') ? $template->background_image : asset('storage/' . $template->background_image) }}" style="width: 100%; height: 100%; object-fit: cover;" />
+                            @php
+                                $bgImg = $template->background_image;
+                                $bgImgUrl = null;
+                                if (str_starts_with($bgImg, 'http://') || str_starts_with($bgImg, 'https://') || str_starts_with($bgImg, 'data:')) {
+                                    $bgImgUrl = $bgImg;
+                                } else {
+                                    $cleanBg = ltrim($bgImg, '/');
+                                    if (str_starts_with($cleanBg, 'storage/')) {
+                                        $cleanBg = substr($cleanBg, 8);
+                                    }
+                                    $localBg = storage_path('app/public/' . $cleanBg);
+                                    $pubBg = public_path('storage/' . $cleanBg);
+                                    if (file_exists($localBg)) {
+                                        $bgImgUrl = 'file://' . $localBg;
+                                    } elseif (file_exists($pubBg)) {
+                                        $bgImgUrl = 'file://' . $pubBg;
+                                    } else {
+                                        $bgImgUrl = asset('storage/' . $cleanBg);
+                                    }
+                                }
+                            @endphp
+                            @if ($bgImgUrl)
+                                <img src="{{ $bgImgUrl }}" style="width: 100%; height: 100%; object-fit: cover;" />
+                            @endif
                         @endif
                     </div>
 

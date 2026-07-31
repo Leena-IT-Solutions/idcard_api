@@ -155,19 +155,42 @@
         '{School Address}' => $schoolAddress,
     ];
 
+    $resolveImageUrl = function($path) {
+        if (!$path) return null;
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, 'data:')) {
+            return $path;
+        }
+        $cleanPath = ltrim($path, '/');
+        if (str_starts_with($cleanPath, 'storage/')) {
+            $cleanPath = substr($cleanPath, 8);
+        }
+        $localPath = storage_path('app/public/' . $cleanPath);
+        if (file_exists($localPath)) {
+            return 'file://' . $localPath;
+        }
+        $pubPath = public_path('storage/' . $cleanPath);
+        if (file_exists($pubPath)) {
+            return 'file://' . $pubPath;
+        }
+        return asset('storage/' . $cleanPath);
+    };
+
+    $bgUrl = $resolveImageUrl($bgPath);
+    $photoUrl = $resolveImageUrl($photoPath);
+    $schoolLogoUrl = $resolveImageUrl($schoolLogo);
+
     $scaledW = round($widthPx * $scale);
     $scaledH = round($heightPx * $scale);
 @endphp
 
 <!-- Responsive Container Wrapper -->
-<div class="relative overflow-hidden shrink-0 inline-block align-top select-none" style="width: {{ $scaledW }}px; height: {{ $scaledH }}px;">
+<div style="position: relative; overflow: hidden; flex-shrink: 0; display: inline-block; vertical-align: top; user-select: none; width: {{ $scaledW }}px; height: {{ $scaledH }}px;">
     <!-- Actual Native Scale Inner Card -->
     <div 
-        class="relative overflow-hidden shadow-2xl rounded-2xl bg-slate-950 border border-slate-700/60"
-        style="width: {{ $widthPx }}px; height: {{ $heightPx }}px; transform: scale({{ $scale }}); transform-origin: top left;"
+        style="position: relative; overflow: hidden; border-radius: 16px; background-color: #020617; border: 1px solid rgba(51, 65, 85, 0.6); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); width: {{ $widthPx }}px; height: {{ $heightPx }}px; transform: scale({{ $scale }}); transform-origin: top left;"
     >
         @if($bgUrl)
-            <img src="{{ $bgUrl }}" class="absolute inset-0 w-full h-full object-fill pointer-events-none z-0 rounded-2xl" alt="Card Background" />
+            <img src="{{ $bgUrl }}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; pointer-events: none; z-index: 0; border-radius: 16px;" alt="Card Background" />
         @endif
 
         @foreach($config as $layer)

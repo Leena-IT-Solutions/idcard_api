@@ -13,13 +13,35 @@ class CardRenderService
      */
     public function renderFrontHtml($template, Student $student, School $school): string
     {
-        return view('components.id-card-renderer', [
+        $cardHtml = view('components.id-card-renderer', [
             'template' => $template,
             'student' => $student,
             'school' => $school,
             'scale' => 1.0,
             'previewMode' => false,
         ])->render();
+
+        return '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ID Card</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+        }
+    </style>
+</head>
+<body style="margin: 0; padding: 0; background: transparent;">
+' . $cardHtml . '
+</body>
+</html>';
     }
 
     /**
