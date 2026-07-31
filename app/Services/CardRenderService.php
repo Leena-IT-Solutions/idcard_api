@@ -36,9 +36,10 @@ class CardRenderService
         $chromePath = env('CHROME_PATH');
         if (!$chromePath) {
             foreach ([
-                '/usr/bin/google-chrome',
                 '/usr/bin/chromium-browser',
                 '/usr/bin/chromium',
+                '/usr/bin/google-chrome',
+                '/usr/bin/google-chrome-stable',
                 '/usr/local/bin/chrome',
                 '/opt/google/chrome/chrome',
             ] as $path) {
@@ -48,6 +49,7 @@ class CardRenderService
                 }
             }
         }
+
 
         if ($chromePath) {
             $browsershot->setChromePath($chromePath);
