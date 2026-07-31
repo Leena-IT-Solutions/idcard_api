@@ -47,8 +47,15 @@ new class extends Component
     public bool $isConfirmDeleteOpen = false;
     public $studentToDeleteId = null;
 
+    // View Mode & Preview ID Card State
+    public string $viewMode = 'auto'; // 'auto', 'list', 'template'
+    public bool $isPreviewIdCardOpen = false;
+    public $previewStudentId = null;
+
+
     // Export Modal State
     public bool $isExportModalOpen = false;
+
     public string $exportType = 'excel_photo_zip'; // 'excel_photo_zip', 'png_zip', 'imposition_pdf'
     public string $exportPageSize = 'A4';
     public float $exportBleedMm = 3.0;
