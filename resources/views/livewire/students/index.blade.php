@@ -47,10 +47,96 @@ new class extends Component
     public bool $isConfirmDeleteOpen = false;
     public $studentToDeleteId = null;
 
-    // View Mode & Preview ID Card State
-    public string $viewMode = 'auto'; // 'auto', 'list', 'template'
-    public bool $isPreviewIdCardOpen = false;
-    public $previewStudentId = null;
+    // Export Modal State
+    public bool $isExportModalOpen = false;
+    public string $exportType = 'excel_photo_zip'; // 'excel_photo_zip', 'png_zip', 'imposition_pdf'
+    public string $exportPageSize = 'A4';
+    public float $exportBleedMm = 3.0;
+    public float $exportMarginMm = 3.0;
+    public float $exportGutterMm = 6.0;
+    public float $exportCustomWidthMm = 210.0;
+    public float $exportCustomHeightMm = 297.0;
+
+    public function openExportModal()
+    {
+        $this->isExportModalOpen = true;
+    }
+
+    public function closeExportModal()
+    {
+        $this->isExportModalOpen = false;
+    }
+
+    public function triggerExport()
+    {
+        $activeSchoolId = session('active_school_id');
+        if (!$activeSchoolId) return;
+
+        $user = auth()->user();
+
+        $query = Student::query();
+        $scopes = $this->getPermittedScopes();
+        if ($scopes['restricted']) {
+            $query->whereHas('campaignStudents', function($q) use ($scopes) {
+                $q->whereIn('grade_id', $scopes['grades'])
+                  ->whereIn('division_id', $scopes['divisions']);
+            });
+        }
+
+        $query->whereHas('campaignStudents.campaign', function($q) use ($activeSchoolId) {
+            $q->where('school_id', $activeSchoolId);
+            if ($this->filterCampaign) {
+                $q->where('id', $this->filterCampaign);
+            }
+        });
+
+        if ($this->filterGrade || $this->filterDivision) {
+            $query->whereHas('campaignStudents', function($q) {
+                if ($this->filterGrade) {
+                    $q->where('grade_id', $this->filterGrade);
+                }
+                if ($this->filterDivision) {
+                    $q->where('division_id', $this->filterDivision);
+                }
+            });
+        }
+
+        $targetStudentIds = $query->pluck('id')->all();
+
+        if (empty($targetStudentIds)) {
+            session()->flash('message', 'No eligible students found to export for active filter selection.');
+            return;
+        }
+
+        $params = [
+            'campaign_id' => $this->filterCampaign ?: null,
+            'student_ids' => $targetStudentIds,
+            'page_size' => $this->exportPageSize,
+            'custom_width_mm' => $this->exportCustomWidthMm,
+            'custom_height_mm' => $this->exportCustomHeightMm,
+            'bleed_mm' => $this->exportBleedMm,
+            'margin_mm' => $this->exportMarginMm,
+            'gutter_mm' => $this->exportGutterMm,
+        ];
+
+        $export = \App\Models\Export::create([
+            'user_id' => $user->id,
+            'school_id' => $activeSchoolId,
+            'type' => $this->exportType,
+            'status' => 'pending',
+            'params' => $params,
+            'total_items' => count($targetStudentIds),
+            'processed_items' => 0,
+        ]);
+
+        match ($this->exportType) {
+            'excel_photo_zip' => \App\Jobs\ExportExcelPhotoZipJob::dispatch($export->id),
+            'png_zip' => \App\Jobs\ExportPngZipJob::dispatch($export->id),
+            'imposition_pdf' => \App\Jobs\ExportImpositionPdfJob::dispatch($export->id),
+        };
+
+        session()->flash('message', 'Export job submitted successfully. Processing in background.');
+    }
 
     public function openPreviewIdCard($studentId)
     {
@@ -63,6 +149,7 @@ new class extends Component
         $this->isPreviewIdCardOpen = false;
         $this->previewStudentId = null;
     }
+
 
     public function getEffectiveTemplate($student = null)
     {
@@ -1040,6 +1127,12 @@ new class extends Component
                 </svg>
                 <span>{{ __('Sync Links') }}</span>
             </button>
+            <button wire:click="openExportModal" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <span>{{ __('Export Center') }}</span>
+            </button>
             <button wire:click="openBulkModal" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold text-xs uppercase tracking-wider rounded-xl transition shadow hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -1860,6 +1953,12 @@ new class extends Component
                     <div class="flex items-center justify-between pt-2 border-t border-slate-800">
                         <span class="text-xs text-slate-400 font-mono">Format: Standard CR-80 (85.6mm &times; 54.0mm)</span>
                         <div class="flex items-center gap-3">
+                            <a href="/api/school-admin/students/{{ $targetStudent->id }}/export-pdf?school_id={{ session('active_school_id') }}&campaign_id={{ $filterCampaign }}" target="_blank" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                <span>Download PDF</span>
+                            </a>
                             <button onclick="window.print()" type="button" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow flex items-center gap-2 cursor-pointer">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
@@ -1875,4 +1974,155 @@ new class extends Component
             </div>
         @endif
     @endif
+
+    <!-- Export Center Modal -->
+    @if ($isExportModalOpen)
+        <div class="fixed inset-0 z-50 overflow-y-auto" wire:poll.5s>
+            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 transition-opacity bg-gray-900/60 dark:bg-black/80 backdrop-blur-sm" wire:click="closeExportModal"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+
+                <div class="inline-block w-full max-w-3xl p-6 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-700 sm:my-8">
+                    <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-700">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ __('Export & Print Center') }}</h3>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ __('Bulk ID cards export, excel roster, and imposition print PDF.') }}</p>
+                            </div>
+                        </div>
+                        <button wire:click="closeExportModal" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
+                    @php
+                        $targetStudentsCount = count($studentsList);
+                        $unverifiedCount = collect($studentsList)->filter(function($s) {
+                            $enrollments = is_array($s) ? ($s['campaign_students'] ?? []) : ($s->campaignStudents ?? []);
+                            $first = collect($enrollments)->first();
+                            return !($first && !empty(is_array($first) ? $first['verified_at'] : $first->verified_at));
+                        })->count();
+                    @endphp
+
+                    @if ($unverifiedCount > 0)
+                        <div class="mt-4 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 rounded-2xl flex items-center gap-3 text-xs text-amber-800 dark:text-amber-400">
+                            <svg class="w-5 h-5 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                            <span><strong>{{ __('Verification Warning') }}:</strong> {{ __(':unverified of :total selected students are not yet verified.', ['unverified' => $unverifiedCount, 'total' => $targetStudentsCount]) }} {{ __('You may proceed with export.') }}</span>
+                        </div>
+                    @endif
+
+                    <!-- Export Configuration Options -->
+                    <div class="mt-6 space-y-4">
+                        <div>
+                            <label class="text-xs font-bold text-gray-700 dark:text-gray-300 block mb-2">{{ __('Select Export Format') }}</label>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <label class="p-3 border rounded-2xl flex flex-col justify-between cursor-pointer transition {{ $exportType === 'excel_photo_zip' ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-900 dark:text-indigo-200' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40' }}">
+                                    <input type="radio" wire:model.live="exportType" value="excel_photo_zip" class="hidden" />
+                                    <span class="font-bold text-xs">{{ __('Excel Roster + Photos ZIP') }}</span>
+                                    <span class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">{{ __('Spreadsheet plus student photos directory.') }}</span>
+                                </label>
+                                <label class="p-3 border rounded-2xl flex flex-col justify-between cursor-pointer transition {{ $exportType === 'png_zip' ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-900 dark:text-indigo-200' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40' }}">
+                                    <input type="radio" wire:model.live="exportType" value="png_zip" class="hidden" />
+                                    <span class="font-bold text-xs">{{ __('Rendered Cards PNG (ZIP)') }}</span>
+                                    <span class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">{{ __('High-resolution PNG image per student.') }}</span>
+                                </label>
+                                <label class="p-3 border rounded-2xl flex flex-col justify-between cursor-pointer transition {{ $exportType === 'imposition_pdf' ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-900 dark:text-indigo-200' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40' }}">
+                                    <input type="radio" wire:model.live="exportType" value="imposition_pdf" class="hidden" />
+                                    <span class="font-bold text-xs">{{ __('Print Imposition PDF') }}</span>
+                                    <span class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">{{ __('Multi-card layout sheet with trim marks & bleed.') }}</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        @if ($exportType === 'imposition_pdf')
+                            <div class="p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-2xl grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                                <div>
+                                    <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">{{ __('Page Size') }}</label>
+                                    <select wire:model.live="exportPageSize" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl text-xs">
+                                        <option value="A4">A4 (210 x 297 mm)</option>
+                                        <option value="Letter">Letter (215.9 x 279.4 mm)</option>
+                                        <option value="Custom">Custom Size</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">{{ __('Bleed (mm)') }}</label>
+                                    <input type="number" step="0.5" wire:model="exportBleedMm" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl text-xs" />
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">{{ __('Safety Margin (mm)') }}</label>
+                                    <input type="number" step="0.5" wire:model="exportMarginMm" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl text-xs" />
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">{{ __('Gutter (mm)') }}</label>
+                                    <input type="number" step="0.5" wire:model="exportGutterMm" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl text-xs" />
+                                </div>
+                            </div>
+                        @endif
+
+                        <div class="flex justify-end pt-2">
+                            <button wire:click="triggerExport" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow cursor-pointer">
+                                {{ __('Start Background Export') }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- My Recent Exports List -->
+                    <div class="mt-8 border-t border-gray-100 dark:border-gray-700 pt-5">
+                        <h4 class="text-xs font-extrabold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">{{ __('My Recent Exports') }}</h4>
+                        @php
+                            $userExports = \App\Models\Export::where('school_id', session('active_school_id'))
+                                ->where('user_id', auth()->id())
+                                ->orderBy('id', 'desc')
+                                ->take(6)
+                                ->get();
+                        @endphp
+                        <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
+                            @forelse ($userExports as $exp)
+                                <div class="p-3 bg-gray-50 dark:bg-gray-900/60 border border-gray-100 dark:border-gray-700/60 rounded-2xl flex items-center justify-between text-xs">
+                                    <div>
+                                        <span class="font-bold text-gray-800 dark:text-gray-200 uppercase text-[11px] block">
+                                            {{ str_replace('_', ' ', $exp->type) }}
+                                        </span>
+                                        <span class="text-[10px] text-gray-500">
+                                            {{ $exp->created_at->format('M d, H:i') }} • {{ $exp->processed_items }}/{{ $exp->total_items ?? 0 }} items
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        @if ($exp->status === 'completed')
+                                            <span class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-lg text-[10px] font-bold">COMPLETED</span>
+                                            <a href="{{ route('exports.download', $exp) }}" target="_blank" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow transition">
+                                                Download
+                                            </a>
+                                        @elseif ($exp->status === 'processing')
+                                            <span class="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-lg text-[10px] font-bold flex items-center gap-1.5">
+                                                <svg class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                PROCESSING
+                                            </span>
+                                        @elseif ($exp->status === 'failed')
+                                            <span class="px-2.5 py-1 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-lg text-[10px] font-bold" title="{{ $exp->error_message }}">FAILED</span>
+                                        @else
+                                            <span class="px-2.5 py-1 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-lg text-[10px] font-bold">PENDING</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="text-center py-4 text-xs text-gray-400">
+                                    {{ __('No recent export tasks found.') }}
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>
+

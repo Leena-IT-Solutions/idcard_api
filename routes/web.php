@@ -144,6 +144,11 @@ Route::get('update-system', function () {
     return view('update-system');
 })->middleware(['auth'])->name('update-system');
 
+Route::get('/school-admin/exports/{export}/download', [\App\Http\Controllers\Api\SchoolAdminController::class, 'downloadExport'])
+    ->middleware(['auth'])
+    ->name('exports.download');
+
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/git-info', function () {
         if (! auth()->user()->hasAnyRole(['saas_admin', 'school_admin'])) {

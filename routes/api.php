@@ -48,4 +48,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user/invitations', [\App\Http\Controllers\Api\SchoolAdminController::class, 'userInvitations']);
     Route::post('/user/invitations/{id}/accept', [\App\Http\Controllers\Api\SchoolAdminController::class, 'acceptUserInvitation']);
     Route::post('/user/invitations/{id}/decline', [\App\Http\Controllers\Api\SchoolAdminController::class, 'declineUserInvitation']);
+
+    // Exports API routes
+    Route::get('/school-admin/students/{id}/export-pdf', [\App\Http\Controllers\Api\SchoolAdminController::class, 'exportSingleStudentPdf']);
+    Route::post('/school-admin/exports', [\App\Http\Controllers\Api\SchoolAdminController::class, 'createExport']);
+    Route::get('/school-admin/exports', [\App\Http\Controllers\Api\SchoolAdminController::class, 'listExports']);
+
 });

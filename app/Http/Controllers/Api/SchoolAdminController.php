@@ -783,4 +783,188 @@ class SchoolAdminController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Invitation declined successfully.']);
     }
+
+    public function exportSingleStudentPdf(Request $request, string $id)
+    {
+        $request->validate([
+            'school_id' => 'required|exists:schools,id',
+            'campaign_id' => 'nullable|exists:campaigns,id',
+        ]);
+
+        $schoolId = $request->school_id;
+        $campaignId = $request->campaign_id;
+        $permitted = $this->getPermittedScopes($schoolId);
+
+        $student = \App\Models\Student::findOrFail($id);
+
+        $enrollment = \App\Models\CampaignStudent::where('student_id', $student->id)
+            ->when($campaignId, fn($q) => $q->where('campaign_id', $campaignId))
+            ->when($permitted['restricted'], function($q) use ($permitted) {
+                $q->where(function($sub) use ($permitted) {
+                    foreach ($permitted['assignments'] as $asg) {
+                        $sub->orWhere(function($sq) use ($asg) {
+                            $sq->where('grade_id', $asg['grade_id']);
+                            if (!empty($asg['division_id'])) {
+                                $sq->where('division_id', $asg['division_id']);
+                            }
+                        });
+                    }
+                });
+            })
+            ->with(['grade', 'division', 'verifier', 'campaign'])
+            ->first();
+
+        if ($permitted['restricted'] && !$enrollment) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized access to student scope.'], 403);
+        }
+
+        if ($enrollment) {
+            $student->setRelation('campaignStudents', collect([$enrollment]));
+        }
+
+        $school = \App\Models\School::findOrFail($schoolId);
+        $templateResolver = new \App\Services\TemplateResolverService();
+        $template = $templateResolver->getEffectiveTemplate($schoolId, $enrollment?->grade_id);
+
+        $cardRenderer = new \App\Services\CardRenderService();
+        $html = $cardRenderer->renderFrontHtml($template, $student, $school);
+
+        $orientation = $template->orientation ?? 'landscape';
+        $isPortrait = $orientation === 'portrait';
+        $cardWidthMm = $isPortrait ? 54.0 : 85.6;
+        $cardHeightMm = $isPortrait ? 85.6 : 54.0;
+
+        $pdf = $cardRenderer->toPdf($html, $cardWidthMm, $cardHeightMm);
+
+        $schoolCode = preg_replace('/[^A-Za-z0-9_-]/', '', $school->school_code ?? $school->name ?? 'SCHOOL');
+
+        $name = preg_replace('/[^A-Za-z0-9_-]/', '_', trim("{$student->first_name}_{$student->last_name}"));
+        $filename = "{$schoolCode}_{$name}_idcard.pdf";
+
+        return response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    public function createExport(Request $request)
+    {
+        $request->validate([
+            'school_id' => 'required|exists:schools,id',
+            'type' => 'required|in:excel_photo_zip,png_zip,imposition_pdf',
+            'campaign_id' => 'nullable|exists:campaigns,id',
+            'student_ids' => 'nullable|array',
+            'student_ids.*' => 'exists:students,id',
+            'page_size' => 'nullable|string',
+            'custom_width_mm' => 'nullable|numeric',
+            'custom_height_mm' => 'nullable|numeric',
+            'bleed_mm' => 'nullable|numeric',
+            'margin_mm' => 'nullable|numeric',
+            'gutter_mm' => 'nullable|numeric',
+        ]);
+
+        $schoolId = $request->school_id;
+        $campaignId = $request->campaign_id;
+        $user = auth()->user();
+
+        $permitted = $this->getPermittedScopes($schoolId);
+
+        $query = \App\Models\CampaignStudent::whereHas('campaign', fn($q) => $q->where('school_id', $schoolId))
+            ->when($campaignId, fn($q) => $q->where('campaign_id', $campaignId));
+
+        if ($request->filled('student_ids')) {
+            $query->whereIn('student_id', $request->student_ids);
+        }
+
+        if ($permitted['restricted']) {
+            $query->where(function($sub) use ($permitted) {
+                foreach ($permitted['assignments'] as $asg) {
+                    $sub->orWhere(function($sq) use ($asg) {
+                        $sq->where('grade_id', $asg['grade_id']);
+                        if (!empty($asg['division_id'])) {
+                            $sq->where('division_id', $asg['division_id']);
+                        }
+                    });
+                }
+            });
+        }
+
+        $targetStudentIds = $query->pluck('student_id')->unique()->values()->all();
+
+        if (empty($targetStudentIds)) {
+            return response()->json(['success' => false, 'message' => 'No eligible students found for export scope.'], 422);
+        }
+
+        $params = [
+            'campaign_id' => $campaignId,
+            'student_ids' => $targetStudentIds,
+            'page_size' => $request->page_size ?? 'A4',
+            'custom_width_mm' => $request->custom_width_mm,
+            'custom_height_mm' => $request->custom_height_mm,
+            'bleed_mm' => $request->bleed_mm ?? 3.0,
+            'margin_mm' => $request->margin_mm ?? 3.0,
+            'gutter_mm' => $request->gutter_mm ?? 6.0,
+        ];
+
+        $export = \App\Models\Export::create([
+            'user_id' => $user->id,
+            'school_id' => $schoolId,
+            'type' => $request->type,
+            'status' => 'pending',
+            'params' => $params,
+            'total_items' => count($targetStudentIds),
+            'processed_items' => 0,
+        ]);
+
+        match ($request->type) {
+            'excel_photo_zip' => \App\Jobs\ExportExcelPhotoZipJob::dispatch($export->id),
+            'png_zip' => \App\Jobs\ExportPngZipJob::dispatch($export->id),
+            'imposition_pdf' => \App\Jobs\ExportImpositionPdfJob::dispatch($export->id),
+        };
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Export task initiated successfully.',
+            'export' => $export,
+        ]);
+    }
+
+    public function listExports(Request $request)
+    {
+        $request->validate(['school_id' => 'required|exists:schools,id']);
+        $user = auth()->user();
+
+        $exports = \App\Models\Export::where('school_id', $request->school_id)
+            ->where('user_id', $user->id)
+            ->orderBy('id', 'desc')
+            ->limit(20)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'exports' => $exports,
+        ]);
+    }
+
+    public function downloadExport(\App\Models\Export $export)
+    {
+        $user = auth()->user();
+
+        if ($export->user_id !== $user->id) {
+            $permitted = $this->getPermittedScopes($export->school_id);
+            if ($permitted['restricted']) {
+                abort(403, 'Unauthorized access to export file.');
+            }
+        }
+
+        if ($export->status !== 'completed' || !$export->file_path) {
+            abort(404, 'Export file not ready or failed.');
+        }
+
+        if (!\Illuminate\Support\Facades\Storage::disk('local')->exists($export->file_path)) {
+            abort(404, 'Export file not found on disk.');
+        }
+
+        return \Illuminate\Support\Facades\Storage::disk('local')->download($export->file_path);
+    }
 }
