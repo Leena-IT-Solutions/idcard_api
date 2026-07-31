@@ -23,7 +23,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_001.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_001.svg',
     'layout_config' => 
     array (
       0 => 
@@ -179,7 +179,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_002.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_002.svg',
     'layout_config' => 
     array (
       0 => 
@@ -335,7 +335,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_003.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_003.svg',
     'layout_config' => 
     array (
       0 => 
@@ -497,7 +497,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_004.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_004.svg',
     'layout_config' => 
     array (
       0 => 
@@ -653,7 +653,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_005.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_005.svg',
     'layout_config' => 
     array (
       0 => 
@@ -809,7 +809,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_006.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_006.svg',
     'layout_config' => 
     array (
       0 => 
@@ -971,7 +971,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_007.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_007.svg',
     'layout_config' => 
     array (
       0 => 
@@ -1127,7 +1127,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_008.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_008.svg',
     'layout_config' => 
     array (
       0 => 
@@ -1283,7 +1283,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_009.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_009.svg',
     'layout_config' => 
     array (
       0 => 
@@ -1445,7 +1445,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_010.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_010.svg',
     'layout_config' => 
     array (
       0 => 
@@ -1601,7 +1601,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_011.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_011.svg',
     'layout_config' => 
     array (
       0 => 
@@ -1757,7 +1757,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_012.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_012.svg',
     'layout_config' => 
     array (
       0 => 
@@ -1919,7 +1919,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_013.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_013.svg',
     'layout_config' => 
     array (
       0 => 
@@ -2075,7 +2075,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_014.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_014.svg',
     'layout_config' => 
     array (
       0 => 
@@ -2231,7 +2231,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_015.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_015.svg',
     'layout_config' => 
     array (
       0 => 
@@ -2393,7 +2393,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_016.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_016.svg',
     'layout_config' => 
     array (
       0 => 
@@ -2549,7 +2549,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_017.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_017.svg',
     'layout_config' => 
     array (
       0 => 
@@ -2705,7 +2705,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_018.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_018.svg',
     'layout_config' => 
     array (
       0 => 
@@ -2867,7 +2867,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_019.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_019.svg',
     'layout_config' => 
     array (
       0 => 
@@ -3023,7 +3023,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_020.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_020.svg',
     'layout_config' => 
     array (
       0 => 
@@ -3179,7 +3179,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_021.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_021.svg',
     'layout_config' => 
     array (
       0 => 
@@ -3341,7 +3341,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_022.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_022.svg',
     'layout_config' => 
     array (
       0 => 
@@ -3497,7 +3497,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_023.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_023.svg',
     'layout_config' => 
     array (
       0 => 
@@ -3653,7 +3653,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_024.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_024.svg',
     'layout_config' => 
     array (
       0 => 
@@ -3815,7 +3815,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_025.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_025.svg',
     'layout_config' => 
     array (
       0 => 
@@ -3971,7 +3971,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_026.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_026.svg',
     'layout_config' => 
     array (
       0 => 
@@ -4127,7 +4127,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_027.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_027.svg',
     'layout_config' => 
     array (
       0 => 
@@ -4289,7 +4289,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_028.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_028.svg',
     'layout_config' => 
     array (
       0 => 
@@ -4445,7 +4445,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_029.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_029.svg',
     'layout_config' => 
     array (
       0 => 
@@ -4601,7 +4601,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_030.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_030.svg',
     'layout_config' => 
     array (
       0 => 
@@ -4763,7 +4763,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_031.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_031.svg',
     'layout_config' => 
     array (
       0 => 
@@ -4919,7 +4919,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_032.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_032.svg',
     'layout_config' => 
     array (
       0 => 
@@ -5075,7 +5075,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_033.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_033.svg',
     'layout_config' => 
     array (
       0 => 
@@ -5237,7 +5237,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_034.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_034.svg',
     'layout_config' => 
     array (
       0 => 
@@ -5393,7 +5393,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_035.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_035.svg',
     'layout_config' => 
     array (
       0 => 
@@ -5549,7 +5549,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_036.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_036.svg',
     'layout_config' => 
     array (
       0 => 
@@ -5711,7 +5711,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_037.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_037.svg',
     'layout_config' => 
     array (
       0 => 
@@ -5867,7 +5867,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_038.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_038.svg',
     'layout_config' => 
     array (
       0 => 
@@ -6023,7 +6023,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_039.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_039.svg',
     'layout_config' => 
     array (
       0 => 
@@ -6185,7 +6185,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_040.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_040.svg',
     'layout_config' => 
     array (
       0 => 
@@ -6341,7 +6341,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_041.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_041.svg',
     'layout_config' => 
     array (
       0 => 
@@ -6497,7 +6497,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_042.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_042.svg',
     'layout_config' => 
     array (
       0 => 
@@ -6659,7 +6659,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_043.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_043.svg',
     'layout_config' => 
     array (
       0 => 
@@ -6815,7 +6815,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_044.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_044.svg',
     'layout_config' => 
     array (
       0 => 
@@ -6971,7 +6971,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_045.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_045.svg',
     'layout_config' => 
     array (
       0 => 
@@ -7133,7 +7133,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_046.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_046.svg',
     'layout_config' => 
     array (
       0 => 
@@ -7289,7 +7289,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_047.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_047.svg',
     'layout_config' => 
     array (
       0 => 
@@ -7445,7 +7445,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_048.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_048.svg',
     'layout_config' => 
     array (
       0 => 
@@ -7607,7 +7607,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_049.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_049.svg',
     'layout_config' => 
     array (
       0 => 
@@ -7763,7 +7763,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_050.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_050.svg',
     'layout_config' => 
     array (
       0 => 
@@ -7919,7 +7919,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_051.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_051.svg',
     'layout_config' => 
     array (
       0 => 
@@ -8081,7 +8081,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_052.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_052.svg',
     'layout_config' => 
     array (
       0 => 
@@ -8237,7 +8237,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_053.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_053.svg',
     'layout_config' => 
     array (
       0 => 
@@ -8393,7 +8393,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_054.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_054.svg',
     'layout_config' => 
     array (
       0 => 
@@ -8555,7 +8555,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_055.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_055.svg',
     'layout_config' => 
     array (
       0 => 
@@ -8711,7 +8711,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_056.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_056.svg',
     'layout_config' => 
     array (
       0 => 
@@ -8867,7 +8867,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_057.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_057.svg',
     'layout_config' => 
     array (
       0 => 
@@ -9029,7 +9029,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_058.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_058.svg',
     'layout_config' => 
     array (
       0 => 
@@ -9185,7 +9185,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_059.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_059.svg',
     'layout_config' => 
     array (
       0 => 
@@ -9341,7 +9341,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_060.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_060.svg',
     'layout_config' => 
     array (
       0 => 
@@ -9503,7 +9503,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_061.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_061.svg',
     'layout_config' => 
     array (
       0 => 
@@ -9659,7 +9659,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_062.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_062.svg',
     'layout_config' => 
     array (
       0 => 
@@ -9815,7 +9815,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_063.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_063.svg',
     'layout_config' => 
     array (
       0 => 
@@ -9977,7 +9977,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_064.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_064.svg',
     'layout_config' => 
     array (
       0 => 
@@ -10133,7 +10133,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_065.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_065.svg',
     'layout_config' => 
     array (
       0 => 
@@ -10289,7 +10289,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_066.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_066.svg',
     'layout_config' => 
     array (
       0 => 
@@ -10451,7 +10451,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_067.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_067.svg',
     'layout_config' => 
     array (
       0 => 
@@ -10607,7 +10607,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_068.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_068.svg',
     'layout_config' => 
     array (
       0 => 
@@ -10763,7 +10763,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_069.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_069.svg',
     'layout_config' => 
     array (
       0 => 
@@ -10925,7 +10925,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_070.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_070.svg',
     'layout_config' => 
     array (
       0 => 
@@ -11081,7 +11081,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_071.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_071.svg',
     'layout_config' => 
     array (
       0 => 
@@ -11237,7 +11237,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_072.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_072.svg',
     'layout_config' => 
     array (
       0 => 
@@ -11399,7 +11399,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_073.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_073.svg',
     'layout_config' => 
     array (
       0 => 
@@ -11555,7 +11555,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_074.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_074.svg',
     'layout_config' => 
     array (
       0 => 
@@ -11711,7 +11711,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_075.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_075.svg',
     'layout_config' => 
     array (
       0 => 
@@ -11873,7 +11873,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_076.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_076.svg',
     'layout_config' => 
     array (
       0 => 
@@ -12029,7 +12029,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_077.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_077.svg',
     'layout_config' => 
     array (
       0 => 
@@ -12185,7 +12185,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_078.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_078.svg',
     'layout_config' => 
     array (
       0 => 
@@ -12347,7 +12347,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_079.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_079.svg',
     'layout_config' => 
     array (
       0 => 
@@ -12503,7 +12503,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_080.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_080.svg',
     'layout_config' => 
     array (
       0 => 
@@ -12659,7 +12659,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_081.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_081.svg',
     'layout_config' => 
     array (
       0 => 
@@ -12821,7 +12821,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_082.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_082.svg',
     'layout_config' => 
     array (
       0 => 
@@ -12977,7 +12977,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_083.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_083.svg',
     'layout_config' => 
     array (
       0 => 
@@ -13133,7 +13133,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_084.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_084.svg',
     'layout_config' => 
     array (
       0 => 
@@ -13295,7 +13295,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_085.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_085.svg',
     'layout_config' => 
     array (
       0 => 
@@ -13451,7 +13451,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_086.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_086.svg',
     'layout_config' => 
     array (
       0 => 
@@ -13607,7 +13607,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_087.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_087.svg',
     'layout_config' => 
     array (
       0 => 
@@ -13769,7 +13769,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_088.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_088.svg',
     'layout_config' => 
     array (
       0 => 
@@ -13925,7 +13925,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_089.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_089.svg',
     'layout_config' => 
     array (
       0 => 
@@ -14081,7 +14081,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_090.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_090.svg',
     'layout_config' => 
     array (
       0 => 
@@ -14243,7 +14243,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_091.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_091.svg',
     'layout_config' => 
     array (
       0 => 
@@ -14399,7 +14399,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_092.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_092.svg',
     'layout_config' => 
     array (
       0 => 
@@ -14555,7 +14555,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_093.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_093.svg',
     'layout_config' => 
     array (
       0 => 
@@ -14717,7 +14717,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_094.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_094.svg',
     'layout_config' => 
     array (
       0 => 
@@ -14873,7 +14873,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_095.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_095.svg',
     'layout_config' => 
     array (
       0 => 
@@ -15029,7 +15029,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_096.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_096.svg',
     'layout_config' => 
     array (
       0 => 
@@ -15191,7 +15191,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_097.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_097.svg',
     'layout_config' => 
     array (
       0 => 
@@ -15347,7 +15347,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_098.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_098.svg',
     'layout_config' => 
     array (
       0 => 
@@ -15503,7 +15503,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'portrait',
     'width_mm' => 54.0,
     'height_mm' => 85.6,
-    'background_image' => 'templates/backgrounds/master_template_099.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_099.svg',
     'layout_config' => 
     array (
       0 => 
@@ -15665,7 +15665,7 @@ class TemplateSeeder extends Seeder
     'orientation' => 'landscape',
     'width_mm' => 85.6,
     'height_mm' => 54.0,
-    'background_image' => 'templates/backgrounds/master_template_100.svg',
+    'background_image' => 'template-assets/backgrounds/master_template_100.svg',
     'layout_config' => 
     array (
       0 => 

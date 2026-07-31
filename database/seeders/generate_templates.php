@@ -4,12 +4,12 @@
  * Master Template Generator Script for 100 Master ID Card Templates
  */
 
-$bgDir = __DIR__ . '/../../storage/app/public/templates/backgrounds';
+$bgDir = __DIR__ . '/../../storage/app/public/template-assets/backgrounds';
 if (!file_exists($bgDir)) {
     mkdir($bgDir, 0755, true);
 }
 
-$publicBgDir = __DIR__ . '/../../public/templates/backgrounds';
+$publicBgDir = __DIR__ . '/../../public/template-assets/backgrounds';
 if (!file_exists($publicBgDir)) {
     mkdir($publicBgDir, 0755, true);
 }
@@ -81,7 +81,7 @@ for ($i = 1; $i <= 100; $i++) {
     $filename = "master_template_" . sprintf("%03d", $i) . ".svg";
     $filePath = $bgDir . '/' . $filename;
     $publicPath = $publicBgDir . '/' . $filename;
-    $dbPath = 'templates/backgrounds/' . $filename;
+    $dbPath = 'template-assets/backgrounds/' . $filename;
 
     // Computed SVG dimensions & curve coordinates
     $hHeader = (int) ($h * 0.22);
