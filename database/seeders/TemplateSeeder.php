@@ -9,12 +9,6 @@ class TemplateSeeder extends Seeder
 {
     public function run(): void
     {
-        // Ensure SVG background generator runs automatically on any server environment
-        $genScript = __DIR__ . '/generate_templates.php';
-        if (file_exists($genScript)) {
-            require_once $genScript;
-        }
-
         $templates = array (
   0 => 
   array (
