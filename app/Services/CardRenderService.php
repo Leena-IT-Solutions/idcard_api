@@ -68,6 +68,16 @@ class CardRenderService
         }
         putenv("PUPPETEER_CACHE_DIR={$cacheDir}");
 
+        // --- Chrome user data dir (writable by www-data) ---
+        $chromeDataDir = storage_path('app/chrome-data');
+        if (!file_exists($chromeDataDir)) {
+            @mkdir($chromeDataDir, 0755, true);
+        }
+        $crashDumpsDir = storage_path('app/chrome-crashes');
+        if (!file_exists($crashDumpsDir)) {
+            @mkdir($crashDumpsDir, 0755, true);
+        }
+
         // --- Chrome args ---
         $browsershot->setOption('args', [
             '--no-sandbox',
@@ -76,6 +86,11 @@ class CardRenderService
             '--disable-web-security',
             '--disable-dev-shm-usage',
             '--disable-gpu',
+            '--user-data-dir=' . $chromeDataDir,
+            '--crash-dumps-dir=' . $crashDumpsDir,
+            '--disable-crash-reporter',
+            '--no-first-run',
+            '--disable-extensions',
         ]);
 
         // --- Chrome binary ---
