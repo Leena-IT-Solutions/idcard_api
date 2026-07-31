@@ -19,10 +19,9 @@
     $widthPx = $isPortrait ? 638 : 1011;
     $heightPx = $isPortrait ? 1011 : 638;
 
-    $bgPath = is_object($template) ? ($template->background_image ?? null) : ($template['background_image'] ?? null);
-    $bgUrl = $bgPath 
-        ? (str_starts_with($bgPath, 'http') ? $bgPath : asset('storage/' . $bgPath)) 
-        : null;
+    $bgPath = is_object($template) 
+        ? ($template->background_image ?: (is_object($template->masterTemplate ?? null) ? $template->masterTemplate->background_image : null)) 
+        : ($template['background_image'] ?? ($template['master_template']['background_image'] ?? null));
 
     // Student fields
     $firstName = is_object($student) ? ($student->first_name ?? '') : ($student['first_name'] ?? '');
@@ -190,7 +189,7 @@
         style="position: relative; overflow: hidden; border-radius: 16px; background-color: #020617; border: 1px solid rgba(51, 65, 85, 0.6); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); width: {{ $widthPx }}px; height: {{ $heightPx }}px; transform: scale({{ $scale }}); transform-origin: top left;"
     >
         @if($bgUrl)
-            <img src="{{ $bgUrl }}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; pointer-events: none; z-index: 0; border-radius: 16px;" alt="Card Background" />
+            <img src="{{ $bgUrl }}" style="position: absolute; top: 0; left: 0; min-width: 100%; min-height: 100%; width: 100%; height: 100%; object-fit: fill; pointer-events: none; z-index: 0; border-radius: 16px; display: block;" alt="Card Background" />
         @endif
 
         @foreach($config as $layer)

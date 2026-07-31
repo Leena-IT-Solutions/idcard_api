@@ -193,6 +193,8 @@ class CardRenderService
     {
         return $this->createBrowsershot($html)
             ->windowSize($widthPx, $heightPx)
+            ->clip(0, 0, $widthPx, $heightPx)
+            ->deviceScaleFactor(2)
             ->screenshot();
     }
 
