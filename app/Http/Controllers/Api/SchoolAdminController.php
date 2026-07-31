@@ -968,9 +968,16 @@ class SchoolAdminController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized access to export record.'], 403);
         }
 
-        if ($export->file_path && \Illuminate\Support\Facades\Storage::disk('private')->exists($export->file_path)) {
-            \Illuminate\Support\Facades\Storage::disk('private')->delete($export->file_path);
+        if ($export->file_path) {
+            if (\Illuminate\Support\Facades\Storage::disk('local')->exists($export->file_path)) {
+                \Illuminate\Support\Facades\Storage::disk('local')->delete($export->file_path);
+            }
+            $fullPath = storage_path('app/private/' . $export->file_path);
+            if (file_exists($fullPath)) {
+                @unlink($fullPath);
+            }
         }
+
 
         $export->delete();
 
