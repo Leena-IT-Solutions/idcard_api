@@ -53,5 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/school-admin/students/{id}/export-pdf', [\App\Http\Controllers\Api\SchoolAdminController::class, 'exportSingleStudentPdf']);
     Route::post('/school-admin/exports', [\App\Http\Controllers\Api\SchoolAdminController::class, 'createExport']);
     Route::get('/school-admin/exports', [\App\Http\Controllers\Api\SchoolAdminController::class, 'listExports']);
+    Route::delete('/school-admin/exports/{export}', [\App\Http\Controllers\Api\SchoolAdminController::class, 'deleteExport']);
+
 
 });

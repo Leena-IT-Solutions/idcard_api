@@ -959,6 +959,28 @@ class SchoolAdminController extends Controller
         ]);
     }
 
+    public function deleteExport(Request $request, \App\Models\Export $export)
+    {
+        $request->validate(['school_id' => 'required|exists:schools,id']);
+        $user = auth()->user();
+
+        if ($export->school_id != $request->school_id || $export->user_id != $user->id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized access to export record.'], 403);
+        }
+
+        if ($export->file_path && \Illuminate\Support\Facades\Storage::disk('private')->exists($export->file_path)) {
+            \Illuminate\Support\Facades\Storage::disk('private')->delete($export->file_path);
+        }
+
+        $export->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Export deleted successfully.',
+        ]);
+    }
+
+
     public function downloadExport(\App\Models\Export $export)
     {
         $user = auth()->user();

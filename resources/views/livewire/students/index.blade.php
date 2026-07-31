@@ -147,10 +147,41 @@ new class extends Component
             $export->update(['status' => 'failed', 'error_message' => $e->getMessage()]);
             session()->flash('message', 'Export failed: ' . $e->getMessage());
         }
+    }
 
+    public function deleteExport($exportId)
+    {
+        $export = \App\Models\Export::where('school_id', session('active_school_id'))
+            ->where('user_id', auth()->id())
+            ->where('id', $exportId)
+            ->first();
+
+        if ($export) {
+            if ($export->file_path && \Illuminate\Support\Facades\Storage::disk('private')->exists($export->file_path)) {
+                \Illuminate\Support\Facades\Storage::disk('private')->delete($export->file_path);
+            }
+            $export->delete();
+            session()->flash('message', 'Export deleted successfully.');
+        }
+    }
+
+    public function clearAllExports()
+    {
+        $exports = \App\Models\Export::where('school_id', session('active_school_id'))
+            ->where('user_id', auth()->id())
+            ->get();
+
+        foreach ($exports as $export) {
+            if ($export->file_path && \Illuminate\Support\Facades\Storage::disk('private')->exists($export->file_path)) {
+                \Illuminate\Support\Facades\Storage::disk('private')->delete($export->file_path);
+            }
+            $export->delete();
+        }
+        session()->flash('message', 'All export records cleared.');
     }
 
     public function openPreviewIdCard($studentId)
+
     {
         $this->previewStudentId = $studentId;
         $this->isPreviewIdCardOpen = true;
@@ -2088,14 +2119,22 @@ new class extends Component
 
                     <!-- My Recent Exports List -->
                     <div class="mt-8 border-t border-gray-100 dark:border-gray-700 pt-5">
-                        <h4 class="text-xs font-extrabold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">{{ __('My Recent Exports') }}</h4>
                         @php
                             $userExports = \App\Models\Export::where('school_id', session('active_school_id'))
                                 ->where('user_id', auth()->id())
                                 ->orderBy('id', 'desc')
-                                ->take(6)
+                                ->take(10)
                                 ->get();
                         @endphp
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-xs font-extrabold uppercase tracking-wider text-gray-500 dark:text-gray-400">{{ __('My Recent Exports') }}</h4>
+                            @if ($userExports->count() > 0)
+                                <button wire:click="clearAllExports" wire:confirm="Are you sure you want to delete all export history and files?" type="button" class="text-[11px] font-semibold text-rose-500 hover:text-rose-600 dark:text-rose-400 hover:underline transition cursor-pointer">
+                                    {{ __('Clear All History') }}
+                                </button>
+                            @endif
+                        </div>
+
                         <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
                             @forelse ($userExports as $exp)
                                 <div class="p-3 bg-gray-50 dark:bg-gray-900/60 border border-gray-100 dark:border-gray-700/60 rounded-2xl flex items-center justify-between text-xs">
@@ -2107,7 +2146,7 @@ new class extends Component
                                             {{ $exp->created_at->format('M d, H:i') }} • {{ $exp->processed_items }}/{{ $exp->total_items ?? 0 }} items
                                         </span>
                                     </div>
-                                    <div class="flex items-center gap-3">
+                                    <div class="flex items-center gap-2">
                                         @if ($exp->status === 'completed')
                                             <span class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-lg text-[10px] font-bold">COMPLETED</span>
                                             <a href="{{ route('exports.download', $exp) }}" target="_blank" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow transition">
@@ -2127,10 +2166,15 @@ new class extends Component
                                                     </span>
                                                 @endif
                                             </div>
-
                                         @else
                                             <span class="px-2.5 py-1 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-lg text-[10px] font-bold">PENDING</span>
                                         @endif
+
+                                        <button wire:click="deleteExport({{ $exp->id }})" wire:confirm="Delete this export file and record?" type="button" class="p-1.5 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition cursor-pointer" title="Delete export">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </button>
                                     </div>
                                 </div>
                             @empty
@@ -2140,6 +2184,7 @@ new class extends Component
                             @endforelse
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
