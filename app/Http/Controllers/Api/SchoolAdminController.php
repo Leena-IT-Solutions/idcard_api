@@ -112,7 +112,7 @@ class SchoolAdminController extends Controller
         return $template;
     }
 
-    private function getEffectiveTemplateForGradeOrSchool($schoolId, $gradeId = null)
+    public function getEffectiveTemplateForGradeOrSchool($schoolId, $gradeId = null)
     {
         $tpl = null;
         if ($gradeId) {

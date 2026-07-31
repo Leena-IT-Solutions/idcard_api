@@ -16,14 +16,28 @@ class StudentController extends Controller
         if ($user) {
             $query->where('user_id', $user->id);
         }
+
+        $query->with(['campaignStudents.grade', 'campaignStudents.campaign']);
         
         $perPage = $request->input('per_page', 15);
-        
+        $schoolAdminCtrl = new \App\Http\Controllers\Api\SchoolAdminController();
+
+        $mapStudentTemplate = function($student) use ($schoolAdminCtrl) {
+            $firstE = $student->campaignStudents ? $student->campaignStudents->first() : null;
+            $schoolId = $firstE && $firstE->campaign ? $firstE->campaign->school_id : null;
+            $gradeId = $firstE ? $firstE->grade_id : null;
+            $tpl = $schoolAdminCtrl->getEffectiveTemplateForGradeOrSchool($schoolId, $gradeId);
+            $student->setAttribute('effective_template', $tpl);
+            return $student;
+        };
+
         if ($request->has('page')) {
             $studentsPaginator = $query->simplePaginate($perPage);
-            return response()->json($studentsPaginator->items());
+            $items = collect($studentsPaginator->items())->map($mapStudentTemplate);
+            return response()->json($items);
         } else {
-            return response()->json($query->get());
+            $items = $query->get()->map($mapStudentTemplate);
+            return response()->json($items);
         }
     }
 

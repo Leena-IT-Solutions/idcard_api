@@ -110,7 +110,7 @@ class CampaignController extends Controller
 
         $enrollments->transform(function ($e) use ($schoolAdminCtrl) {
             $schoolId = $e->campaign->school_id ?? null;
-            $tpl = $schoolId ? $schoolAdminCtrl->getEffectiveTemplateForGradeOrSchool($schoolId, $e->grade_id) : null;
+            $tpl = $schoolAdminCtrl->getEffectiveTemplateForGradeOrSchool($schoolId, $e->grade_id);
             $e->setAttribute('effective_template', $tpl);
             return $e;
         });
