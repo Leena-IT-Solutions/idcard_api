@@ -193,7 +193,7 @@
                             $scaleRatio = $targetWidthMm / ($targetWidthPx / 3.7795275591); 
                         @endphp
                         <div class="card-inner-scale" style="transform: scale({{ round($scaleRatio, 4) }}); width: {{ $targetWidthPx }}px; height: {{ $targetHeightPx }}px;">
-                            <x-id-card-renderer :template="$template" :student="$student" :school="$school" :scale="1.0" />
+                            <x-id-card-renderer :template="$template" :student="$student" :school="$school" :scale="1.0" :forExport="true" />
                         </div>
                     </div>
                 </div>

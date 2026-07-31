@@ -4,6 +4,7 @@
     'school' => null,
     'scale' => 1.0,
     'previewMode' => false,
+    'forExport' => false,
 ])
 
 @php
@@ -154,7 +155,7 @@
         '{School Address}' => $schoolAddress,
     ];
 
-    $resolveImageUrl = function($path) {
+    $resolveImageUrl = function($path) use ($forExport) {
         if (!$path) return null;
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, 'data:')) {
             return $path;
@@ -163,13 +164,15 @@
         if (str_starts_with($cleanPath, 'storage/')) {
             $cleanPath = substr($cleanPath, 8);
         }
-        $localPath = storage_path('app/public/' . $cleanPath);
-        if (file_exists($localPath)) {
-            return 'file://' . $localPath;
-        }
-        $pubPath = public_path('storage/' . $cleanPath);
-        if (file_exists($pubPath)) {
-            return 'file://' . $pubPath;
+        if ($forExport) {
+            $localPath = storage_path('app/public/' . $cleanPath);
+            if (file_exists($localPath)) {
+                return 'file://' . $localPath;
+            }
+            $pubPath = public_path('storage/' . $cleanPath);
+            if (file_exists($pubPath)) {
+                return 'file://' . $pubPath;
+            }
         }
         return asset('storage/' . $cleanPath);
     };

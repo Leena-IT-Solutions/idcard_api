@@ -19,6 +19,7 @@ class CardRenderService
             'school' => $school,
             'scale' => 1.0,
             'previewMode' => false,
+            'forExport' => true,
         ])->render();
 
         return '<!DOCTYPE html>
