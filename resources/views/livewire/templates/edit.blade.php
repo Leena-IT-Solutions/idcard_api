@@ -2013,7 +2013,7 @@ new class extends Component {
                 >
                     <div 
                         id="canva-studio-canvas"
-                        class="relative mx-auto select-none shadow-2xl rounded-2xl bg-slate-950 overflow-hidden shrink-0 my-auto transform"
+                        class="relative mx-auto select-none shadow-2xl bg-white overflow-hidden shrink-0 my-auto transform"
                         :class="$wire.showGrid ? 'canvas-grid-bg' : ''"
                         :style="'width: {{ $canvasW }}px; height: {{ $canvasH }}px; transform: translate(' + panOffsetX + 'px, ' + panOffsetY + 'px) scale(' + ((parseFloat(zoomLevel) || 100) / 100) + '); transform-origin: center center;'"
                     >
@@ -2024,11 +2024,8 @@ new class extends Component {
                             :style="'left: ' + boxRect.left + 'px; top: ' + boxRect.top + 'px; width: ' + boxRect.width + 'px; height: ' + boxRect.height + 'px;'"
                         ></div>
                         @if($bgUrl)
-                            <img src="{{ $bgUrl }}" class="absolute inset-0 w-full h-full object-fill pointer-events-none z-0 rounded-2xl" alt="Background Graphic" />
+                            <img src="{{ $bgUrl }}" class="absolute inset-0 w-full h-full object-fill pointer-events-none z-0" alt="Background Graphic" />
                         @endif
-
-                        <!-- Card Perimeter Border Overlay (Sits flush on top of background) -->
-                        <div class="absolute inset-0 rounded-2xl border-2 pointer-events-none z-40 border-slate-700/60"></div>
 
                         <!-- Center Snap Line (Visual Indicator when Selected) -->
                         @if($selectedLayerIndex !== null)
