@@ -31,7 +31,21 @@ class CardRenderService
         putenv("PUPPETEER_CACHE_DIR={$cacheDir}");
 
 
-        $browsershot->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox']);
+        $tempPath = storage_path('app/temp');
+        if (!file_exists($tempPath)) {
+            @mkdir($tempPath, 0755, true);
+        }
+
+        $browsershot
+            ->setTempPath($tempPath)
+            ->setOption('args', [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--allow-file-access-from-files',
+                '--disable-web-security',
+                '--disable-dev-shm-usage',
+            ]);
+
 
         $chromePath = env('CHROME_PATH');
         if (!$chromePath) {
