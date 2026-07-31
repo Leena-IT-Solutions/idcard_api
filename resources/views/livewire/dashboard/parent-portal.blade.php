@@ -362,169 +362,175 @@ new class extends Component {
                 @foreach ($campaigns as $camp)
                     @php
                         $enrolledPivots = $camp->campaignStudents()->whereIn('student_id', $this->children->pluck('id'))->with(['student', 'grade', 'division'])->get();
-                        $firstEnrolledPivot = $enrolledPivots->first();
-                        $effectiveTemplate = $this->getEffectiveTemplate(
-                            $camp->school_id,
-                            $firstEnrolledPivot ? $firstEnrolledPivot->grade_id : null
-                        );
-                        $isPortrait = $effectiveTemplate ? ($effectiveTemplate->orientation ?? 'landscape') === 'portrait' : false;
                     @endphp
 
-                    <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-8 border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden">
-                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                            <!-- Left Column: Details & Enrollment -->
-                            <div class="lg:col-span-7 flex flex-col justify-between h-full space-y-6">
-                                <div>
-                                    <div class="flex items-center justify-between gap-3 mb-3">
-                                        <span class="text-xs font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-3 py-1 rounded-full">
-                                            {{ $camp->school->name }}
-                                        </span>
-                                        <span class="px-3 py-1 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-full text-xs font-black uppercase tracking-wider">
-                                            {{ __('Active') }}
-                                        </span>
-                                    </div>
-                                    <h4 class="font-extrabold text-gray-900 dark:text-gray-100 text-2xl leading-tight mb-2">
-                                        {{ $camp->name }}
-                                    </h4>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                                        {{ __('Registration Period:') }}
-                                        <span class="font-bold text-gray-700 dark:text-gray-300">{{ $camp->registration_start_date->format('d M, Y') }}</span>
-                                        {{ __('to') }}
-                                        <span class="font-bold text-gray-700 dark:text-gray-300">{{ $camp->registration_end_date->format('d M, Y') }}</span>
-                                    </p>
+                    <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-8 border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden space-y-6">
+                        <div class="flex flex-wrap items-center justify-between gap-4">
+                            <div>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-xs font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-3 py-1 rounded-full">
+                                        {{ $camp->school->name }}
+                                    </span>
+                                    <span class="px-3 py-1 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-full text-xs font-black uppercase tracking-wider">
+                                        {{ __('Active') }}
+                                    </span>
                                 </div>
-
-                                <!-- Enrolled Children -->
-                                <div class="space-y-3">
-                                    <h5 class="text-xs font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5">
-                                        <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                                        </svg>
-                                        {{ __('Enrolled Children:') }}
-                                    </h5>
-
-                                    @if ($enrolledPivots->isEmpty())
-                                        <div class="p-3.5 bg-gray-50 dark:bg-gray-900/60 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700 text-xs text-gray-400 italic">
-                                            {{ __('No children enrolled in this campaign yet.') }}
-                                        </div>
-                                    @else
-                                        <div class="space-y-2">
-                                            @foreach ($enrolledPivots as $piv)
-                                                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-700">
-                                                    <div class="flex items-center space-x-2.5">
-                                                        <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                                                        <span class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ $piv->student->first_name }} {{ $piv->student->last_name }}</span>
-                                                    </div>
-                                                    <div class="flex items-center gap-2">
-                                                        <span class="px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 text-xs font-bold">
-                                                            {{ $piv->grade->name }} - {{ $piv->division->name }}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @endif
-                                </div>
-
-                                <!-- Action Button -->
-                                <div class="pt-2">
-                                    @php
-                                        $unenrolledChildren = $this->children->filter(function($child) use ($enrolledPivots) {
-                                            return !$enrolledPivots->pluck('student_id')->contains($child->id);
-                                        });
-                                    @endphp
-
-                                    @if ($unenrolledChildren->isEmpty() && !$this->children->isEmpty())
-                                        <button disabled class="w-full py-3 bg-gray-100 dark:bg-gray-900 text-gray-400 dark:text-gray-500 font-bold text-xs uppercase tracking-wider rounded-2xl cursor-not-allowed text-center">
-                                            {{ __('All children enrolled') }}
-                                        </button>
-                                    @else
-                                        <button wire:click="openEnrollModal({{ $camp->id }})" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-wider rounded-2xl transition shadow-lg shadow-indigo-600/20 text-center cursor-pointer">
-                                            {{ __('Enroll a Child') }}
-                                        </button>
-                                    @endif
-                                </div>
+                                <h4 class="font-extrabold text-gray-900 dark:text-gray-100 text-2xl leading-tight">
+                                    {{ $camp->name }}
+                                </h4>
                             </div>
-
-                            <!-- Right Column: Actual iCard Template Design Preview (All Enrolled Students or Default Template) -->
-                            <div class="lg:col-span-5 flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-900/80 rounded-2xl border border-gray-100 dark:border-gray-700/80 min-h-[260px] relative group overflow-hidden">
-                                @if ($enrolledPivots->isNotEmpty())
-                                    <div class="w-full space-y-5 max-h-[500px] overflow-y-auto pr-1">
-                                        @foreach ($enrolledPivots as $piv)
-                                            @php
-                                                $studentTemplate = $this->getEffectiveTemplate($camp->school_id, $piv->grade_id);
-                                                $studentIsPortrait = $studentTemplate ? ($studentTemplate->orientation ?? 'landscape') === 'portrait' : false;
-                                            @endphp
-                                            <div class="w-full flex flex-col items-center border-b border-gray-200/60 dark:border-gray-700/60 pb-4 last:border-0 last:pb-0">
-                                                <div class="w-full flex items-center justify-between mb-2 px-1">
-                                                    <span class="text-[11px] font-extrabold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
-                                                        <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                                                        {{ $piv->student->first_name }} {{ $piv->student->last_name }}'s iCard
-                                                    </span>
-                                                    <span class="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded-md">
-                                                        {{ $studentTemplate->name ?? __('Template') }}
-                                                    </span>
-                                                </div>
-
-                                                @if ($studentTemplate)
-                                                    <div class="relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 shadow-md flex items-center justify-center bg-white dark:bg-gray-950 p-2"
-                                                         style="width: 100%; max-width: {{ $studentIsPortrait ? '230px' : '360px' }}; height: {{ $studentIsPortrait ? '340px' : '230px' }};">
-                                                        <div class="transform origin-center transition-transform duration-300 scale-95" style="transform: scale({{ $studentIsPortrait ? 0.32 : 0.34 }}); width: {{ $studentIsPortrait ? '638px' : '1011px' }}; height: {{ $studentIsPortrait ? '1011px' : '638px' }};">
-                                                            <x-id-card-renderer
-                                                                :template="$studentTemplate"
-                                                                :student="$piv->student"
-                                                                :school="$camp->school"
-                                                                :previewMode="false"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                @else
-                                                    <div class="flex flex-col items-center justify-center p-4 text-center text-gray-400">
-                                                        <span class="text-xs font-semibold">{{ __('No Template Assigned') }}</span>
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @else
-                                    @php
-                                        $defaultTemplate = $this->getEffectiveTemplate($camp->school_id, null);
-                                        $defaultIsPortrait = $defaultTemplate ? ($defaultTemplate->orientation ?? 'landscape') === 'portrait' : false;
-                                    @endphp
-                                    <div class="w-full flex items-center justify-between mb-3 px-1">
-                                        <span class="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 flex items-center gap-1">
-                                            <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                            </svg>
-                                            {{ __('School iCard Template Design') }}
-                                        </span>
-                                        <span class="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded-md">
-                                            {{ $defaultTemplate->name ?? __('Template') }}
-                                        </span>
-                                    </div>
-
-                                    @if ($defaultTemplate)
-                                        <div class="relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 shadow-md flex items-center justify-center bg-white dark:bg-gray-950 my-auto p-2"
-                                             style="width: 100%; max-width: {{ $defaultIsPortrait ? '230px' : '360px' }}; height: {{ $defaultIsPortrait ? '340px' : '230px' }};">
-                                            <div class="transform origin-center transition-transform duration-300 scale-95" style="transform: scale({{ $defaultIsPortrait ? 0.32 : 0.34 }}); width: {{ $defaultIsPortrait ? '638px' : '1011px' }}; height: {{ $defaultIsPortrait ? '1011px' : '638px' }};">
-                                                <x-id-card-renderer
-                                                    :template="$defaultTemplate"
-                                                    :student="null"
-                                                    :school="$camp->school"
-                                                    :previewMode="true"
-                                                />
-                                            </div>
-                                        </div>
-                                    @else
-                                        <div class="flex flex-col items-center justify-center p-8 text-center text-gray-400">
-                                            <svg class="w-10 h-10 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
-                                            </svg>
-                                            <span class="text-xs font-semibold">{{ __('No Template Assigned') }}</span>
-                                        </div>
-                                    @endif
-                                @endif
+                            <div class="text-left sm:text-right">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-0.5">{{ __('Registration Period') }}</span>
+                                <span class="text-xs font-bold text-gray-700 dark:text-gray-300">
+                                    {{ $camp->registration_start_date->format('d M, Y') }} &bull; {{ $camp->registration_end_date->format('d M, Y') }}
+                                </span>
                             </div>
+                        </div>
+
+                        <!-- Enrolled Children -->
+                        <div class="space-y-3">
+                            <h5 class="text-xs font-black uppercase text-gray-400 tracking-wider flex items-center gap-1.5">
+                                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                                {{ __('Enrolled Children:') }}
+                            </h5>
+
+                            @if ($enrolledPivots->isEmpty())
+                                <div class="p-3.5 bg-gray-50 dark:bg-gray-900/60 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700 text-xs text-gray-400 italic">
+                                    {{ __('No children enrolled in this campaign yet.') }}
+                                </div>
+                            @else
+                                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                    @foreach ($enrolledPivots as $piv)
+                                        <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-700">
+                                            <div class="flex items-center space-x-2.5">
+                                                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                                                <span class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ $piv->student->first_name }} {{ $piv->student->last_name }}</span>
+                                            </div>
+                                            <span class="px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 text-xs font-bold">
+                                                {{ $piv->grade->name }} - {{ $piv->division->name }}
+                                            </span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+
+                        <!-- Action Button -->
+                        <div class="pt-2">
+                            @php
+                                $unenrolledChildren = $this->children->filter(function($child) use ($enrolledPivots) {
+                                    return !$enrolledPivots->pluck('student_id')->contains($child->id);
+                                });
+                            @endphp
+
+                            @if ($unenrolledChildren->isEmpty() && !$this->children->isEmpty())
+                                <button disabled class="w-full py-3 bg-gray-100 dark:bg-gray-900 text-gray-400 dark:text-gray-500 font-bold text-xs uppercase tracking-wider rounded-2xl cursor-not-allowed text-center">
+                                    {{ __('All children enrolled') }}
+                                </button>
+                            @else
+                                <button wire:click="openEnrollModal({{ $camp->id }})" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-wider rounded-2xl transition shadow-lg shadow-indigo-600/20 text-center cursor-pointer">
+                                    {{ __('Enroll a Child') }}
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+    </div>
+
+    <!-- Verify ID Cards Section -->
+    <div class="space-y-4">
+        <div class="flex items-center justify-between">
+            <h3 class="text-base font-black uppercase text-gray-400 dark:text-gray-500 tracking-wider flex items-center gap-2">
+                <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                {{ __('Verify ID Cards') }}
+            </h3>
+        </div>
+
+        @php
+            $allEnrolledPivots = \App\Models\CampaignStudent::whereIn('student_id', $this->children->pluck('id'))
+                ->with(['student', 'grade', 'division', 'campaign.school'])
+                ->get();
+        @endphp
+
+        @if ($allEnrolledPivots->isEmpty())
+            <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 border border-gray-100 dark:border-gray-700 text-center">
+                <div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                    </svg>
+                </div>
+                <h4 class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ __('No enrolled student ID cards to verify yet') }}</h4>
+                <p class="text-xs text-gray-400 mt-1 max-w-sm mx-auto">
+                    {{ __('Enroll your children in an active school campaign above to generate and verify their official ID Cards.') }}
+                </p>
+            </div>
+        @else
+            <div class="space-y-6">
+                @foreach ($allEnrolledPivots as $piv)
+                    @php
+                        $school = $piv->campaign->school ?? null;
+                        $template = $school ? $this->getEffectiveTemplate($school->id, $piv->grade_id) : null;
+                        $isPortrait = $template ? ($template->orientation ?? 'landscape') === 'portrait' : false;
+                    @endphp
+
+                    <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-8 border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden space-y-6">
+                        <!-- Top Header -->
+                        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-700/80 pb-4">
+                            <div class="flex items-center space-x-3">
+                                <span class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></span>
+                                <h4 class="font-extrabold text-gray-900 dark:text-gray-100 text-xl">
+                                    {{ $piv->student->first_name }} {{ $piv->student->last_name }}'s iCard
+                                </h4>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 rounded-xl text-xs font-bold uppercase tracking-wider">
+                                    {{ $school->name ?? 'School' }}
+                                </span>
+                                <span class="px-3 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 rounded-xl text-xs font-bold">
+                                    {{ $piv->grade->name ?? '' }} - {{ $piv->division->name ?? '' }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Center Area: Rendered iCard -->
+                        <div class="flex flex-col items-center justify-center p-6 bg-gray-50 dark:bg-gray-900/80 rounded-2xl border border-gray-100 dark:border-gray-700/80 overflow-auto">
+                            @if ($template)
+                                <div class="relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 shadow-xl flex items-center justify-center bg-white dark:bg-gray-950 p-3 my-2"
+                                     style="width: 100%; max-width: {{ $isPortrait ? '340px' : '520px' }}; height: {{ $isPortrait ? '500px' : '340px' }};">
+                                    <div class="transform origin-center transition-transform duration-300" style="transform: scale({{ $isPortrait ? 0.48 : 0.50 }}); width: {{ $isPortrait ? '638px' : '1011px' }}; height: {{ $isPortrait ? '1011px' : '638px' }};">
+                                        <x-id-card-renderer
+                                            :template="$template"
+                                            :student="$piv->student"
+                                            :school="$school"
+                                            :previewMode="false"
+                                        />
+                                    </div>
+                                </div>
+                            @else
+                                <div class="p-8 text-center text-gray-400">
+                                    <span class="text-xs font-semibold">{{ __('No Template Assigned for this Grade/School') }}</span>
+                                </div>
+                            @endif
+                        </div>
+
+                        <!-- Footer Actions -->
+                        <div class="flex items-center justify-between pt-2">
+                            <span class="text-xs font-mono font-bold text-gray-400">
+                                Student ID: #{{ $piv->student->id }} &bull; Roll No: {{ $piv->student->roll_no ?? 'N/A' }}
+                            </span>
+                            <button wire:click="openPreviewIdCard({{ $piv->student->id }})" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition shadow flex items-center gap-2 cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                {{ __('Fullscreen Preview') }}
+                            </button>
                         </div>
                     </div>
                 @endforeach
