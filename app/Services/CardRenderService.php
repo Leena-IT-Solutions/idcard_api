@@ -29,13 +29,7 @@ class CardRenderService
      */
     protected function createBrowsershot(string $html): Browsershot
     {
-        $tempPath = storage_path('app/temp');
-        if (!file_exists($tempPath)) {
-            @mkdir($tempPath, 0755, true);
-        }
-
         $b = (new Browsershot())
-            ->setTempPath($tempPath)
             ->setHtml($html);
 
         return $this->configureBrowsershot($b);
@@ -257,8 +251,9 @@ class CardRenderService
 
         // Quick render test
         try {
-            $pdf = $service->toPdf('<h1 style="color:green">Browsershot OK</h1>', 85.6, 54.0);
-            $results['test_render'] = '✅ SUCCESS (' . strlen($pdf) . ' bytes)';
+            $pdf = $service->toPdf('<h1 style="color:green">Browsershot PDF OK</h1>', 85.6, 54.0);
+            $png = $service->toPng('<h1 style="color:green">Browsershot PNG OK</h1>', 1011, 638);
+            $results['test_render'] = '✅ SUCCESS (PDF: ' . strlen($pdf) . ' bytes, PNG: ' . strlen($png) . ' bytes)';
         } catch (\Throwable $e) {
             $results['test_render'] = '❌ FAILED: ' . $e->getMessage();
         }
