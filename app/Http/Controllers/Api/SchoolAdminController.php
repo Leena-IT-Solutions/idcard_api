@@ -851,7 +851,7 @@ class SchoolAdminController extends Controller
     {
         $request->validate([
             'school_id' => 'required|exists:schools,id',
-            'type' => 'required|in:excel_photo_zip,png_zip,imposition_pdf',
+            'type' => 'required|in:excel_photo_zip,png_zip,single_card_pdf,imposition_pdf',
             'campaign_id' => 'nullable|exists:campaigns,id',
             'student_ids' => 'nullable|array',
             'student_ids.*' => 'exists:students,id',
@@ -921,12 +921,14 @@ class SchoolAdminController extends Controller
                 match ($request->type) {
                     'excel_photo_zip' => \App\Jobs\ExportExcelPhotoZipJob::dispatchSync($export->id),
                     'png_zip' => \App\Jobs\ExportPngZipJob::dispatchSync($export->id),
+                    'single_card_pdf' => \App\Jobs\ExportSingleCardPdfJob::dispatchSync($export->id),
                     'imposition_pdf' => \App\Jobs\ExportImpositionPdfJob::dispatchSync($export->id),
                 };
             } else {
                 match ($request->type) {
                     'excel_photo_zip' => \App\Jobs\ExportExcelPhotoZipJob::dispatch($export->id),
                     'png_zip' => \App\Jobs\ExportPngZipJob::dispatch($export->id),
+                    'single_card_pdf' => \App\Jobs\ExportSingleCardPdfJob::dispatch($export->id),
                     'imposition_pdf' => \App\Jobs\ExportImpositionPdfJob::dispatch($export->id),
                 };
             }

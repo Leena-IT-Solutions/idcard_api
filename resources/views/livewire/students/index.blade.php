@@ -67,6 +67,22 @@ new class extends Component
     public function openExportModal()
     {
         $this->isExportModalOpen = true;
+
+        $lastPdfExport = \App\Models\Export::where('school_id', session('active_school_id'))
+            ->where('user_id', auth()->id())
+            ->where('type', 'imposition_pdf')
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if ($lastPdfExport && is_array($lastPdfExport->params)) {
+            $p = $lastPdfExport->params;
+            if (!empty($p['page_size'])) $this->exportPageSize = $p['page_size'];
+            if (isset($p['custom_width_mm'])) $this->exportCustomWidthMm = (float)$p['custom_width_mm'];
+            if (isset($p['custom_height_mm'])) $this->exportCustomHeightMm = (float)$p['custom_height_mm'];
+            if (isset($p['bleed_mm'])) $this->exportBleedMm = (float)$p['bleed_mm'];
+            if (isset($p['margin_mm'])) $this->exportMarginMm = (float)$p['margin_mm'];
+            if (isset($p['gutter_mm'])) $this->exportGutterMm = (float)$p['gutter_mm'];
+        }
     }
 
     public function closeExportModal()
@@ -140,6 +156,7 @@ new class extends Component
             match ($this->exportType) {
                 'excel_photo_zip' => \App\Jobs\ExportExcelPhotoZipJob::dispatchSync($export->id),
                 'png_zip' => \App\Jobs\ExportPngZipJob::dispatchSync($export->id),
+                'single_card_pdf' => \App\Jobs\ExportSingleCardPdfJob::dispatchSync($export->id),
                 'imposition_pdf' => \App\Jobs\ExportImpositionPdfJob::dispatchSync($export->id),
             };
             session()->flash('message', 'Export completed successfully! Click Download to save file.');
@@ -2079,7 +2096,7 @@ new class extends Component
                     <div class="mt-6 space-y-4">
                         <div>
                             <label class="text-xs font-bold text-gray-700 dark:text-gray-300 block mb-2">{{ __('Select Export Format') }}</label>
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                                 <label class="p-3 border rounded-2xl flex flex-col justify-between cursor-pointer transition {{ $exportType === 'excel_photo_zip' ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-900 dark:text-indigo-200' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40' }}">
                                     <input type="radio" wire:model.live="exportType" value="excel_photo_zip" class="hidden" />
                                     <span class="font-bold text-xs">{{ __('Excel Roster + Photos ZIP') }}</span>
@@ -2090,6 +2107,11 @@ new class extends Component
                                     <span class="font-bold text-xs">{{ __('Rendered Cards PNG (ZIP)') }}</span>
                                     <span class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">{{ __('High-resolution PNG image per student.') }}</span>
                                 </label>
+                                <label class="p-3 border rounded-2xl flex flex-col justify-between cursor-pointer transition {{ $exportType === 'single_card_pdf' ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-900 dark:text-indigo-200' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40' }}">
+                                    <input type="radio" wire:model.live="exportType" value="single_card_pdf" class="hidden" />
+                                    <span class="font-bold text-xs">{{ __('Single Card PDF (ID Printer)') }}</span>
+                                    <span class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">{{ __('1 Card per Page (CR80 exact size) for direct thermal ID card printers.') }}</span>
+                                </label>
                                 <label class="p-3 border rounded-2xl flex flex-col justify-between cursor-pointer transition {{ $exportType === 'imposition_pdf' ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-900 dark:text-indigo-200' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40' }}">
                                     <input type="radio" wire:model.live="exportType" value="imposition_pdf" class="hidden" />
                                     <span class="font-bold text-xs">{{ __('Print Imposition PDF') }}</span>
@@ -2099,27 +2121,44 @@ new class extends Component
                         </div>
 
                         @if ($exportType === 'imposition_pdf')
-                            <div class="p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-2xl grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                                <div>
-                                    <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">{{ __('Page Size') }}</label>
-                                    <select wire:model.live="exportPageSize" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl text-xs">
-                                        <option value="A4">A4 (210 x 297 mm)</option>
-                                        <option value="Letter">Letter (215.9 x 279.4 mm)</option>
-                                        <option value="Custom">Custom Size</option>
-                                    </select>
+                            <div class="p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-2xl space-y-3 text-xs">
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    <div>
+                                        <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">{{ __('Page Size') }}</label>
+                                        <select wire:model.live="exportPageSize" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl text-xs font-semibold">
+                                            <option value="A4">A4 (210 x 297 mm)</option>
+                                            <option value="Letter">Letter (215.9 x 279.4 mm)</option>
+                                            <option value="Custom">Custom Size</option>
+                                        </select>
+                                    </div>
+                                    @if ($exportPageSize === 'Custom')
+                                        <div>
+                                            <label class="block font-bold text-indigo-600 dark:text-indigo-400 mb-1">{{ __('Custom Width (mm)') }}</label>
+                                            <input type="number" step="1" min="50" max="2000" wire:model="exportCustomWidthMm" class="w-full border-indigo-300 focus:border-indigo-500 dark:border-indigo-700 dark:bg-gray-800 rounded-xl text-xs font-semibold" placeholder="210" />
+                                        </div>
+                                        <div>
+                                            <label class="block font-bold text-indigo-600 dark:text-indigo-400 mb-1">{{ __('Custom Height (mm)') }}</label>
+                                            <input type="number" step="1" min="50" max="2000" wire:model="exportCustomHeightMm" class="w-full border-indigo-300 focus:border-indigo-500 dark:border-indigo-700 dark:bg-gray-800 rounded-xl text-xs font-semibold" placeholder="297" />
+                                        </div>
+                                    @endif
+                                    <div>
+                                        <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">{{ __('Bleed (mm)') }}</label>
+                                        <input type="number" step="0.5" wire:model="exportBleedMm" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl text-xs" />
+                                    </div>
+                                    <div>
+                                        <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">{{ __('Safety Margin (mm)') }}</label>
+                                        <input type="number" step="0.5" wire:model="exportMarginMm" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl text-xs" />
+                                    </div>
+                                    <div>
+                                        <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">{{ __('Gutter (mm)') }}</label>
+                                        <input type="number" step="0.5" wire:model="exportGutterMm" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl text-xs" />
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">{{ __('Bleed (mm)') }}</label>
-                                    <input type="number" step="0.5" wire:model="exportBleedMm" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl text-xs" />
-                                </div>
-                                <div>
-                                    <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">{{ __('Safety Margin (mm)') }}</label>
-                                    <input type="number" step="0.5" wire:model="exportMarginMm" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl text-xs" />
-                                </div>
-                                <div>
-                                    <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">{{ __('Gutter (mm)') }}</label>
-                                    <input type="number" step="0.5" wire:model="exportGutterMm" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl text-xs" />
-                                </div>
+                                @if ($exportPageSize === 'Custom')
+                                    <p class="text-[11px] text-indigo-500 dark:text-indigo-400 font-medium">
+                                        💡 Custom page dimensions ({{ $exportCustomWidthMm }}mm x {{ $exportCustomHeightMm }}mm) and layout options are saved to your setup for future exports.
+                                    </p>
+                                @endif
                             </div>
                         @endif
 
