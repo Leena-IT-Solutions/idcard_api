@@ -184,18 +184,21 @@
     $photoUrl = $resolveImageUrl($photoPath);
     $schoolLogoUrl = $resolveImageUrl($schoolLogo);
 
-    $scaledW = round($widthPx * $scale);
-    $scaledH = round($heightPx * $scale);
+    $cardStyle = $forExport 
+        ? "position: relative; overflow: hidden; width: {$widthPx}px; height: {$heightPx}px; transform: scale({$scale}); transform-origin: top left; background-color: #ffffff;" 
+        : "position: relative; overflow: hidden; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); width: {$widthPx}px; height: {$heightPx}px; transform: scale({$scale}); transform-origin: top left; background-color: #ffffff;";
+
+    $bgStyle = $forExport
+        ? "position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; pointer-events: none; z-index: 0; display: block;"
+        : "position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; pointer-events: none; z-index: 0; border-radius: 16px; display: block;";
 @endphp
 
 <!-- Responsive Container Wrapper -->
 <div style="position: relative; overflow: hidden; flex-shrink: 0; display: inline-block; vertical-align: top; user-select: none; width: {{ $scaledW }}px; height: {{ $scaledH }}px;">
     <!-- Actual Native Scale Inner Card -->
-    <div 
-        style="position: relative; overflow: hidden; border-radius: 16px; background-color: #020617; border: 1px solid rgba(51, 65, 85, 0.6); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); width: {{ $widthPx }}px; height: {{ $heightPx }}px; transform: scale({{ $scale }}); transform-origin: top left;"
-    >
+    <div style="{{ $cardStyle }}">
         @if($bgUrl)
-            <img src="{{ $bgUrl }}" style="position: absolute; top: 0; left: 0; min-width: 100%; min-height: 100%; width: 100%; height: 100%; object-fit: fill; pointer-events: none; z-index: 0; border-radius: 16px; display: block;" alt="Card Background" />
+            <img src="{{ $bgUrl }}" style="{{ $bgStyle }}" alt="Card Background" />
         @endif
 
         @foreach($config as $layer)
