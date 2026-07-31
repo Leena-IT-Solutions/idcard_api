@@ -68,13 +68,43 @@ class CardRenderService
             $browsershot->setChromePath($chromePath);
         }
 
+        $nodeBinary = env('NODE_BINARY');
+        if (!$nodeBinary) {
+            foreach (['/usr/bin/node', '/usr/local/bin/node', '/bin/node'] as $path) {
+                if (file_exists($path)) {
+                    $nodeBinary = $path;
+                    break;
+                }
+            }
+        }
+        if ($nodeBinary) {
+            $browsershot->setNodeBinary($nodeBinary);
+        }
+
+        $npmBinary = env('NPM_BINARY');
+        if (!$npmBinary) {
+            foreach (['/usr/bin/npm', '/usr/local/bin/npm', '/bin/npm'] as $path) {
+                if (file_exists($path)) {
+                    $npmBinary = $path;
+                    break;
+                }
+            }
+        }
+        if ($npmBinary) {
+            $browsershot->setNpmBinary($npmBinary);
+        }
+
         $nodeModulePath = env('NODE_MODULES_PATH');
+        if (!$nodeModulePath && file_exists(base_path('node_modules'))) {
+            $nodeModulePath = base_path('node_modules');
+        }
         if ($nodeModulePath) {
             $browsershot->setNodeModulePath($nodeModulePath);
         }
 
         return $browsershot;
     }
+
 
     protected function createBrowsershot(string $html): Browsershot
     {
