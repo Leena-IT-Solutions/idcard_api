@@ -2119,7 +2119,15 @@ new class extends Component
                                                 PROCESSING
                                             </span>
                                         @elseif ($exp->status === 'failed')
-                                            <span class="px-2.5 py-1 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-lg text-[10px] font-bold" title="{{ $exp->error_message }}">FAILED</span>
+                                            <div class="text-right">
+                                                <span class="px-2.5 py-1 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-lg text-[10px] font-bold">FAILED</span>
+                                                @if ($exp->error_message)
+                                                    <span class="block text-[9px] text-rose-500 dark:text-rose-400 max-w-xs truncate mt-1" title="{{ $exp->error_message }}">
+                                                        {{ $exp->error_message }}
+                                                    </span>
+                                                @endif
+                                            </div>
+
                                         @else
                                             <span class="px-2.5 py-1 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-lg text-[10px] font-bold">PENDING</span>
                                         @endif

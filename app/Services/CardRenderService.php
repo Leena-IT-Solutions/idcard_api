@@ -19,28 +19,56 @@ class CardRenderService
         ])->render();
     }
 
-    public function toPng(string $html, int $widthPx, int $heightPx): string
+    protected function configureBrowsershot(Browsershot $browsershot): Browsershot
     {
         $cacheDir = env('PUPPETEER_CACHE_DIR', storage_path('app/puppeteer'));
         putenv("PUPPETEER_CACHE_DIR={$cacheDir}");
 
-        return Browsershot::html($html)
-            ->windowSize($widthPx, $heightPx)
-            ->setOption('args', ['--no-sandbox'])
-            ->screenshot();
+        $browsershot->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox']);
+
+        $chromePath = env('CHROME_PATH');
+        if (!$chromePath) {
+            foreach ([
+                '/usr/bin/google-chrome',
+                '/usr/bin/chromium-browser',
+                '/usr/bin/chromium',
+                '/usr/local/bin/chrome',
+                '/opt/google/chrome/chrome',
+            ] as $path) {
+                if (file_exists($path)) {
+                    $chromePath = $path;
+                    break;
+                }
+            }
+        }
+
+        if ($chromePath) {
+            $browsershot->setChromePath($chromePath);
+        }
+
+        $nodeModulePath = env('NODE_MODULES_PATH');
+        if ($nodeModulePath) {
+            $browsershot->setNodeModulePath($nodeModulePath);
+        }
+
+        return $browsershot;
+    }
+
+    public function toPng(string $html, int $widthPx, int $heightPx): string
+    {
+        $b = Browsershot::html($html)->windowSize($widthPx, $heightPx);
+        return $this->configureBrowsershot($b)->screenshot();
     }
 
     public function toPdf(string $html, float $widthMm, float $heightMm): string
     {
-        $cacheDir = env('PUPPETEER_CACHE_DIR', storage_path('app/puppeteer'));
-        putenv("PUPPETEER_CACHE_DIR={$cacheDir}");
-
-        return Browsershot::html($html)
+        $b = Browsershot::html($html)
             ->showBackground()
-            ->setOption('args', ['--no-sandbox'])
             ->paperSize($widthMm, $heightMm, 'mm')
-            ->margins(0, 0, 0, 0)
-            ->pdf();
+            ->margins(0, 0, 0, 0);
+
+        return $this->configureBrowsershot($b)->pdf();
     }
+
 
 }
