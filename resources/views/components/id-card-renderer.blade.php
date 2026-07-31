@@ -184,6 +184,9 @@
     $photoUrl = $resolveImageUrl($photoPath);
     $schoolLogoUrl = $resolveImageUrl($schoolLogo);
 
+    $scaledW = round($widthPx * $scale);
+    $scaledH = round($heightPx * $scale);
+
     $cardStyle = $forExport 
         ? "position: relative; overflow: hidden; width: {$widthPx}px; height: {$heightPx}px; transform: scale({$scale}); transform-origin: top left; background-color: #ffffff;" 
         : "position: relative; overflow: hidden; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); width: {$widthPx}px; height: {$heightPx}px; transform: scale({$scale}); transform-origin: top left; background-color: #ffffff;";
