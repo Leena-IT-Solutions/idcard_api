@@ -21,8 +21,15 @@ class CardRenderService
 
     protected function configureBrowsershot(Browsershot $browsershot): Browsershot
     {
-        $cacheDir = env('PUPPETEER_CACHE_DIR', storage_path('app/puppeteer'));
+        $cacheDir = env('PUPPETEER_CACHE_DIR');
+        if (!$cacheDir || !file_exists(dirname($cacheDir))) {
+            $cacheDir = storage_path('app/puppeteer');
+        }
+        if (!file_exists($cacheDir)) {
+            @mkdir($cacheDir, 0755, true);
+        }
         putenv("PUPPETEER_CACHE_DIR={$cacheDir}");
+
 
         $browsershot->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox']);
 
