@@ -15,7 +15,27 @@ class CampaignStudent extends Pivot
         'division_id',
         'roll_no',
         'serial_number',
+        'verified_at',
+        'verified_by',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'verified_at' => 'datetime',
+        ];
+    }
+
+    protected static function booted()
+    {
+        static::updating(function (CampaignStudent $enrollment) {
+            $watched = ['grade_id', 'division_id', 'roll_no', 'serial_number'];
+            if ($enrollment->isDirty($watched) && !$enrollment->isDirty(['verified_at', 'verified_by'])) {
+                $enrollment->verified_at = null;
+                $enrollment->verified_by = null;
+            }
+        });
+    }
 
     public function campaign()
     {
@@ -35,5 +55,10 @@ class CampaignStudent extends Pivot
     public function division()
     {
         return $this->belongsTo(Division::class);
+    }
+
+    public function verifier()
+    {
+        return $this->belongsTo(User::class, 'verified_by');
     }
 }

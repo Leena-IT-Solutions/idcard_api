@@ -103,7 +103,7 @@ class CampaignController extends Controller
         $studentIds = Student::where('user_id', $user->id)->pluck('id');
 
         $enrollments = CampaignStudent::whereIn('student_id', $studentIds)
-            ->with(['student', 'grade', 'division', 'campaign.school'])
+            ->with(['student', 'grade', 'division', 'campaign.school', 'verifier'])
             ->get();
 
         $schoolAdminCtrl = new \App\Http\Controllers\Api\SchoolAdminController();

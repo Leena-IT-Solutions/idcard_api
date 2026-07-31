@@ -24,6 +24,19 @@ class Student extends Model
         return $this->hasMany(CampaignStudent::class);
     }
 
+    protected static function booted()
+    {
+        static::updated(function (Student $student) {
+            $watched = ['first_name', 'middle_name', 'last_name', 'dob', 'blood_group', 'gender', 'contact_number', 'address', 'pincode', 'photo_path'];
+            if ($student->wasChanged($watched)) {
+                $student->campaignStudents()->whereNotNull('verified_at')->update([
+                    'verified_at' => null,
+                    'verified_by' => null,
+                ]);
+            }
+        });
+    }
+
     public function campaigns()
     {
         return $this->belongsToMany(Campaign::class, 'campaign_student')

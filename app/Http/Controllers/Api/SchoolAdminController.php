@@ -442,7 +442,7 @@ class SchoolAdminController extends Controller
             $studentsPaginator = $query->with(['campaignStudents' => function($q) use ($schoolId) {
                 $q->whereHas('campaign', function($inner) use ($schoolId) {
                     $inner->where('school_id', $schoolId);
-                })->with(['grade', 'division', 'campaign']);
+                })->with(['grade', 'division', 'campaign', 'verifier']);
             }])->simplePaginate($perPage);
             
             $items = collect($studentsPaginator->items())->map($mapStudentTemplate);
@@ -451,7 +451,7 @@ class SchoolAdminController extends Controller
             $students = $query->with(['campaignStudents' => function($q) use ($schoolId) {
                 $q->whereHas('campaign', function($inner) use ($schoolId) {
                     $inner->where('school_id', $schoolId);
-                })->with(['grade', 'division', 'campaign']);
+                })->with(['grade', 'division', 'campaign', 'verifier']);
             }])->get()->map($mapStudentTemplate);
             
             return response()->json($students);
@@ -608,6 +608,68 @@ class SchoolAdminController extends Controller
         }
 
         return response()->json(['success' => true, 'message' => 'Student enrollment removed from campaign successfully.']);
+    }
+
+    public function verifyStudent(Request $request, string $id)
+    {
+        $request->validate([
+            'school_id' => 'required|exists:schools,id',
+            'campaign_id' => 'required|exists:campaigns,id',
+        ]);
+
+        $schoolId = $request->school_id;
+        $scopes = $this->getPermittedScopes($schoolId);
+
+        $enrollment = \App\Models\CampaignStudent::where('student_id', $id)
+            ->where('campaign_id', $request->campaign_id)
+            ->whereHas('campaign', function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            })
+            ->firstOrFail();
+
+        if ($scopes['restricted']) {
+            if (!in_array($enrollment->grade_id, $scopes['grades']) || !in_array($enrollment->division_id, $scopes['divisions'])) {
+                return response()->json(['message' => 'You do not have permission to verify students in this grade/division.'], 403);
+            }
+        }
+
+        $enrollment->update([
+            'verified_at' => now(),
+            'verified_by' => auth()->id(),
+        ]);
+
+        return response()->json($enrollment->load(['grade', 'division', 'campaign', 'verifier']));
+    }
+
+    public function unverifyStudent(Request $request, string $id)
+    {
+        $request->validate([
+            'school_id' => 'required|exists:schools,id',
+            'campaign_id' => 'required|exists:campaigns,id',
+        ]);
+
+        $schoolId = $request->school_id;
+        $scopes = $this->getPermittedScopes($schoolId);
+
+        $enrollment = \App\Models\CampaignStudent::where('student_id', $id)
+            ->where('campaign_id', $request->campaign_id)
+            ->whereHas('campaign', function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            })
+            ->firstOrFail();
+
+        if ($scopes['restricted']) {
+            if (!in_array($enrollment->grade_id, $scopes['grades']) || !in_array($enrollment->division_id, $scopes['divisions'])) {
+                return response()->json(['message' => 'You do not have permission to verify students in this grade/division.'], 403);
+            }
+        }
+
+        $enrollment->update([
+            'verified_at' => null,
+            'verified_by' => null,
+        ]);
+
+        return response()->json($enrollment->load(['grade', 'division', 'campaign']));
     }
 
     public function updateMember(Request $request, string $id)
