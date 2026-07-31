@@ -169,6 +169,9 @@
             if (!file_exists($localPath)) {
                 $localPath = public_path('storage/' . $cleanPath);
             }
+            if (!file_exists($localPath)) {
+                $localPath = public_path($cleanPath);
+            }
             if (file_exists($localPath)) {
                 $mime = @mime_content_type($localPath) ?: 'image/png';
                 if (str_ends_with(strtolower($localPath), '.svg')) {
@@ -176,6 +179,9 @@
                 }
                 return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($localPath));
             }
+        }
+        if (file_exists(public_path($cleanPath))) {
+            return asset($cleanPath);
         }
         return asset('storage/' . $cleanPath);
     };

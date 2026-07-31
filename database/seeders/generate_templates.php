@@ -9,7 +9,7 @@ if (!file_exists($bgDir)) {
     mkdir($bgDir, 0755, true);
 }
 
-$publicBgDir = __DIR__ . '/../../public/storage/templates/backgrounds';
+$publicBgDir = __DIR__ . '/../../public/templates/backgrounds';
 if (!file_exists($publicBgDir)) {
     mkdir($publicBgDir, 0755, true);
 }
@@ -434,7 +434,7 @@ for ($i = 1; $i <= 100; $i++) {
 
 echo "Generated 100 SVG background files in {$bgDir} and {$publicBgDir}\n";
 
-// Now write TemplateSeeder.php
+// Write self-contained TemplateSeeder.php that auto-generates SVG backgrounds if missing
 $seederContent = '<?php
 
 namespace Database\Seeders;
@@ -446,6 +446,12 @@ class TemplateSeeder extends Seeder
 {
     public function run(): void
     {
+        // Ensure SVG background generator runs automatically on any server environment
+        $genScript = __DIR__ . \'/generate_templates.php\';
+        if (file_exists($genScript)) {
+            require_once $genScript;
+        }
+
         $templates = ' . var_export($templatesData, true) . ';
 
         foreach ($templates as $tpl) {
