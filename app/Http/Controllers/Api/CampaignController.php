@@ -103,8 +103,17 @@ class CampaignController extends Controller
         $studentIds = Student::where('user_id', $user->id)->pluck('id');
 
         $enrollments = CampaignStudent::whereIn('student_id', $studentIds)
-            ->with(['student', 'grade', 'division'])
+            ->with(['student', 'grade', 'division', 'campaign.school'])
             ->get();
+
+        $schoolAdminCtrl = new \App\Http\Controllers\Api\SchoolAdminController();
+
+        $enrollments->transform(function ($e) use ($schoolAdminCtrl) {
+            $schoolId = $e->campaign->school_id ?? null;
+            $tpl = $schoolId ? $schoolAdminCtrl->getEffectiveTemplateForGradeOrSchool($schoolId, $e->grade_id) : null;
+            $e->setAttribute('effective_template', $tpl);
+            return $e;
+        });
 
         return response()->json($enrollments);
     }
