@@ -166,12 +166,15 @@
         }
         if ($forExport) {
             $localPath = storage_path('app/public/' . $cleanPath);
-            if (file_exists($localPath)) {
-                return 'file://' . $localPath;
+            if (!file_exists($localPath)) {
+                $localPath = public_path('storage/' . $cleanPath);
             }
-            $pubPath = public_path('storage/' . $cleanPath);
-            if (file_exists($pubPath)) {
-                return 'file://' . $pubPath;
+            if (file_exists($localPath)) {
+                $mime = @mime_content_type($localPath) ?: 'image/png';
+                if (str_ends_with(strtolower($localPath), '.svg')) {
+                    $mime = 'image/svg+xml';
+                }
+                return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($localPath));
             }
         }
         return asset('storage/' . $cleanPath);

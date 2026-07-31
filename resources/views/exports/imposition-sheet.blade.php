@@ -151,11 +151,15 @@
                                         $cleanBg = substr($cleanBg, 8);
                                     }
                                     $localBg = storage_path('app/public/' . $cleanBg);
-                                    $pubBg = public_path('storage/' . $cleanBg);
+                                    if (!file_exists($localBg)) {
+                                        $localBg = public_path('storage/' . $cleanBg);
+                                    }
                                     if (file_exists($localBg)) {
-                                        $bgImgUrl = 'file://' . $localBg;
-                                    } elseif (file_exists($pubBg)) {
-                                        $bgImgUrl = 'file://' . $pubBg;
+                                        $mime = @mime_content_type($localBg) ?: 'image/png';
+                                        if (str_ends_with(strtolower($localBg), '.svg')) {
+                                            $mime = 'image/svg+xml';
+                                        }
+                                        $bgImgUrl = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($localBg));
                                     } else {
                                         $bgImgUrl = asset('storage/' . $cleanBg);
                                     }
