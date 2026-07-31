@@ -130,7 +130,7 @@ new class extends Component
             'user_id' => $user->id,
             'school_id' => $activeSchoolId,
             'type' => $this->exportType,
-            'status' => 'pending',
+            'status' => 'processing',
             'params' => $params,
             'total_items' => count($targetStudentIds),
             'processed_items' => 0,
@@ -2124,21 +2124,29 @@ new class extends Component
                         @endif
 
                         <div class="flex justify-end pt-2">
-                            <button wire:click="triggerExport" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow cursor-pointer">
-                                {{ __('Start Background Export') }}
+                            <button wire:click="triggerExport" wire:loading.attr="disabled" wire:target="triggerExport" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow cursor-pointer flex items-center justify-center gap-2">
+                                <span wire:loading.remove wire:target="triggerExport" class="flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                    <span>{{ __('Start Background Export') }}</span>
+                                </span>
+                                <span wire:loading wire:target="triggerExport" class="flex items-center gap-2">
+                                    <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    <span>{{ __('Processing Export...') }}</span>
+                                </span>
                             </button>
                         </div>
                     </div>
 
                     <!-- My Recent Exports List -->
-                    <div class="mt-8 border-t border-gray-100 dark:border-gray-700 pt-5">
-                        @php
-                            $userExports = \App\Models\Export::where('school_id', session('active_school_id'))
-                                ->where('user_id', auth()->id())
-                                ->orderBy('id', 'desc')
-                                ->take(10)
-                                ->get();
-                        @endphp
+                    @php
+                        $userExports = \App\Models\Export::where('school_id', session('active_school_id'))
+                            ->where('user_id', auth()->id())
+                            ->orderBy('id', 'desc')
+                            ->take(10)
+                            ->get();
+                        $hasActiveExport = $userExports->contains(fn($e) => in_array($e->status, ['pending', 'processing']));
+                    @endphp
+                    <div class="mt-8 border-t border-gray-100 dark:border-gray-700 pt-5" @if($hasActiveExport) wire:poll.2s @endif>
                         <div class="flex items-center justify-between mb-3">
                             <h4 class="text-xs font-extrabold uppercase tracking-wider text-gray-500 dark:text-gray-400">{{ __('My Recent Exports') }}</h4>
                             @if ($userExports->count() > 0)
