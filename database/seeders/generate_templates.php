@@ -134,8 +134,12 @@ for ($i = 1; $i <= 100; $i++) {
         </svg>';
     }
 
-    file_put_contents($filePath, trim($svgContent));
-    file_put_contents($publicPath, trim($svgContent));
+    if (!file_exists($filePath)) {
+        @file_put_contents($filePath, trim($svgContent));
+    }
+    if (!file_exists($publicPath)) {
+        @file_put_contents($publicPath, trim($svgContent));
+    }
 
     // High-Resolution Layout Configurations
     if (!$isPortrait) {
