@@ -136,13 +136,18 @@ new class extends Component
             'processed_items' => 0,
         ]);
 
-        match ($this->exportType) {
-            'excel_photo_zip' => \App\Jobs\ExportExcelPhotoZipJob::dispatch($export->id),
-            'png_zip' => \App\Jobs\ExportPngZipJob::dispatch($export->id),
-            'imposition_pdf' => \App\Jobs\ExportImpositionPdfJob::dispatch($export->id),
-        };
+        try {
+            match ($this->exportType) {
+                'excel_photo_zip' => \App\Jobs\ExportExcelPhotoZipJob::dispatchSync($export->id),
+                'png_zip' => \App\Jobs\ExportPngZipJob::dispatchSync($export->id),
+                'imposition_pdf' => \App\Jobs\ExportImpositionPdfJob::dispatchSync($export->id),
+            };
+            session()->flash('message', 'Export completed successfully! Click Download to save file.');
+        } catch (\Throwable $e) {
+            $export->update(['status' => 'failed', 'error_message' => $e->getMessage()]);
+            session()->flash('message', 'Export failed: ' . $e->getMessage());
+        }
 
-        session()->flash('message', 'Export job submitted successfully. Processing in background.');
     }
 
     public function openPreviewIdCard($studentId)

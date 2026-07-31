@@ -916,17 +916,30 @@ class SchoolAdminController extends Controller
             'processed_items' => 0,
         ]);
 
-        match ($request->type) {
-            'excel_photo_zip' => \App\Jobs\ExportExcelPhotoZipJob::dispatch($export->id),
-            'png_zip' => \App\Jobs\ExportPngZipJob::dispatch($export->id),
-            'imposition_pdf' => \App\Jobs\ExportImpositionPdfJob::dispatch($export->id),
-        };
+        try {
+            if ($request->boolean('sync', true)) {
+                match ($request->type) {
+                    'excel_photo_zip' => \App\Jobs\ExportExcelPhotoZipJob::dispatchSync($export->id),
+                    'png_zip' => \App\Jobs\ExportPngZipJob::dispatchSync($export->id),
+                    'imposition_pdf' => \App\Jobs\ExportImpositionPdfJob::dispatchSync($export->id),
+                };
+            } else {
+                match ($request->type) {
+                    'excel_photo_zip' => \App\Jobs\ExportExcelPhotoZipJob::dispatch($export->id),
+                    'png_zip' => \App\Jobs\ExportPngZipJob::dispatch($export->id),
+                    'imposition_pdf' => \App\Jobs\ExportImpositionPdfJob::dispatch($export->id),
+                };
+            }
+        } catch (\Throwable $e) {
+            $export->update(['status' => 'failed', 'error_message' => $e->getMessage()]);
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'Export task initiated successfully.',
-            'export' => $export,
+            'message' => 'Export task executed successfully.',
+            'export' => $export->fresh(),
         ]);
+
     }
 
     public function listExports(Request $request)
