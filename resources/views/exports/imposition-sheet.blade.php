@@ -32,15 +32,6 @@
             width: {{ $layout['card_outer_width'] }}mm;
             height: {{ $layout['card_outer_height'] }}mm;
         }
-        .bleed-box {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: #1e293b;
-        }
         .trim-area {
             position: absolute;
             top: {{ $layout['bleed_mm'] }}mm;
@@ -48,16 +39,6 @@
             width: {{ $layout['card_width_mm'] }}mm;
             height: {{ $layout['card_height_mm'] }}mm;
             overflow: hidden;
-        }
-        .safety-margin {
-            position: absolute;
-            top: {{ $layout['bleed_mm'] + $layout['margin_mm'] }}mm;
-            left: {{ $layout['bleed_mm'] + $layout['margin_mm'] }}mm;
-            width: {{ $layout['card_width_mm'] - (2 * $layout['margin_mm']) }}mm;
-            height: {{ $layout['card_height_mm'] - (2 * $layout['margin_mm']) }}mm;
-            border: 0.5px dashed rgba(239, 68, 68, 0.4);
-            pointer-events: none;
-            z-index: 99;
         }
         /* Crop / Trim Marks */
         .crop-mark {
@@ -137,40 +118,6 @@
                 @endphp
 
                 <div class="card-cell" style="left: {{ $leftMm }}mm; top: {{ $topMm }}mm;">
-                    <div class="bleed-box">
-                        <!-- Background Extension Bleed -->
-                        @if ($template && $template->background_image)
-                            @php
-                                $bgImg = $template->background_image;
-                                $bgImgUrl = null;
-                                if (str_starts_with($bgImg, 'http://') || str_starts_with($bgImg, 'https://') || str_starts_with($bgImg, 'data:')) {
-                                    $bgImgUrl = $bgImg;
-                                } else {
-                                    $cleanBg = ltrim($bgImg, '/');
-                                    if (str_starts_with($cleanBg, 'storage/')) {
-                                        $cleanBg = substr($cleanBg, 8);
-                                    }
-                                    $localBg = storage_path('app/public/' . $cleanBg);
-                                    if (!file_exists($localBg)) {
-                                        $localBg = public_path('storage/' . $cleanBg);
-                                    }
-                                    if (file_exists($localBg)) {
-                                        $mime = @mime_content_type($localBg) ?: 'image/png';
-                                        if (str_ends_with(strtolower($localBg), '.svg')) {
-                                            $mime = 'image/svg+xml';
-                                        }
-                                        $bgImgUrl = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($localBg));
-                                    } else {
-                                        $bgImgUrl = asset('storage/' . $cleanBg);
-                                    }
-                                }
-                            @endphp
-                            @if ($bgImgUrl)
-                                <img src="{{ $bgImgUrl }}" style="width: 100%; height: 100%; object-fit: cover;" />
-                            @endif
-                        @endif
-                    </div>
-
                     <!-- Hairline Crop Marks -->
                     <div class="crop-mark cm-tl-v"></div>
                     <div class="crop-mark cm-tl-h"></div>
@@ -180,9 +127,6 @@
                     <div class="crop-mark cm-bl-h"></div>
                     <div class="crop-mark cm-br-v"></div>
                     <div class="crop-mark cm-br-h"></div>
-
-                    <!-- Safety Margin Line -->
-                    <div class="safety-margin"></div>
 
                     <!-- Trim Area with Exact Card Content -->
                     <div class="trim-area">
