@@ -19,6 +19,7 @@ new class extends Component
     public $bulkZip = null;
 
     // Filter fields
+    public string $search = '';
     public $filterCampaign = '';
     public $filterGrade = '';
     public $filterDivision = '';
@@ -121,6 +122,24 @@ new class extends Component
                 if ($this->filterDivision) {
                     $q->where('division_id', $this->filterDivision);
                 }
+            });
+        }
+
+        if (!empty(trim($this->search))) {
+            $s = '%' . trim($this->search) . '%';
+            $query->where(function($q) use ($s) {
+                $q->where('first_name', 'like', $s)
+                  ->orWhere('middle_name', 'like', $s)
+                  ->orWhere('last_name', 'like', $s)
+                  ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", [$s])
+                  ->orWhereRaw("CONCAT(first_name, ' ', middle_name, ' ', last_name) LIKE ?", [$s])
+                  ->orWhere('contact_number', 'like', $s)
+                  ->orWhere('address', 'like', $s)
+                  ->orWhere('pincode', 'like', $s)
+                  ->orWhereHas('campaignStudents', function($csQ) use ($s) {
+                      $csQ->where('roll_no', 'like', $s)
+                          ->orWhere('serial_number', 'like', $s);
+                  });
             });
         }
 
@@ -282,6 +301,11 @@ new class extends Component
         $this->perPage += 12;
     }
 
+    public function updatedSearch()
+    {
+        $this->perPage = 12;
+    }
+
     public function updatedFilterCampaign()
     {
         $this->perPage = 12;
@@ -392,7 +416,23 @@ new class extends Component
             });
         }
 
-
+        if (!empty(trim($this->search))) {
+            $s = '%' . trim($this->search) . '%';
+            $query->where(function($q) use ($s) {
+                $q->where('first_name', 'like', $s)
+                  ->orWhere('middle_name', 'like', $s)
+                  ->orWhere('last_name', 'like', $s)
+                  ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", [$s])
+                  ->orWhereRaw("CONCAT(first_name, ' ', middle_name, ' ', last_name) LIKE ?", [$s])
+                  ->orWhere('contact_number', 'like', $s)
+                  ->orWhere('address', 'like', $s)
+                  ->orWhere('pincode', 'like', $s)
+                  ->orWhereHas('campaignStudents', function($csQ) use ($s) {
+                      $csQ->where('roll_no', 'like', $s)
+                          ->orWhere('serial_number', 'like', $s);
+                  });
+            });
+        }
 
         $totalCount = $query->count();
         $this->hasMore = $totalCount > $this->perPage;
@@ -449,8 +489,26 @@ new class extends Component
             });
         }
 
+        if (!empty(trim($this->search))) {
+            $s = '%' . trim($this->search) . '%';
+            $filteredQuery->where(function($q) use ($s) {
+                $q->where('first_name', 'like', $s)
+                  ->orWhere('middle_name', 'like', $s)
+                  ->orWhere('last_name', 'like', $s)
+                  ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", [$s])
+                  ->orWhereRaw("CONCAT(first_name, ' ', middle_name, ' ', last_name) LIKE ?", [$s])
+                  ->orWhere('contact_number', 'like', $s)
+                  ->orWhere('address', 'like', $s)
+                  ->orWhere('pincode', 'like', $s)
+                  ->orWhereHas('campaignStudents', function($csQ) use ($s) {
+                      $csQ->where('roll_no', 'like', $s)
+                          ->orWhere('serial_number', 'like', $s);
+                  });
+            });
+        }
+
         $filteredCount = $filteredQuery->count();
-        $isFiltered = !empty($this->filterCampaign) || !empty($this->filterGrade) || !empty($this->filterDivision);
+        $isFiltered = !empty($this->filterCampaign) || !empty($this->filterGrade) || !empty($this->filterDivision) || !empty(trim($this->search));
 
         return [
             'total' => $totalCount,
@@ -461,7 +519,7 @@ new class extends Component
 
     public function resetFilters()
     {
-        $this->reset(['filterCampaign', 'filterGrade', 'filterDivision']);
+        $this->reset(['filterCampaign', 'filterGrade', 'filterDivision', 'search']);
     }
 
 
@@ -1222,7 +1280,27 @@ new class extends Component
     </div>
 
     <!-- Filters Bar -->
-    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-white dark:bg-gray-800 p-5 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 bg-white dark:bg-gray-800 p-5 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none">
+        <!-- Search Input -->
+        <div>
+            <label class="text-[9px] uppercase font-bold text-gray-500 dark:text-gray-400 tracking-wider block mb-1.5">{{ __('Search Student') }}</label>
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <input type="text" wire:model.live.debounce.300ms="search" placeholder="{{ __('Name, Roll, Mobile, Address...') }}" class="w-full pl-9 pr-8 border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-xl text-xs focus:ring-indigo-500 focus:border-indigo-500 placeholder-gray-400 dark:placeholder-gray-500" />
+                @if(!empty($search))
+                    <button type="button" wire:click="$set('search', '')" class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                @endif
+            </div>
+        </div>
+
         <!-- Campaign Filter -->
         <div>
             <label class="text-[9px] uppercase font-bold text-gray-500 dark:text-gray-400 tracking-wider block mb-1.5">{{ __('Campaign') }}</label>
@@ -1276,7 +1354,7 @@ new class extends Component
         <!-- Actions / Clear Filters -->
         <div class="flex items-end">
             @if ($studentCounts['is_filtered'])
-                <button wire:click="resetFilters" type="button" class="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer">
+                <button wire:click="resetFilters" type="button" class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
