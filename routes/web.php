@@ -3,6 +3,15 @@
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
+Route::view('features', 'features')->name('features');
+Route::view('how-it-works', 'how-it-works')->name('how-it-works');
+Route::view('for-schools', 'for-schools')->name('for-schools');
+Route::view('for-teachers', 'for-teachers')->name('for-teachers');
+Route::view('for-parents', 'for-parents')->name('for-parents');
+Route::view('for-printing-companies', 'for-printing-companies')->name('for-printing-companies');
+Route::view('mobile-app', 'mobile-app')->name('mobile-app');
+Route::view('pricing', 'pricing')->name('pricing');
+Route::view('contact', 'contact')->name('contact');
 Route::view('privacy-policy', 'privacy')->name('privacy');
 
 Route::view('dashboard', 'dashboard')

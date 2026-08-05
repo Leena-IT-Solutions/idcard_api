@@ -25,8 +25,10 @@ new #[Layout('layouts.guest')] class extends Component
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'mobile' => ['required', 'string', 'max:255', 'unique:'.User::class],
+            'mobile' => ['required', 'string', 'regex:/^[6-9]\d{9}$/', 'unique:'.User::class],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
+        ], [
+            'mobile.regex' => 'The mobile number must be a 10-digit number starting with 6-9.',
         ]);
 
         $user = User::create([
@@ -62,7 +64,7 @@ new #[Layout('layouts.guest')] class extends Component
             <label for="name" class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Full Name</label>
             <input wire:model="name" id="name" type="text" name="name" required autofocus autocomplete="name" 
                 class="block w-full rounded-xl border border-slate-800 bg-slate-950/70 text-white placeholder-slate-500 focus:border-amber-500 focus:ring-amber-500 shadow-inner px-4 py-2.5 text-sm transition duration-250" 
-                placeholder="e.g. Sandeep Rathod" />
+                placeholder="e.g. John Doe" />
             <x-input-error :messages="$errors->get('name')" class="mt-2" />
         </div>
 
@@ -71,7 +73,7 @@ new #[Layout('layouts.guest')] class extends Component
             <label for="email" class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Email Address</label>
             <input wire:model="email" id="email" type="email" name="email" required autocomplete="username" 
                 class="block w-full rounded-xl border border-slate-800 bg-slate-950/70 text-white placeholder-slate-500 focus:border-amber-500 focus:ring-amber-500 shadow-inner px-4 py-2.5 text-sm transition duration-250" 
-                placeholder="e.g. sandeep@gmail.com" />
+                placeholder="e.g. johndoe@example.com" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
@@ -79,8 +81,10 @@ new #[Layout('layouts.guest')] class extends Component
         <div>
             <label for="mobile" class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Mobile Number</label>
             <input wire:model="mobile" id="mobile" type="text" name="mobile" required autocomplete="mobile" 
+                maxlength="10"
+                oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);"
                 class="block w-full rounded-xl border border-slate-800 bg-slate-950/70 text-white placeholder-slate-500 focus:border-amber-500 focus:ring-amber-500 shadow-inner px-4 py-2.5 text-sm transition duration-250" 
-                placeholder="e.g. 9664588677" />
+                placeholder="e.g. 9876543210" />
             <x-input-error :messages="$errors->get('mobile')" class="mt-2" />
         </div>
 
