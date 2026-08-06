@@ -128,9 +128,9 @@ export function photoStudio() {
 
             this.cropper = new Cropper(imgElement, {
                 aspectRatio: this.aspectRatio,
-                viewMode: 1,
+                viewMode: 2,
                 dragMode: 'move',
-                autoCropArea: 0.9,
+                autoCropArea: 0.95,
                 restore: false,
                 guides: true,
                 center: true,

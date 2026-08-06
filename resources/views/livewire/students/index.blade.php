@@ -2078,16 +2078,14 @@ new class extends Component
                                                     </div>
 
                                                     <!-- Crop Stage Container with Passport Oval Silhouette Overlay -->
-                                                    <div class="relative w-full h-[400px] bg-gray-950 rounded-2xl overflow-hidden flex items-center justify-center border border-gray-800 p-2">
-                                                        <div class="w-full h-full flex items-center justify-center">
-                                                            <img x-ref="cropImage" class="max-w-full max-h-full block" />
-                                                        </div>
+                                                    <div class="relative w-full h-[500px] bg-gray-950 rounded-2xl overflow-hidden flex items-center justify-center border border-gray-800">
+                                                        <img x-ref="cropImage" class="w-full h-full object-contain block" />
                                                         
                                                         <!-- Passport Head Oval Silhouette Overlay Guide -->
                                                         <div class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center opacity-35 z-20">
-                                                            <div class="w-52 h-64 border-2 border-dashed border-indigo-400 rounded-[50%] flex flex-col items-center justify-start pt-6">
+                                                            <div class="w-64 h-80 border-2 border-dashed border-indigo-400 rounded-[50%] flex flex-col items-center justify-start pt-8">
                                                                 <div class="w-full border-t border-indigo-300/60 my-2"></div>
-                                                                <span class="text-[9px] font-black uppercase text-indigo-300 tracking-wider bg-black/50 px-2 py-0.5 rounded">Eye Line</span>
+                                                                <span class="text-[10px] font-black uppercase text-indigo-300 tracking-wider bg-black/60 px-2.5 py-0.5 rounded">Eye Line</span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -2182,9 +2180,10 @@ new class extends Component
                                                     </div>
                                                 </div>
 
-                                                <!-- STEP 4: FINAL PREVIEW & CANVAS DISPLAY -->
-                                                <div class="flex flex-col items-center justify-center p-4 bg-gray-950 rounded-2xl border border-gray-800 min-h-[260px]">
-                                                    <canvas x-ref="studioCanvas" class="max-h-72 max-w-full rounded-xl shadow-2xl border border-gray-700/80 object-contain"></canvas>
+                                                <!-- STEP 4: FINAL PREVIEW -->
+                                                <div x-show="step === 'preview'" class="flex flex-col items-center justify-center p-6 bg-gray-950 rounded-2xl border border-gray-800 min-h-[350px]">
+                                                    <h5 class="text-xs font-extrabold uppercase text-gray-400 mb-3 tracking-wider">Final Photo Result</h5>
+                                                    <canvas x-ref="studioCanvas" class="max-h-[380px] max-w-full rounded-2xl shadow-2xl border border-gray-700/80 object-contain"></canvas>
                                                 </div>
                                             </div>
 

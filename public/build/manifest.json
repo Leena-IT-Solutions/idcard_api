@@ -8,7 +8,7 @@
     "src": "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.wasm"
   },
   "node_modules/onnxruntime-web/dist/ort.bundle.min.mjs": {
-    "file": "assets/ort.bundle.min-DIR0pIAD.js",
+    "file": "assets/ort.bundle.min-Bd_pyN6T.js",
     "name": "ort.bundle.min",
     "src": "node_modules/onnxruntime-web/dist/ort.bundle.min.mjs",
     "isDynamicEntry": true,
@@ -22,7 +22,7 @@
     ]
   },
   "node_modules/onnxruntime-web/dist/ort.webgpu.bundle.min.mjs": {
-    "file": "assets/ort.webgpu.bundle.min-Drs0le-0.js",
+    "file": "assets/ort.webgpu.bundle.min-BQ3JiMkP.js",
     "name": "ort.webgpu.bundle.min",
     "src": "node_modules/onnxruntime-web/dist/ort.webgpu.bundle.min.mjs",
     "isDynamicEntry": true,
@@ -36,7 +36,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-BF9ADkAt.css",
+    "file": "assets/app-D8yHIth3.css",
     "name": "app",
     "names": [
       "app.css"
@@ -45,7 +45,7 @@
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-BvivrqSu.js",
+    "file": "assets/app-C2q-Ri8W.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
