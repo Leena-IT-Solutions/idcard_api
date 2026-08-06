@@ -504,21 +504,19 @@ class SchoolAdminController extends Controller
         }
  
         // Check if student is already enrolled in the selected campaign
-        if (!$request->student_id) {
-            $existingCheck = Student::findExisting($request->contact_number, $request->first_name, $request->last_name, $request->dob);
-            if ($existingCheck) {
-                $alreadyEnrolled = \App\Models\CampaignStudent::where('campaign_id', $request->campaign_id)
-                    ->where('student_id', $existingCheck->id)
-                    ->exists();
+        $existingCheck = Student::findExisting($request->contact_number, $request->first_name, $request->last_name, $request->dob);
+        if ($existingCheck && (!$request->student_id || (string)$existingCheck->id !== (string)$request->student_id)) {
+            $alreadyEnrolled = \App\Models\CampaignStudent::where('campaign_id', $request->campaign_id)
+                ->where('student_id', $existingCheck->id)
+                ->exists();
 
-                if ($alreadyEnrolled) {
-                    return response()->json([
-                        'message' => 'This student is already enrolled in the selected campaign.',
-                        'errors' => [
-                            'campaign_id' => ['This student is already enrolled in the selected campaign.']
-                        ]
-                    ], 422);
-                }
+            if ($alreadyEnrolled) {
+                return response()->json([
+                    'message' => 'This student is already enrolled in the selected campaign.',
+                    'errors' => [
+                        'campaign_id' => ['This student is already enrolled in the selected campaign.']
+                    ]
+                ], 422);
             }
         }
 
