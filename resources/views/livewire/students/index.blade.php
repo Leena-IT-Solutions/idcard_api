@@ -24,6 +24,15 @@ new class extends Component
     public $filterGrade = '';
     public $filterDivision = '';
 
+    public function mount()
+    {
+        $this->search = session('students_filter_search', '');
+        $this->filterCampaign = session('students_filter_campaign', '');
+        $this->filterGrade = session('students_filter_grade', '');
+        $this->filterDivision = session('students_filter_division', '');
+        $this->viewMode = session('students_view_mode', 'auto');
+    }
+
     // Form fields
     public $studentId = null;
     public string $first_name = '';
@@ -304,22 +313,34 @@ new class extends Component
     public function updatedSearch()
     {
         $this->perPage = 12;
+        session(['students_filter_search' => $this->search]);
     }
 
     public function updatedFilterCampaign()
     {
         $this->perPage = 12;
+        session(['students_filter_campaign' => $this->filterCampaign]);
     }
 
     public function updatedFilterGrade()
     {
         $this->filterDivision = '';
         $this->perPage = 12;
+        session([
+            'students_filter_grade' => $this->filterGrade,
+            'students_filter_division' => '',
+        ]);
     }
 
     public function updatedFilterDivision()
     {
         $this->perPage = 12;
+        session(['students_filter_division' => $this->filterDivision]);
+    }
+
+    public function updatedViewMode()
+    {
+        session(['students_view_mode' => $this->viewMode]);
     }
 
     public function updatedFilterBloodGroup()
@@ -520,6 +541,12 @@ new class extends Component
     public function resetFilters()
     {
         $this->reset(['filterCampaign', 'filterGrade', 'filterDivision', 'search']);
+        session()->forget([
+            'students_filter_search',
+            'students_filter_campaign',
+            'students_filter_grade',
+            'students_filter_division',
+        ]);
     }
 
 
