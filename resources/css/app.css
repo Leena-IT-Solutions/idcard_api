@@ -1,3 +1,17 @@
+@import "cropperjs/dist/cropper.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Cropper Container Overrides */
+.cropper-container {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.cropper-bg {
+    background-image: repeating-conic-gradient(#1e293b 0% 25%, #0f172a 0% 50%) !important;
+    background-position: 0 0, 8px 0, 8px -8px, 0px 8px !important;
+    background-size: 16px 16px !important;
+}

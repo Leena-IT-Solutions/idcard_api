@@ -18,7 +18,7 @@
     },
     "dependencies": {
         "@imgly/background-removal": "^1.7.0",
-        "cropperjs": "^2.1.1",
+        "cropperjs": "^1.6.2",
         "puppeteer": "^25.4.0"
     }
 }
