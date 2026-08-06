@@ -2165,18 +2165,18 @@ new class extends Component
                     <div class="flex items-center justify-between pt-2 border-t border-slate-800">
                         <span class="text-xs text-slate-400 font-mono">Format: Standard CR-80 (85.6mm &times; 54.0mm)</span>
                         <div class="flex items-center gap-3">
-                            <a href="/api/school-admin/students/{{ $targetStudent->id }}/export-pdf?school_id={{ session('active_school_id') }}&campaign_id={{ $filterCampaign }}" target="_blank" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow flex items-center gap-2">
+                            <a href="/school-admin/students/{{ $targetStudent->id }}/export-pdf?school_id={{ session('active_school_id') }}&campaign_id={{ $filterCampaign }}" target="_blank" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow flex items-center gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                                 </svg>
                                 <span>Download PDF</span>
                             </a>
-                            <button onclick="window.print()" type="button" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow flex items-center gap-2 cursor-pointer">
+                            <a href="/school-admin/students/{{ $targetStudent->id }}/export-png?school_id={{ session('active_school_id') }}&campaign_id={{ $filterCampaign }}" target="_blank" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow flex items-center gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                 </svg>
-                                <span>Print ID Card</span>
-                            </button>
+                                <span>Download PNG</span>
+                            </a>
                             <button type="button" wire:click="closePreviewIdCard" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs uppercase tracking-wider rounded-xl transition cursor-pointer">
                                 {{ __('Close') }}
                             </button>

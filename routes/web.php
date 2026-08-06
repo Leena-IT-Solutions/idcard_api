@@ -148,6 +148,14 @@ Route::get('/school-admin/exports/{export}/download', [\App\Http\Controllers\Api
     ->middleware(['auth'])
     ->name('exports.download');
 
+Route::get('/school-admin/students/{id}/export-pdf', [\App\Http\Controllers\Api\SchoolAdminController::class, 'exportSingleStudentPdf'])
+    ->middleware(['auth'])
+    ->name('students.export-pdf');
+
+Route::get('/school-admin/students/{id}/export-png', [\App\Http\Controllers\Api\SchoolAdminController::class, 'exportSingleStudentPng'])
+    ->middleware(['auth'])
+    ->name('students.export-png');
+
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/git-info', function () {

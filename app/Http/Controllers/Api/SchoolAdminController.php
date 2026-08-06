@@ -845,6 +845,69 @@ class SchoolAdminController extends Controller
         ]);
     }
 
+    public function exportSingleStudentPng(Request $request, string $id)
+    {
+        $request->validate([
+            'school_id' => 'required|exists:schools,id',
+            'campaign_id' => 'nullable|exists:campaigns,id',
+        ]);
+
+        $schoolId = $request->school_id;
+        $campaignId = $request->campaign_id;
+        $permitted = $this->getPermittedScopes($schoolId);
+
+        $student = \App\Models\Student::findOrFail($id);
+
+        $enrollment = \App\Models\CampaignStudent::where('student_id', $student->id)
+            ->when($campaignId, fn($q) => $q->where('campaign_id', $campaignId))
+            ->when($permitted['restricted'], function($q) use ($permitted) {
+                $q->where(function($sub) use ($permitted) {
+                    foreach ($permitted['assignments'] as $asg) {
+                        $sub->orWhere(function($sq) use ($asg) {
+                            $sq->where('grade_id', $asg['grade_id']);
+                            if (!empty($asg['division_id'])) {
+                                $sq->where('division_id', $asg['division_id']);
+                            }
+                        });
+                    }
+                });
+            })
+            ->with(['grade', 'division', 'verifier', 'campaign'])
+            ->first();
+
+        if ($permitted['restricted'] && !$enrollment) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized access to student scope.'], 403);
+        }
+
+        if ($enrollment) {
+            $student->setRelation('campaignStudents', collect([$enrollment]));
+        }
+
+        $school = \App\Models\School::findOrFail($schoolId);
+        $templateResolver = new \App\Services\TemplateResolverService();
+        $template = $templateResolver->getEffectiveTemplate($schoolId, $enrollment?->grade_id);
+
+        $cardRenderer = new \App\Services\CardRenderService();
+        $html = $cardRenderer->renderFrontHtml($template, $student, $school);
+
+        $orientation = $template->orientation ?? 'landscape';
+        $isPortrait = $orientation === 'portrait';
+        $widthPx = $isPortrait ? 638 : 1011;
+        $heightPx = $isPortrait ? 1011 : 638;
+
+        $png = $cardRenderer->toPng($html, $widthPx, $heightPx);
+
+        $schoolCode = preg_replace('/[^A-Za-z0-9_-]/', '', $school->school_code ?? $school->name ?? 'SCHOOL');
+
+        $name = preg_replace('/[^A-Za-z0-9_-]/', '_', trim("{$student->first_name}_{$student->last_name}"));
+        $filename = "{$schoolCode}_{$name}_idcard.png";
+
+        return response($png, 200, [
+            'Content-Type' => 'image/png',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
     public function createExport(Request $request)
     {
         $request->validate([
