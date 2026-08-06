@@ -1,6 +1,42 @@
 {
+  "_rolldown-runtime-BX6QyPe0.js": {
+    "file": "assets/rolldown-runtime-BX6QyPe0.js",
+    "name": "rolldown-runtime"
+  },
+  "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.wasm": {
+    "file": "assets/ort-wasm-simd-threaded.jsep-D5Jk56-t.wasm",
+    "src": "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.wasm"
+  },
+  "node_modules/onnxruntime-web/dist/ort.bundle.min.mjs": {
+    "file": "assets/ort.bundle.min-CiRO9XkD.js",
+    "name": "ort.bundle.min",
+    "src": "node_modules/onnxruntime-web/dist/ort.bundle.min.mjs",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-BX6QyPe0.js",
+      "resources/js/app.js"
+    ],
+    "assets": [
+      "assets/ort.bundle.min-OfoG_cy9.mjs",
+      "assets/ort-wasm-simd-threaded.jsep-D5Jk56-t.wasm"
+    ]
+  },
+  "node_modules/onnxruntime-web/dist/ort.webgpu.bundle.min.mjs": {
+    "file": "assets/ort.webgpu.bundle.min-CDgUyenv.js",
+    "name": "ort.webgpu.bundle.min",
+    "src": "node_modules/onnxruntime-web/dist/ort.webgpu.bundle.min.mjs",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-BX6QyPe0.js",
+      "resources/js/app.js"
+    ],
+    "assets": [
+      "assets/ort.webgpu.bundle.min-CEayb2S6.mjs",
+      "assets/ort-wasm-simd-threaded.jsep-D5Jk56-t.wasm"
+    ]
+  },
   "resources/css/app.css": {
-    "file": "assets/app-C6JJZv3T.css",
+    "file": "assets/app-B4oil5UE.css",
     "name": "app",
     "names": [
       "app.css"
@@ -9,9 +45,13 @@
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-BvRk9kiK.js",
+    "file": "assets/app-BPaXuDzd.js",
     "name": "app",
     "src": "resources/js/app.js",
-    "isEntry": true
+    "isEntry": true,
+    "dynamicImports": [
+      "node_modules/onnxruntime-web/dist/ort.webgpu.bundle.min.mjs",
+      "node_modules/onnxruntime-web/dist/ort.bundle.min.mjs"
+    ]
   }
 }

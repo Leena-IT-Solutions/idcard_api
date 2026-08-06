@@ -761,7 +761,7 @@ new class extends Component
             'address' => ['required', 'string'],
             'pincode' => ['required', 'string', 'max:20'],
             'contact_number' => ['required', 'string', 'max:20'],
-            'photo' => ['nullable', 'image', 'max:2048'], // Max 2MB
+            'photo' => ['nullable', 'image', 'max:4096'], // Max 4MB
         ];
 
         $validated = $this->validate($rules);
@@ -1960,29 +1960,218 @@ new class extends Component
                             <div class="space-y-6">
                                 <h4 class="text-sm font-black text-gray-900 dark:text-gray-100 uppercase tracking-wider">Part 4: Student Photo & Final Review</h4>
 
-                                <div class="bg-gray-50 dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-200 dark:border-gray-700">
+                                <div class="bg-gray-50 dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-200 dark:border-gray-700" x-data="photoStudio()" x-init="initStudio()">
                                     <x-input-label :value="__('Student Photo')" class="font-bold text-xs uppercase" />
                                     <div class="mt-3 flex items-center gap-5">
                                         @if ($photo)
-                                            <img src="{{ $photo->temporaryUrl() }}" class="h-20 w-20 object-cover rounded-2xl border-2 border-indigo-500 shadow-md shrink-0" />
+                                            <img src="{{ $photo->temporaryUrl() }}" class="h-24 w-24 object-cover rounded-2xl border-2 border-indigo-500 shadow-md shrink-0" />
                                         @elseif ($currentPhotoPath)
-                                            <img src="{{ asset('storage/' . $currentPhotoPath) }}" class="h-20 w-20 object-cover rounded-2xl border-2 border-indigo-500 shadow-md shrink-0" />
+                                            <img src="{{ asset('storage/' . $currentPhotoPath) }}" class="h-24 w-24 object-cover rounded-2xl border-2 border-indigo-500 shadow-md shrink-0" />
                                         @else
-                                            <div class="h-20 w-20 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-400 shrink-0 shadow-sm">
-                                                <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                            <div class="h-24 w-24 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-400 shrink-0 shadow-sm">
+                                                <svg class="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                             </div>
                                         @endif
 
-                                        <div class="flex-1">
-                                            <input type="file" wire:model="photo" id="photo" class="hidden" accept="image/*" />
-                                            <label for="photo" class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-indigo-50 text-gray-700 dark:text-gray-300 font-bold text-xs uppercase rounded-xl transition shadow-sm">
-                                                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                                                {{ __('Choose Photo') }}
+                                        <div class="flex-1 space-y-2">
+                                            <input type="file" id="photo-studio-input" @change="openStudio($event)" class="hidden" accept="image/*" />
+                                            <label for="photo-studio-input" class="cursor-pointer inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase rounded-xl transition shadow-md shadow-indigo-600/20">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                                <span>{{ __('Open Photo Studio Editor 🎨') }}</span>
                                             </label>
-                                            <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5 font-medium">JPEG, PNG up to 2MB (Square ratio recommended)</p>
+                                            <p class="text-[11px] text-gray-500 dark:text-gray-400 font-medium">Crop (1:1 / 3:4), Remove & Change Background Color, Touch-up filters with Passport Silhouette Guide.</p>
                                         </div>
                                     </div>
                                     <x-input-error :messages="$errors->get('photo')" class="mt-2" />
+
+                                    <!-- PHOTO STUDIO MODAL -->
+                                    <div x-show="isOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
+                                        <div class="fixed inset-0 bg-gray-950/80 backdrop-blur-md transition-opacity" @click="closeStudio()"></div>
+
+                                        <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl max-w-4xl w-full p-6 space-y-6 shadow-2xl relative z-10 text-gray-900 dark:text-white max-h-[90vh] flex flex-col">
+                                            <!-- Modal Header -->
+                                            <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-4 shrink-0">
+                                                <div class="space-y-1">
+                                                    <h3 class="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
+                                                        <span>🎨 Student Photo Studio</span>
+                                                        <span class="text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 px-2.5 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-500/30">AI Powered WASM</span>
+                                                    </h3>
+                                                    <p class="text-xs text-gray-500 dark:text-gray-400">Crop, remove background, change background color, and touch-up before saving.</p>
+                                                </div>
+                                                <button type="button" @click="closeStudio()" class="text-gray-400 hover:text-gray-600 dark:hover:text-white p-2 transition">
+                                                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                </button>
+                                            </div>
+
+                                            <!-- Step Tabs -->
+                                            <div class="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-3 shrink-0">
+                                                <button type="button" @click="step = 'crop'" :class="step === 'crop' ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'" class="px-4 py-2 rounded-xl font-extrabold text-xs transition flex items-center gap-1.5 cursor-pointer">
+                                                    <span>1. Crop & Align</span>
+                                                </button>
+                                                <button type="button" @click="step = 'background'" :class="step === 'background' ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'" class="px-4 py-2 rounded-xl font-extrabold text-xs transition flex items-center gap-1.5 cursor-pointer">
+                                                    <span>2. Background</span>
+                                                </button>
+                                                <button type="button" @click="step = 'touchup'" :class="step === 'touchup' ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'" class="px-4 py-2 rounded-xl font-extrabold text-xs transition flex items-center gap-1.5 cursor-pointer">
+                                                    <span>3. Touch-up Filters</span>
+                                                </button>
+                                                <button type="button" @click="step = 'preview'" :class="step === 'preview' ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'" class="px-4 py-2 rounded-xl font-extrabold text-xs transition flex items-center gap-1.5 cursor-pointer">
+                                                    <span>4. Final Preview</span>
+                                                </button>
+                                            </div>
+
+                                            <!-- Warning Banner -->
+                                            <template x-if="resWarning">
+                                                <div class="bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-300 p-3 rounded-xl text-xs font-semibold flex items-center gap-2 shrink-0">
+                                                    <svg class="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                                    <span x-text="resWarning"></span>
+                                                </div>
+                                            </template>
+
+                                            <!-- Main Studio Stage -->
+                                            <div class="flex-1 overflow-y-auto min-h-0 space-y-4">
+                                                <!-- STEP 1: CROP & ALIGN -->
+                                                <div x-show="step === 'crop'" class="space-y-4">
+                                                    <div class="flex flex-wrap items-center justify-between gap-3 bg-gray-50 dark:bg-gray-800/60 p-3 rounded-2xl border border-gray-100 dark:border-gray-700/60">
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Aspect Ratio:</span>
+                                                            <button type="button" @click="setAspectRatio(1)" :class="aspectRatio === 1 ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-gray-300'" class="px-3 py-1.5 rounded-lg font-bold text-xs border border-gray-200 dark:border-gray-600 transition">1:1 Square</button>
+                                                            <button type="button" @click="setAspectRatio(0.75)" :class="aspectRatio === 0.75 ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-gray-300'" class="px-3 py-1.5 rounded-lg font-bold text-xs border border-gray-200 dark:border-gray-600 transition">3:4 Passport</button>
+                                                        </div>
+
+                                                        <div class="flex items-center gap-2">
+                                                            <button type="button" @click="rotate(-90)" class="p-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold hover:bg-gray-100 transition" title="Rotate Left 90°">↺ 90°</button>
+                                                            <button type="button" @click="rotate(90)" class="p-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold hover:bg-gray-100 transition" title="Rotate Right 90°">↻ 90°</button>
+                                                            <button type="button" @click="flipHorizontal()" class="p-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold hover:bg-gray-100 transition" title="Flip Horizontal">⇄ Flip</button>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Crop Stage Container with Passport Oval Silhouette Overlay -->
+                                                    <div class="relative w-full h-80 bg-gray-950 rounded-2xl overflow-hidden flex items-center justify-center border border-gray-800">
+                                                        <img x-ref="cropImage" class="max-h-full max-w-full block" />
+                                                        
+                                                        <!-- Passport Head Oval Silhouette Overlay Guide -->
+                                                        <div class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center opacity-35">
+                                                            <div class="w-44 h-56 border-2 border-dashed border-indigo-400 rounded-[50%] flex flex-col items-center justify-start pt-6">
+                                                                <div class="w-full border-t border-indigo-300/60 my-2"></div>
+                                                                <span class="text-[9px] font-black uppercase text-indigo-300 tracking-wider bg-black/50 px-2 py-0.5 rounded">Eye Line</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- STEP 2: BACKGROUND -->
+                                                <div x-show="step === 'background'" class="space-y-4">
+                                                    <div class="bg-gray-50 dark:bg-gray-800/60 p-4 rounded-2xl border border-gray-100 dark:border-gray-700/60 space-y-4">
+                                                        <div class="flex items-center justify-between">
+                                                            <div>
+                                                                <h5 class="text-xs font-extrabold uppercase text-gray-900 dark:text-white">Client-Side AI Background Isolation</h5>
+                                                                <p class="text-[11px] text-gray-500 dark:text-gray-400">Isolate student subject and replace background with solid backdrop color.</p>
+                                                            </div>
+
+                                                            <button type="button" @click="removeBg()" :disabled="isProcessingBg" class="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-xs uppercase rounded-xl transition shadow flex items-center gap-2 cursor-pointer disabled:opacity-50">
+                                                                <template x-if="isProcessingBg">
+                                                                    <div class="flex items-center gap-2">
+                                                                        <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                                        <span>Removing BG...</span>
+                                                                    </div>
+                                                                </template>
+                                                                <template x-if="!isProcessingBg">
+                                                                    <span>✨ Remove Background Now</span>
+                                                                </template>
+                                                            </button>
+                                                        </div>
+
+                                                        <template x-if="bgErrorMessage">
+                                                            <p class="text-xs font-semibold text-rose-500 bg-rose-50 dark:bg-rose-950/40 p-2.5 rounded-xl border border-rose-200 dark:border-rose-900/50" x-text="bgErrorMessage"></p>
+                                                        </template>
+
+                                                        <!-- Background Color Swatches -->
+                                                        <div class="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                                            <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Select Backdrop Fill Color:</span>
+                                                            <div class="flex flex-wrap items-center gap-3">
+                                                                <button type="button" @click="bgColor = '#ffffff'; renderCompositedCanvas()" :class="bgColor === '#ffffff' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-8 h-8 rounded-full bg-white border border-gray-300 shadow-sm transition" title="White"></button>
+                                                                <button type="button" @click="bgColor = '#f1f5f9'; renderCompositedCanvas()" :class="bgColor === '#f1f5f9' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-8 h-8 rounded-full bg-slate-100 border border-gray-300 shadow-sm transition" title="Light Grey"></button>
+                                                                <button type="button" @click="bgColor = '#38bdf8'; renderCompositedCanvas()" :class="bgColor === '#38bdf8' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-8 h-8 rounded-full bg-sky-400 border border-sky-300 shadow-sm transition" title="Sky Blue"></button>
+                                                                <button type="button" @click="bgColor = '#1e3a8a'; renderCompositedCanvas()" :class="bgColor === '#1e3a8a' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-8 h-8 rounded-full bg-blue-900 border border-blue-800 shadow-sm transition" title="Navy Blue"></button>
+                                                                <button type="button" @click="bgColor = '#dc2626'; renderCompositedCanvas()" :class="bgColor === '#dc2626' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-8 h-8 rounded-full bg-red-600 border border-red-500 shadow-sm transition" title="Red"></button>
+                                                                
+                                                                <!-- Custom Color Picker -->
+                                                                <div class="flex items-center gap-2 ml-2 pl-3 border-l border-gray-300 dark:border-gray-700">
+                                                                    <input type="color" x-model="bgColor" @input="renderCompositedCanvas()" class="w-8 h-8 rounded-lg cursor-pointer border-0 bg-transparent" />
+                                                                    <span class="text-xs font-mono text-gray-500" x-text="bgColor"></span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- STEP 3: TOUCH-UP FILTERS -->
+                                                <div x-show="step === 'touchup'" class="space-y-4">
+                                                    <div class="bg-gray-50 dark:bg-gray-800/60 p-4 rounded-2xl border border-gray-100 dark:border-gray-700/60 space-y-4">
+                                                        <div class="flex items-center justify-between">
+                                                            <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">One-Click Presets:</span>
+                                                            <div class="flex items-center gap-2">
+                                                                <button type="button" @click="applyPreset('enhance')" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg font-bold text-xs shadow-sm hover:bg-indigo-700 transition">✨ ID Photo Enhance</button>
+                                                                <button type="button" @click="applyPreset('studio')" class="px-3 py-1.5 bg-purple-600 text-white rounded-lg font-bold text-xs shadow-sm hover:bg-purple-700 transition">💡 Studio Bright</button>
+                                                                <button type="button" @click="applyPreset('reset')" class="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-bold text-xs hover:bg-gray-300 transition">Reset Filters</button>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                                            <!-- Brightness -->
+                                                            <div class="space-y-1">
+                                                                <div class="flex justify-between text-xs font-bold">
+                                                                    <span>Brightness</span>
+                                                                    <span x-text="brightness + '%'"></span>
+                                                                </div>
+                                                                <input type="range" min="50" max="150" x-model="brightness" @input="renderCompositedCanvas()" class="w-full accent-indigo-600" />
+                                                            </div>
+
+                                                            <!-- Contrast -->
+                                                            <div class="space-y-1">
+                                                                <div class="flex justify-between text-xs font-bold">
+                                                                    <span>Contrast</span>
+                                                                    <span x-text="contrast + '%'"></span>
+                                                                </div>
+                                                                <input type="range" min="50" max="150" x-model="contrast" @input="renderCompositedCanvas()" class="w-full accent-indigo-600" />
+                                                            </div>
+
+                                                            <!-- Saturation -->
+                                                            <div class="space-y-1">
+                                                                <div class="flex justify-between text-xs font-bold">
+                                                                    <span>Saturation</span>
+                                                                    <span x-text="saturation + '%'"></span>
+                                                                </div>
+                                                                <input type="range" min="50" max="150" x-model="saturation" @input="renderCompositedCanvas()" class="w-full accent-indigo-600" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- STEP 4: FINAL PREVIEW & CANVAS DISPLAY -->
+                                                <div class="flex flex-col items-center justify-center p-4 bg-gray-950 rounded-2xl border border-gray-800 min-h-[260px]">
+                                                    <canvas x-ref="studioCanvas" class="max-h-72 max-w-full rounded-xl shadow-2xl border border-gray-700/80 object-contain"></canvas>
+                                                </div>
+                                            </div>
+
+                                            <!-- Modal Footer -->
+                                            <div class="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-800 shrink-0">
+                                                <button type="button" @click="resetState(); initStudio()" class="px-4 py-2 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-bold transition">
+                                                    ↺ Reset to Original
+                                                </button>
+
+                                                <div class="flex items-center gap-3">
+                                                    <button type="button" @click="closeStudio()" class="px-5 py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold text-xs uppercase tracking-wider transition">
+                                                        Cancel
+                                                    </button>
+                                                    <button type="button" @click="savePhoto()" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-emerald-600/20 transition cursor-pointer flex items-center gap-2">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                        <span>Save Photo</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Summary Box -->

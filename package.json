@@ -17,6 +17,8 @@
         "vite": "^8.0.0"
     },
     "dependencies": {
+        "@imgly/background-removal": "^1.7.0",
+        "cropperjs": "^2.1.1",
         "puppeteer": "^25.4.0"
     }
 }
