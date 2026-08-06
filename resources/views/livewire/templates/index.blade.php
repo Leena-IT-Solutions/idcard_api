@@ -387,14 +387,12 @@ new class extends Component {
             $schoolQuery->where('orientation', 'portrait');
         }
 
+        $schoolTemplates = $schoolQuery->get();
+
         $totalMaster = $masterQuery->count();
-        $totalSchool = $schoolQuery->count();
-        $totalCount = $totalMaster + $totalSchool;
-        $hasMore = $totalCount > $this->perPage;
+        $hasMore = $totalMaster > $this->perPage;
 
         $masterTemplates = $masterQuery->take($this->perPage)->get();
-        $remainingLimit = max(0, $this->perPage - $masterTemplates->count());
-        $schoolTemplates = $remainingLimit > 0 ? $schoolQuery->take($remainingLimit)->get() : collect();
 
         // Sample student mock data for previews
         $mockStudent = (object)[
