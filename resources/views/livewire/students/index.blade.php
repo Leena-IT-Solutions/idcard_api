@@ -628,8 +628,14 @@ new class extends Component
             return false;
         }
 
-        $targetStudentId = $this->studentId;
-        if (!$targetStudentId && !empty($this->contact_number) && !empty($this->first_name) && !empty($this->last_name)) {
+        // When editing an existing student ($this->studentId is present), they are ALREADY enrolled in the campaign.
+        // Editing their class/division/details is allowed and should not trigger duplicate enrollment error.
+        if ($this->studentId) {
+            return false;
+        }
+
+        $targetStudentId = null;
+        if (!empty($this->contact_number) && !empty($this->first_name) && !empty($this->last_name)) {
             $matched = Student::findExisting($this->contact_number, $this->first_name, $this->last_name, $this->dob);
             if ($matched) {
                 $targetStudentId = $matched->id;
