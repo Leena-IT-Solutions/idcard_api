@@ -2085,11 +2085,11 @@ new class extends Component {
                                                     '{School Name}' => ($activeSchool->name ?? 'Sarvodya Vidyalay'),
                                                     '{School Code}' => ($activeSchool->school_code ?? 'SV-2026'),
                                                     '{Registration Code}' => ($activeSchool->school_code ?? 'SV-2026'),
-                                                    '{Principal Name}' => 'Dr. R. K. Sharma',
-                                                    '{School Contact}' => '9820198201',
-                                                    '{School Email}' => 'info@sarvodya.edu.in',
-                                                    '{School Website}' => 'www.sarvodya.edu.in',
-                                                    '{School Address}' => 'Station Road, Mumbai',
+                                                    '{Principal Name}' => ($activeSchool->principal_name ?? 'Dr. R. K. Sharma'),
+                                                    '{School Contact}' => ($activeSchool->contact_number ?? '9820198201'),
+                                                    '{School Email}' => ($activeSchool->email ?? 'info@sarvodya.edu.in'),
+                                                    '{School Website}' => ($activeSchool->website ?? 'www.sarvodya.edu.in'),
+                                                    '{School Address}' => ($activeSchool->address ?? 'Station Road, Mumbai'),
                                                   ])
                                                 : $rawText;
 
@@ -2119,12 +2119,18 @@ new class extends Component {
                                          </div>
 
                                     @elseif($type === 'logo')
-                                        <div style="width: 100%; height: 100%; border-radius: 10px; background: linear-gradient(135deg, #312e81 0%, #4338ca 100%); border: 1.5px dashed #818cf8; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ffffff; padding: 2px; box-sizing: border-box;">
-                                            <svg viewBox="0 0 24 24" style="width: 40%; height: 40%; color: #fbbf24;" fill="currentColor">
-                                                <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM3.82 9L12 4.54 20.18 9 12 13.46 3.82 9zM5 14.45v3.55l7 3.82 7-3.82v-3.55l-7 3.81-7-3.81z"/>
-                                            </svg>
-                                            <span style="font-size: 7px; font-weight: 800; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; text-align: center;">SCHOOL LOGO</span>
-                                        </div>
+                                        @if($activeSchool && $activeSchool->logo_path)
+                                            <div style="width: 100%; height: 100%; border-radius: 10px; overflow: hidden; display: flex; align-items: center; justify-content: center; box-sizing: border-box; background: {{ $isSelected ? 'rgba(99, 102, 241, 0.15)' : 'transparent' }};">
+                                                <img src="{{ asset('storage/' . $activeSchool->logo_path) }}" alt="{{ $activeSchool->name }}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+                                            </div>
+                                        @else
+                                            <div style="width: 100%; height: 100%; border-radius: 10px; background: linear-gradient(135deg, #312e81 0%, #4338ca 100%); border: 1.5px dashed #818cf8; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ffffff; padding: 2px; box-sizing: border-box;">
+                                                <svg viewBox="0 0 24 24" style="width: 40%; height: 40%; color: #fbbf24;" fill="currentColor">
+                                                    <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM3.82 9L12 4.54 20.18 9 12 13.46 3.82 9zM5 14.45v3.55l7 3.82 7-3.82v-3.55l-7 3.81-7-3.81z"/>
+                                                </svg>
+                                                <span style="font-size: 7px; font-weight: 800; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; text-align: center;">SCHOOL LOGO</span>
+                                            </div>
+                                        @endif
 
                                     @elseif($type === 'qr')
                                         <div style="width: 100%; height: 100%; background: white; padding: 4px; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
