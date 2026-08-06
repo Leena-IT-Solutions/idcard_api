@@ -2078,12 +2078,14 @@ new class extends Component
                                                     </div>
 
                                                     <!-- Crop Stage Container with Passport Oval Silhouette Overlay -->
-                                                    <div class="relative w-full h-80 bg-gray-950 rounded-2xl overflow-hidden flex items-center justify-center border border-gray-800">
-                                                        <img x-ref="cropImage" class="max-h-full max-w-full block" />
+                                                    <div class="relative w-full h-[400px] bg-gray-950 rounded-2xl overflow-hidden flex items-center justify-center border border-gray-800 p-2">
+                                                        <div class="w-full h-full flex items-center justify-center">
+                                                            <img x-ref="cropImage" class="max-w-full max-h-full block" />
+                                                        </div>
                                                         
                                                         <!-- Passport Head Oval Silhouette Overlay Guide -->
-                                                        <div class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center opacity-35">
-                                                            <div class="w-44 h-56 border-2 border-dashed border-indigo-400 rounded-[50%] flex flex-col items-center justify-start pt-6">
+                                                        <div class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center opacity-35 z-20">
+                                                            <div class="w-52 h-64 border-2 border-dashed border-indigo-400 rounded-[50%] flex flex-col items-center justify-start pt-6">
                                                                 <div class="w-full border-t border-indigo-300/60 my-2"></div>
                                                                 <span class="text-[9px] font-black uppercase text-indigo-300 tracking-wider bg-black/50 px-2 py-0.5 rounded">Eye Line</span>
                                                             </div>
