@@ -55,6 +55,28 @@ export function photoStudio() {
                 reader.readAsDataURL(file);
             });
 
+            this.warmupEngine();
+        },
+
+        openStudioWithUrl(imageUrl) {
+            if (!imageUrl) return;
+            this.resetState();
+            this.isOpen = true;
+
+            this.$nextTick(() => {
+                const img = this.$refs.cropImage;
+                img.crossOrigin = 'anonymous';
+                img.src = imageUrl;
+                img.onload = () => {
+                    this.initCropper(img);
+                    this.checkResolution(img);
+                };
+            });
+
+            this.warmupEngine();
+        },
+
+        warmupEngine() {
             // Pre-warm WASM background removal engine in background
             try {
                 if (window.crossOriginIsolated || true) {

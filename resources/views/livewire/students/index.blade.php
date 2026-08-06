@@ -1988,10 +1988,29 @@ new class extends Component
 
                                         <div class="flex-1 space-y-2">
                                             <input type="file" id="photo-studio-input" @change="openStudio($event)" class="hidden" accept="image/*" />
-                                            <label for="photo-studio-input" class="cursor-pointer inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase rounded-xl transition shadow-md shadow-indigo-600/20">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                                                <span>{{ __('Open Photo Studio Editor 🎨') }}</span>
-                                            </label>
+
+                                            @if ($photo || $currentPhotoPath)
+                                                @php
+                                                    $activePhotoUrl = $photo ? $photo->temporaryUrl() : asset('storage/' . $currentPhotoPath);
+                                                @endphp
+                                                <div class="flex flex-wrap items-center gap-3">
+                                                    <button type="button" @click="openStudioWithUrl('{{ $activePhotoUrl }}')" class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase rounded-xl transition shadow-md shadow-indigo-600/20 cursor-pointer">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                                        <span>{{ __('Open Photo Studio Editor 🎨') }}</span>
+                                                    </button>
+
+                                                    <label for="photo-studio-input" class="cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-100 text-gray-700 dark:text-gray-300 font-bold text-xs uppercase rounded-xl transition shadow-sm">
+                                                        <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                                        <span>{{ __('Upload Different Photo') }}</span>
+                                                    </label>
+                                                </div>
+                                            @else
+                                                <label for="photo-studio-input" class="cursor-pointer inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase rounded-xl transition shadow-md shadow-indigo-600/20">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                                    <span>{{ __('Choose & Edit Photo 🎨') }}</span>
+                                                </label>
+                                            @endif
+
                                             <p class="text-[11px] text-gray-500 dark:text-gray-400 font-medium">Crop (1:1 / 3:4), Remove & Change Background Color, Touch-up filters with Passport Silhouette Guide.</p>
                                         </div>
                                     </div>
