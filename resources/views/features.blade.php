@@ -16,40 +16,106 @@
         <div class="absolute top-40 right-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <!-- Header -->
-        <header class="sticky top-0 z-50 backdrop-blur-md bg-slate-950/80 border-b border-slate-900 w-full px-4 sm:px-6 py-4">
-            <div class="max-w-7xl mx-auto flex flex-row justify-between items-center gap-4">
-                <a href="/" class="flex items-center space-x-2 sm:space-x-3 hover:opacity-90 transition duration-200">
-                    <img src="{{ asset('images/logo.png') }}" class="h-8 sm:h-9 w-auto" alt="iCard Maker Logo">
-                    <span class="text-lg sm:text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-amber-400 bg-clip-text text-transparent">iCard Maker</span>
-                </a>
+        <!-- Header -->
+        <header class="sticky top-0 z-50 backdrop-blur-md bg-slate-950/80 border-b border-slate-900 w-full px-4 py-4">
+            <div class="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-center gap-4">
+                <div class="flex items-center justify-between w-full lg:w-auto">
+                    <a href="/" class="flex items-center space-x-2 hover:opacity-90 transition duration-200 shrink-0">
+                        <img src="{{ asset('images/logo.png') }}" class="h-8 w-auto shrink-0" alt="iCard Maker Logo">
+                        <span class="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-amber-400 bg-clip-text text-transparent whitespace-nowrap">iCard Maker</span>
+                    </a>
+                    
+                    <!-- Hamburger Button for Mobile -->
+                    <button id="mobileMenuToggle" class="text-slate-300 hover:text-white focus:outline-none p-1 lg:hidden">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path id="hamburgerIcon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            <path id="closeIcon" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
 
                 <!-- Navigation Links -->
-                <nav class="flex items-center space-x-3 sm:space-x-4 md:space-x-6 overflow-x-auto whitespace-nowrap scrollbar-none max-w-[55%] md:max-w-none py-1">
-                    <a href="/features" class="text-xs sm:text-sm font-semibold text-amber-400 hover:text-amber-300 transition duration-200">Features</a>
-                    <a href="/how-it-works" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">How It Works</a>
-                    <a href="/for-schools" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">For Schools</a>
-                    <a href="/for-teachers" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">For Teachers</a>
-                    <a href="/for-parents" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">For Parents</a>
-                    <a href="/for-printing-companies" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">For Printing Companies</a>
-                    <a href="/mobile-app" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">Mobile App</a>
-                    <a href="/pricing" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">Pricing</a>
-                    <a href="/contact" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">Contact</a>
+                <nav id="navMenu" class="hidden lg:flex flex-col lg:flex-row items-center gap-4 w-full lg:w-auto mt-4 lg:mt-0 border-t border-slate-900 lg:border-none pt-4 lg:pt-0">
+                    <a href="/features" class="text-sm font-semibold text-amber-400 hover:text-amber-305 transition duration-200 w-full lg:w-auto text-center py-2 lg:py-0">Features</a>
+                    <a href="/how-it-works" class="text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200 w-full lg:w-auto text-center py-2 lg:py-0">How It Works</a>
+                    
+                    <!-- Solutions Dropdown -->
+                    <div class="relative group/solutions w-full lg:w-auto text-center lg:text-left">
+                        <button type="button" class="dropdown-trigger flex items-center justify-center lg:justify-start gap-1 mx-auto lg:mx-0 text-sm font-semibold text-slate-300 hover:text-amber-400 focus:outline-none transition duration-200 w-full lg:w-auto py-2 lg:py-0">
+                            <span>Solutions</span>
+                            <svg class="dropdown-arrow w-4 h-4 transition-transform duration-200 group-hover/solutions:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div class="dropdown-menu hidden group-hover/solutions:block lg:absolute lg:left-1/2 lg:-translate-x-1/2 lg:top-full lg:mt-2 w-full lg:w-48 bg-slate-950 lg:border lg:border-slate-900 rounded-xl py-2 lg:shadow-xl z-50">
+                            <a href="/for-schools" class="block px-4 py-2 text-sm text-slate-300 hover:text-amber-400 hover:bg-slate-900 transition duration-150 text-center lg:text-left">For Schools</a>
+                            <a href="/for-printing-companies" class="block px-4 py-2 text-sm text-slate-300 hover:text-amber-400 hover:bg-slate-900 transition duration-150 text-center lg:text-left">For Printing Companies</a>
+                        </div>
+                    </div>
+
+                    <a href="/mobile-app" class="text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200 w-full lg:w-auto text-center py-2 lg:py-0">Mobile App</a>
+                    <a href="/pricing" class="text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200 w-full lg:w-auto text-center py-2 lg:py-0">Pricing</a>
+                    <a href="/contact" class="text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200 w-full lg:w-auto text-center py-2 lg:py-0">Contact</a>
+                    
+                    <!-- Auth Actions on Mobile (hidden on desktop) -->
+                    <div class="flex flex-col items-center gap-3 w-full border-t border-slate-900 pt-4 mt-2 lg:hidden">
+                        @if (Route::has('login'))
+                            @auth
+                                <a href="{{ url('/dashboard') }}" class="text-sm font-semibold text-amber-400 hover:text-amber-300 transition duration-200">Dashboard</a>
+                            @else
+                                <a href="{{ route('login') }}" class="text-sm font-semibold text-slate-300 hover:text-white transition duration-200">Log in</a>
+                                @if (Route::has('register'))
+                                    <a href="{{ route('register') }}" class="inline-flex items-center justify-center w-full max-w-[200px] py-2 text-sm font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 rounded-lg">Register</a>
+                                @endif
+                            @endauth
+                        @endif
+                    </div>
                 </nav>
 
-                <!-- Auth / Call to Action -->
-                <div class="flex items-center space-x-2 sm:space-x-4">
+                <!-- Auth / Call to Action on Desktop -->
+                <div class="hidden lg:flex items-center space-x-4 shrink-0">
                     @if (Route::has('login'))
                         @auth
-                            <a href="{{ url('/dashboard') }}" class="text-xs sm:text-sm font-semibold text-amber-400 hover:text-amber-300 transition duration-200">Dashboard</a>
+                            <a href="{{ url('/dashboard') }}" class="text-sm font-semibold text-amber-400 hover:text-amber-300 transition duration-200">Dashboard</a>
                         @else
-                            <a href="{{ route('login') }}" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-white transition duration-200">Log in</a>
+                            <a href="{{ route('login') }}" class="text-sm font-semibold text-slate-300 hover:text-white transition duration-200">Log in</a>
                             @if (Route::has('register'))
-                                <a href="{{ route('register') }}" class="inline-flex items-center justify-center px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 rounded-xl transition duration-200 shadow-md shadow-amber-500/10">Register</a>
+                                <a href="{{ route('register') }}" class="inline-flex items-center justify-center px-4 py-2 text-sm font-bold text-slate-955 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 rounded-xl transition duration-200 shadow-md shadow-amber-500/10">Register</a>
                             @endif
                         @endauth
                     @endif
                 </div>
             </div>
+
+            <script>
+                document.getElementById('mobileMenuToggle').addEventListener('click', function() {
+                    const navMenu = document.getElementById('navMenu');
+                    const hamburgerIcon = document.getElementById('hamburgerIcon');
+                    const closeIcon = document.getElementById('closeIcon');
+                    
+                    if (navMenu.classList.contains('hidden')) {
+                        navMenu.classList.remove('hidden');
+                        navMenu.classList.add('flex');
+                        hamburgerIcon.classList.add('hidden');
+                        closeIcon.classList.remove('hidden');
+                    } else {
+                        navMenu.classList.add('hidden');
+                        navMenu.classList.remove('flex');
+                        hamburgerIcon.classList.remove('hidden');
+                        closeIcon.classList.add('hidden');
+                    }
+                });
+
+                // Toggle solutions dropdown on mobile click
+                document.querySelector('.dropdown-trigger').addEventListener('click', function(e) {
+                    if (window.innerWidth < 1024) {
+                        const dropdownMenu = this.nextElementSibling;
+                        const dropdownArrow = this.querySelector('.dropdown-arrow');
+                        dropdownMenu.classList.toggle('hidden');
+                        dropdownArrow.classList.toggle('rotate-180');
+                    }
+                });
+            </script>
         </header>
 
         <!-- Main Features Content -->
@@ -57,135 +123,324 @@
             <!-- Hero Header -->
             <div class="text-center max-w-3xl mx-auto space-y-4 mb-16">
                 <span class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs font-semibold tracking-wide text-amber-400">
-                    🚀 Powerful Platform Features
+                    ✨ Features
                 </span>
-                <h1 class="text-4xl sm:text-5xl font-black tracking-tight leading-none text-white">
-                    Everything you need to <span class="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">Manage School IDs</span>
+                <h1 class="text-4xl sm:text-5xl font-black tracking-tight leading-tight text-white">
+                    Everything You Need to <span class="bg-gradient-to-r from-amber-400 via-amber-500 to-orange-400 bg-clip-text text-transparent">Manage Student ID Cards</span>
                 </h1>
-                <p class="text-lg text-slate-400">
-                    Automate student data validation, design premium templates, and export bulk print jobs effortlessly.
+                <p class="text-lg text-slate-400 leading-relaxed max-w-2xl mx-auto">
+                    Powerful tools for school administration, data collection, student management, ID card design and printing.
                 </p>
-            </div>
-
-            <!-- Features Grid (9 Items) -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Feature 1: Template Builder -->
-                <div class="group relative bg-slate-900/60 border border-slate-850 hover:border-amber-500/30 rounded-3xl p-8 transition-all duration-300 hover:-translate-y-1 shadow-xl">
-                    <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-6 group-hover:scale-110 transition duration-300">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
+            </div>            <!-- Detailed Feature Categories (9 Sections) -->
+            <div class="space-y-32 mt-24">
+                
+                <!-- 1. School Management -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                    <div class="lg:col-span-5 space-y-6 text-left">
+                        <span class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-bold tracking-widest text-amber-400 uppercase">
+                            01 &bull; School Administration
+                        </span>
+                        <h2 class="text-3xl sm:text-4xl font-black text-white leading-tight">School Profiles & Branding</h2>
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            Configure multiple school campuses, brand assets, logos, and essential details dynamically. Switch dashboard context instantly to manage different schools under a single master account.
+                        </p>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] text-slate-400">School Profiles</span>
+                            <span class="px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] text-slate-400">Multiple Schools</span>
+                            <span class="px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] text-slate-400">Branding Presets</span>
+                        </div>
+                        <ul class="space-y-2.5 text-xs text-slate-300">
+                            <li class="flex items-center space-x-2.5">
+                                <span class="w-4 h-4 rounded bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 font-bold text-[9px]">&check;</span>
+                                <span>Logo & custom color integrations</span>
+                            </li>
+                            <li class="flex items-center space-x-2.5">
+                                <span class="w-4 h-4 rounded bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 font-bold text-[9px]">&check;</span>
+                                <span>Global school context switching controls</span>
+                            </li>
+                        </ul>
                     </div>
-                    <h3 class="text-xl font-bold text-white mb-2">Visual Template Editor</h3>
-                    <p class="text-sm text-slate-400 leading-relaxed">
-                        Design professional horizontal or vertical identity layouts. Drag and drop text fields, assign custom backgrounds, and adjust barcode parameters in real-time.
-                    </p>
+                    <div class="lg:col-span-7 relative group">
+                        <div class="absolute -inset-2 rounded-3xl bg-gradient-to-tr from-amber-500/10 to-indigo-500/5 blur-2xl opacity-60 group-hover:opacity-80 transition duration-500"></div>
+                        <div class="relative rounded-2xl overflow-hidden border border-slate-850 bg-slate-950 p-2.5 shadow-2xl">
+                            <img src="{{ asset('images/screenshots/s1.png') }}" alt="School Profiles screenshot" class="w-full h-auto rounded-xl object-cover shadow-inner" />
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Feature 2: Mobile Photo App -->
-                <div class="group relative bg-slate-900/60 border border-slate-850 hover:border-amber-500/30 rounded-3xl p-8 transition-all duration-300 hover:-translate-y-1 shadow-xl">
-                    <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-6 group-hover:scale-110 transition duration-300">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
+                <!-- 2. User & Role Management -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                    <div class="lg:col-span-7 lg:order-2 space-y-6 text-left">
+                        <span class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-bold tracking-widest text-amber-400 uppercase">
+                            02 &bull; Security & Permissions
+                        </span>
+                        <h2 class="text-3xl sm:text-4xl font-black text-white leading-tight">User & Role Management</h2>
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            Maintain complete organizational oversight with fine-grained role allocations. Secure access controls isolate capabilities for system operators, school administrators, and class teachers with invite setups.
+                        </p>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] text-slate-400">School Admin</span>
+                            <span class="px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] text-slate-400">Teachers</span>
+                            <span class="px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] text-slate-400">RBAC Security</span>
+                        </div>
+                        <ul class="space-y-2.5 text-xs text-slate-300">
+                            <li class="flex items-center space-x-2.5">
+                                <span class="w-4 h-4 rounded bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 font-bold text-[9px]">&check;</span>
+                                <span>Class and Grade assignments for staff members</span>
+                            </li>
+                            <li class="flex items-center space-x-2.5">
+                                <span class="w-4 h-4 rounded bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 font-bold text-[9px]">&check;</span>
+                                <span>Teacher invitation flow & global school access limit configurations</span>
+                            </li>
+                        </ul>
                     </div>
-                    <h3 class="text-xl font-bold text-white mb-2">Android Mobile App</h3>
-                    <p class="text-sm text-slate-400 leading-relaxed">
-                        Administrators, teachers, and parents can capture verified candidate photos, manage rosters, and upload details directly from our official Google Play application.
-                    </p>
+                    <div class="lg:col-span-5 lg:order-1 relative group">
+                        <div class="absolute -inset-2 rounded-3xl bg-gradient-to-tr from-indigo-500/10 to-amber-500/5 blur-2xl opacity-60 group-hover:opacity-80 transition duration-500"></div>
+                        <div class="relative rounded-2xl overflow-hidden border border-slate-850 bg-slate-950 p-2.5 shadow-2xl">
+                            <img src="{{ asset('images/screenshots/s2.png') }}" alt="User Roles screenshot" class="w-full h-auto rounded-xl object-cover shadow-inner" />
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Feature 3: Smart Parent Linkage -->
-                <div class="group relative bg-slate-900/60 border border-slate-850 hover:border-amber-500/30 rounded-3xl p-8 transition-all duration-300 hover:-translate-y-1 shadow-xl">
-                    <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-6 group-hover:scale-110 transition duration-300">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                        </svg>
+                <!-- 3. Grade & Division Management -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                    <div class="lg:col-span-5 space-y-6 text-left">
+                        <span class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-bold tracking-widest text-amber-400 uppercase">
+                            03 &bull; Class Structure
+                        </span>
+                        <h2 class="text-3xl sm:text-4xl font-black text-white leading-tight">Grade & Division Setup</h2>
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            Organize campus rosters with hierarchical grouping structures. Define grades, sections, and map specific divisions to teachers.
+                        </p>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] text-slate-400">Grades</span>
+                            <span class="px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] text-slate-400">Divisions</span>
+                            <span class="px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] text-slate-400">Teacher Mapping</span>
+                        </div>
+                        <ul class="space-y-2.5 text-xs text-slate-300">
+                            <li class="flex items-center space-x-2.5">
+                                <span class="w-4 h-4 rounded bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 font-bold text-[9px]">&check;</span>
+                                <span>Assign grades and divisions in seconds</span>
+                            </li>
+                        </ul>
                     </div>
-                    <h3 class="text-xl font-bold text-white mb-2">Smart Parent-Student Link</h3>
-                    <p class="text-sm text-slate-400 leading-relaxed">
-                        Zero setup linkage. Normalizes mobile inputs during register to instantly hook parent profiles with matching school records, granting immediate access to upload details.
-                    </p>
+                    <div class="lg:col-span-7 relative group">
+                        <div class="absolute -inset-2 rounded-3xl bg-gradient-to-tr from-amber-500/10 to-indigo-500/5 blur-2xl opacity-60 group-hover:opacity-80 transition duration-500"></div>
+                        <div class="relative rounded-2xl overflow-hidden border border-slate-850 bg-slate-950 p-2.5 shadow-2xl">
+                            <img src="{{ asset('images/screenshots/s3.png') }}" alt="Grade and Division screenshot" class="w-full h-auto rounded-xl object-cover shadow-inner" />
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Feature 4: Asynchronous Print Queues -->
-                <div class="group relative bg-slate-900/60 border border-slate-850 hover:border-amber-500/30 rounded-3xl p-8 transition-all duration-300 hover:-translate-y-1 shadow-xl">
-                    <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-6 group-hover:scale-110 transition duration-300">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
+                <!-- 4. Campaign Management -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                    <div class="lg:col-span-7 lg:order-2 space-y-6 text-left">
+                        <span class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-bold tracking-widest text-amber-400 uppercase">
+                            04 &bull; Data Collection Campaigns
+                        </span>
+                        <h2 class="text-3xl sm:text-4xl font-black text-white leading-tight">Campaign Management</h2>
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            Create time-bound campaigns for collecting student information during specific enrollment periods or academic cycles. Define clear deadlines and automate parent login allocations.
+                        </p>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] text-slate-400">Time-Bound Campaigns</span>
+                            <span class="px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] text-slate-400">Registration Cycles</span>
+                        </div>
                     </div>
-                    <h3 class="text-xl font-bold text-white mb-2">Asynchronous Print Queues</h3>
-                    <p class="text-sm text-slate-400 leading-relaxed">
-                        Never worry about timeouts during bulk prints. Queue operations in the background to handle thousands of records while tracking progress in real-time.
-                    </p>
+                    <div class="lg:col-span-5 lg:order-1 relative group">
+                        <div class="absolute -inset-2 rounded-3xl bg-gradient-to-tr from-indigo-500/10 to-amber-500/5 blur-2xl opacity-60 group-hover:opacity-80 transition duration-500"></div>
+                        <div class="relative rounded-2xl border border-slate-800 bg-slate-900/60 p-6 space-y-4 shadow-2xl text-left">
+                            <div class="flex justify-between items-center pb-2 border-b border-slate-800">
+                                <div>
+                                    <h4 class="text-sm font-bold text-white uppercase tracking-wider">Active Campaign</h4>
+                                    <p class="text-xs text-amber-400 font-black mt-0.5">iCard 2026–27</p>
+                                </div>
+                                <span class="px-2.5 py-1 text-[9px] font-bold text-emerald-400 bg-emerald-950/40 rounded-full border border-emerald-900/30">Registration Campaign</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-xs text-slate-400">
+                                <div>
+                                    <p class="uppercase font-semibold tracking-wider text-[10px]">Start Date</p>
+                                    <p class="text-slate-200 font-bold mt-1">Aug 01, 2026</p>
+                                </div>
+                                <div>
+                                    <p class="uppercase font-semibold tracking-wider text-[10px]">End Date</p>
+                                    <p class="text-slate-200 font-bold mt-1">Sep 30, 2026</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Feature 5: Multi-Format ZIP/PDF Export -->
-                <div class="group relative bg-slate-900/60 border border-slate-850 hover:border-amber-500/30 rounded-3xl p-8 transition-all duration-300 hover:-translate-y-1 shadow-xl">
-                    <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-6 group-hover:scale-110 transition duration-300">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20" />
-                        </svg>
+                <!-- 5. Parent Access Management -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                    <div class="lg:col-span-5 space-y-6 text-left">
+                        <span class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-bold tracking-widest text-amber-400 uppercase">
+                            05 &bull; Guardian Security
+                        </span>
+                        <h2 class="text-3xl sm:text-4xl font-black text-white leading-tight">Parent Access Management</h2>
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            Control and authorize parent logins. Match parent mobile numbers during signup to automatically link student profiles, guaranteeing secure data capture.
+                        </p>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] text-slate-400">Authorize Mobile Numbers</span>
+                            <span class="px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] text-slate-400">Bulk Import</span>
+                            <span class="px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] text-slate-400">Controlled Logins</span>
+                        </div>
                     </div>
-                    <h3 class="text-xl font-bold text-white mb-2">Multi-Format Print Outputs</h3>
-                    <p class="text-sm text-slate-400 leading-relaxed">
-                        Export pre-arranged imposition PDF sheets (8/10 grids with cut marks), high-res PNG image zips for card machines, or references Excel data packages.
-                    </p>
+                    <div class="lg:col-span-7 relative group">
+                        <div class="absolute -inset-2 rounded-3xl bg-gradient-to-tr from-amber-500/10 to-indigo-500/5 blur-2xl opacity-60 group-hover:opacity-80 transition duration-500"></div>
+                        <div class="relative rounded-2xl overflow-hidden border border-slate-850 bg-slate-950 p-2.5 shadow-2xl">
+                            <img src="{{ asset('images/screenshots/s5.png') }}" alt="Parent Access screenshot" class="w-full h-auto rounded-xl object-cover shadow-inner" />
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Feature 6: Auto-Revoke Verification -->
-                <div class="group relative bg-slate-900/60 border border-slate-850 hover:border-amber-500/30 rounded-3xl p-8 transition-all duration-300 hover:-translate-y-1 shadow-xl">
-                    <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-6 group-hover:scale-110 transition duration-300">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                        </svg>
+                <!-- 6. Student Management (BIG Section) -->
+                <div class="p-8 sm:p-12 rounded-3xl bg-gradient-to-tr from-slate-900 via-indigo-950/20 to-slate-950 border border-slate-850 relative overflow-hidden shadow-2xl">
+                    <div class="absolute -top-12 -right-12 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
+                    
+                    <div class="max-w-4xl mx-auto space-y-8 text-center">
+                        <span class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-950 border border-slate-800 text-[10px] font-bold tracking-widest text-amber-400 uppercase">
+                            06 &bull; Central Student Directory
+                        </span>
+                        <h2 class="text-3xl sm:text-5xl font-black text-white leading-none">Student Management Spotlight</h2>
+                        <p class="text-sm sm:text-base text-slate-400 leading-relaxed max-w-2xl mx-auto">
+                            The central core of the iCard Maker ecosystem. Filter, search, import, and download thousands of records with zero-latency controls.
+                        </p>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-left">
+                            <div class="p-4 bg-slate-950/80 rounded-2xl border border-slate-850">
+                                <h4 class="text-xs font-bold text-white uppercase tracking-wider">Search & Filters</h4>
+                                <p class="text-[11px] text-slate-400 mt-1">Locate records instantly by grade, section, or campaign attributes.</p>
+                            </div>
+                            <div class="p-4 bg-slate-950/80 rounded-2xl border border-slate-850">
+                                <h4 class="text-xs font-bold text-white uppercase tracking-wider">Bulk Import / Export</h4>
+                                <p class="text-[11px] text-slate-400 mt-1">Upload and match standard CSV/Excel roster databases in a single action.</p>
+                            </div>
+                            <div class="p-4 bg-slate-950/80 rounded-2xl border border-slate-850">
+                                <h4 class="text-xs font-bold text-white uppercase tracking-wider">Template Linkage</h4>
+                                <p class="text-[11px] text-slate-400 mt-1">Assign layout templates to individuals or entire grades dynamically.</p>
+                            </div>
+                            <div class="p-4 bg-slate-950/80 rounded-2xl border border-slate-850">
+                                <h4 class="text-xs font-bold text-white uppercase tracking-wider">Full CRUD operations</h4>
+                                <p class="text-[11px] text-slate-400 mt-1">Preview, crop images, modify fields, or delete candidate profiles.</p>
+                            </div>
+                        </div>
+
+                        <!-- Large center mockup image -->
+                        <div class="relative group mt-8">
+                            <div class="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-amber-500/10 to-indigo-500/10 blur-xl opacity-60"></div>
+                            <div class="relative rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 p-2 shadow-2xl">
+                                <img src="{{ asset('images/screenshots/s6.png') }}" alt="Student Management Directory screenshot" class="w-full h-auto rounded-xl object-cover" />
+                            </div>
+                        </div>
                     </div>
-                    <h3 class="text-xl font-bold text-white mb-2">Automated Verification Loop</h3>
-                    <p class="text-sm text-slate-400 leading-relaxed">
-                        Stop printing outdated card layouts. Booted database observers automatically reset teacher verification states if student info or photos are updated.
-                    </p>
                 </div>
 
-                <!-- Feature 7: Roster Structure -->
-                <div class="group relative bg-slate-900/60 border border-slate-850 hover:border-amber-500/30 rounded-3xl p-8 transition-all duration-300 hover:-translate-y-1 shadow-xl">
-                    <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-6 group-hover:scale-110 transition duration-300">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
+                <!-- 7. Smart Student Registration -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                    <div class="lg:col-span-5 space-y-6 text-left">
+                        <span class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-bold tracking-widest text-amber-400 uppercase">
+                            07 &bull; Frictionless Signup Portal
+                        </span>
+                        <h2 class="text-3xl sm:text-4xl font-black text-white leading-tight">Smart Student Registration</h2>
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            A fast, structured 4-step wizard interface designed specifically for parents. It minimizes input fatigue and enforces crop parameters directly in the client browser.
+                        </p>
+                        
+                        <div class="p-4 rounded-2xl bg-amber-950/10 border border-amber-900/20">
+                            <p class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                                <span>💡</span> Reusing Profile Functionality
+                            </p>
+                            <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+                                Parents can check mobile logs to automatically reuse existing profile details when enrolling siblings, preventing duplicate data entries.
+                            </p>
+                        </div>
                     </div>
-                    <h3 class="text-xl font-bold text-white mb-2">Grade & Division Structure</h3>
-                    <p class="text-sm text-slate-400 leading-relaxed">
-                        Organize your school with ease. Group student records by academic years, classes, and specific divisions. Import batches using excel or CSV file templates.
-                    </p>
+                    <div class="lg:col-span-7 relative group">
+                        <div class="absolute -inset-2 rounded-3xl bg-gradient-to-tr from-amber-500/10 to-indigo-500/5 blur-2xl opacity-60 group-hover:opacity-80 transition duration-500"></div>
+                        <div class="relative rounded-2xl border border-slate-800 bg-slate-900/60 p-6 space-y-4 shadow-2xl text-left">
+                            <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest border-b border-slate-800 pb-2">Wizard Interface Workflow</h4>
+                            <div class="grid grid-cols-4 gap-2 text-center text-[10px] font-bold">
+                                <div class="p-2 bg-slate-950 rounded border border-slate-800 text-amber-400">
+                                    <p class="text-slate-500 text-[8px] font-black uppercase">Step 01</p>
+                                    <p class="mt-0.5">Mobile Check</p>
+                                </div>
+                                <div class="p-2 bg-slate-950 rounded border border-slate-800 text-slate-300">
+                                    <p class="text-slate-500 text-[8px] font-black uppercase">Step 02</p>
+                                    <p class="mt-0.5">Details</p>
+                                </div>
+                                <div class="p-2 bg-slate-950 rounded border border-slate-800 text-slate-300">
+                                    <p class="text-slate-500 text-[8px] font-black uppercase">Step 03</p>
+                                    <p class="mt-0.5">Campaign</p>
+                                </div>
+                                <div class="p-2 bg-slate-950 rounded border border-slate-850 text-slate-300">
+                                    <p class="text-slate-500 text-[8px] font-black uppercase">Step 04</p>
+                                    <p class="mt-0.5">Photo</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Feature 8: Barcodes & QR codes -->
-                <div class="group relative bg-slate-900/60 border border-slate-850 hover:border-amber-500/30 rounded-3xl p-8 transition-all duration-300 hover:-translate-y-1 shadow-xl">
-                    <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-6 group-hover:scale-110 transition duration-300">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                        </svg>
+                <!-- 8. ID Card Template Studio -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                    <div class="lg:col-span-5 lg:order-2 space-y-6 text-left">
+                        <span class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-bold tracking-widest text-amber-400 uppercase">
+                            08 &bull; Drag & Drop Studio
+                        </span>
+                        <h2 class="text-3xl sm:text-4xl font-black text-white leading-tight">ID Card Template Studio</h2>
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            A powerful visual designer supporting portrait and landscape configurations. Setup master presets, position details dynamically, import/export template JSON structures, and configure backgrounds.
+                        </p>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] text-slate-400">Portrait / Landscape</span>
+                            <span class="px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] text-slate-400">JSON Import/Export</span>
+                            <span class="px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] text-slate-400">Live Preview</span>
+                        </div>
                     </div>
-                    <h3 class="text-xl font-bold text-white mb-2">QR Code & Barcode Integration</h3>
-                    <p class="text-sm text-slate-400 leading-relaxed">
-                        Embed dynamically generated QR codes or custom barcode symbologies on card backs to enable digital attendance scanning and secure physical campus entry validation.
-                    </p>
+                    <div class="lg:col-span-7 lg:order-1 relative group">
+                        <div class="absolute -inset-2 rounded-3xl bg-gradient-to-tr from-indigo-500/10 to-amber-500/5 blur-2xl opacity-60 group-hover:opacity-80 transition duration-500"></div>
+                        <div class="relative rounded-2xl overflow-hidden border border-slate-850 bg-slate-950 p-2.5 shadow-2xl grid grid-cols-2 gap-3">
+                            <img src="{{ asset('images/screenshots/s9.png') }}" alt="Templates view screenshot" class="w-full h-auto rounded-lg object-cover shadow" />
+                            <img src="{{ asset('images/screenshots/s10.png') }}" alt="Template Studio Editor screenshot" class="w-full h-auto rounded-lg object-cover shadow" />
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Feature 9: Role Management -->
-                <div class="group relative bg-slate-900/60 border border-slate-850 hover:border-amber-500/30 rounded-3xl p-8 transition-all duration-300 hover:-translate-y-1 shadow-xl">
-                    <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-6 group-hover:scale-110 transition duration-300">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                        </svg>
+                <!-- 9. ID Card Generation -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                    <div class="lg:col-span-5 space-y-6 text-left">
+                        <span class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-bold tracking-widest text-amber-400 uppercase">
+                            09 &bull; Batch Print Engine
+                        </span>
+                        <h2 class="text-3xl sm:text-4xl font-black text-white leading-tight">ID Card Generation & Printing</h2>
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            Auto-maps registered database fields into custom designs in real-time. Export bulk printable PDF imposition sheets (8/10 grids with cut marks) or high-res candidate image packages.
+                        </p>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] text-slate-400">PDF Sheet Imposition</span>
+                            <span class="px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[10px] text-slate-400">High-Res PNG ZIPs</span>
+                        </div>
                     </div>
-                    <h3 class="text-xl font-bold text-white mb-2">Granular Role Assignment</h3>
-                    <p class="text-sm text-slate-400 leading-relaxed">
-                        Keep operations secure with fine-grained access. Allocate distinct permissions for system operators, school admins, teachers, and student profiles.
-                    </p>
+                    <div class="lg:col-span-7 relative group">
+                        <div class="absolute -inset-2 rounded-3xl bg-gradient-to-tr from-amber-500/10 to-indigo-500/5 blur-2xl opacity-60 group-hover:opacity-80 transition duration-500"></div>
+                        <div class="relative rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow-2xl text-left">
+                            <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest border-b border-slate-800 pb-2">Execution Flow</h4>
+                            <div class="flex flex-col md:flex-row items-center justify-between gap-2 text-[10px] text-slate-300 font-bold">
+                                <div class="px-3 py-1.5 bg-slate-950 border border-slate-800 rounded text-center w-full md:w-auto">Student details</div>
+                                <span class="text-amber-500/60 leading-none rotate-90 md:rotate-0">&rarr;</span>
+                                <div class="px-3 py-1.5 bg-slate-950 border border-slate-800 rounded text-center w-full md:w-auto">Design Template</div>
+                                <span class="text-amber-500/60 leading-none rotate-90 md:rotate-0">&rarr;</span>
+                                <div class="px-3 py-1.5 bg-slate-950 border border-slate-800 rounded text-emerald-400 text-center w-full md:w-auto">Auto-Generated ID</div>
+                                <span class="text-amber-500/60 leading-none rotate-90 md:rotate-0">&rarr;</span>
+                                <div class="px-3 py-1.5 bg-emerald-950/40 text-emerald-400 border border-emerald-900/40 rounded text-center w-full md:w-auto">PDF Print Sheets</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
+
+            </div>         </div>
 
             <!-- School Administration & Verification Loop Section -->
             <section class="mt-24 border-t border-slate-900 pt-16">

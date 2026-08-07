@@ -16,40 +16,106 @@
         <div class="absolute top-40 right-1/4 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
         <!-- Header -->
-        <header class="sticky top-0 z-50 backdrop-blur-md bg-slate-950/80 border-b border-slate-900 w-full px-4 sm:px-6 py-4">
-            <div class="max-w-7xl mx-auto flex flex-row justify-between items-center gap-4">
-                <a href="/" class="flex items-center space-x-2 sm:space-x-3 hover:opacity-90 transition duration-200">
-                    <img src="{{ asset('images/logo.png') }}" class="h-8 sm:h-9 w-auto" alt="iCard Maker Logo">
-                    <span class="text-lg sm:text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-amber-400 bg-clip-text text-transparent">iCard Maker</span>
-                </a>
+        <!-- Header -->
+        <header class="sticky top-0 z-50 backdrop-blur-md bg-slate-950/80 border-b border-slate-900 w-full px-4 py-4">
+            <div class="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-center gap-4">
+                <div class="flex items-center justify-between w-full lg:w-auto">
+                    <a href="/" class="flex items-center space-x-2 hover:opacity-90 transition duration-200 shrink-0">
+                        <img src="{{ asset('images/logo.png') }}" class="h-8 w-auto shrink-0" alt="iCard Maker Logo">
+                        <span class="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-amber-400 bg-clip-text text-transparent whitespace-nowrap">iCard Maker</span>
+                    </a>
+                    
+                    <!-- Hamburger Button for Mobile -->
+                    <button id="mobileMenuToggle" class="text-slate-300 hover:text-white focus:outline-none p-1 lg:hidden">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path id="hamburgerIcon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            <path id="closeIcon" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
 
                 <!-- Navigation Links -->
-                <nav class="flex items-center space-x-3 sm:space-x-4 md:space-x-6 overflow-x-auto whitespace-nowrap scrollbar-none max-w-[55%] md:max-w-none py-1">
-                    <a href="/features" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">Features</a>
-                    <a href="/how-it-works" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">How It Works</a>
-                    <a href="/for-schools" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">For Schools</a>
-                    <a href="/for-teachers" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">For Teachers</a>
-                    <a href="/for-parents" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">For Parents</a>
-                    <a href="/for-printing-companies" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">For Printing Companies</a>
-                    <a href="/mobile-app" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">Mobile App</a>
-                    <a href="/pricing" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">Pricing</a>
-                    <a href="/contact" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">Contact</a>
+                <nav id="navMenu" class="hidden lg:flex flex-col lg:flex-row items-center gap-4 w-full lg:w-auto mt-4 lg:mt-0 border-t border-slate-900 lg:border-none pt-4 lg:pt-0">
+                    <a href="/features" class="text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200 w-full lg:w-auto text-center py-2 lg:py-0">Features</a>
+                    <a href="/how-it-works" class="text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200 w-full lg:w-auto text-center py-2 lg:py-0">How It Works</a>
+                    
+                    <!-- Solutions Dropdown -->
+                    <div class="relative group/solutions w-full lg:w-auto text-center lg:text-left">
+                        <button type="button" class="dropdown-trigger flex items-center justify-center lg:justify-start gap-1 mx-auto lg:mx-0 text-sm font-semibold text-slate-300 hover:text-amber-400 focus:outline-none transition duration-200 w-full lg:w-auto py-2 lg:py-0">
+                            <span>Solutions</span>
+                            <svg class="dropdown-arrow w-4 h-4 transition-transform duration-200 group-hover/solutions:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div class="dropdown-menu hidden group-hover/solutions:block lg:absolute lg:left-1/2 lg:-translate-x-1/2 lg:top-full lg:mt-2 w-full lg:w-48 bg-slate-950 lg:border lg:border-slate-900 rounded-xl py-2 lg:shadow-xl z-50">
+                            <a href="/for-schools" class="block px-4 py-2 text-sm text-slate-300 hover:text-amber-400 hover:bg-slate-900 transition duration-150 text-center lg:text-left">For Schools</a>
+                            <a href="/for-printing-companies" class="block px-4 py-2 text-sm text-slate-300 hover:text-amber-400 hover:bg-slate-900 transition duration-150 text-center lg:text-left">For Printing Companies</a>
+                        </div>
+                    </div>
+
+                    <a href="/mobile-app" class="text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200 w-full lg:w-auto text-center py-2 lg:py-0">Mobile App</a>
+                    <a href="/pricing" class="text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200 w-full lg:w-auto text-center py-2 lg:py-0">Pricing</a>
+                    <a href="/contact" class="text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200 w-full lg:w-auto text-center py-2 lg:py-0">Contact</a>
+                    
+                    <!-- Auth Actions on Mobile (hidden on desktop) -->
+                    <div class="flex flex-col items-center gap-3 w-full border-t border-slate-900 pt-4 mt-2 lg:hidden">
+                        @if (Route::has('login'))
+                            @auth
+                                <a href="{{ url('/dashboard') }}" class="text-sm font-semibold text-amber-400 hover:text-amber-300 transition duration-200">Dashboard</a>
+                            @else
+                                <a href="{{ route('login') }}" class="text-sm font-semibold text-slate-300 hover:text-white transition duration-200">Log in</a>
+                                @if (Route::has('register'))
+                                    <a href="{{ route('register') }}" class="inline-flex items-center justify-center w-full max-w-[200px] py-2 text-sm font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 rounded-lg">Register</a>
+                                @endif
+                            @endauth
+                        @endif
+                    </div>
                 </nav>
 
-                <!-- Auth / Call to Action -->
-                <div class="flex items-center space-x-2 sm:space-x-4">
+                <!-- Auth / Call to Action on Desktop -->
+                <div class="hidden lg:flex items-center space-x-4 shrink-0">
                     @if (Route::has('login'))
                         @auth
-                            <a href="{{ url('/dashboard') }}" class="text-xs sm:text-sm font-semibold text-amber-400 hover:text-amber-300 transition duration-200">Dashboard</a>
+                            <a href="{{ url('/dashboard') }}" class="text-sm font-semibold text-amber-400 hover:text-amber-300 transition duration-200">Dashboard</a>
                         @else
-                            <a href="{{ route('login') }}" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-white transition duration-200">Log in</a>
+                            <a href="{{ route('login') }}" class="text-sm font-semibold text-slate-300 hover:text-white transition duration-200">Log in</a>
                             @if (Route::has('register'))
-                                <a href="{{ route('register') }}" class="inline-flex items-center justify-center px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 rounded-xl transition duration-200 shadow-md shadow-amber-500/10">Register</a>
+                                <a href="{{ route('register') }}" class="inline-flex items-center justify-center px-4 py-2 text-sm font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 rounded-xl transition duration-200 shadow-md shadow-amber-500/10">Register</a>
                             @endif
                         @endauth
                     @endif
                 </div>
             </div>
+
+            <script>
+                document.getElementById('mobileMenuToggle').addEventListener('click', function() {
+                    const navMenu = document.getElementById('navMenu');
+                    const hamburgerIcon = document.getElementById('hamburgerIcon');
+                    const closeIcon = document.getElementById('closeIcon');
+                    
+                    if (navMenu.classList.contains('hidden')) {
+                        navMenu.classList.remove('hidden');
+                        navMenu.classList.add('flex');
+                        hamburgerIcon.classList.add('hidden');
+                        closeIcon.classList.remove('hidden');
+                    } else {
+                        navMenu.classList.add('hidden');
+                        navMenu.classList.remove('flex');
+                        hamburgerIcon.classList.remove('hidden');
+                        closeIcon.classList.add('hidden');
+                    }
+                });
+
+                // Toggle solutions dropdown on mobile click
+                document.querySelector('.dropdown-trigger').addEventListener('click', function(e) {
+                    if (window.innerWidth < 1024) {
+                        const dropdownMenu = this.nextElementSibling;
+                        const dropdownArrow = this.querySelector('.dropdown-arrow');
+                        dropdownMenu.classList.toggle('hidden');
+                        dropdownArrow.classList.toggle('rotate-180');
+                    }
+                });
+            </script>
         </header>
 
         <!-- Main Hero Section -->
@@ -59,11 +125,14 @@
                 <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs font-semibold tracking-wide text-amber-400 animate-pulse">
                     <span>✨ Modern Digital ID Card System</span>
                 </div>
-                <h1 class="text-4xl sm:text-6xl font-black tracking-tight leading-none text-white">
-                    Generate Smart <span class="bg-gradient-to-r from-amber-400 via-amber-500 to-orange-400 bg-clip-text text-transparent">Student ID Cards</span> in Minutes
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight text-white flex flex-col gap-2">
+                    <span class="bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">Student ID Card Management Platform</span>
+                    <span class="text-2xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-amber-400 via-amber-500 to-orange-400 bg-clip-text text-transparent leading-normal">
+                        From Student Registration to Print-Ready ID Cards
+                    </span>
                 </h1>
                 <p class="text-lg text-slate-400 leading-relaxed">
-                    iCard Maker simplifies student profile collection, class assignment, and digital badge issuing. Built for schools, academies, and institutes seeking a premium, secure ID infrastructure.
+                    One cloud platform that connects Schools, Teachers, Parents and Printing Companies.
                 </p>
                 
                 <div class="pt-4 flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
@@ -73,22 +142,12 @@
                         </a>
                     @else
                         <a href="{{ route('register') }}" class="inline-flex items-center justify-center px-6 py-4 text-base font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 rounded-2xl transition duration-200 shadow-lg shadow-amber-500/20">
-                            Create Free Account
+                            Start Free Trial
                         </a>
-                        <a href="{{ route('login') }}" class="inline-flex items-center justify-center px-6 py-4 text-base font-bold text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-2xl transition duration-200">
-                            School Admin Sign In
+                        <a href="{{ route('contact') }}" class="inline-flex items-center justify-center px-6 py-4 text-base font-bold text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-2xl transition duration-200">
+                            Book Demo
                         </a>
                     @endauth
-
-                    <a href="https://play.google.com/store/apps/details?id=com.infoleena.icard.maker" target="_blank" class="inline-flex items-center space-x-3 px-5 h-[58px] bg-black border border-slate-800 hover:border-slate-700 rounded-2xl transition duration-200 shadow-md">
-                        <svg class="w-6 h-6 text-amber-400" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M5 3.00003C5 2.50003 5.4 2.20003 5.9 2.40003L21.4 11.4C21.8 11.6 21.8 12.4 21.4 12.6L5.9 21.6C5.4 21.8 5 21.5 5 21V3.00003Z"/>
-                        </svg>
-                        <div class="text-left leading-none">
-                            <p class="text-[8px] text-slate-400 font-semibold tracking-wider uppercase">Get it on</p>
-                            <p class="text-xs font-bold text-white mt-1">Google Play</p>
-                        </div>
-                    </a>
                 </div>
 
                 <!-- Minimal Trust Stats -->
@@ -110,79 +169,183 @@
 
             <!-- Right Interactive Graphic Column -->
             <div class="flex-1 w-full max-w-md bg-slate-900/60 border border-slate-850 rounded-3xl p-8 relative shadow-2xl shadow-indigo-500/5 backdrop-blur-sm">
-                <!-- Floating Mini Card -->
-                <div class="absolute -top-6 -left-6 bg-slate-950/90 backdrop-blur border border-slate-800 rounded-2xl p-4 shadow-xl flex items-center space-x-3 pointer-events-none">
-                    <div class="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                        </svg>
+                <!-- Card Header -->
+                <div class="flex justify-between items-center pb-4 border-b border-slate-850">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-2.5 h-2.5 rounded-full bg-green-500 shadow-md shadow-green-500/30 animate-pulse"></div>
+                        <span class="text-xs font-black text-slate-200 uppercase tracking-widest">Automated Delivery Pipeline</span>
                     </div>
-                    <div>
-                        <p class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Security System</p>
-                        <p class="text-xs font-bold text-white">Active Identity Verified</p>
-                    </div>
+                    <span class="text-[9px] text-slate-500 font-bold tracking-widest">ACTIVE</span>
                 </div>
 
-                <!-- Card Structure Preview -->
-                <div class="space-y-6">
-                    <div class="flex justify-between items-center pb-4 border-b border-slate-850">
-                        <span class="text-xs font-black text-slate-400 uppercase tracking-widest">iCard System Preview</span>
-                        <div class="flex items-center space-x-2">
-                            <span class="text-[10px] text-slate-500 font-bold">ONLINE</span>
-                            <div class="h-2.5 w-2.5 rounded-full bg-green-500 shadow-md shadow-green-500/30 animate-pulse"></div>
+                <!-- Workflow Timeline Diagram -->
+                <div class="relative border-l border-slate-800/80 ml-2.5 pl-6 space-y-5 py-4 mt-2">
+                    <!-- Step 1: School -->
+                    <div class="relative group flex items-start space-x-4">
+                        <!-- Bullet on the line -->
+                        <div class="absolute -left-[35px] top-1.5 w-5 h-5 rounded-full bg-slate-950 border border-slate-800 group-hover:border-amber-400 transition duration-200 flex items-center justify-center">
+                            <div class="w-1.5 h-1.5 rounded-full bg-amber-400 group-hover:bg-amber-400"></div>
                         </div>
-                    </div>
-                    
-                    <!-- Glassmorphic ID Card -->
-                    <div class="aspect-[1.586/1] bg-gradient-to-br from-indigo-950/80 via-slate-900 to-slate-950 rounded-2xl p-6 border border-indigo-900/30 flex flex-col justify-between shadow-xl relative overflow-hidden group">
-                        <!-- Card Glow Top -->
-                        <div class="absolute -top-12 -right-12 w-24 h-24 bg-amber-500/10 rounded-full blur-xl"></div>
-                        
-                        <div class="flex justify-between items-start z-10">
-                            <div>
-                                <h4 class="text-xs font-black tracking-widest text-slate-200">EXCELSIOR ACADEMY</h4>
-                                <p class="text-[8px] text-amber-400 uppercase font-semibold">Digital Student ID</p>
-                            </div>
-                            <img src="{{ asset('images/logo.png') }}" class="h-6 w-auto" alt="Logo">
+                        <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-500/5 border border-slate-800 group-hover:border-amber-500/20 flex items-center justify-center text-amber-400 transition duration-200">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
                         </div>
-                        <div class="flex items-center space-x-4 z-10">
-                            <!-- Placeholder Avatar -->
-                            <div class="w-14 h-14 rounded-xl bg-slate-900 border border-slate-800 flex flex-col items-center justify-center overflow-hidden">
-                                <svg class="w-8 h-8 text-slate-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" /></svg>
-                            </div>
-                            <div>
-                                <p class="text-sm font-bold text-white">Aarav S. Rathod</p>
-                                <p class="text-[10px] text-slate-400 font-semibold">Class: 5-A | Roll No: 24</p>
-                                <p class="text-[9px] text-slate-500">Blood Group: <span class="text-amber-400 font-bold">B+</span></p>
-                            </div>
-                        </div>
-                        <div class="flex justify-between items-center text-[8px] text-slate-500 border-t border-slate-800/80 pt-2 z-10">
-                            <span>ISSUE: 2026</span>
-                            <div class="flex space-x-0.5">
-                                <span class="bg-slate-800 w-[2px] h-2"></span>
-                                <span class="bg-slate-800 w-[1px] h-2"></span>
-                                <span class="bg-slate-800 w-[3px] h-2"></span>
-                                <span class="bg-slate-800 w-[1px] h-2"></span>
-                                <span class="bg-slate-800 w-[2px] h-2"></span>
-                            </div>
-                            <span>VALID UNTIL: 2027</span>
+                        <div class="transform group-hover:translate-x-1 transition duration-200">
+                            <h4 class="text-xs font-bold text-white uppercase tracking-wider">School</h4>
+                            <p class="text-[10px] text-slate-500">Initiates the ID card creation campaign</p>
                         </div>
                     </div>
 
-                    <!-- Description of Core Modules -->
-                    <div class="grid grid-cols-2 gap-4 pt-2">
-                        <div class="p-4 bg-slate-950 border border-slate-850 rounded-2xl hover:border-slate-800 transition duration-200">
-                            <h3 class="text-xs font-bold text-white uppercase tracking-wider">Admins & Staff</h3>
-                            <p class="text-[10px] text-slate-500 mt-1 leading-relaxed">Configure classes, invite teachers, and export badges.</p>
+                    <!-- Step 2: Teachers -->
+                    <div class="relative group flex items-start space-x-4">
+                        <!-- Bullet on the line -->
+                        <div class="absolute -left-[35px] top-1.5 w-5 h-5 rounded-full bg-slate-950 border border-slate-800 group-hover:border-amber-400 transition duration-200 flex items-center justify-center">
+                            <div class="w-1.5 h-1.5 rounded-full bg-amber-400 group-hover:bg-amber-400"></div>
                         </div>
-                        <div class="p-4 bg-slate-950 border border-slate-850 rounded-2xl hover:border-slate-800 transition duration-200">
-                            <h3 class="text-xs font-bold text-white uppercase tracking-wider">Teachers & Parents</h3>
-                            <p class="text-[10px] text-slate-500 mt-1 leading-relaxed">Upload profile photos and manage student rosters.</p>
+                        <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-500/5 border border-slate-800 group-hover:border-amber-500/20 flex items-center justify-center text-amber-400 transition duration-200">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            </svg>
+                        </div>
+                        <div class="transform group-hover:translate-x-1 transition duration-200">
+                            <h4 class="text-xs font-bold text-white uppercase tracking-wider">Teachers</h4>
+                            <p class="text-[10px] text-slate-500">Manage classroom rosters & profiles</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Parents -->
+                    <div class="relative group flex items-start space-x-4">
+                        <!-- Bullet on the line -->
+                        <div class="absolute -left-[35px] top-1.5 w-5 h-5 rounded-full bg-slate-950 border border-slate-800 group-hover:border-amber-400 transition duration-200 flex items-center justify-center">
+                            <div class="w-1.5 h-1.5 rounded-full bg-amber-400 group-hover:bg-amber-400"></div>
+                        </div>
+                        <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-500/5 border border-slate-800 group-hover:border-amber-500/20 flex items-center justify-center text-amber-400 transition duration-200">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                        </div>
+                        <div class="transform group-hover:translate-x-1 transition duration-200">
+                            <h4 class="text-xs font-bold text-white uppercase tracking-wider">Parents</h4>
+                            <p class="text-[10px] text-slate-500">Upload profile photos & approve info</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Student Database -->
+                    <div class="relative group flex items-start space-x-4">
+                        <!-- Bullet on the line -->
+                        <div class="absolute -left-[35px] top-1.5 w-5 h-5 rounded-full bg-slate-950 border border-slate-800 group-hover:border-amber-400 transition duration-200 flex items-center justify-center">
+                            <div class="w-1.5 h-1.5 rounded-full bg-amber-400 group-hover:bg-amber-400"></div>
+                        </div>
+                        <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-500/5 border border-slate-800 group-hover:border-amber-500/20 flex items-center justify-center text-amber-400 transition duration-200">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                            </svg>
+                        </div>
+                        <div class="transform group-hover:translate-x-1 transition duration-200">
+                            <h4 class="text-xs font-bold text-white uppercase tracking-wider">Student Database</h4>
+                            <p class="text-[10px] text-slate-500">Centralized secure identity storage</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Template Studio -->
+                    <div class="relative group flex items-start space-x-4">
+                        <!-- Bullet on the line -->
+                        <div class="absolute -left-[35px] top-1.5 w-5 h-5 rounded-full bg-slate-950 border border-slate-800 group-hover:border-amber-400 transition duration-200 flex items-center justify-center">
+                            <div class="w-1.5 h-1.5 rounded-full bg-amber-400 group-hover:bg-amber-400"></div>
+                        </div>
+                        <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-500/5 border border-slate-800 group-hover:border-amber-500/20 flex items-center justify-center text-amber-400 transition duration-200">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <div class="transform group-hover:translate-x-1 transition duration-200">
+                            <h4 class="text-xs font-bold text-white uppercase tracking-wider">Template Studio</h4>
+                            <p class="text-[10px] text-slate-500">Design cards or map variables dynamically</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 6: Print Company -->
+                    <div class="relative group flex items-start space-x-4">
+                        <!-- Bullet on the line -->
+                        <div class="absolute -left-[35px] top-1.5 w-5 h-5 rounded-full bg-slate-950 border border-slate-800 group-hover:border-amber-400 transition duration-200 flex items-center justify-center">
+                            <div class="w-1.5 h-1.5 rounded-full bg-amber-400 group-hover:bg-amber-400"></div>
+                        </div>
+                        <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-500/5 border border-slate-800 group-hover:border-amber-500/20 flex items-center justify-center text-amber-400 transition duration-200">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                            </svg>
+                        </div>
+                        <div class="transform group-hover:translate-x-1 transition duration-200">
+                            <h4 class="text-xs font-bold text-white uppercase tracking-wider">Print Company</h4>
+                            <p class="text-[10px] text-slate-500">Access print-ready files securely</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 7: ID Cards Ready -->
+                    <div class="relative group flex items-start space-x-4">
+                        <!-- Bullet on the line -->
+                        <div class="absolute -left-[35px] top-1.5 w-5 h-5 rounded-full bg-slate-950 border border-emerald-500/50 group-hover:border-emerald-400 transition duration-200 flex items-center justify-center">
+                            <div class="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                        </div>
+                        <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 transition duration-200">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                        </div>
+                        <div class="transform group-hover:translate-x-1 transition duration-200">
+                            <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-wider">ID Cards Ready</h4>
+                            <p class="text-[10px] text-emerald-500/80">Batch printed, cut, and issued</p>
                         </div>
                     </div>
                 </div>
             </div>
         </main>
+
+        <!-- Trust Section -->
+        <section class="relative z-10 max-w-7xl mx-auto w-full px-6 py-6">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                <!-- Stat 1 -->
+                <div class="flex flex-col items-center justify-center text-center p-6 rounded-2xl bg-slate-900/40 border border-slate-850 hover:border-slate-800 transition duration-200 shadow-lg">
+                    <span class="text-3xl sm:text-4xl lg:text-5xl font-black bg-gradient-to-r from-amber-400 via-amber-500 to-orange-400 bg-clip-text text-transparent">
+                        10,000+
+                    </span>
+                    <span class="text-xs sm:text-sm font-bold tracking-wider text-slate-400 uppercase mt-2">
+                        Students Managed
+                    </span>
+                </div>
+
+                <!-- Stat 2 -->
+                <div class="flex flex-col items-center justify-center text-center p-6 rounded-2xl bg-slate-900/40 border border-slate-850 hover:border-slate-800 transition duration-200 shadow-lg">
+                    <span class="text-3xl sm:text-4xl lg:text-5xl font-black bg-gradient-to-r from-amber-400 via-amber-500 to-orange-400 bg-clip-text text-transparent">
+                        100+
+                    </span>
+                    <span class="text-xs sm:text-sm font-bold tracking-wider text-slate-400 uppercase mt-2">
+                        Schools
+                    </span>
+                </div>
+
+                <!-- Stat 3 -->
+                <div class="flex flex-col items-center justify-center text-center p-6 rounded-2xl bg-slate-900/40 border border-slate-850 hover:border-slate-800 transition duration-200 shadow-lg">
+                    <span class="text-3xl sm:text-4xl lg:text-5xl font-black bg-gradient-to-r from-amber-400 via-amber-500 to-orange-400 bg-clip-text text-transparent">
+                        50,000+
+                    </span>
+                    <span class="text-xs sm:text-sm font-bold tracking-wider text-slate-400 uppercase mt-2">
+                        ID Cards Generated
+                    </span>
+                </div>
+
+                <!-- Stat 4 -->
+                <div class="flex flex-col items-center justify-center text-center p-6 rounded-2xl bg-slate-900/40 border border-slate-850 hover:border-slate-800 transition duration-200 shadow-lg">
+                    <span class="text-3xl sm:text-4xl lg:text-5xl font-black text-emerald-400">
+                        95%
+                    </span>
+                    <span class="text-xs sm:text-sm font-bold tracking-wider text-slate-400 uppercase mt-2">
+                        Reduction in Manual Work
+                    </span>
+                </div>
+            </div>
+        </section>
 
         <!-- The Problem Section -->
         <section class="relative z-10 max-w-7xl mx-auto w-full px-6 py-16 border-t border-slate-900">
@@ -190,93 +353,120 @@
                 <span class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-red-950/40 border border-red-900/30 text-xs font-semibold tracking-wider text-red-400 uppercase">
                     ⚠️ The Traditional Way
                 </span>
-                <h2 class="text-3xl sm:text-4xl font-extrabold text-white">
-                    Schools still spend weeks making ID cards
+                <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">
+                    Why Schools Still Waste Weeks Creating ID Cards
                 </h2>
                 <p class="text-sm text-slate-400 max-w-xl mx-auto">
-                    Traditional ID card compilation is filled with manual steps, communication delays, and errors.
+                    A frustrating, manual back-and-forth chain reaction that wastes time and yields poor results.
                 </p>
             </div>
 
+            <!-- Problem Workflow Chain -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-                <!-- Item 1 -->
-                <div class="p-6 rounded-2xl bg-slate-950 border border-slate-900 hover:border-red-900/30 transition duration-200 flex items-start space-x-3">
-                    <span class="text-red-500 text-lg select-none">❌</span>
-                    <div>
-                        <h4 class="text-sm font-bold text-slate-200">Manual Photos</h4>
-                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">Student photos collected manually via USBs or emails.</p>
+                <!-- Step 1 -->
+                <div class="p-6 rounded-2xl bg-slate-950 border border-slate-900 hover:border-red-900/40 transition duration-200 flex flex-col justify-between group relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-16 h-16 bg-red-500/5 rounded-bl-full pointer-events-none"></div>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] text-red-400 font-bold uppercase tracking-widest bg-red-950/30 px-2 py-0.5 rounded-full border border-red-900/20">Step 01</span>
+                            <span class="text-red-500 text-lg select-none group-hover:scale-115 transition duration-200">💬</span>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-200">WhatsApp Spam</h4>
+                            <p class="text-xs text-slate-500 mt-2 leading-relaxed">Teacher asking parents on WhatsApp for photos and details.</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Item 2 -->
-                <div class="p-6 rounded-2xl bg-slate-950 border border-slate-900 hover:border-red-900/30 transition duration-200 flex items-start space-x-3">
-                    <span class="text-red-500 text-lg select-none">❌</span>
-                    <div>
-                        <h4 class="text-sm font-bold text-slate-200">Paper Forms</h4>
-                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">Student rosters and details filled on paper sheets.</p>
+                <!-- Step 2 -->
+                <div class="p-6 rounded-2xl bg-slate-950 border border-slate-900 hover:border-red-900/40 transition duration-200 flex flex-col justify-between group relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-16 h-16 bg-red-500/5 rounded-bl-full pointer-events-none"></div>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] text-red-400 font-bold uppercase tracking-widest bg-red-950/30 px-2 py-0.5 rounded-full border border-red-900/20">Step 02</span>
+                            <span class="text-red-500 text-lg select-none group-hover:scale-115 transition duration-200">📷</span>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-200">Wrong Photos</h4>
+                            <p class="text-xs text-slate-500 mt-2 leading-relaxed">Parents sending wrong, low-res, or blurry photos.</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Item 3 -->
-                <div class="p-6 rounded-2xl bg-slate-950 border border-slate-900 hover:border-red-900/30 transition duration-200 flex items-start space-x-3">
-                    <span class="text-red-500 text-lg select-none">❌</span>
-                    <div>
-                        <h4 class="text-sm font-bold text-slate-200">Wrong Spellings</h4>
-                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">Name spelling mistakes due to manual re-typing.</p>
+                <!-- Step 3 -->
+                <div class="p-6 rounded-2xl bg-slate-950 border border-slate-900 hover:border-red-900/40 transition duration-200 flex flex-col justify-between group relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-16 h-16 bg-red-500/5 rounded-bl-full pointer-events-none"></div>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] text-red-400 font-bold uppercase tracking-widest bg-red-950/30 px-2 py-0.5 rounded-full border border-red-900/20">Step 03</span>
+                            <span class="text-red-500 text-lg select-none group-hover:scale-115 transition duration-200">✍️</span>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-200">Admin Corrections</h4>
+                            <p class="text-xs text-slate-500 mt-2 leading-relaxed">Admin correcting spelling names, typos, and classes manually.</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Item 4 -->
-                <div class="p-6 rounded-2xl bg-slate-950 border border-slate-900 hover:border-red-900/30 transition duration-200 flex items-start space-x-3">
-                    <span class="text-red-500 text-lg select-none">❌</span>
-                    <div>
-                        <h4 class="text-sm font-bold text-slate-200">Missing Information</h4>
-                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">Key parameters like blood group or section missing.</p>
+                <!-- Step 4 -->
+                <div class="p-6 rounded-2xl bg-slate-950 border border-slate-900 hover:border-red-900/40 transition duration-200 flex flex-col justify-between group relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-16 h-16 bg-red-500/5 rounded-bl-full pointer-events-none"></div>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] text-red-400 font-bold uppercase tracking-widest bg-red-950/30 px-2 py-0.5 rounded-full border border-red-900/20">Step 04</span>
+                            <span class="text-red-500 text-lg select-none group-hover:scale-115 transition duration-200">🔄</span>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-200">Vendor Back & Forth</h4>
+                            <p class="text-xs text-slate-500 mt-2 leading-relaxed">Printing company asking again due to size, format, or layout issues.</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Item 5 -->
-                <div class="p-6 rounded-2xl bg-slate-950 border border-slate-900 hover:border-red-900/30 transition duration-200 flex items-start space-x-3">
-                    <span class="text-red-500 text-lg select-none">❌</span>
-                    <div>
-                        <h4 class="text-sm font-bold text-slate-200">School Visits</h4>
-                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">Parents visiting the school repeatedly to submit data.</p>
+                <!-- Step 5 -->
+                <div class="p-6 rounded-2xl bg-slate-950 border border-slate-900 hover:border-red-900/40 transition duration-200 flex flex-col justify-between group relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-16 h-16 bg-red-500/5 rounded-bl-full pointer-events-none"></div>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] text-red-400 font-bold uppercase tracking-widest bg-red-950/30 px-2 py-0.5 rounded-full border border-red-900/20">Step 05</span>
+                            <span class="text-red-500 text-lg select-none group-hover:scale-115 transition duration-200">❌</span>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-200">Wrong ID Cards</h4>
+                            <p class="text-xs text-slate-500 mt-2 leading-relaxed">Errors get through, leading to incorrect details on final cards.</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Item 6 -->
-                <div class="p-6 rounded-2xl bg-slate-950 border border-slate-900 hover:border-red-900/30 transition duration-200 flex items-start space-x-3">
-                    <span class="text-red-500 text-lg select-none">❌</span>
-                    <div>
-                        <h4 class="text-sm font-bold text-slate-200">WhatsApp Overload</h4>
-                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">Teachers sending random low-res photos on WhatsApp.</p>
+                <!-- Step 6 -->
+                <div class="p-6 rounded-2xl bg-slate-950 border border-slate-900 hover:border-red-900/40 transition duration-200 flex flex-col justify-between group relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-16 h-16 bg-red-500/5 rounded-bl-full pointer-events-none"></div>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] text-red-400 font-bold uppercase tracking-widest bg-red-950/30 px-2 py-0.5 rounded-full border border-red-900/20">Step 06</span>
+                            <span class="text-red-500 text-lg select-none group-hover:scale-115 transition duration-200">🖨️</span>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-200">Reprint Cycle</h4>
+                            <p class="text-xs text-slate-500 mt-2 leading-relaxed">Paying extra fees and waiting to run print sheets again.</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Item 7 -->
-                <div class="p-6 rounded-2xl bg-slate-950 border border-slate-900 hover:border-red-900/30 transition duration-200 flex items-start space-x-3">
-                    <span class="text-red-500 text-lg select-none">❌</span>
-                    <div>
-                        <h4 class="text-sm font-bold text-slate-200">Printer Corrections</h4>
-                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">Printing companies constantly asking for file corrections.</p>
+                <!-- Step 7 -->
+                <div class="p-6 rounded-2xl bg-slate-950 border border-slate-900 hover:border-red-900/40 transition duration-200 flex flex-col justify-between group relative overflow-hidden md:col-span-2 lg:col-span-2">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-bl-full pointer-events-none"></div>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] text-red-400 font-bold uppercase tracking-widest bg-red-950/30 px-2 py-0.5 rounded-full border border-red-900/20">Result</span>
+                            <span class="text-red-500 text-lg select-none group-hover:scale-115 transition duration-200">⏳</span>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-200">Weeks of Delay</h4>
+                            <p class="text-xs text-slate-500 mt-2 leading-relaxed">Campuses left without secure physical or digital identification for weeks.</p>
+                        </div>
                     </div>
                 </div>
-
-                <!-- Item 8 -->
-                <div class="p-6 rounded-2xl bg-slate-950 border border-slate-900 hover:border-red-900/30 transition duration-200 flex items-start space-x-3">
-                    <span class="text-red-500 text-lg select-none">❌</span>
-                    <div>
-                        <h4 class="text-sm font-bold text-slate-200">Phone Calls</h4>
-                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">Hundreds of follow-up phone calls to gather correct data.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Warning Callout -->
-            <div class="mt-10 max-w-3xl mx-auto p-4 rounded-xl bg-red-950/20 border border-red-900/20 text-center">
-                <p class="text-sm font-bold text-red-400">
-                    ⚠️ One mistake means printing everything again.
-                </p>
             </div>
         </section>
 
@@ -346,6 +536,93 @@
                 <div class="flex items-center space-x-3 justify-center md:justify-start">
                     <div class="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-sm font-black">✓</div>
                     <span class="text-xs font-semibold text-slate-300">No Repeated Data Entry</span>
+                </div>
+            </div>
+
+            <!-- Horizontal Timeline -->
+            <div class="max-w-6xl mx-auto mt-16 pt-12 border-t border-slate-900/60 relative">
+                <h3 class="text-center text-xs font-black tracking-widest text-emerald-400 uppercase mb-10">Modern Automated Workflow</h3>
+                
+                <div class="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-8 md:gap-4">
+                    <!-- Continuous Line behind steps (Desktop only) -->
+                    <div class="hidden md:block absolute top-[18px] left-4 right-4 h-0.5 bg-gradient-to-r from-emerald-500/10 via-emerald-500/40 to-emerald-500/10"></div>
+
+                    <!-- Step 1: School Profile -->
+                    <div class="relative flex md:flex-col items-center md:text-center gap-4 md:gap-3 flex-1 z-10 group w-full">
+                        <div class="w-9 h-9 rounded-full bg-slate-950 border-2 border-emerald-500 flex items-center justify-center text-emerald-400 font-black text-xs shadow-lg shadow-emerald-500/10 group-hover:scale-110 group-hover:border-emerald-400 transition duration-200">
+                            1
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-white uppercase tracking-wider group-hover:text-emerald-400 transition duration-200">School Profile</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5 max-w-[125px] md:mx-auto">Setup branding, name & details</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Teacher Management -->
+                    <div class="relative flex md:flex-col items-center md:text-center gap-4 md:gap-3 flex-1 z-10 group w-full">
+                        <div class="w-9 h-9 rounded-full bg-slate-950 border-2 border-emerald-500/50 flex items-center justify-center text-emerald-400/80 font-black text-xs shadow-lg group-hover:scale-110 group-hover:border-emerald-400 transition duration-200">
+                            2
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-white uppercase tracking-wider group-hover:text-emerald-400 transition duration-200">Teacher Management</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5 max-w-[125px] md:mx-auto">Assign class rosters to staff</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Campaign -->
+                    <div class="relative flex md:flex-col items-center md:text-center gap-4 md:gap-3 flex-1 z-10 group w-full">
+                        <div class="w-9 h-9 rounded-full bg-slate-950 border-2 border-emerald-500/50 flex items-center justify-center text-emerald-400/80 font-black text-xs shadow-lg group-hover:scale-110 group-hover:border-emerald-400 transition duration-200">
+                            3
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-white uppercase tracking-wider group-hover:text-emerald-400 transition duration-200">Campaign</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5 max-w-[125px] md:mx-auto">Launch photos collection link</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Parent Mobile App -->
+                    <div class="relative flex md:flex-col items-center md:text-center gap-4 md:gap-3 flex-1 z-10 group w-full">
+                        <div class="w-9 h-9 rounded-full bg-slate-950 border-2 border-emerald-500/50 flex items-center justify-center text-emerald-400/80 font-black text-xs shadow-lg group-hover:scale-110 group-hover:border-emerald-400 transition duration-200">
+                            4
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-white uppercase tracking-wider group-hover:text-emerald-400 transition duration-200">Parent Mobile App</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5 max-w-[125px] md:mx-auto">Parents crop & submit photos</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Student Database -->
+                    <div class="relative flex md:flex-col items-center md:text-center gap-4 md:gap-3 flex-1 z-10 group w-full">
+                        <div class="w-9 h-9 rounded-full bg-slate-950 border-2 border-emerald-500/50 flex items-center justify-center text-emerald-400/80 font-black text-xs shadow-lg group-hover:scale-110 group-hover:border-emerald-400 transition duration-200">
+                            5
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-white uppercase tracking-wider group-hover:text-emerald-400 transition duration-200">Student Database</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5 max-w-[125px] md:mx-auto">Central secure profile registry</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 6: Template Studio -->
+                    <div class="relative flex md:flex-col items-center md:text-center gap-4 md:gap-3 flex-1 z-10 group w-full">
+                        <div class="w-9 h-9 rounded-full bg-slate-950 border-2 border-emerald-500/50 flex items-center justify-center text-emerald-400/80 font-black text-xs shadow-lg group-hover:scale-110 group-hover:border-emerald-400 transition duration-200">
+                            6
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-white uppercase tracking-wider group-hover:text-emerald-400 transition duration-200">Template Studio</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5 max-w-[125px] md:mx-auto">Design dynamic card variables</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 7: Printing -->
+                    <div class="relative flex md:flex-col items-center md:text-center gap-4 md:gap-3 flex-1 z-10 group w-full">
+                        <div class="w-9 h-9 rounded-full bg-slate-950 border-2 border-emerald-500 flex items-center justify-center text-emerald-400 font-black text-xs shadow-lg shadow-emerald-500/10 group-hover:scale-110 group-hover:border-emerald-400 transition duration-200">
+                            7
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-white uppercase tracking-wider group-hover:text-emerald-400 transition duration-200">Printing</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5 max-w-[125px] md:mx-auto">One-click high-res print sheet</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -514,69 +791,6 @@
             </div>
         </section>
 
-        <!-- ID Verification Loop Section -->
-        <section class="relative z-10 max-w-7xl mx-auto w-full px-6 py-16 border-t border-slate-900">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-                <!-- Left: Simple English description of steps -->
-                <div class="lg:col-span-5 space-y-6 text-left">
-                    <span class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-bold tracking-widest text-amber-400 uppercase">
-                        Smart Approval Loop
-                    </span>
-                    <h2 class="text-3xl sm:text-4xl font-extrabold text-white leading-tight">
-                        How We Prevent Printing Mistakes
-                    </h2>
-                    <p class="text-sm text-slate-400 leading-relaxed">
-                        To save costs and avoid errors, iCard Maker has a built-in safety check. We make sure every card is double-checked and verified before it is sent to print.
-                    </p>
-
-                    <!-- Simple Steps List -->
-                    <div class="space-y-4">
-                        <div class="flex items-start space-x-3">
-                            <span class="w-5 h-5 rounded-md bg-amber-500/10 flex items-center justify-center text-amber-400 font-bold text-xs mt-0.5">1</span>
-                            <div>
-                                <h4 class="text-xs font-bold text-white uppercase tracking-wider">School Uploads the List</h4>
-                                <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">The school admin uploads the list of students with their names and classes.</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start space-x-3">
-                            <span class="w-5 h-5 rounded-md bg-amber-500/10 flex items-center justify-center text-amber-400 font-bold text-xs mt-0.5">2</span>
-                            <div>
-                                <h4 class="text-xs font-bold text-white uppercase tracking-wider">Parents Upload Photos</h4>
-                                <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">Parents use their mobile phones to snap and upload their child's card photo.</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start space-x-3">
-                            <span class="w-5 h-5 rounded-md bg-amber-500/10 flex items-center justify-center text-amber-400 font-bold text-xs mt-0.5">3</span>
-                            <div>
-                                <h4 class="text-xs font-bold text-white uppercase tracking-wider">Teachers Approve the Cards</h4>
-                                <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">Class teachers review the photos and spelling. If everything looks good, they click approve.</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start space-x-3">
-                            <span class="w-5 h-5 rounded-md bg-amber-500/10 flex items-center justify-center text-amber-400 font-bold text-xs mt-0.5">4</span>
-                            <div>
-                                <h4 class="text-xs font-bold text-white uppercase tracking-wider">Admin Prints approved Cards</h4>
-                                <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">Admins generate and print the cards that are marked as approved.</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start space-x-3 border-t border-slate-900 pt-3">
-                            <span class="w-5 h-5 rounded-md bg-amber-500/10 flex items-center justify-center text-amber-400 font-bold text-xs mt-0.5">&larr;</span>
-                            <div>
-                                <h4 class="text-xs font-bold text-white uppercase tracking-wider">Safety Reset (If Info Changes)</h4>
-                                <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">If anyone edits student details later, the card is instantly unapproved. It must be approved again before printing.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right: Diagram Image -->
-                <div class="lg:col-span-7 flex justify-center">
-                    <div class="p-4 bg-slate-950/60 border border-slate-850 rounded-3xl overflow-hidden shadow-2xl">
-                        <img src="{{ asset('images/id_verification_workflow.png') }}" alt="School ID Card Verification Loop Diagram" class="w-full h-auto rounded-2xl max-w-lg object-contain shadow-inner" />
-                    </div>
-                </div>
-            </div>
-        </section>
 
         <!-- Features Benefit Grid Section -->
         <section class="relative z-10 max-w-7xl mx-auto w-full px-6 py-16 border-t border-slate-900">
@@ -642,6 +856,8 @@
                     </p>
                 </details>
 
+
+                
                 <details class="group bg-slate-900/40 border border-slate-850 rounded-2xl p-6 [&_summary::-webkit-details-marker]:hidden">
                     <summary class="flex justify-between items-center cursor-pointer outline-none">
                         <h4 class="text-sm font-semibold text-white pr-4">Can parents upload photos using their mobile phones?</h4>

@@ -16,40 +16,106 @@
         <div class="absolute top-40 right-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <!-- Header -->
-        <header class="sticky top-0 z-50 backdrop-blur-md bg-slate-950/80 border-b border-slate-900 w-full px-4 sm:px-6 py-4">
-            <div class="max-w-7xl mx-auto flex flex-row justify-between items-center gap-4">
-                <a href="/" class="flex items-center space-x-2 sm:space-x-3 hover:opacity-90 transition duration-200">
-                    <img src="{{ asset('images/logo.png') }}" class="h-8 sm:h-9 w-auto" alt="iCard Maker Logo">
-                    <span class="text-lg sm:text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-amber-400 bg-clip-text text-transparent">iCard Maker</span>
-                </a>
+        <!-- Header -->
+        <header class="sticky top-0 z-50 backdrop-blur-md bg-slate-950/80 border-b border-slate-900 w-full px-4 py-4">
+            <div class="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-center gap-4">
+                <div class="flex items-center justify-between w-full lg:w-auto">
+                    <a href="/" class="flex items-center space-x-2 hover:opacity-90 transition duration-200 shrink-0">
+                        <img src="{{ asset('images/logo.png') }}" class="h-8 w-auto shrink-0" alt="iCard Maker Logo">
+                        <span class="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-amber-400 bg-clip-text text-transparent whitespace-nowrap">iCard Maker</span>
+                    </a>
+                    
+                    <!-- Hamburger Button for Mobile -->
+                    <button id="mobileMenuToggle" class="text-slate-300 hover:text-white focus:outline-none p-1 lg:hidden">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path id="hamburgerIcon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            <path id="closeIcon" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
 
                 <!-- Navigation Links -->
-                <nav class="flex items-center space-x-3 sm:space-x-4 md:space-x-6 overflow-x-auto whitespace-nowrap scrollbar-none max-w-[55%] md:max-w-none py-1">
-                    <a href="/features" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">Features</a>
-                    <a href="/how-it-works" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">How It Works</a>
-                    <a href="/for-schools" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">For Schools</a>
-                    <a href="/for-teachers" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">For Teachers</a>
-                    <a href="/for-parents" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">For Parents</a>
-                    <a href="/for-printing-companies" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">For Printing Companies</a>
-                    <a href="/mobile-app" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">Mobile App</a>
-                    <a href="/pricing" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200">Pricing</a>
-                    <a href="/contact" class="text-xs sm:text-sm font-semibold text-amber-400 hover:text-amber-300 transition duration-200">Contact</a>
+                <nav id="navMenu" class="hidden lg:flex flex-col lg:flex-row items-center gap-4 w-full lg:w-auto mt-4 lg:mt-0 border-t border-slate-900 lg:border-none pt-4 lg:pt-0">
+                    <a href="/features" class="text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200 w-full lg:w-auto text-center py-2 lg:py-0">Features</a>
+                    <a href="/how-it-works" class="text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200 w-full lg:w-auto text-center py-2 lg:py-0">How It Works</a>
+                    
+                    <!-- Solutions Dropdown -->
+                    <div class="relative group/solutions w-full lg:w-auto text-center lg:text-left">
+                        <button type="button" class="dropdown-trigger flex items-center justify-center lg:justify-start gap-1 mx-auto lg:mx-0 text-sm font-semibold text-slate-300 hover:text-amber-400 focus:outline-none transition duration-200 w-full lg:w-auto py-2 lg:py-0">
+                            <span>Solutions</span>
+                            <svg class="dropdown-arrow w-4 h-4 transition-transform duration-200 group-hover/solutions:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div class="dropdown-menu hidden group-hover/solutions:block lg:absolute lg:left-1/2 lg:-translate-x-1/2 lg:top-full lg:mt-2 w-full lg:w-48 bg-slate-950 lg:border lg:border-slate-900 rounded-xl py-2 lg:shadow-xl z-50">
+                            <a href="/for-schools" class="block px-4 py-2 text-sm text-slate-300 hover:text-amber-400 hover:bg-slate-900 transition duration-150 text-center lg:text-left">For Schools</a>
+                            <a href="/for-printing-companies" class="block px-4 py-2 text-sm text-slate-300 hover:text-amber-400 hover:bg-slate-900 transition duration-150 text-center lg:text-left">For Printing Companies</a>
+                        </div>
+                    </div>
+
+                    <a href="/mobile-app" class="text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200 w-full lg:w-auto text-center py-2 lg:py-0">Mobile App</a>
+                    <a href="/pricing" class="text-sm font-semibold text-slate-300 hover:text-amber-400 transition duration-200 w-full lg:w-auto text-center py-2 lg:py-0">Pricing</a>
+                    <a href="/contact" class="text-sm font-semibold text-amber-400 hover:text-amber-300 transition duration-200 w-full lg:w-auto text-center py-2 lg:py-0">Contact</a>
+                    
+                    <!-- Auth Actions on Mobile (hidden on desktop) -->
+                    <div class="flex flex-col items-center gap-3 w-full border-t border-slate-900 pt-4 mt-2 lg:hidden">
+                        @if (Route::has('login'))
+                            @auth
+                                <a href="{{ url('/dashboard') }}" class="text-sm font-semibold text-amber-400 hover:text-amber-300 transition duration-200">Dashboard</a>
+                            @else
+                                <a href="{{ route('login') }}" class="text-sm font-semibold text-slate-300 hover:text-white transition duration-200">Log in</a>
+                                @if (Route::has('register'))
+                                    <a href="{{ route('register') }}" class="inline-flex items-center justify-center w-full max-w-[200px] py-2 text-sm font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 rounded-lg">Register</a>
+                                @endif
+                            @endauth
+                        @endif
+                    </div>
                 </nav>
 
-                <!-- Auth / Call to Action -->
-                <div class="flex items-center space-x-2 sm:space-x-4">
+                <!-- Auth / Call to Action on Desktop -->
+                <div class="hidden lg:flex items-center space-x-4 shrink-0">
                     @if (Route::has('login'))
                         @auth
-                            <a href="{{ url('/dashboard') }}" class="text-xs sm:text-sm font-semibold text-amber-400 hover:text-amber-300 transition duration-200">Dashboard</a>
+                            <a href="{{ url('/dashboard') }}" class="text-sm font-semibold text-amber-400 hover:text-amber-300 transition duration-200">Dashboard</a>
                         @else
-                            <a href="{{ route('login') }}" class="text-xs sm:text-sm font-semibold text-slate-300 hover:text-white transition duration-200">Log in</a>
+                            <a href="{{ route('login') }}" class="text-sm font-semibold text-slate-300 hover:text-white transition duration-200">Log in</a>
                             @if (Route::has('register'))
-                                <a href="{{ route('register') }}" class="inline-flex items-center justify-center px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 rounded-xl transition duration-200 shadow-md shadow-amber-500/10">Register</a>
+                                <a href="{{ route('register') }}" class="inline-flex items-center justify-center px-4 py-2 text-sm font-bold text-slate-955 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 rounded-xl transition duration-200 shadow-md shadow-amber-500/10">Register</a>
                             @endif
                         @endauth
                     @endif
                 </div>
             </div>
+
+            <script>
+                document.getElementById('mobileMenuToggle').addEventListener('click', function() {
+                    const navMenu = document.getElementById('navMenu');
+                    const hamburgerIcon = document.getElementById('hamburgerIcon');
+                    const closeIcon = document.getElementById('closeIcon');
+                    
+                    if (navMenu.classList.contains('hidden')) {
+                        navMenu.classList.remove('hidden');
+                        navMenu.classList.add('flex');
+                        hamburgerIcon.classList.add('hidden');
+                        closeIcon.classList.remove('hidden');
+                    } else {
+                        navMenu.classList.add('hidden');
+                        navMenu.classList.remove('flex');
+                        hamburgerIcon.classList.remove('hidden');
+                        closeIcon.classList.add('hidden');
+                    }
+                });
+
+                // Toggle solutions dropdown on mobile click
+                document.querySelector('.dropdown-trigger').addEventListener('click', function(e) {
+                    if (window.innerWidth < 1024) {
+                        const dropdownMenu = this.nextElementSibling;
+                        const dropdownArrow = this.querySelector('.dropdown-arrow');
+                        dropdownMenu.classList.toggle('hidden');
+                        dropdownArrow.classList.toggle('rotate-180');
+                    }
+                });
+            </script>
         </header>
 
         <!-- Main Contact Content -->
@@ -57,13 +123,13 @@
             <!-- Hero Header -->
             <div class="text-center max-w-3xl mx-auto space-y-4 mb-16">
                 <span class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs font-semibold tracking-wide text-amber-400">
-                    ✉️ Connect With Us
+                    ✉️ Book a Demo
                 </span>
                 <h1 class="text-4xl sm:text-5xl font-black tracking-tight leading-none text-white">
-                    We'd love to <span class="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">hear from you</span>
+                    See <span class="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">iCard in Action</span>
                 </h1>
-                <p class="text-lg text-slate-400">
-                    Have questions about setup, pricing, or templates? Send our team a message.
+                <p class="text-lg text-slate-400 leading-relaxed">
+                    Schedule a personalized demo and see how iCard can simplify your school's ID card workflow.
                 </p>
             </div>
 
@@ -100,66 +166,58 @@
                         </div>
                     </div>
 
-                    <!-- FAQs Accordion -->
-                    <div class="space-y-4 pt-4">
-                        <h3 class="text-xl font-bold text-white">Frequently Asked Questions</h3>
-                        
-                        <div class="space-y-3">
-                            <details class="group bg-slate-900/40 border border-slate-850 rounded-2xl p-5 [&_summary::-webkit-details-marker]:hidden">
-                                <summary class="flex justify-between items-center cursor-pointer outline-none">
-                                    <h4 class="text-sm font-semibold text-white pr-4">Can parents upload their own photos?</h4>
-                                    <span class="transition duration-300 group-open:-rotate-180 text-amber-400">&darr;</span>
-                                </summary>
-                                <p class="text-xs text-slate-400 mt-3 leading-relaxed">
-                                    Yes! Launch a photo campaign from your dashboard and share the generated links. Parents or teachers can open the links on their phones to upload verified student profile photos directly.
-                                </p>
-                            </details>
-
-                            <details class="group bg-slate-900/40 border border-slate-850 rounded-2xl p-5 [&_summary::-webkit-details-marker]:hidden">
-                                <summary class="flex justify-between items-center cursor-pointer outline-none">
-                                    <h4 class="text-sm font-semibold text-white pr-4">What paper format is used for printing?</h4>
-                                    <span class="transition duration-300 group-open:-rotate-180 text-amber-400">&darr;</span>
-                                </summary>
-                                <p class="text-xs text-slate-400 mt-3 leading-relaxed">
-                                    The system generates high-res PDF sheets aligned to standard A4 or Letter sizes with grids of 8 or 10 ID cards (standard CR80 credit card dimensions).
-                                </p>
-                            </details>
-
-                            <details class="group bg-slate-900/40 border border-slate-850 rounded-2xl p-5 [&_summary::-webkit-details-marker]:hidden">
-                                <summary class="flex justify-between items-center cursor-pointer outline-none">
-                                    <h4 class="text-sm font-semibold text-white pr-4">Can we build custom designs?</h4>
-                                    <span class="transition duration-300 group-open:-rotate-180 text-amber-400">&darr;</span>
-                                </summary>
-                                <p class="text-xs text-slate-400 mt-3 leading-relaxed">
-                                    Absolutely. Our interactive template editor lets you select custom backgrounds, reposition name and detail text boxes, and generate custom QR layouts.
-                                </p>
-                            </details>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Right Form Box -->
                 <div class="bg-slate-900 border border-slate-850 rounded-3xl p-8 shadow-2xl relative">
-                    <h3 class="text-xl font-bold text-white mb-6">Send Message</h3>
+                    <h3 class="text-xl font-bold text-white mb-6">Schedule Demo</h3>
                     
                     <form id="contactForm" onsubmit="event.preventDefault(); document.getElementById('successMsg').classList.remove('hidden'); document.getElementById('contactForm').reset();" class="space-y-5">
                         <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Full Name</label>
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Name</label>
                             <input type="text" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 transition" placeholder="John Doe">
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Email Address</label>
-                            <input type="email" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 transition" placeholder="john@example.com">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">School / Company Name</label>
+                            <input type="text" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 transition" placeholder="Academy High School">
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Mobile Number</label>
+                                <input type="tel" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 transition" placeholder="+1 (555) 000-0000">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Email Address</label>
+                                <input type="email" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 transition" placeholder="john@example.com">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Number of Students</label>
+                                <input type="number" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 transition" placeholder="500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-2">I am a</label>
+                                <select required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500/50 transition">
+                                    <option value="" disabled selected>Select Role</option>
+                                    <option value="school">School</option>
+                                    <option value="printing_company">Printing Company</option>
+                                    <option value="college">College</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
                         </div>
 
                         <div>
                             <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Message</label>
-                            <textarea required rows="4" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 transition" placeholder="Tell us how we can help you..."></textarea>
+                            <textarea required rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 transition" placeholder="Tell us how we can help you..."></textarea>
                         </div>
 
                         <button type="submit" class="w-full inline-flex items-center justify-center px-6 py-3.5 text-sm font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 rounded-xl transition duration-200 shadow-lg shadow-amber-500/20">
-                            Send Message
+                            Book My Free Demo
                         </button>
                     </form>
 
@@ -169,11 +227,11 @@
                             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
                         </div>
                         <div>
-                            <h4 class="text-xl font-bold text-white">Message Sent Successfully!</h4>
-                            <p class="text-sm text-slate-400 mt-2 max-w-xs mx-auto">Thank you for reaching out. A representative will email you shortly.</p>
+                            <h4 class="text-xl font-bold text-white">Demo Booked Successfully!</h4>
+                            <p class="text-sm text-slate-400 mt-2 max-w-xs mx-auto">Thank you for booking. A representative will contact you shortly to confirm your scheduled slot.</p>
                         </div>
                         <button onclick="document.getElementById('successMsg').classList.add('hidden')" class="px-5 py-2.5 bg-slate-950 hover:bg-slate-850 border border-slate-800 rounded-xl text-xs font-bold transition">
-                            Send Another Message
+                            Back
                         </button>
                     </div>
                 </div>
