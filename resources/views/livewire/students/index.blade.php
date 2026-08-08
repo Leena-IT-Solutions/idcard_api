@@ -73,6 +73,7 @@ new class extends Component
     public float $exportGutterMm = 6.0;
     public float $exportCustomWidthMm = 210.0;
     public float $exportCustomHeightMm = 297.0;
+    public bool $exportMirrorPrint = false;
 
     public function openExportModal()
     {
@@ -92,6 +93,15 @@ new class extends Component
             if (isset($p['bleed_mm'])) $this->exportBleedMm = (float)$p['bleed_mm'];
             if (isset($p['margin_mm'])) $this->exportMarginMm = (float)$p['margin_mm'];
             if (isset($p['gutter_mm'])) $this->exportGutterMm = (float)$p['gutter_mm'];
+        }
+
+        $lastAnyExport = \App\Models\Export::where('school_id', session('active_school_id'))
+            ->where('user_id', auth()->id())
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if ($lastAnyExport && is_array($lastAnyExport->params) && isset($lastAnyExport->params['mirror_print'])) {
+            $this->exportMirrorPrint = (bool) $lastAnyExport->params['mirror_print'];
         }
     }
 
@@ -168,6 +178,7 @@ new class extends Component
             'bleed_mm' => $this->exportBleedMm,
             'margin_mm' => $this->exportMarginMm,
             'gutter_mm' => $this->exportGutterMm,
+            'mirror_print' => $this->exportMirrorPrint,
         ];
 
         $export = \App\Models\Export::create([
@@ -2481,6 +2492,27 @@ new class extends Component
                             </div>
                         </div>
 
+                        @if ($exportType !== 'excel_photo_zip')
+                            <div class="p-4 border rounded-2xl flex items-start justify-between gap-4 transition {{ $exportMirrorPrint ? 'border-amber-400 bg-amber-50/60 dark:bg-amber-950/20' : 'border-gray-200 dark:border-gray-700' }}">
+                                <div>
+                                    <span class="font-bold text-xs text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                                        {{ __('Mirror Print (Horizontal Flip)') }}
+                                        @if ($exportMirrorPrint)
+                                            <span class="px-2 py-0.5 bg-amber-400 text-amber-950 rounded-md text-[9px] font-extrabold uppercase tracking-wider">{{ __('Active') }}</span>
+                                        @endif
+                                    </span>
+                                    <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">
+                                        {{ __('Horizontally flips all rendered cards for printing on transparent PVC, acrylic, or back-side thermal transfer film. Text and QR codes will appear reversed — this is expected and corrects itself once viewed from the intended physical side.') }}
+                                    </p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                                    <input type="checkbox" wire:model.live="exportMirrorPrint" class="sr-only peer" />
+                                    <div class="w-11 h-6 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-amber-500 transition-colors"></div>
+                                    <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+                                </label>
+                            </div>
+                        @endif
+
                         @if ($exportType === 'imposition_pdf')
                             <div class="p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-2xl space-y-3 text-xs">
                                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -2560,8 +2592,11 @@ new class extends Component
                             @forelse ($userExports as $exp)
                                 <div class="p-3 bg-gray-50 dark:bg-gray-900/60 border border-gray-100 dark:border-gray-700/60 rounded-2xl flex items-center justify-between text-xs">
                                     <div>
-                                        <span class="font-bold text-gray-800 dark:text-gray-200 uppercase text-[11px] block">
+                                        <span class="font-bold text-gray-800 dark:text-gray-200 uppercase text-[11px] block flex items-center gap-1.5">
                                             {{ str_replace('_', ' ', $exp->type) }}
+                                            @if (is_array($exp->params) && !empty($exp->params['mirror_print']))
+                                                <span class="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 rounded text-[8px] font-bold">MIRRORED</span>
+                                            @endif
                                         </span>
                                         <span class="text-[10px] text-gray-500">
                                             {{ $exp->created_at->format('M d, H:i') }} • {{ $exp->processed_items }}/{{ $exp->total_items ?? 0 }} items

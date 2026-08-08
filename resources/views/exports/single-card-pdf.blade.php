@@ -53,7 +53,7 @@
         @endphp
         <div class="card-page">
             <div class="card-inner-scale" style="transform: scale({{ round($scaleRatio, 4) }}); width: {{ $targetWidthPx }}px; height: {{ $targetHeightPx }}px;">
-                <x-id-card-renderer :template="$template" :student="$student" :school="$school" :scale="1.0" :forExport="true" />
+                <x-id-card-renderer :template="$template" :student="$student" :school="$school" :scale="1.0" :forExport="true" :isMirrored="$isMirrored ?? false" />
             </div>
         </div>
     @endforeach

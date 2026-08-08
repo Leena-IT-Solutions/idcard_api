@@ -40,6 +40,7 @@ class ExportPngZipJob implements ShouldQueue
                 mkdir($tmpDir, 0755, true);
             }
 
+            $isMirrored = (bool) ($export->params['mirror_print'] ?? false);
             $schoolCode = preg_replace('/[^A-Za-z0-9_-]/', '', $export->school->school_code ?? $export->school->name ?? 'SCHOOL');
 
 
@@ -63,7 +64,7 @@ class ExportPngZipJob implements ShouldQueue
                 $widthPx = $isPortrait ? 638 : 1011;
                 $heightPx = $isPortrait ? 1011 : 638;
 
-                $html = $renderer->renderFrontHtml($template, $student, $export->school);
+                $html = $renderer->renderFrontHtml($template, $student, $export->school, $isMirrored);
                 $png = $renderer->toPng($html, $widthPx, $heightPx);
 
                 $gradeName = preg_replace('/[^A-Za-z0-9_-]/', '', $enrollment?->grade?->name ?? 'Grade');

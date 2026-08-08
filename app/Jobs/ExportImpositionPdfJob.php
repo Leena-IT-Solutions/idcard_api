@@ -54,6 +54,8 @@ class ExportImpositionPdfJob implements ShouldQueue
             $rows = $layout['rows'];
             $cardsPerPage = $layout['cards_per_page'];
 
+            $isMirrored = (bool) ($export->params['mirror_print'] ?? false);
+
             $itemIndex = 0;
             foreach ($studentIds as $studentId) {
                 $student = Student::find($studentId);
@@ -72,7 +74,8 @@ class ExportImpositionPdfJob implements ShouldQueue
 
                 $cardIndexInPage = count($currentPageCards);
                 $row = (int) floor($cardIndexInPage / $cols);
-                $col = $cardIndexInPage % $cols;
+                $rawCol = $cardIndexInPage % $cols;
+                $col = $isMirrored ? ($cols - 1 - $rawCol) : $rawCol;
 
                 $currentPageCards[] = [
                     'row' => $row,
@@ -100,6 +103,7 @@ class ExportImpositionPdfJob implements ShouldQueue
             $html = view('exports.imposition-sheet', [
                 'layout' => $layout,
                 'pages' => $pages,
+                'isMirrored' => $isMirrored,
             ])->render();
 
             $pdf = $renderer->toPdf($html, $layout['page_width_mm'], $layout['page_height_mm']);

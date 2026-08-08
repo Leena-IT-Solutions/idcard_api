@@ -73,10 +73,13 @@ class ExportSingleCardPdfJob implements ShouldQueue
                 }
             }
 
+            $isMirrored = (bool) ($export->params['mirror_print'] ?? false);
+
             $html = view('exports.single-card-pdf', [
                 'cardWidthMm' => $cardWidthMm,
                 'cardHeightMm' => $cardHeightMm,
                 'items' => $items,
+                'isMirrored' => $isMirrored,
             ])->render();
 
             $pdf = $renderer->toPdf($html, $cardWidthMm, $cardHeightMm);

@@ -5,6 +5,7 @@
     'scale' => 1.0,
     'previewMode' => false,
     'forExport' => false,
+    'isMirrored' => false,
 ])
 
 @php
@@ -193,9 +194,11 @@
     $scaledW = round($widthPx * $scale);
     $scaledH = round($heightPx * $scale);
 
+    $mirrorTransform = $isMirrored ? ' scaleX(-1)' : '';
+
     $cardStyle = $forExport 
-        ? "position: relative; overflow: hidden; width: {$widthPx}px; height: {$heightPx}px; transform: scale({$scale}); transform-origin: top left; background-color: #ffffff;" 
-        : "position: relative; overflow: hidden; border-radius: 12px; width: {$widthPx}px; height: {$heightPx}px; transform: scale({$scale}); transform-origin: top left; background-color: #ffffff;";
+        ? "position: relative; overflow: hidden; width: {$widthPx}px; height: {$heightPx}px; transform: scale({$scale}){$mirrorTransform}; transform-origin: top left; background-color: #ffffff;" 
+        : "position: relative; overflow: hidden; border-radius: 12px; width: {$widthPx}px; height: {$heightPx}px; transform: scale({$scale}){$mirrorTransform}; transform-origin: top left; background-color: #ffffff;";
 
     $bgStyle = "position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; pointer-events: none; z-index: 0; display: block;";
 @endphp
