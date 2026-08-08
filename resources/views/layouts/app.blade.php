@@ -7,13 +7,9 @@
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
-        <!-- Script to sync Dark Mode class based on system / localStorage -->
         <script>
-            if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
+            document.documentElement.classList.remove('dark');
+            localStorage.removeItem('color-theme');
         </script>
 
         <!-- Fonts -->
@@ -24,8 +20,8 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans antialiased text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-900">
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col lg:flex-row">
+    <body class="font-sans antialiased text-gray-900 bg-gray-100">
+        <div class="min-h-screen bg-gray-100 flex flex-col lg:flex-row">
             <!-- Sidebar Navigation -->
             <livewire:layout.navigation />
 
@@ -33,7 +29,7 @@
             <div class="flex-1 lg:ps-64 w-full">
                 <!-- Page Heading -->
                 @if (isset($header))
-                    <header class="bg-white dark:bg-gray-800 shadow border-b border-gray-200 dark:border-gray-700">
+                    <header class="bg-white shadow border-b border-gray-200">
                         <div class="w-full py-4 px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div>
                                 {{ $header }}
