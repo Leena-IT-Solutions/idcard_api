@@ -26,7 +26,7 @@
             <livewire:layout.navigation />
 
             <!-- Main Content Area with offset for sidebar -->
-            <div class="flex-1 lg:ps-64 w-full">
+            <div class="flex-1 lg:ps-64 w-full pt-16 lg:pt-0">
                 <!-- Page Heading -->
                 @if (isset($header))
                     <header class="bg-white shadow border-b border-gray-200">
