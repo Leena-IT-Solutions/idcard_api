@@ -18,13 +18,14 @@ new class extends Component
 
 <div x-data="{ open: false }">
     <!-- Mobile Navigation Top Bar -->
-    <div class="lg:hidden flex items-center justify-between bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 py-3 h-16 w-full fixed top-0 z-40">
+    <div class="lg:hidden flex items-center justify-between bg-white border-b border-gray-200 px-4 py-3 h-16 w-full fixed top-0 z-40">
         <div class="flex items-center">
-            <a href="{{ route('dashboard') }}" wire:navigate>
-                <x-application-logo class="block h-8 w-auto fill-current text-gray-800 dark:text-gray-200" />
+            <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center space-x-2 text-indigo-600 font-extrabold text-lg tracking-tight">
+                <x-application-logo class="h-8 w-8" />
+                <span>{{ config('app.name', 'iCard Maker') }}</span>
             </a>
         </div>
-        <button @click="open = true" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none">
+        <button @click="open = true" class="text-gray-500 hover:text-gray-700 focus:outline-none">
             <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
