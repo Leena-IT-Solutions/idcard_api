@@ -194,11 +194,9 @@
     $scaledW = round($widthPx * $scale);
     $scaledH = round($heightPx * $scale);
 
-    $mirrorTransform = $isMirrored ? ' scaleX(-1)' : '';
-
     $cardStyle = $forExport 
-        ? "position: relative; overflow: hidden; width: {$widthPx}px; height: {$heightPx}px; transform: scale({$scale}){$mirrorTransform}; transform-origin: top left; background-color: #ffffff;" 
-        : "position: relative; overflow: hidden; border-radius: 12px; width: {$widthPx}px; height: {$heightPx}px; transform: scale({$scale}){$mirrorTransform}; transform-origin: top left; background-color: #ffffff;";
+        ? "position: relative; overflow: hidden; width: {$widthPx}px; height: {$heightPx}px; transform: scale({$scale}); transform-origin: top left; background-color: #ffffff;" 
+        : "position: relative; overflow: hidden; border-radius: 12px; width: {$widthPx}px; height: {$heightPx}px; transform: scale({$scale}); transform-origin: top left; background-color: #ffffff;";
 
     $bgStyle = "position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; pointer-events: none; z-index: 0; display: block;";
 @endphp
@@ -207,9 +205,10 @@
 <div style="position: relative; overflow: hidden; flex-shrink: 0; display: inline-block; vertical-align: top; user-select: none; width: {{ $scaledW }}px; height: {{ $scaledH }}px;">
     <!-- Actual Native Scale Inner Card -->
     <div style="{{ $cardStyle }}">
-        @if($bgUrl)
-            <img src="{{ $bgUrl }}" style="{{ $bgStyle }}" alt="Card Background" />
-        @endif
+        <div style="width: 100%; height: 100%; position: relative; {{ $isMirrored ? 'transform: scaleX(-1); transform-origin: 50% 50%;' : '' }}">
+            @if($bgUrl)
+                <img src="{{ $bgUrl }}" style="{{ $bgStyle }}" alt="Card Background" />
+            @endif
 
         @foreach($config as $layer)
             @php
@@ -297,5 +296,6 @@
                 </div>
             @endif
         @endforeach
+        </div>
     </div>
 </div>
