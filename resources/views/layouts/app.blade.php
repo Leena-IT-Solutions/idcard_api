@@ -31,10 +31,10 @@
                 @if (isset($header))
                     <header class="bg-white shadow border-b border-gray-200">
                         <div class="w-full py-4 px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                            <div>
+                            <div class="w-full text-center sm:text-left">
                                 {{ $header }}
                             </div>
-                            <div class="flex items-center shrink-0">
+                            <div class="flex items-center shrink-0 justify-center sm:justify-end">
                                 <livewire:layout.school-selector />
                             </div>
                         </div>
