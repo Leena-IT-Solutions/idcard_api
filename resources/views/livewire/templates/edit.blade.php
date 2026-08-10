@@ -2373,6 +2373,7 @@ new class extends Component {
                     </div>
                 </div>
             </div>
+            </div>
 
             <!-- Clickable Variable Inserter Toolbar Pills -->
             <div class="w-full mt-5 space-y-3 bg-white/90 backdrop-blur-xl border border-slate-200/80 rounded-2xl p-4 shadow-md">
@@ -2984,9 +2985,8 @@ new class extends Component {
                 </div>
 
             </div>
-        </div>v>
         </div>
-    </div>
+        </div>
     <link rel="stylesheet" href="{{ asset('css/fonts.css') }}">
     <style>
     .canvas-grid-bg {
