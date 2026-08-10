@@ -475,6 +475,43 @@ new class extends Component {
         $this->selectLayer($newIndex, false);
     }
 
+    public function addBarcodeLayer()
+    {
+        $this->recordHistory();
+        $newIndex = count($this->layers);
+
+        // Find last barcode layer to copy its styling settings
+        $lastBarcodeLayer = null;
+        if ($this->selectedLayerIndex !== null && isset($this->layers[$this->selectedLayerIndex]) && $this->layers[$this->selectedLayerIndex]['type'] === 'barcode') {
+            $lastBarcodeLayer = $this->layers[$this->selectedLayerIndex];
+        } else {
+            for ($i = count($this->layers) - 1; $i >= 0; $i--) {
+                if ($this->layers[$i]['type'] === 'barcode') {
+                    $lastBarcodeLayer = $this->layers[$i];
+                    break;
+                }
+            }
+        }
+
+        $w = $lastBarcodeLayer ? ($lastBarcodeLayer['width'] ?? 160) : 160;
+        $h = $lastBarcodeLayer ? ($lastBarcodeLayer['height'] ?? 45) : 45;
+        $x = $lastBarcodeLayer ? (($lastBarcodeLayer['x'] ?? 100) + 15) : 100;
+        $y = $lastBarcodeLayer ? (($lastBarcodeLayer['y'] ?? 240) + 15) : 240;
+
+        $this->layers[] = [
+            'id' => 'barcode_' . microtime(true) . '_' . rand(1000, 9999),
+            'type' => 'barcode',
+            'label' => 'Barcode',
+            'x' => $x,
+            'y' => $y,
+            'width' => $w,
+            'height' => $h,
+            'value' => '{Ref No}',
+            'show_text' => true,
+        ];
+        $this->selectLayer($newIndex, false);
+    }
+
     private function shapeDefaults(string $shapeType): array
     {
         $shapeType = in_array($shapeType, ['rectangle', 'circle', 'line']) ? $shapeType : 'rectangle';
@@ -671,13 +708,17 @@ new class extends Component {
             $this->addQrLayer();
             return;
         }
+        if ($tag === '{Barcode}') {
+            $this->addBarcodeLayer();
+            return;
+        }
 
         if ($this->selectedLayerIndex !== null && isset($this->layers[$this->selectedLayerIndex])) {
             $type = $this->layers[$this->selectedLayerIndex]['type'] ?? '';
             if ($type === 'text') {
                 $current = trim($this->layers[$this->selectedLayerIndex]['text'] ?? '');
                 $this->layers[$this->selectedLayerIndex]['text'] = $current !== '' ? ($current . ' ' . $tag) : $tag;
-            } elseif ($type === 'qr') {
+            } elseif ($type === 'qr' || $type === 'barcode') {
                 $current = trim($this->layers[$this->selectedLayerIndex]['value'] ?? '');
                 $this->layers[$this->selectedLayerIndex]['value'] = $current !== '' ? ($current . ' ' . $tag) : $tag;
             }
@@ -2349,6 +2390,63 @@ new class extends Component {
                                              {!! $qrSvg !!}
                                          </div>
 
+                                    @elseif($type === 'barcode')
+                                         @php
+                                             $rawBarcodeValue = !empty($layer['value']) ? $layer['value'] : '{Ref No}';
+                                             $barcodeData = strtr($rawBarcodeValue, [
+                                                 '{Student Photo}' => 'PHOTO',
+                                                 '{QR Code}' => 'QR',
+                                                 '{Barcode}' => 'BARCODE',
+                                                 '{First Name}' => 'Aaditya',
+                                                 '{Middle Name}' => 'Sunil',
+                                                 '{Last Name}' => 'Thakur',
+                                                 '{Roll No}' => '102',
+                                                 '{Ref No}' => 'REF-2026-0891',
+                                                 '{Campaign}' => 'iCard 2026-27',
+                                                 '{Standard}' => 'Grade V',
+                                                 '{Division}' => 'Div A',
+                                                 'Grade ({grade}) Div ({division})' => 'Grade V - A',
+                                                 '{Blood Group}' => 'B+',
+                                                 '{Gender}' => 'Male',
+                                                 '{DOB}' => '2017-05-12',
+                                                 '{Contact Number}' => '9876543210',
+                                                 '{Address}' => 'Samarth Nagar, Pune',
+                                                 '{Pincode}' => '411001',
+                                                 '{School Name}' => ($activeSchool->name ?? 'Sarvodya Vidyalay'),
+                                                 '{School Code}' => ($activeSchool->school_code ?? 'SV-2026'),
+                                                 '{Registration Code}' => ($activeSchool->school_code ?? 'SV-2026'),
+                                                 '{Principal Name}' => ($activeSchool->principal_name ?? 'Dr. R. K. Sharma'),
+                                                 '{School Contact}' => ($activeSchool->contact_number ?? '9820198201'),
+                                                 '{School Email}' => ($activeSchool->email ?? 'info@sarvodya.edu.in'),
+                                                 '{School Website}' => ($activeSchool->website ?? 'www.sarvodya.edu.in'),
+                                                 '{School Address}' => ($activeSchool->address ?? 'Station Road, Mumbai'),
+                                             ]);
+                                             if (empty(trim($barcodeData))) {
+                                                 $barcodeData = 'REF-2026-0891';
+                                             }
+                                             $showText = !isset($layer['show_text']) || $layer['show_text'];
+
+                                             try {
+                                                 $generator = new \Picqer\Barcode\BarcodeGeneratorSVG();
+                                                 $rawSvg = $generator->getBarcode($barcodeData, $generator::TYPE_CODE_128);
+                                                 $barcodeSvg = preg_replace('/<\?xml.*?\?>/i', '', $rawSvg);
+                                                 $barcodeSvg = preg_replace('/<!DOCTYPE.*?>/i', '', $barcodeSvg);
+                                                 $barcodeSvg = str_replace('<svg ', '<svg preserveAspectRatio="none" style="width: 100%; height: 100%;" ', $barcodeSvg);
+                                             } catch (\Throwable $e) {
+                                                 $barcodeSvg = '<div style="font-size: 10px; font-weight: bold; color: #ef4444;">[Barcode Error]</div>';
+                                             }
+                                         @endphp
+                                         <div style="width: 100%; height: 100%; background: white; padding: 4px 6px; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; overflow: hidden;">
+                                             <div style="flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                                 {!! $barcodeSvg !!}
+                                             </div>
+                                             @if($showText)
+                                                 <div style="font-size: 9px; font-weight: 800; font-family: monospace; color: #0f172a; letter-spacing: 1px; margin-top: 1px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">
+                                                     {{ $barcodeData }}
+                                                 </div>
+                                             @endif
+                                         </div>
+
                                     @elseif($type === 'shape')
                                         @php
                                             $shapeOpacity = max(0, min(100, (float)($layer['opacity'] ?? 100))) / 100;
@@ -2480,7 +2578,7 @@ new class extends Component {
                     <div class="flex flex-wrap gap-1.5">
                         @php
                             $studentVars = [
-                                '{Student Photo}', '{QR Code}', '{First Name}', '{Middle Name}', '{Last Name}',
+                                '{Student Photo}', '{QR Code}', '{Barcode}', '{First Name}', '{Middle Name}', '{Last Name}',
                                 '{Roll No}', '{Ref No}', '{Campaign}', '{Standard}', '{Division}',
                                 'Grade ({grade}) Div ({division})', '{Blood Group}', '{Gender}',
                                 '{DOB}', '{Contact Number}', '{Address}', '{Pincode}'
@@ -2493,6 +2591,8 @@ new class extends Component {
                                     $btnStyle = 'bg-amber-600 text-white hover:bg-amber-700 shadow-sm shadow-amber-600/25';
                                 } elseif ($v === '{QR Code}') {
                                     $btnStyle = 'bg-violet-600 text-white hover:bg-violet-700 shadow-sm shadow-violet-600/25';
+                                } elseif ($v === '{Barcode}') {
+                                    $btnStyle = 'bg-cyan-600 text-white hover:bg-cyan-700 shadow-sm shadow-cyan-600/25';
                                 }
                             @endphp
                             <button type="button" wire:click="appendVariableToSelected('{{ $v }}')" class="px-2.5 py-1 {{ $btnStyle }} rounded-lg text-xs font-bold transition">
@@ -2560,6 +2660,9 @@ new class extends Component {
                             </button>
                             <button type="button" wire:click="addQrLayer" class="px-2.5 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-md shadow-violet-600/20">
                                 + QR Code
+                            </button>
+                            <button type="button" wire:click="addBarcodeLayer" class="px-2.5 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-md shadow-cyan-600/20">
+                                + Barcode
                             </button>
                             <div class="relative" x-data="{ shapeMenuOpen: false }" @click.outside="shapeMenuOpen = false">
                                 <button type="button" @click="shapeMenuOpen = !shapeMenuOpen" class="px-2.5 py-1.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl text-xs font-bold transition flex items-center shadow-md shadow-emerald-600/20">
@@ -2846,6 +2949,22 @@ new class extends Component {
                                         <input type="text" wire:key="input-qr-value-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.value" placeholder="e.g. {Ref No}, {Roll No}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600">
                                         
                                         <span class="text-[10px] text-slate-500 mt-1 block">Specify variable tag (click any tag below to insert) or static text encoded in the QR code.</span>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- Barcode Specific Controls -->
+                            @if(($selectedLayer['type'] ?? '') === 'barcode')
+                                <div class="space-y-3 pt-2 border-t border-slate-100">
+                                    <span class="text-xs font-extrabold text-cyan-700 block">1D Barcode Data Settings:</span>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-500 mb-1">Barcode Encoded Value / Variable Tag</label>
+                                        <input type="text" wire:key="input-barcode-value-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.value" placeholder="e.g. {Ref No}, {Roll No}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600">
+                                        <span class="text-[10px] text-slate-500 mt-1 block">Specify variable tag (click any tag below to insert) or static text encoded in Code 128 barcode.</span>
+                                    </div>
+                                    <div class="flex items-center justify-between pt-1">
+                                        <label class="text-xs font-bold text-slate-700">Display Text Value below Barcode</label>
+                                        <input type="checkbox" wire:key="check-barcode-showtext-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.show_text" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
                                     </div>
                                 </div>
                             @endif

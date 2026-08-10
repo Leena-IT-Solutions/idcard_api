@@ -331,6 +331,67 @@
                     {!! $qrSvg !!}
                 </div>
 
+            @elseif($type === 'barcode')
+                @php
+                    $rawBarcodeValue = !empty($layer['value']) ? $layer['value'] : '{Ref No}';
+                    $barcodeData = $rawBarcodeValue;
+                    if (isset($data) && is_array($data)) {
+                        foreach ($data as $k => $v) {
+                            $barcodeData = str_replace('{' . $k . '}', (string)$v, $barcodeData);
+                        }
+                    }
+                    $barcodeData = strtr($barcodeData, [
+                        '{Student Photo}' => 'PHOTO',
+                        '{QR Code}' => 'QR',
+                        '{Barcode}' => 'BARCODE',
+                        '{First Name}' => $data['first_name'] ?? 'Aaditya',
+                        '{Middle Name}' => $data['middle_name'] ?? 'Sunil',
+                        '{Last Name}' => $data['last_name'] ?? 'Thakur',
+                        '{Roll No}' => $data['roll_no'] ?? '102',
+                        '{Ref No}' => $data['ref_no'] ?? 'REF-2026-0891',
+                        '{Campaign}' => $data['campaign'] ?? 'iCard 2026-27',
+                        '{Standard}' => $data['standard'] ?? 'Grade V',
+                        '{Division}' => $data['division'] ?? 'Div A',
+                        'Grade ({grade}) Div ({division})' => ($data['standard'] ?? 'Grade V') . ' - ' . ($data['division'] ?? 'Div A'),
+                        '{Blood Group}' => $data['blood_group'] ?? 'B+',
+                        '{Gender}' => $data['gender'] ?? 'Male',
+                        '{DOB}' => $data['dob'] ?? '2017-05-12',
+                        '{Contact Number}' => $data['contact_number'] ?? '9876543210',
+                        '{Address}' => $data['address'] ?? 'Samarth Nagar, Pune',
+                        '{Pincode}' => $data['pincode'] ?? '411001',
+                        '{School Name}' => $schoolName ?? 'Sarvodya Vidyalay',
+                        '{School Code}' => $schoolCode ?? 'SV-2026',
+                        '{Registration Code}' => $schoolCode ?? 'SV-2026',
+                    ]);
+                    if (empty(trim($barcodeData))) {
+                        $barcodeData = 'REF-2026-0891';
+                    }
+                    $barcodeW = max(40, (int)($layer['width'] ?? 160));
+                    $barcodeH = max(20, (int)($layer['height'] ?? 45));
+                    $showText = !isset($layer['show_text']) || $layer['show_text'];
+                    $barcodeStyle = $style . " width: {$barcodeW}px; height: {$barcodeH}px; background: white; padding: 4px 6px; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; overflow: hidden;";
+
+                    try {
+                        $generator = new \Picqer\Barcode\BarcodeGeneratorSVG();
+                        $rawSvg = $generator->getBarcode($barcodeData, $generator::TYPE_CODE_128);
+                        $barcodeSvg = preg_replace('/<\?xml.*?\?>/i', '', $rawSvg);
+                        $barcodeSvg = preg_replace('/<!DOCTYPE.*?>/i', '', $barcodeSvg);
+                        $barcodeSvg = str_replace('<svg ', '<svg preserveAspectRatio="none" style="width: 100%; height: 100%;" ', $barcodeSvg);
+                    } catch (\Throwable $e) {
+                        $barcodeSvg = '<div style="font-size: 10px; font-weight: bold; color: #ef4444;">[Barcode Error]</div>';
+                    }
+                @endphp
+                <div style="{{ $barcodeStyle }}">
+                    <div style="flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                        {!! $barcodeSvg !!}
+                    </div>
+                    @if($showText)
+                        <div style="font-size: 9px; font-weight: 800; font-family: monospace; color: #0f172a; letter-spacing: 1px; margin-top: 1px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">
+                            {{ $barcodeData }}
+                        </div>
+                    @endif
+                </div>
+
             @elseif($type === 'shape')
                 @php
                     $shapeW = max(1, (float)($layer['width'] ?? 120));
