@@ -128,9 +128,9 @@
                     @endphp
                     <div 
                         wire:key="canvas-layer-{{ $layer['id'] ?? $idx }}"
-                        @click.stop="$wire.selectLayer({{ $idx }}, $event.shiftKey)"
-                        @mousedown.prevent="startDrag({{ $idx }}, $event)"
-                        @touchstart.prevent="startDrag({{ $idx }}, $event)"
+                        @click.stop="if (!hasMoved) { $wire.selectLayer({{ $idx }}, $event.shiftKey); }"
+                        @mousedown.stop="startDrag({{ $idx }}, $event)"
+                        @touchstart.stop="startDrag({{ $idx }}, $event)"
                         @dragstart.prevent
                         @selectstart.prevent
                         data-layer-box
