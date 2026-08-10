@@ -2756,7 +2756,6 @@ new class extends Component {
                         <button type="button" @click="setZoom(100)" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 100 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'">100%</button>
                         <button type="button" @click="setZoom(125)" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 125 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'">125%</button>
                         <button type="button" @click="setZoom(150)" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 150 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'">150%</button>
-
                         <span title="Preferences are saved automatically in your browser" class="text-[10px] text-emerald-400 font-extrabold bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md flex items-center ml-2">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>
                             Saved ⚡
@@ -3589,3 +3588,4 @@ new class extends Component {
             </div>
         </div>
     </div>
+</div>
