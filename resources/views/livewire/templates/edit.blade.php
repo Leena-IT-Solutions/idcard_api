@@ -2755,6 +2755,8 @@ new class extends Component {
                         </span>
                     </div>
                 </div>
+            </div>
+            </div>
 
             <!-- Clickable Variable Inserter Toolbar Pills -->
             <div class="w-full mt-5 space-y-3 bg-white/90 backdrop-blur-xl border border-slate-200/80 rounded-2xl p-4 shadow-md">
@@ -2804,6 +2806,7 @@ new class extends Component {
                     </div>
                 </div>
             </div>
+        </div>
 
         <!-- Right: Canva Studio Tabbed Inspector Panel (5 Cols) -->
         <div class="md:col-span-6 lg:col-span-5 min-w-0 flex flex-col h-full space-y-4">
@@ -3581,3 +3584,6 @@ new class extends Component {
             </div>
         </div>
     </div>
+        </div>
+    </div>
+</div>
