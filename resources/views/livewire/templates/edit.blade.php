@@ -1329,16 +1329,16 @@ new class extends Component {
 
     @include('livewire.templates.partials.top-bar')
 
-    <!-- Main Workspace Split Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">
-        <!-- Left Column: Interactive Studio Workbench & Variable Tags (7 Cols) -->
-        <div class="lg:col-span-7 min-w-0 space-y-5">
+    <!-- Main Workspace Split Container (2 Columns: Workbench Left, Inspector Panel Right) -->
+    <div class="flex flex-col lg:flex-row items-start gap-6 w-full">
+        <!-- Left Column: Interactive Studio Workbench & Variable Tags (7 Cols / 58% Width) -->
+        <div class="w-full lg:w-[58%] min-w-0 space-y-5">
             @include('livewire.templates.partials.canvas-workbench')
             @include('livewire.templates.partials.variable-inserter')
         </div>
 
-        <!-- Right Column: Canva Studio Tabbed Inspector Panel (5 Cols) -->
-        <div class="lg:col-span-5 min-w-0 flex flex-col space-y-4">
+        <!-- Right Column: Canva Studio Tabbed Inspector Panel (5 Cols / 42% Width) -->
+        <div class="w-full lg:w-[42%] min-w-0 flex flex-col space-y-4">
             @include('livewire.templates.partials.inspector-panel')
         </div>
     </div>
