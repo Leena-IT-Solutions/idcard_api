@@ -1016,6 +1016,7 @@ new class extends Component {
                     }
                 } else {
                     this.selectedIndices = [idx];
+                    this.activeInspectorTab = 'controls';
                 }
                 this.$wire.selectLayer(idx, shiftKey);
             },
