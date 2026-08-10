@@ -996,9 +996,29 @@ new class extends Component {
             curFontSize: 14,
             isResizing: false,
             resizeHandle: null,
-            origW: 0,
-            origH: 0,
-            isSelectingBox: false,
+            hasMoved: false,
+            selectedIndices: [],
+            isLayerSelected(idx) {
+                if (this.selectedIndices && this.selectedIndices.includes(idx)) return true;
+                if (this.$wire.selectedLayerIndices && this.$wire.selectedLayerIndices.includes(idx)) return true;
+                return false;
+            },
+            selectLayer(idx, e) {
+                const shiftKey = e ? e.shiftKey : false;
+                if (idx === null || idx === undefined) {
+                    this.selectedIndices = [];
+                } else if (shiftKey) {
+                    const pos = this.selectedIndices.indexOf(idx);
+                    if (pos > -1) {
+                        this.selectedIndices.splice(pos, 1);
+                    } else {
+                        this.selectedIndices.push(idx);
+                    }
+                } else {
+                    this.selectedIndices = [idx];
+                }
+                this.$wire.selectLayer(idx, shiftKey);
+            },
             boxStartX: 0,
             boxStartY: 0,
             boxRect: { left: 0, top: 0, width: 0, height: 0 },
@@ -1229,6 +1249,7 @@ new class extends Component {
             },
             startDrag(idx, e) {
                 if (this.activeTool === 'pan' || this.isSpacePressed) return;
+                this.selectLayer(idx, e);
                 const el = document.querySelector('[data-layer-index="' + idx + '"]');
                 if (!el) return;
 
@@ -1249,6 +1270,7 @@ new class extends Component {
             },
             startResize(idx, handle, e) {
                 if (this.activeTool === 'pan' || this.isSpacePressed) return;
+                this.selectLayer(idx, e);
                 const el = document.querySelector('[data-layer-index="' + idx + '"]');
                 if (!el) return;
 

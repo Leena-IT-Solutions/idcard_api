@@ -128,15 +128,15 @@
                     @endphp
                     <div 
                         wire:key="canvas-layer-{{ $layer['id'] ?? $idx }}"
-                        @click.stop="if (!hasMoved) { $wire.selectLayer({{ $idx }}, $event.shiftKey); }"
-                        @mousedown.stop="startDrag({{ $idx }}, $event)"
-                        @touchstart.stop="startDrag({{ $idx }}, $event)"
+                        @mousedown.stop.prevent="startDrag({{ $idx }}, $event)"
+                        @touchstart.stop.prevent="startDrag({{ $idx }}, $event)"
                         @dragstart.prevent
                         @selectstart.prevent
                         data-layer-box
                         data-layer-index="{{ $idx }}"
                         data-layer-type="{{ $type }}"
-                        class="absolute cursor-move select-none transition-shadow group {{ $isSelected ? 'ring-2 ring-indigo-500 ring-offset-1 ring-offset-slate-900' : 'hover:ring-1 hover:ring-indigo-400/50' }}"
+                        :class="isLayerSelected({{ $idx }}) ? 'ring-2 ring-indigo-500 ring-offset-1 ring-offset-slate-900' : 'hover:ring-1 hover:ring-indigo-400/50'"
+                        class="absolute cursor-move select-none transition-shadow group"
                         style="left: {{ $x }}px; top: {{ $y }}px; transform: rotate({{ $rot }}deg); transform-origin: center center; z-index: {{ $idx + 10 }};"
                     >
                         @php
