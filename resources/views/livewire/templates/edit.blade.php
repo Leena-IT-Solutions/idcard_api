@@ -2089,7 +2089,9 @@ new class extends Component {
     <!-- Main Workspace Split -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">
         <!-- Left: Interactive Canva Canvas Studio Workbench (7 Cols) -->
-        <div class="lg:col-span-7 bg-[#0f172a] border border-slate-800 rounded-3xl p-5 flex flex-col items-center justify-center min-h-[620px] shadow-2xl relative overflow-hidden">
+        <div class="lg:col-span-7 space-y-5">
+            <!-- Studio Canvas Viewport Box -->
+            <div class="bg-[#0f172a] border border-slate-800 rounded-3xl p-5 flex flex-col items-center justify-center min-h-[620px] shadow-2xl relative overflow-hidden">
             <!-- Studio Canvas Header Info -->
             <div class="w-full flex items-center justify-between mb-3 px-1">
                 <div class="flex items-center space-x-2">
@@ -2410,7 +2412,9 @@ new class extends Component {
                     </div>
                 </div>
             </div>
-           <!-- Right: Canva Studio Tabbed Inspector Panel (5 Cols) -->
+        </div>
+
+        <!-- Right: Canva Studio Tabbed Inspector Panel (5 Cols) -->
         <div class="lg:col-span-5 space-y-4">
             <div class="bg-white border border-slate-200/80 rounded-3xl shadow-xl shadow-slate-200/40 p-5 space-y-4">
                 
