@@ -2809,21 +2809,7 @@ new class extends Component {
                                         <label class="block text-[11px] font-bold text-slate-500 mb-1">QR Encoded Value / Variable Tag</label>
                                         <input type="text" wire:key="input-qr-value-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.value" placeholder="e.g. {Ref No}, {Roll No}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600">
                                         
-                                        <!-- Quick Variable Tag Inserter Pills for QR -->
-                                        <div class="mt-2 space-y-1">
-                                            <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">Click to Insert Tag into QR:</span>
-                                            <div class="flex flex-wrap gap-1">
-                                                @php
-                                                    $qrQuickTags = ['{Ref No}', '{Roll No}', '{Registration Code}', '{School Code}', '{First Name}', '{Last Name}', '{Campaign}'];
-                                                @endphp
-                                                @foreach($qrQuickTags as $qTag)
-                                                    <button type="button" wire:click="appendVariableToSelected('{{ $qTag }}')" class="px-2 py-0.5 bg-violet-50 hover:bg-violet-600 text-violet-700 hover:text-white border border-violet-200 rounded-md text-[10px] font-bold transition">
-                                                        + {{ $qTag }}
-                                                    </button>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                        <span class="text-[10px] text-slate-500 mt-1 block">Specify variable tag or static string encoded in the QR code.</span>
+                                        <span class="text-[10px] text-slate-500 mt-1 block">Specify variable tag (click any tag below to insert) or static text encoded in the QR code.</span>
                                     </div>
                                 </div>
                             @endif
