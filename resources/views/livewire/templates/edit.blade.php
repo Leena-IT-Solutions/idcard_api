@@ -21,6 +21,7 @@ new class extends Component {
     public float $heightMm = 54.00;
     public array $layers = [];
     public $bgUpload = null;
+    public $uploadedImage = null;
 
     // Studio Canvas Settings
     public bool $showGrid = true;
@@ -510,6 +511,42 @@ new class extends Component {
             'show_text' => true,
         ];
         $this->selectLayer($newIndex, false);
+    }
+
+    public function updatedUploadedImage()
+    {
+        $this->validate([
+            'uploadedImage' => 'image|max:10240', // 10MB max JPG, PNG, WEBP, SVG
+        ]);
+
+        $path = $this->uploadedImage->store('template_assets', 'public');
+
+        $this->recordHistory();
+
+        if ($this->selectedLayerIndex !== null && isset($this->layers[$this->selectedLayerIndex]) && ($this->layers[$this->selectedLayerIndex]['type'] ?? '') === 'image') {
+            $this->layers[$this->selectedLayerIndex]['image_path'] = $path;
+        } else {
+            $newIndex = count($this->layers);
+            $this->layers[] = [
+                'id' => 'image_' . microtime(true) . '_' . rand(1000, 9999),
+                'type' => 'image',
+                'label' => 'Custom Image',
+                'image_path' => $path,
+                'x' => 100,
+                'y' => 80,
+                'width' => 90,
+                'height' => 90,
+                'border_radius' => 8,
+                'border_color' => '#818cf8',
+                'border_width' => 0,
+                'opacity' => 100,
+                'rotation' => 0,
+                'object_fit' => 'contain',
+            ];
+            $this->selectLayer($newIndex, false);
+        }
+
+        $this->uploadedImage = null;
     }
 
     private function shapeDefaults(string $shapeType): array
@@ -2447,6 +2484,24 @@ new class extends Component {
                                              @endif
                                          </div>
 
+                                     @elseif($type === 'image')
+                                         @php
+                                             $imgBw = (float)($layer['border_width'] ?? 0);
+                                             $imgBc = $layer['border_color'] ?? '#818cf8';
+                                             $imgBr = (float)($layer['border_radius'] ?? 0);
+                                             $imgFit = $layer['object_fit'] ?? 'contain';
+                                             $imgOpacity = max(0, min(100, (float)($layer['opacity'] ?? 100))) / 100;
+                                             $imgRadiusStyle = ($imgBr >= 999) ? '50%' : ($imgBr . 'px');
+                                             $imgSrc = !empty($layer['image_path']) ? asset('storage/' . $layer['image_path']) : null;
+                                         @endphp
+                                         <div style="width: 100%; height: 100%; border-radius: {{ $imgRadiusStyle }}; border: {{ $imgBw }}px solid {{ $imgBc }}; opacity: {{ $imgOpacity }}; overflow: hidden; display: flex; align-items: center; justify-content: center; box-sizing: border-box; background: {{ $isSelected ? 'rgba(99, 102, 241, 0.15)' : 'transparent' }};">
+                                             @if($imgSrc)
+                                                 <img src="{{ $imgSrc }}" alt="{{ $layer['label'] ?? 'Custom Image' }}" style="width: 100%; height: 100%; object-fit: {{ $imgFit }};" />
+                                             @else
+                                                 <div style="font-size: 10px; font-weight: bold; color: #94a3b8;">[No Image]</div>
+                                             @endif
+                                         </div>
+
                                     @elseif($type === 'shape')
                                         @php
                                             $shapeOpacity = max(0, min(100, (float)($layer['opacity'] ?? 100))) / 100;
@@ -2658,6 +2713,10 @@ new class extends Component {
                             <button type="button" wire:click="addTextLayer" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-md shadow-indigo-600/20">
                                 + Text
                             </button>
+                            <label class="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-md shadow-amber-600/20 cursor-pointer">
+                                <span>+ Image</span>
+                                <input type="file" wire:model.live="uploadedImage" accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml" class="hidden">
+                            </label>
                             <button type="button" wire:click="addQrLayer" class="px-2.5 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-md shadow-violet-600/20">
                                 + QR Code
                             </button>
@@ -2965,6 +3024,58 @@ new class extends Component {
                                     <div class="flex items-center justify-between pt-1">
                                         <label class="text-xs font-bold text-slate-700">Display Text Value below Barcode</label>
                                         <input type="checkbox" wire:key="check-barcode-showtext-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.show_text" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- Image / Custom Upload Specific Controls -->
+                            @if(($selectedLayer['type'] ?? '') === 'image')
+                                <div class="space-y-4 pt-2 border-t border-slate-100">
+                                    <span class="text-xs font-extrabold text-amber-700 block">Custom Uploaded Image Settings:</span>
+
+                                    <!-- Replace Image File Button -->
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-500 mb-1">Replace Image File (JPG, PNG, WEBP, SVG)</label>
+                                        <input type="file" wire:key="input-img-file-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="uploadedImage" accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml" class="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-50 file:text-amber-800 hover:file:bg-amber-100 cursor-pointer">
+                                        <div wire:loading wire:target="uploadedImage" class="text-[10px] text-amber-600 font-bold mt-1">Uploading image...</div>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-500 mb-1">Object Fit Mode</label>
+                                            <select wire:key="select-fit-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.object_fit" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600">
+                                                <option value="contain">Contain (Keep Aspect)</option>
+                                                <option value="cover">Cover (Fill & Crop)</option>
+                                                <option value="fill">Fill (Stretch)</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-500 mb-1">Corner Radius (px)</label>
+                                            <input type="number" min="0" max="999" wire:key="input-img-bradius-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.border_radius" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600">
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-500 mb-1">Border Width (px)</label>
+                                            <input type="number" min="0" max="30" wire:key="input-img-bwidth-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.border_width" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-500 mb-1">Border Color</label>
+                                            <div class="flex items-center space-x-2">
+                                                <input type="color" wire:key="input-img-bcolor-picker-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.border_color" class="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer shadow-sm">
+                                                <input type="text" wire:key="input-img-bcolor-text-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.border_color" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600 uppercase">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div class="flex justify-between items-center mb-1">
+                                            <label class="text-[11px] font-bold text-slate-500">Opacity (%)</label>
+                                            <span class="text-xs font-mono font-bold text-indigo-600">{{ $selectedLayer['opacity'] ?? 100 }}%</span>
+                                        </div>
+                                        <input type="range" min="0" max="100" wire:key="input-img-opacity-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.opacity" class="w-full accent-indigo-600">
                                     </div>
                                 </div>
                             @endif

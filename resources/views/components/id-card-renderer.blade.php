@@ -392,6 +392,25 @@
                     @endif
                 </div>
 
+            @elseif($type === 'image')
+                @php
+                    $imgBw = (float)($layer['border_width'] ?? 0);
+                    $imgBc = $layer['border_color'] ?? '#818cf8';
+                    $imgBr = (float)($layer['border_radius'] ?? 0);
+                    $imgFit = $layer['object_fit'] ?? 'contain';
+                    $imgOpacity = max(0, min(100, (float)($layer['opacity'] ?? 100))) / 100;
+                    $imgRadiusStyle = ($imgBr >= 999) ? '50%' : ($imgBr . 'px');
+                    $imgStyle = $style . " width: {$w}px; height: {$h}px; border-radius: {$imgRadiusStyle}; border: {$imgBw}px solid {$imgBc}; opacity: {$imgOpacity}; overflow: hidden; display: flex; align-items: center; justify-content: center; box-sizing: border-box;";
+                    $imgSrc = !empty($layer['image_path']) ? asset('storage/' . $layer['image_path']) : null;
+                @endphp
+                <div style="{{ $imgStyle }}">
+                    @if($imgSrc)
+                        <img src="{{ $imgSrc }}" alt="{{ $layer['label'] ?? 'Custom Image' }}" style="width: 100%; height: 100%; object-fit: {{ $imgFit }};" />
+                    @else
+                        <div style="font-size: 10px; font-weight: bold; color: #94a3b8;">[No Image]</div>
+                    @endif
+                </div>
+
             @elseif($type === 'shape')
                 @php
                     $shapeW = max(1, (float)($layer['width'] ?? 120));
