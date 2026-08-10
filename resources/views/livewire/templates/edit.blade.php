@@ -2466,7 +2466,7 @@ new class extends Component {
                             <p class="text-[11px] text-slate-500 font-medium">Add, reorder, or select elements on your ID card</p>
                         </div>
                         <div class="flex items-center space-x-1.5">
-                            <button type="button" wire:click="addTextLayer" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-md shadow-indigo-600/20">
+                            <button type="button" wire:click="addTextLayer" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-md shadow-indigo-600/20">
                                 + Text
                             </button>
                             <div class="relative" x-data="{ shapeMenuOpen: false }" @click.outside="shapeMenuOpen = false">
