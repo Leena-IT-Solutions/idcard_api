@@ -2087,7 +2087,7 @@ new class extends Component {
     </div>
 
     <!-- Main Workspace Split -->
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start w-full">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch w-full">
         <!-- Left: Interactive Canva Canvas Studio Workbench & Variable Tags (7 Cols) -->
         <div class="md:col-span-6 lg:col-span-7 min-w-0 space-y-5">
             <!-- Studio Canvas Viewport Box -->
@@ -2416,8 +2416,8 @@ new class extends Component {
         </div>
 
         <!-- Right: Canva Studio Tabbed Inspector Panel (5 Cols) -->
-        <div class="md:col-span-6 lg:col-span-5 min-w-0 space-y-4">
-            <div class="bg-white border border-slate-200/80 rounded-3xl shadow-xl shadow-slate-200/40 p-5 space-y-4">
+        <div class="md:col-span-6 lg:col-span-5 min-w-0 flex flex-col h-full space-y-4">
+            <div class="bg-white border border-slate-200/80 rounded-3xl shadow-xl shadow-slate-200/40 p-5 space-y-4 flex-1 flex flex-col min-h-[620px]">
                 
                 <!-- Tab Navigation Segmented Bar -->
                 <div class="flex items-center bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/80 gap-1">
@@ -2459,7 +2459,7 @@ new class extends Component {
                 </div>
 
                 <!-- TAB 1: Templates Layers & Assets -->
-                <div x-show="activeInspectorTab === 'layers'" x-transition:enter="transition ease-out duration-150 transform opacity-0 scale-95" class="space-y-4">
+                <div x-show="activeInspectorTab === 'layers'" x-transition:enter="transition ease-out duration-150 transform opacity-0 scale-95" class="space-y-4 flex-1 flex flex-col">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                         <div>
                             <h3 class="text-sm font-black text-slate-900">Template Layers & Assets</h3>
@@ -2498,7 +2498,7 @@ new class extends Component {
                     </div>
 
                     <!-- Layer List Cards -->
-                    <div class="space-y-2 max-h-[460px] overflow-y-auto pr-1">
+                    <div class="space-y-2 flex-1 min-h-[480px] max-h-[640px] overflow-y-auto pr-1">
                         @foreach($layers as $idx => $layer)
                             @php
                                 $isSelectedInList = in_array($idx, $selectedLayerIndices);
