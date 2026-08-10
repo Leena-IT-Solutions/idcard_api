@@ -1069,8 +1069,11 @@ new class extends Component {
 
                 // Layer elements stop propagation on their own mousedown, so reaching here
                 // means the click landed on empty canvas space - deselect the current layer(s).
+                // Goes through the Alpine selectLayer() wrapper (not $wire directly) so the
+                // local selectedIndices array clears immediately too - that's what actually
+                // drives the selection ring/resize-handle visibility via isLayerSelected().
                 if (e.button === 0) {
-                    this.$wire.selectLayer(null);
+                    this.selectLayer(null);
                 }
             },
             onViewportMouseMove(e) {
