@@ -198,27 +198,6 @@ new class extends Component {
         $this->saveStudioDesign();
     }
 
-    public function updateLayerCoordinates(int $index, int $x, int $y)
-    {
-        $this->recordHistory();
-        if (isset($this->layers[$index])) {
-            $this->layers[$index]['x'] = $x;
-            $this->layers[$index]['y'] = $y;
-        }
-    }
-
-    public function updateLayerDimensions(int $index, int $width, int $height, int $fontSize, int $x, int $y)
-    {
-        $this->recordHistory();
-        if (isset($this->layers[$index])) {
-            $this->layers[$index]['x'] = $x;
-            $this->layers[$index]['y'] = $y;
-            if ($width > 0) $this->layers[$index]['width'] = $width;
-            if ($height > 0) $this->layers[$index]['height'] = $height;
-            if ($fontSize > 0) $this->layers[$index]['font_size'] = $fontSize;
-        }
-    }
-
     public function updateMultipleLayersCoordinates(array $updates)
     {
         $this->recordHistory();
@@ -881,6 +860,7 @@ new class extends Component {
 
     public function updateLayerCoordinates($index, $x = 0, $y = 0)
     {
+        $this->recordHistory();
         $idx = (int)($index ?? -1);
         if ($idx >= 0 && isset($this->layers[$idx])) {
             $this->layers[$idx]['x'] = max(0, (int)round((float)($x ?? 0)));
@@ -890,6 +870,7 @@ new class extends Component {
 
     public function updateLayerDimensions($index, $width = null, $height = null, $fontSize = null, $x = null, $y = null)
     {
+        $this->recordHistory();
         $idx = (int)($index ?? -1);
         if ($idx >= 0 && isset($this->layers[$idx])) {
             if ($x !== null) $this->layers[$idx]['x'] = max(0, (int)round((float)$x));
