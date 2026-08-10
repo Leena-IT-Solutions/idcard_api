@@ -219,7 +219,7 @@
                 $h = $layer['height'] ?? 'auto';
                 $rot = $layer['rotation'] ?? 0;
 
-                $style = "position: absolute; left: {$x}px; top: {$y}px; transform: rotate({$rot}deg); transform-origin: top left; z-index: 10;";
+                $style = "position: absolute; left: {$x}px; top: {$y}px; transform: rotate({$rot}deg); transform-origin: center center; z-index: 10;";
             @endphp
 
             @if($type === 'text')
@@ -293,6 +293,17 @@
                         <rect x="3" y="14" width="7" height="7" rx="1" fill="#0f172a" />
                         <path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 18h3v3h-3z" fill="#0f172a" />
                     </svg>
+                </div>
+
+            @elseif($type === 'shape')
+                @php
+                    $shapeW = max(1, (float)($layer['width'] ?? 120));
+                    $shapeH = max(1, (float)($layer['height'] ?? 60));
+                    $shapeOpacity = max(0, min(100, (float)($layer['opacity'] ?? 100))) / 100;
+                    $shapeStyle = $style . " width: {$shapeW}px; height: {$shapeH}px; opacity: {$shapeOpacity};";
+                @endphp
+                <div style="{{ $shapeStyle }}">
+                    @include('components.shape-svg', ['layer' => $layer])
                 </div>
             @endif
         @endforeach

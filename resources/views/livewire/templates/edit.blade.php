@@ -439,6 +439,116 @@ new class extends Component {
         $this->selectLayer($newIndex, false);
     }
 
+    private function shapeDefaults(string $shapeType): array
+    {
+        $shapeType = in_array($shapeType, ['rectangle', 'circle', 'line']) ? $shapeType : 'rectangle';
+
+        $shared = [
+            'type' => 'shape',
+            'shape_type' => $shapeType,
+            'width' => 120,
+            'height' => 60,
+            'rotation' => 0,
+            'fill_type' => 'solid',
+            'fill_color' => '#4f46e5',
+            'fill_opacity' => 100,
+            'stroke_color' => '#312e81',
+            'stroke_width' => 2,
+            'stroke_style' => 'solid',
+            'stroke_alignment' => 'center',
+            'opacity' => 100,
+            'group_id' => null,
+        ];
+
+        return match ($shapeType) {
+            'circle' => array_merge($shared, [
+                'label' => 'Circle Shape',
+                'width' => 90,
+                'height' => 90,
+                'aspect_locked' => true,
+            ]),
+            'line' => array_merge($shared, [
+                'label' => 'Line Divider',
+                'width' => 140,
+                'height' => 20,
+                'stroke_width' => 3,
+                'fill_type' => 'none',
+            ]),
+            default => array_merge($shared, [
+                'label' => 'Rectangle Shape',
+                'corner_radius' => 8,
+                'corner_radius_pill' => false,
+            ]),
+        };
+    }
+
+    public function addShapeLayer(string $shapeType = 'rectangle')
+    {
+        $this->recordHistory();
+        $newIndex = count($this->layers);
+
+        // Find last shape layer of the same shape_type to copy its styling settings
+        $lastShapeLayer = null;
+        for ($i = count($this->layers) - 1; $i >= 0; $i--) {
+            if (($this->layers[$i]['type'] ?? null) === 'shape' && ($this->layers[$i]['shape_type'] ?? null) === $shapeType) {
+                $lastShapeLayer = $this->layers[$i];
+                break;
+            }
+        }
+
+        $defaults = $this->shapeDefaults($shapeType);
+
+        if ($lastShapeLayer) {
+            foreach (array_keys($defaults) as $prop) {
+                if (in_array($prop, ['type', 'shape_type', 'label'], true)) continue;
+                if (array_key_exists($prop, $lastShapeLayer)) {
+                    $defaults[$prop] = $lastShapeLayer[$prop];
+                }
+            }
+        }
+
+        $x = $lastShapeLayer ? (($lastShapeLayer['x'] ?? 100) + 15) : 100;
+        $y = $lastShapeLayer ? (($lastShapeLayer['y'] ?? 100) + 15) : 100;
+
+        $this->layers[] = array_merge($defaults, [
+            'id' => 'shape_' . microtime(true) . '_' . rand(1000, 9999),
+            'x' => $x,
+            'y' => $y,
+        ]);
+        $this->selectLayer($newIndex, false);
+    }
+
+    public function updateShapeProperty(string $property, $value)
+    {
+        if (empty($this->selectedLayerIndices)) return;
+        $this->recordHistory();
+
+        foreach ($this->selectedLayerIndices as $idx) {
+            if (!isset($this->layers[$idx]) || ($this->layers[$idx]['type'] ?? null) !== 'shape') continue;
+            $shapeType = $this->layers[$idx]['shape_type'] ?? 'rectangle';
+            $this->layers[$idx][$property] = $this->sanitizeShapeProperty($property, $value, $shapeType, $this->layers[$idx]);
+        }
+    }
+
+    private function sanitizeShapeProperty(string $property, $value, string $shapeType, array $layer)
+    {
+        $hexColor = function ($v, $default) {
+            return is_string($v) && preg_match('/^#[0-9a-fA-F]{3,8}$/', $v) ? $v : $default;
+        };
+
+        return match ($property) {
+            'fill_color', 'stroke_color' => $hexColor($value, $layer[$property] ?? '#000000'),
+            'fill_opacity', 'opacity' => max(0, min(100, (int)round((float)$value))),
+            'stroke_width' => max(0, min(40, (int)round((float)$value))),
+            'corner_radius' => max(0, min((int)round((float)$value), (int)(min($layer['width'] ?? 999, $layer['height'] ?? 999) / 2))),
+            'fill_type' => in_array($value, ['solid', 'gradient', 'none'], true) ? $value : 'solid',
+            'stroke_style' => in_array($value, ['solid', 'dashed', 'dotted'], true) ? $value : 'solid',
+            'stroke_alignment' => 'center', // only 'center' is supported until Phase 3 (viewBox padding math for inside/outside)
+            'corner_radius_pill', 'aspect_locked' => (bool)$value,
+            default => $value,
+        };
+    }
+
     public function removeLayer(int $index)
     {
         $this->recordHistory();
@@ -2062,7 +2172,7 @@ new class extends Component {
                                 data-layer-index="{{ $idx }}"
                                 data-layer-type="{{ $type }}"
                                 class="absolute cursor-move select-none transition-shadow group {{ $isSelected ? 'ring-2 ring-indigo-500 ring-offset-1 ring-offset-slate-900 z-30' : 'hover:ring-1 hover:ring-indigo-400/50 z-10' }}"
-                                style="left: {{ $x }}px; top: {{ $y }}px; transform: rotate({{ $rot }}deg); transform-origin: top left;"
+                                style="left: {{ $x }}px; top: {{ $y }}px; transform: rotate({{ $rot }}deg); transform-origin: center center;"
                             >
                                 <div data-layer-content style="width: {{ ($type === 'text') ? (!empty($layer['width']) ? ($layer['width'] . 'px') : 'max-content') : ($w . 'px') }}; height: {{ ($type === 'text') ? 'max-content' : ($h . 'px') }}; max-width: 100%;">
                                     @if($type === 'text')
@@ -2140,6 +2250,14 @@ new class extends Component {
                                                 <rect x="3" y="14" width="7" height="7" rx="1"/>
                                                 <path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 18h3v3h-3z"/>
                                             </svg>
+                                        </div>
+
+                                    @elseif($type === 'shape')
+                                        @php
+                                            $shapeOpacity = max(0, min(100, (float)($layer['opacity'] ?? 100))) / 100;
+                                        @endphp
+                                        <div style="width: 100%; height: 100%; opacity: {{ $shapeOpacity }};">
+                                            @include('components.shape-svg', ['layer' => $layer])
                                         </div>
                                     @endif
                                 </div>
@@ -2575,7 +2693,7 @@ new class extends Component {
                             </div>
                         </div>
  
-                        @if(in_array($selectedLayer['type'] ?? '', ['photo', 'logo', 'qr', 'text']))
+                        @if(in_array($selectedLayer['type'] ?? '', ['photo', 'logo', 'qr', 'text', 'shape']))
                             <div class="grid grid-cols-2 gap-3 pt-1">
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-400 mb-1">
@@ -2768,6 +2886,78 @@ new class extends Component {
                         </div>
                     @endif
 
+                    <!-- Shape Specific Fill, Stroke & Geometry Controls -->
+                    @if(($selectedLayer['type'] ?? '') === 'shape')
+                        @php $shapeType = $selectedLayer['shape_type'] ?? 'rectangle'; @endphp
+                        <div class="space-y-3 pt-2">
+                            @if($shapeType !== 'line')
+                                <div>
+                                    <label class="block text-[11px] font-bold text-indigo-400 mb-1">Fill</label>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <select wire:key="select-fill-type-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:change="updateShapeProperty('fill_type', $event.target.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                            <option value="solid" {{ ($selectedLayer['fill_type'] ?? 'solid') === 'solid' ? 'selected' : '' }}>Solid</option>
+                                            <option value="none" {{ ($selectedLayer['fill_type'] ?? 'solid') === 'none' ? 'selected' : '' }}>None (Outline only)</option>
+                                        </select>
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-400 mb-1">Opacity</label>
+                                            <input type="range" min="0" max="100" wire:key="range-fill-opacity-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" value="{{ $selectedLayer['fill_opacity'] ?? 100 }}" @change="$wire.updateShapeProperty('fill_opacity', parseInt($event.target.value))" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 mt-2.5">
+                                        </div>
+                                    </div>
+                                </div>
+                                @if(($selectedLayer['fill_type'] ?? 'solid') !== 'none')
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-400 mb-1">Fill Color (Hex)</label>
+                                        <div class="flex items-center space-x-2">
+                                            <input type="color" wire:key="input-fill-picker-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" value="{{ $selectedLayer['fill_color'] ?? '#4f46e5' }}" @change="$wire.updateShapeProperty('fill_color', $event.target.value)" class="w-8 h-8 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer">
+                                            <input type="text" wire:key="input-fill-text-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" value="{{ $selectedLayer['fill_color'] ?? '#4f46e5' }}" @change="$wire.updateShapeProperty('fill_color', $event.target.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 uppercase">
+                                        </div>
+                                    </div>
+                                @endif
+                            @endif
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-indigo-400 mb-1">Stroke Color (Hex)</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="color" wire:key="input-stroke-picker-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" value="{{ $selectedLayer['stroke_color'] ?? '#312e81' }}" @change="$wire.updateShapeProperty('stroke_color', $event.target.value)" class="w-8 h-8 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer">
+                                    <input type="text" wire:key="input-stroke-text-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" value="{{ $selectedLayer['stroke_color'] ?? '#312e81' }}" @change="$wire.updateShapeProperty('stroke_color', $event.target.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 uppercase">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Stroke Width (px)</label>
+                                    <input type="number" min="0" max="40" wire:key="input-stroke-width-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" value="{{ $selectedLayer['stroke_width'] ?? 0 }}" @change="$wire.updateShapeProperty('stroke_width', parseInt($event.target.value) || 0)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Stroke Style</label>
+                                    <select wire:key="select-stroke-style-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:change="updateShapeProperty('stroke_style', $event.target.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                        <option value="solid" {{ ($selectedLayer['stroke_style'] ?? 'solid') === 'solid' ? 'selected' : '' }}>Solid</option>
+                                        <option value="dashed" {{ ($selectedLayer['stroke_style'] ?? 'solid') === 'dashed' ? 'selected' : '' }}>Dashed</option>
+                                        <option value="dotted" {{ ($selectedLayer['stroke_style'] ?? 'solid') === 'dotted' ? 'selected' : '' }}>Dotted</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            @if($shapeType === 'rectangle')
+                                <div class="grid grid-cols-2 gap-3 items-end">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-400 mb-1">Corner Radius (px)</label>
+                                        <input type="number" min="0" max="500" wire:key="input-corner-radius-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" value="{{ $selectedLayer['corner_radius'] ?? 0 }}" @change="$wire.updateShapeProperty('corner_radius', parseInt($event.target.value) || 0)" {{ !empty($selectedLayer['corner_radius_pill']) ? 'disabled' : '' }} class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 disabled:opacity-40">
+                                    </div>
+                                    <label class="flex items-center space-x-2 pb-2 cursor-pointer">
+                                        <input type="checkbox" wire:key="check-pill-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" {{ !empty($selectedLayer['corner_radius_pill']) ? 'checked' : '' }} @change="$wire.updateShapeProperty('corner_radius_pill', $event.target.checked)" class="rounded border-slate-700 bg-slate-950 text-indigo-600 focus:ring-indigo-500">
+                                        <span class="text-[11px] font-bold text-slate-400">Pill Shape</span>
+                                    </label>
+                                </div>
+                            @endif
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Layer Opacity</label>
+                                <input type="range" min="0" max="100" wire:key="range-opacity-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" value="{{ $selectedLayer['opacity'] ?? 100 }}" @change="$wire.updateShapeProperty('opacity', parseInt($event.target.value))" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+                            </div>
+                        </div>
+                    @endif
+
                     <!-- Photo Specific Shape & Frame Formatting Controls -->
                     @if(($selectedLayer['type'] ?? '') === 'photo')
                         <div class="space-y-3 pt-2">
@@ -2877,6 +3067,25 @@ new class extends Component {
                         <button type="button" wire:click="addLogoLayer" class="px-2.5 py-1.5 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 rounded-xl text-xs font-bold transition flex items-center border border-indigo-500/30">
                             + Logo
                         </button>
+                        <div class="relative" x-data="{ shapeMenuOpen: false }" @click.outside="shapeMenuOpen = false">
+                            <button type="button" @click="shapeMenuOpen = !shapeMenuOpen" class="px-2.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 rounded-xl text-xs font-bold transition flex items-center border border-emerald-500/30">
+                                + Shape
+                            </button>
+                            <div x-show="shapeMenuOpen" @click="shapeMenuOpen = false" class="absolute right-0 mt-1.5 w-36 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden py-1">
+                                <button type="button" wire:click="addShapeLayer('rectangle')" class="w-full text-left px-3 py-2 text-xs font-bold text-slate-200 hover:bg-slate-800 flex items-center space-x-2">
+                                    <span class="w-3 h-3 rounded-sm bg-indigo-400 inline-block"></span>
+                                    <span>Rectangle</span>
+                                </button>
+                                <button type="button" wire:click="addShapeLayer('circle')" class="w-full text-left px-3 py-2 text-xs font-bold text-slate-200 hover:bg-slate-800 flex items-center space-x-2">
+                                    <span class="w-3 h-3 rounded-full bg-indigo-400 inline-block"></span>
+                                    <span>Circle</span>
+                                </button>
+                                <button type="button" wire:click="addShapeLayer('line')" class="w-full text-left px-3 py-2 text-xs font-bold text-slate-200 hover:bg-slate-800 flex items-center space-x-2">
+                                    <span class="w-3 h-0.5 bg-indigo-400 inline-block"></span>
+                                    <span>Line</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -2889,7 +3098,7 @@ new class extends Component {
                         >
                             <div class="flex items-center space-x-3">
                                 <span class="text-[10px] font-black uppercase tracking-wider text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md">
-                                    {{ $layer['type'] ?? 'layer' }}
+                                    {{ ($layer['type'] ?? 'layer') === 'shape' ? ($layer['shape_type'] ?? 'shape') : ($layer['type'] ?? 'layer') }}
                                 </span>
                                 <div>
                                     <span class="text-xs font-bold block">{{ $layer['label'] ?? 'Layer #' . ($idx + 1) }}</span>
