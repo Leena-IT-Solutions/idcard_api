@@ -2304,14 +2304,50 @@ new class extends Component {
                                         @endif
 
                                     @elseif($type === 'qr')
-                                        <div style="width: 100%; height: 100%; background: white; padding: 4px; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
-                                            <svg viewBox="0 0 24 24" style="width: 100%; height: 100%;" fill="#0f172a">
-                                                <rect x="3" y="3" width="7" height="7" rx="1"/>
-                                                <rect x="14" y="3" width="7" height="7" rx="1"/>
-                                                <rect x="3" y="14" width="7" height="7" rx="1"/>
-                                                <path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 18h3v3h-3z"/>
-                                            </svg>
-                                        </div>
+                                         @php
+                                             $rawQrValue = !empty($layer['value']) ? $layer['value'] : '{Ref No}';
+                                             $qrData = strtr($rawQrValue, [
+                                                 '{Student Photo}' => 'PHOTO',
+                                                 '{QR Code}' => 'QR',
+                                                 '{First Name}' => 'Aaditya',
+                                                 '{Middle Name}' => 'Sunil',
+                                                 '{Last Name}' => 'Thakur',
+                                                 '{Roll No}' => '102',
+                                                 '{Ref No}' => 'REF-2026-0891',
+                                                 '{Campaign}' => 'iCard 2026-27',
+                                                 '{Standard}' => 'Grade V',
+                                                 '{Division}' => 'Div A',
+                                                 'Grade ({grade}) Div ({division})' => 'Grade V - A',
+                                                 '{Blood Group}' => 'B+',
+                                                 '{Gender}' => 'Male',
+                                                 '{DOB}' => '2017-05-12',
+                                                 '{Contact Number}' => '9876543210',
+                                                 '{Address}' => 'Samarth Nagar, Pune',
+                                                 '{Pincode}' => '411001',
+                                                 '{School Name}' => ($activeSchool->name ?? 'Sarvodya Vidyalay'),
+                                                 '{School Code}' => ($activeSchool->school_code ?? 'SV-2026'),
+                                                 '{Registration Code}' => ($activeSchool->school_code ?? 'SV-2026'),
+                                                 '{Principal Name}' => ($activeSchool->principal_name ?? 'Dr. R. K. Sharma'),
+                                                 '{School Contact}' => ($activeSchool->contact_number ?? '9820198201'),
+                                                 '{School Email}' => ($activeSchool->email ?? 'info@sarvodya.edu.in'),
+                                                 '{School Website}' => ($activeSchool->website ?? 'www.sarvodya.edu.in'),
+                                                 '{School Address}' => ($activeSchool->address ?? 'Station Road, Mumbai'),
+                                             ]);
+                                             if (empty(trim($qrData))) {
+                                                 $qrData = 'REF-2026-0891';
+                                             }
+                                             $qrW = max(20, (int)($layer['width'] ?? 60));
+                                             $qrH = max(20, (int)($layer['height'] ?? 60));
+                                             $qrSize = min($qrW, $qrH);
+                                             try {
+                                                 $qrSvg = str_replace('<?xml version="1.0" encoding="UTF-8"?>', '', (string)\SimpleSoftwareIO\QrCode\Facades\QrCode::size($qrSize)->margin(1)->generate($qrData));
+                                             } catch (\Throwable $e) {
+                                                 $qrSvg = '<svg viewBox="0 0 24 24" style="width: 100%; height: 100%;" fill="#0f172a"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 18h3v3h-3z"/></svg>';
+                                             }
+                                         @endphp
+                                         <div style="width: 100%; height: 100%; background: white; padding: 3px; border-radius: 6px; display: flex; align-items: center; justify-content: center; box-sizing: border-box; overflow: hidden;">
+                                             {!! $qrSvg !!}
+                                         </div>
 
                                     @elseif($type === 'shape')
                                         @php
