@@ -2442,8 +2442,8 @@ new class extends Component {
                                 data-layer-box
                                 data-layer-index="{{ $idx }}"
                                 data-layer-type="{{ $type }}"
-                                class="absolute cursor-move select-none transition-shadow group {{ $isSelected ? 'ring-2 ring-indigo-500 ring-offset-1 ring-offset-slate-900 z-30' : 'hover:ring-1 hover:ring-indigo-400/50 z-10' }}"
-                                style="left: {{ $x }}px; top: {{ $y }}px; transform: rotate({{ $rot }}deg); transform-origin: center center;"
+                                class="absolute cursor-move select-none transition-shadow group {{ $isSelected ? 'ring-2 ring-indigo-500 ring-offset-1 ring-offset-slate-900' : 'hover:ring-1 hover:ring-indigo-400/50' }}"
+                                style="left: {{ $x }}px; top: {{ $y }}px; transform: rotate({{ $rot }}deg); transform-origin: center center; z-index: {{ $idx + 10 }};"
                             >
                                 <div data-layer-content style="width: {{ ($type === 'text') ? (!empty($layer['width']) ? ($layer['width'] . 'px') : 'max-content') : ($w . 'px') }}; height: {{ ($type === 'text') ? 'max-content' : ($h . 'px') }}; max-width: 100%;">
                                     @if($type === 'text')
