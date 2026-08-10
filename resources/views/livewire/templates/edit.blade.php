@@ -202,11 +202,10 @@ new class extends Component {
     {
         $this->recordHistory();
         foreach ($updates as $update) {
-            $idx = $update['index'];
-            if (isset($this->layers[$idx])) {
-                $this->layers[$idx]['x'] = $update['x'];
-                $this->layers[$idx]['y'] = $update['y'];
-            }
+            $idx = $update['idx'] ?? null;
+            if ($idx === null || !isset($this->layers[$idx])) continue;
+            $this->layers[$idx]['x'] = $update['x'];
+            $this->layers[$idx]['y'] = $update['y'];
         }
     }
 
