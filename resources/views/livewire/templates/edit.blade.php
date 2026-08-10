@@ -2317,39 +2317,47 @@ new class extends Component {
                         </svg>
                     </button>
 
-                    <!-- 4 Direct Layer Order Buttons -->
-                    <div class="flex items-center space-x-1 pl-1 border-l border-slate-800">
+                    <!-- 4 Direct Layer Order Buttons (Bigger & High Contrast) -->
+                    <div class="flex items-center space-x-1.5 pl-2 border-l border-slate-800">
                         <button type="button" 
                             wire:click="moveLayer(null, 'front')" 
-                            title="Bring to Front"
+                            title="Bring to Front (Top Layer)"
                             @if($selectedLayerIndex === null) disabled @endif
-                            class="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white disabled:opacity-30 disabled:hover:bg-slate-900 disabled:hover:text-slate-300 transition text-xs font-bold"
+                            class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-indigo-600 border border-slate-700/80 text-white disabled:opacity-25 disabled:hover:bg-slate-800 transition flex items-center justify-center shadow-sm"
                         >
-                            <span>⏫</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 11l7-7 7 7M5 19l7-7 7 7"></path>
+                            </svg>
                         </button>
                         <button type="button" 
                             wire:click="moveLayer(null, 'up')" 
-                            title="Bring Forward"
+                            title="Bring Forward (1 Step Up)"
                             @if($selectedLayerIndex === null) disabled @endif
-                            class="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white disabled:opacity-30 disabled:hover:bg-slate-900 disabled:hover:text-slate-300 transition text-xs font-bold"
+                            class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-indigo-600 border border-slate-700/80 text-white disabled:opacity-25 disabled:hover:bg-slate-800 transition flex items-center justify-center shadow-sm"
                         >
-                            <span>🔼</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"></path>
+                            </svg>
                         </button>
                         <button type="button" 
                             wire:click="moveLayer(null, 'down')" 
-                            title="Send Backward"
+                            title="Send Backward (1 Step Down)"
                             @if($selectedLayerIndex === null) disabled @endif
-                            class="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white disabled:opacity-30 disabled:hover:bg-slate-900 disabled:hover:text-slate-300 transition text-xs font-bold"
+                            class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-indigo-600 border border-slate-700/80 text-white disabled:opacity-25 disabled:hover:bg-slate-800 transition flex items-center justify-center shadow-sm"
                         >
-                            <span>🔽</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
+                            </svg>
                         </button>
                         <button type="button" 
                             wire:click="moveLayer(null, 'back')" 
-                            title="Send to Back"
+                            title="Send to Back (Bottom Layer)"
                             @if($selectedLayerIndex === null) disabled @endif
-                            class="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white disabled:opacity-30 disabled:hover:bg-slate-900 disabled:hover:text-slate-300 transition text-xs font-bold"
+                            class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-indigo-600 border border-slate-700/80 text-white disabled:opacity-25 disabled:hover:bg-slate-800 transition flex items-center justify-center shadow-sm"
                         >
-                            <span>⏬</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 13l-7 7-7-7M19 5l-7 7-7-7"></path>
+                            </svg>
                         </button>
                     </div>
                 </div>
