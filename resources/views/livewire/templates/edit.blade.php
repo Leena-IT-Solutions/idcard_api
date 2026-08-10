@@ -2087,9 +2087,9 @@ new class extends Component {
     </div>
 
     <!-- Main Workspace Split -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">
-        <!-- Left: Interactive Canva Canvas Studio Workbench & Variable Tags (6/7 Cols) -->
-        <div class="lg:col-span-6 xl:col-span-7 space-y-5">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start w-full">
+        <!-- Left: Interactive Canva Canvas Studio Workbench & Variable Tags (7 Cols) -->
+        <div class="md:col-span-6 lg:col-span-7 min-w-0 space-y-5">
             <!-- Studio Canvas Viewport Box -->
             <div class="bg-[#0f172a] border border-slate-800 rounded-3xl p-5 flex flex-col items-center justify-center min-h-[620px] shadow-2xl relative overflow-hidden">
             <!-- Studio Canvas Header Info -->
@@ -2414,8 +2414,8 @@ new class extends Component {
             </div>
         </div>
 
-        <!-- Right: Canva Studio Tabbed Inspector Panel (6/5 Cols) -->
-        <div class="lg:col-span-6 xl:col-span-5 space-y-4">
+        <!-- Right: Canva Studio Tabbed Inspector Panel (5 Cols) -->
+        <div class="md:col-span-6 lg:col-span-5 min-w-0 space-y-4">
             <div class="bg-white border border-slate-200/80 rounded-3xl shadow-xl shadow-slate-200/40 p-5 space-y-4">
                 
                 <!-- Tab Navigation Segmented Bar -->
