@@ -2845,30 +2845,32 @@ new class extends Component {
 
                 <!-- TAB 1: Templates Layers & Assets -->
                 <div x-show="activeInspectorTab === 'layers'" x-transition:enter="transition ease-out duration-150 transform opacity-0 scale-95" class="space-y-4 flex-1 flex flex-col">
-                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div class="border-b border-slate-100 pb-3 space-y-2.5">
                         <div>
                             <h3 class="text-sm font-black text-slate-900">Template Layers & Assets</h3>
                             <p class="text-[11px] text-slate-500 font-medium">Add, reorder, or select elements on your ID card</p>
                         </div>
-                        <div class="flex items-center space-x-1.5">
-                            <button type="button" wire:click="addTextLayer" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-md shadow-indigo-600/20">
+
+                        <!-- Dedicated Quick Add Buttons Row -->
+                        <div class="flex items-center flex-wrap gap-2 pt-1">
+                            <button type="button" wire:click="addTextLayer" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-md shadow-indigo-600/20">
                                 + Text
                             </button>
-                            <label class="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-md shadow-amber-600/20 cursor-pointer">
+                            <label class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-md shadow-amber-600/20 cursor-pointer">
                                 <span>+ Image</span>
                                 <input type="file" wire:model.live="uploadedImage" accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml" class="hidden">
                             </label>
-                            <button type="button" wire:click="addQrLayer" class="px-2.5 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-md shadow-violet-600/20">
+                            <button type="button" wire:click="addQrLayer" class="px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-md shadow-violet-600/20">
                                 + QR Code
                             </button>
-                            <button type="button" wire:click="addBarcodeLayer" class="px-2.5 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-md shadow-cyan-600/20">
+                            <button type="button" wire:click="addBarcodeLayer" class="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-md shadow-cyan-600/20">
                                 + Barcode
                             </button>
                             <div class="relative" x-data="{ shapeMenuOpen: false }" @click.outside="shapeMenuOpen = false">
-                                <button type="button" @click="shapeMenuOpen = !shapeMenuOpen" class="px-2.5 py-1.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl text-xs font-bold transition flex items-center shadow-md shadow-emerald-600/20">
+                                <button type="button" @click="shapeMenuOpen = !shapeMenuOpen" class="px-3 py-1.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl text-xs font-bold transition flex items-center shadow-md shadow-emerald-600/20">
                                     + Shape ▾
                                 </button>
-                                <div x-show="shapeMenuOpen" @click="shapeMenuOpen = false" class="absolute right-0 mt-1.5 w-40 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden py-1">
+                                <div x-show="shapeMenuOpen" @click="shapeMenuOpen = false" class="absolute left-0 mt-1.5 w-40 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden py-1">
                                     <button type="button" wire:click="addShapeLayer('rectangle')" class="w-full text-left px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center space-x-2.5">
                                         <span class="w-3.5 h-3.5 rounded bg-indigo-500 inline-block shadow-sm"></span>
                                         <span>Rectangle Box</span>
