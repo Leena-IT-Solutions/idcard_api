@@ -1064,6 +1064,13 @@ new class extends Component {
                     this.panStartX = e.clientX - this.panOffsetX;
                     this.panStartY = e.clientY - this.panOffsetY;
                     e.preventDefault();
+                    return;
+                }
+
+                // Layer elements stop propagation on their own mousedown, so reaching here
+                // means the click landed on empty canvas space - deselect the current layer(s).
+                if (e.button === 0) {
+                    this.$wire.selectLayer(null);
                 }
             },
             onViewportMouseMove(e) {
