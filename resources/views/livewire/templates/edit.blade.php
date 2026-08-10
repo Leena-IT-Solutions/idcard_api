@@ -972,13 +972,6 @@ new class extends Component {
 
 <div class="space-y-6 notranslate" translate="no" x-data="templateStudio({{ $canvasW }}, {{ $canvasH }})">
 
-    @if(session()->has('message'))
-        <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-2xl flex items-center justify-between text-sm font-semibold">
-            <span>{{ session('message') }}</span>
-            <button type="button" onclick="this.parentElement.remove()" class="text-emerald-400 hover:text-white">&times;</button>
-        </div>
-    @endif
-
     @include('livewire.templates.partials.top-bar')
 
     <!-- Main Workspace Split Container (2 Columns: Workbench Left, Inspector Panel Right) -->
