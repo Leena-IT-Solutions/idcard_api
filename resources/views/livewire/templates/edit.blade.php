@@ -1038,6 +1038,7 @@ new class extends Component {
                 }
                 this.$wire.selectLayer(idx, shiftKey);
             },
+            isSelectingBox: false,
             boxStartX: 0,
             boxStartY: 0,
             boxRect: { left: 0, top: 0, width: 0, height: 0 },
@@ -1068,12 +1069,23 @@ new class extends Component {
                 }
 
                 // Layer elements stop propagation on their own mousedown, so reaching here
-                // means the click landed on empty canvas space - deselect the current layer(s).
+                // means the click landed on empty canvas space - deselect the current layer(s)
+                // and arm the drag-to-select marquee box in case this turns into a drag.
                 // Goes through the Alpine selectLayer() wrapper (not $wire directly) so the
                 // local selectedIndices array clears immediately too - that's what actually
                 // drives the selection ring/resize-handle visibility via isLayerSelected().
                 if (e.button === 0) {
                     this.selectLayer(null);
+
+                    const canvasEl = document.getElementById('canva-studio-canvas');
+                    if (canvasEl) {
+                        const rect = canvasEl.getBoundingClientRect();
+                        const zoomFactor = (parseFloat(this.zoomLevel) || 100) / 100;
+                        this.boxStartX = (e.clientX - rect.left) / zoomFactor;
+                        this.boxStartY = (e.clientY - rect.top) / zoomFactor;
+                        this.boxRect = { left: this.boxStartX, top: this.boxStartY, width: 0, height: 0 };
+                        this.isSelectingBox = true;
+                    }
                 }
             },
             onViewportMouseMove(e) {
@@ -1274,7 +1286,8 @@ new class extends Component {
                                 }
                             });
                             if (selectedIndices.length > 0) {
-                                this.$wire.selectMultipleLayers(selectedIndices);
+                                this.selectedIndices = selectedIndices;
+                                this.$wire.selectLayerBatch(selectedIndices);
                             }
                         }
                     }
