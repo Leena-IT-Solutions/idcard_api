@@ -2498,7 +2498,7 @@ new class extends Component {
                     </div>
 
                     <!-- Layer List Cards -->
-                    <div class="space-y-2 flex-1 min-h-[480px] max-h-[640px] overflow-y-auto pr-1">
+                    <div class="space-y-2 flex-1 overflow-y-auto pr-1 min-h-0">
                         @foreach($layers as $idx => $layer)
                             @php
                                 $isSelectedInList = in_array($idx, $selectedLayerIndices);
@@ -2525,7 +2525,7 @@ new class extends Component {
                 </div>
 
                 <!-- TAB 2: Element Controls -->
-                <div x-show="activeInspectorTab === 'controls'" x-transition:enter="transition ease-out duration-150 transform opacity-0 scale-95" class="space-y-4">
+                <div x-show="activeInspectorTab === 'controls'" x-transition:enter="transition ease-out duration-150 transform opacity-0 scale-95" class="space-y-4 flex-1 flex flex-col min-h-0">
                     <!-- Alignment & Layer Tools for Multiple Selections -->
                     @if(count($selectedLayerIndices) > 1)
                         <div wire:key="controls-panel-multi" class="space-y-4">
@@ -2938,7 +2938,7 @@ new class extends Component {
                 </div>
 
                 <!-- TAB 3: Background Graphic -->
-                <div x-show="activeInspectorTab === 'background'" x-transition:enter="transition ease-out duration-150 transform opacity-0 scale-95" class="space-y-4">
+                <div x-show="activeInspectorTab === 'background'" x-transition:enter="transition ease-out duration-150 transform opacity-0 scale-95" class="space-y-4 flex-1 flex flex-col min-h-0">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                         <div>
                             <h3 class="text-sm font-black text-slate-900">Background Graphic</h3>
