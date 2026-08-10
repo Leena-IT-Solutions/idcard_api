@@ -22,11 +22,13 @@
     </head>
     <body class="font-sans antialiased text-gray-900 bg-gray-100">
         <div class="min-h-screen bg-gray-100 flex flex-col lg:flex-row">
-            <!-- Sidebar Navigation -->
-            <livewire:layout.navigation />
+            @unless($hideSidebar ?? false)
+                <!-- Sidebar Navigation -->
+                <livewire:layout.navigation />
+            @endunless
 
             <!-- Main Content Area with offset for sidebar -->
-            <div class="flex-1 lg:ps-64 w-full pt-16 lg:pt-0">
+            <div class="flex-1 {{ ($hideSidebar ?? false) ? 'w-full' : 'lg:ps-64 w-full pt-16 lg:pt-0' }}">
                 <!-- Page Heading -->
                 @if (isset($header))
                     <header class="bg-white shadow border-b border-gray-200">
