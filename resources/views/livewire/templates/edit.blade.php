@@ -2444,8 +2444,25 @@ new class extends Component {
                                 data-layer-type="{{ $type }}"
                                 class="absolute cursor-move select-none transition-shadow group {{ $isSelected ? 'ring-2 ring-indigo-500 ring-offset-1 ring-offset-slate-900' : 'hover:ring-1 hover:ring-indigo-400/50' }}"
                                 style="left: {{ $x }}px; top: {{ $y }}px; transform: rotate({{ $rot }}deg); transform-origin: center center; z-index: {{ $idx + 10 }};"
-                            >
-                                <div data-layer-content style="width: {{ ($type === 'text') ? (!empty($layer['width']) ? ($layer['width'] . 'px') : 'max-content') : ($w . 'px') }}; height: {{ ($type === 'text') ? 'max-content' : ($h . 'px') }}; max-width: 100%;">
+                                @php
+                                    $layerOpacity = max(0, min(100, (float)($layer['opacity'] ?? 100))) / 100;
+                                    $layerFadeMode = $layer['fade_mode'] ?? 'none';
+                                    
+                                    $transStyle = "opacity: {$layerOpacity};";
+                                    
+                                    $maskGrad = match($layerFadeMode) {
+                                        'fade_bottom' => 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)',
+                                        'fade_top'    => 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)',
+                                        'fade_right'  => 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)',
+                                        'fade_left'   => 'linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)',
+                                        'radial'      => 'radial-gradient(circle, rgba(0,0,0,1) 20%, rgba(0,0,0,0) 100%)',
+                                        default       => null,
+                                    };
+                                    if ($maskGrad) {
+                                        $transStyle .= " -webkit-mask-image: {$maskGrad}; mask-image: {$maskGrad};";
+                                    }
+                                @endphp
+                                <div data-layer-content style="width: {{ ($type === 'text') ? (!empty($layer['width']) ? ($layer['width'] . 'px') : 'max-content') : ($w . 'px') }}; height: {{ ($type === 'text') ? 'max-content' : ($h . 'px') }}; max-width: 100%; {{ $transStyle }}">
                                     @if($type === 'text')
                                         @php
                                             $rawText = $layer['text'] ?? '';
@@ -3030,6 +3047,30 @@ new class extends Component {
                                     <button type="button" wire:click="alignSelectedLayer('top')" title="Align Top" class="p-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold flex justify-center">Top</button>
                                     <button type="button" wire:click="alignSelectedLayer('center_v')" title="Center Vertically" class="p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold flex justify-center">Center V</button>
                                     <button type="button" wire:click="alignSelectedLayer('bottom')" title="Align Bottom" class="p-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold flex justify-center">Bottom</button>
+                            <!-- Universal Transparency & Fade Effects Controls (ALL Layer Types) -->
+                            <div class="space-y-3 pt-2 border-t border-slate-100">
+                                <span class="text-xs font-black text-indigo-700 uppercase tracking-wider block">✨ Transparency & Fade Effects:</span>
+                                
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <div class="flex justify-between items-center mb-1">
+                                            <label class="text-[11px] font-bold text-slate-500">Overall Opacity</label>
+                                            <span class="text-xs font-mono font-bold text-indigo-600">{{ $selectedLayer['opacity'] ?? 100 }}%</span>
+                                        </div>
+                                        <input type="range" min="0" max="100" wire:key="universal-opacity-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.opacity" class="w-full accent-indigo-600">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-500 mb-1">Fade Gradient Mask</label>
+                                        <select wire:key="universal-fademode-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.fade_mode" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600">
+                                            <option value="none">Solid (No Fade)</option>
+                                            <option value="fade_bottom">Linear Fade ⬇️ (Top to Bottom)</option>
+                                            <option value="fade_top">Linear Fade ⬆️ (Bottom to Top)</option>
+                                            <option value="fade_right">Linear Fade ➡️ (Left to Right)</option>
+                                            <option value="fade_left">Linear Fade ⬅️ (Right to Left)</option>
+                                            <option value="radial">Radial Center Fade ⭕</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
 

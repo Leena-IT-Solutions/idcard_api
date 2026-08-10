@@ -210,7 +210,7 @@
                 <img src="{{ $bgUrl }}" style="{{ $bgStyle }}" alt="Card Background" />
             @endif
 
-        @foreach($config as $layer)
+        @foreach($config as $idx => $layer)
             @php
                 $type = $layer['type'] ?? 'text';
                 $x = $layer['x'] ?? 0;
@@ -219,7 +219,24 @@
                 $h = $layer['height'] ?? 'auto';
                 $rot = $layer['rotation'] ?? 0;
 
-                $style = "position: absolute; left: {$x}px; top: {$y}px; transform: rotate({$rot}deg); transform-origin: center center; z-index: 10;";
+                $layerOpacity = max(0, min(100, (float)($layer['opacity'] ?? 100))) / 100;
+                $layerFadeMode = $layer['fade_mode'] ?? 'none';
+                
+                $transStyle = "opacity: {$layerOpacity};";
+                
+                $maskGrad = match($layerFadeMode) {
+                    'fade_bottom' => 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)',
+                    'fade_top'    => 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)',
+                    'fade_right'  => 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)',
+                    'fade_left'   => 'linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)',
+                    'radial'      => 'radial-gradient(circle, rgba(0,0,0,1) 20%, rgba(0,0,0,0) 100%)',
+                    default       => null,
+                };
+                if ($maskGrad) {
+                    $transStyle .= " -webkit-mask-image: {$maskGrad}; mask-image: {$maskGrad};";
+                }
+
+                $style = "position: absolute; left: {$x}px; top: {$y}px; transform: rotate({$rot}deg); transform-origin: center center; z-index: " . ($idx + 10) . "; {$transStyle}";
             @endphp
 
             @if($type === 'text')
