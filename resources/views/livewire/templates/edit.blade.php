@@ -198,6 +198,27 @@ new class extends Component {
         $this->saveStudioDesign();
     }
 
+    public function updateLayerCoordinates(int $index, int $x, int $y)
+    {
+        $this->recordHistory();
+        if (isset($this->layers[$index])) {
+            $this->layers[$index]['x'] = $x;
+            $this->layers[$index]['y'] = $y;
+        }
+    }
+
+    public function updateLayerDimensions(int $index, int $width, int $height, int $fontSize, int $x, int $y)
+    {
+        $this->recordHistory();
+        if (isset($this->layers[$index])) {
+            $this->layers[$index]['x'] = $x;
+            $this->layers[$index]['y'] = $y;
+            if ($width > 0) $this->layers[$index]['width'] = $width;
+            if ($height > 0) $this->layers[$index]['height'] = $height;
+            if ($fontSize > 0) $this->layers[$index]['font_size'] = $fontSize;
+        }
+    }
+
     public function updateMultipleLayersCoordinates(array $updates)
     {
         $this->recordHistory();
@@ -1066,81 +1087,94 @@ new class extends Component {
                         const zoomFactor = (parseFloat(this.zoomLevel) || 100) / 100;
                         let dx = (e.clientX - this.startX) / zoomFactor;
                         let dy = (e.clientY - this.startY) / zoomFactor;
-                        let targetX = Math.round(this.origX + dx);
-                        let targetY = Math.round(this.origY + dy);
 
-                        if (this.$wire.enableSnapping) {
-                            const snapThreshold = 6;
-                            this.snapLines = { x: null, y: null };
-
-                            const canvasCenterX = canvasW / 2;
-                            const canvasCenterY = canvasH / 2;
-
-                            const layerW = this.curW || 150;
-                            const layerH = this.curH || 30;
-                            const layerCenterX = targetX + layerW / 2;
-                            const layerCenterY = targetY + layerH / 2;
-
-                            if (Math.abs(layerCenterX - canvasCenterX) < snapThreshold) {
-                                targetX = Math.round(canvasCenterX - layerW / 2);
-                                this.snapLines.x = canvasCenterX;
-                            }
-                            if (Math.abs(layerCenterY - canvasCenterY) < snapThreshold) {
-                                targetY = Math.round(canvasCenterY - layerH / 2);
-                                this.snapLines.y = canvasCenterY;
-                            }
-                        } else {
-                            this.snapLines = { x: null, y: null };
+                        if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+                            this.hasMoved = true;
                         }
 
-                        this.curX = targetX;
-                        this.curY = targetY;
+                        if (this.hasMoved) {
+                            let targetX = Math.round(this.origX + dx);
+                            let targetY = Math.round(this.origY + dy);
 
-                        const layerEl = document.querySelector('[data-layer-index="' + this.dragLayerIndex + '"]');
-                        if (layerEl) {
-                            layerEl.style.left = targetX + 'px';
-                            layerEl.style.top = targetY + 'px';
+                            if (this.$wire.enableSnapping) {
+                                const snapThreshold = 6;
+                                this.snapLines = { x: null, y: null };
+
+                                const canvasCenterX = canvasW / 2;
+                                const canvasCenterY = canvasH / 2;
+
+                                const layerW = this.curW || 150;
+                                const layerH = this.curH || 30;
+                                const layerCenterX = targetX + layerW / 2;
+                                const layerCenterY = targetY + layerH / 2;
+
+                                if (Math.abs(layerCenterX - canvasCenterX) < snapThreshold) {
+                                    targetX = Math.round(canvasCenterX - layerW / 2);
+                                    this.snapLines.x = canvasCenterX;
+                                }
+                                if (Math.abs(layerCenterY - canvasCenterY) < snapThreshold) {
+                                    targetY = Math.round(canvasCenterY - layerH / 2);
+                                    this.snapLines.y = canvasCenterY;
+                                }
+                            } else {
+                                this.snapLines = { x: null, y: null };
+                            }
+
+                            this.curX = targetX;
+                            this.curY = targetY;
+
+                            const layerEl = document.querySelector('[data-layer-index="' + this.dragLayerIndex + '"]');
+                            if (layerEl) {
+                                layerEl.style.left = targetX + 'px';
+                                layerEl.style.top = targetY + 'px';
+                            }
                         }
                     } else if (this.isResizing) {
                         const zoomFactor = (parseFloat(this.zoomLevel) || 100) / 100;
                         let dx = (e.clientX - this.startX) / zoomFactor;
                         let dy = (e.clientY - this.startY) / zoomFactor;
 
-                        let newW = this.origW;
-                        let newH = this.origH;
-                        let newX = this.origX;
-                        let newY = this.origY;
-
-                        const handle = this.resizeHandle;
-                        if (handle.includes('e')) newW = Math.max(10, this.origW + dx);
-                        if (handle.includes('s')) newH = Math.max(10, this.origH + dy);
-                        if (handle.includes('w')) {
-                            newW = Math.max(10, this.origW - dx);
-                            newX = this.origX + (this.origW - newW);
-                        }
-                        if (handle.includes('n')) {
-                            newH = Math.max(10, this.origH - dy);
-                            newY = this.origY + (this.origH - newH);
+                        if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+                            this.hasMoved = true;
                         }
 
-                        newW = Math.round(newW);
-                        newH = Math.round(newH);
-                        newX = Math.round(newX);
-                        newY = Math.round(newY);
+                        if (this.hasMoved) {
+                            let newW = this.origW;
+                            let newH = this.origH;
+                            let newX = this.origX;
+                            let newY = this.origY;
 
-                        this.curW = newW;
-                        this.curH = newH;
-                        this.curX = newX;
-                        this.curY = newY;
+                            const handle = this.resizeHandle;
+                            if (handle.includes('e')) newW = Math.max(10, this.origW + dx);
+                            if (handle.includes('s')) newH = Math.max(10, this.origH + dy);
+                            if (handle.includes('w')) {
+                                newW = Math.max(10, this.origW - dx);
+                                newX = this.origX + (this.origW - newW);
+                            }
+                            if (handle.includes('n')) {
+                                newH = Math.max(10, this.origH - dy);
+                                newY = this.origY + (this.origH - newH);
+                            }
 
-                        const layerEl = document.querySelector('[data-layer-index="' + this.dragLayerIndex + '"]');
-                        if (layerEl) {
-                            layerEl.style.left = newX + 'px';
-                            layerEl.style.top = newY + 'px';
-                            const contentEl = layerEl.querySelector('[data-layer-content]');
-                            if (contentEl) {
-                                contentEl.style.width = newW + 'px';
-                                contentEl.style.height = newH + 'px';
+                            newW = Math.round(newW);
+                            newH = Math.round(newH);
+                            newX = Math.round(newX);
+                            newY = Math.round(newY);
+
+                            this.curW = newW;
+                            this.curH = newH;
+                            this.curX = newX;
+                            this.curY = newY;
+
+                            const layerEl = document.querySelector('[data-layer-index="' + this.dragLayerIndex + '"]');
+                            if (layerEl) {
+                                layerEl.style.left = newX + 'px';
+                                layerEl.style.top = newY + 'px';
+                                const contentEl = layerEl.querySelector('[data-layer-content]');
+                                if (contentEl) {
+                                    contentEl.style.width = newW + 'px';
+                                    contentEl.style.height = newH + 'px';
+                                }
                             }
                         }
                     } else if (this.isSelectingBox) {
@@ -1160,16 +1194,30 @@ new class extends Component {
                         }
                     }
                 });
-                window.addEventListener('mouseup', () => {
+                window.addEventListener('mouseup', (e) => {
                     if (this.isDragging) {
+                        const idx = this.dragLayerIndex;
+                        const moved = this.hasMoved;
                         this.isDragging = false;
                         this.snapLines = { x: null, y: null };
-                        this.$wire.updateLayerCoordinates(this.dragLayerIndex, this.curX, this.curY);
+
+                        if (moved) {
+                            this.$wire.updateLayerCoordinates(idx, this.curX, this.curY);
+                        } else {
+                            this.$wire.selectLayer(idx, e ? e.shiftKey : false);
+                        }
                     }
                     if (this.isResizing) {
+                        const idx = this.dragLayerIndex;
+                        const moved = this.hasMoved;
                         this.isResizing = false;
                         this.snapLines = { x: null, y: null };
-                        this.$wire.updateLayerDimensions(this.dragLayerIndex, this.curW, this.curH, this.curFontSize, this.curX, this.curY);
+
+                        if (moved) {
+                            this.$wire.updateLayerDimensions(idx, this.curW, this.curH, this.curFontSize, this.curX, this.curY);
+                        } else {
+                            this.$wire.selectLayer(idx, e ? e.shiftKey : false);
+                        }
                     }
                     if (this.isSelectingBox) {
                         this.isSelectingBox = false;
@@ -1200,31 +1248,41 @@ new class extends Component {
             },
             startDrag(idx, e) {
                 if (this.activeTool === 'pan' || this.isSpacePressed) return;
+                const el = document.querySelector('[data-layer-index="' + idx + '"]');
+                if (!el) return;
+
                 this.isDragging = true;
                 this.dragLayerIndex = idx;
                 this.startX = e.clientX;
                 this.startY = e.clientY;
-                const layer = this.$wire.layers[idx] || {};
-                this.origX = layer.x || 0;
-                this.origY = layer.y || 0;
+                this.hasMoved = false;
+
+                const layer = (this.$wire.layers && this.$wire.layers[idx]) ? this.$wire.layers[idx] : {};
+                this.origX = (el.style.left !== '') ? parseInt(el.style.left) : (layer.x ?? 0);
+                this.origY = (el.style.top !== '') ? parseInt(el.style.top) : (layer.y ?? 0);
                 this.curX = this.origX;
                 this.curY = this.origY;
-                this.curW = layer.width || 150;
-                this.curH = layer.height || 30;
+                this.curW = layer.width || el.offsetWidth || 150;
+                this.curH = layer.height || el.offsetHeight || 30;
                 this.curFontSize = layer.font_size || 14;
             },
             startResize(idx, handle, e) {
                 if (this.activeTool === 'pan' || this.isSpacePressed) return;
+                const el = document.querySelector('[data-layer-index="' + idx + '"]');
+                if (!el) return;
+
                 this.isResizing = true;
                 this.dragLayerIndex = idx;
                 this.resizeHandle = handle;
                 this.startX = e.clientX;
                 this.startY = e.clientY;
-                const layer = this.$wire.layers[idx] || {};
-                this.origX = layer.x || 0;
-                this.origY = layer.y || 0;
-                this.origW = layer.width || 150;
-                this.origH = layer.height || 30;
+                this.hasMoved = false;
+
+                const layer = (this.$wire.layers && this.$wire.layers[idx]) ? this.$wire.layers[idx] : {};
+                this.origX = (el.style.left !== '') ? parseInt(el.style.left) : (layer.x ?? 0);
+                this.origY = (el.style.top !== '') ? parseInt(el.style.top) : (layer.y ?? 0);
+                this.origW = layer.width || el.offsetWidth || 150;
+                this.origH = layer.height || el.offsetHeight || 30;
                 this.curX = this.origX;
                 this.curY = this.origY;
                 this.curW = this.origW;
