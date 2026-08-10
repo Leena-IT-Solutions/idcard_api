@@ -2008,64 +2008,67 @@ new class extends Component {
         </div>
     @endif
 
-    <!-- Top Action Bar -->
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+    <!-- Top Action Bar (Pro Studio Header) -->
+    <div class="bg-white/90 backdrop-blur-xl border border-slate-200/80 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-sm">
         <div class="flex items-center space-x-4">
-            <a href="{{ route('templates') }}" class="p-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition flex items-center justify-center">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            <a href="{{ route('templates') }}" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition flex items-center justify-center border border-slate-200/60" title="Back to Templates">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                 </svg>
             </a>
             <div>
-                <div class="flex items-center space-x-2">
-                    <input type="text" wire:model.live="templateName" class="bg-transparent border-b border-slate-700 text-lg font-black text-white focus:outline-none focus:border-indigo-500">
-                    <span class="text-[10px] font-black text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                <div class="flex items-center space-x-2.5">
+                    <input type="text" wire:model.live="templateName" class="bg-transparent border-b border-dashed border-slate-300 hover:border-indigo-500 text-lg font-black text-slate-900 focus:outline-none focus:border-indigo-600 transition px-1 py-0.5" placeholder="Untitled Template">
+                    <span class="text-[10px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                         {{ strtoupper($type) }} • CR-80
                     </span>
                 </div>
-                <p class="text-xs text-slate-400 mt-0.5">Canva Studio • Drag layers, snap to guides, edit text & formatting</p>
+                <p class="text-xs text-slate-500 mt-0.5 font-medium flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                    <span>Canva Studio • Drag layers, snap to guides, edit text & shapes</span>
+                </p>
             </div>
         </div>
 
         <!-- Studio Quick Tools Bar -->
-        <div class="flex items-center space-x-3">
+        <div class="flex items-center space-x-2.5">
             <!-- Orientation Switcher -->
-            <div class="flex items-center bg-slate-950 border border-slate-800 p-1 rounded-xl">
-                <button type="button" wire:click="setOrientation('landscape')" title="Landscape Orientation (85.6mm x 54mm)" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center {{ $orientation === 'landscape' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white' }}">
+            <div class="flex items-center bg-slate-100 border border-slate-200/80 p-1 rounded-xl">
+                <button type="button" wire:click="setOrientation('landscape')" title="Landscape Orientation (85.6mm x 54mm)" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center {{ $orientation === 'landscape' ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30' : 'text-slate-600 hover:text-slate-900' }}">
                     <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 18h16"/></svg>
                     Landscape
                 </button>
-                <button type="button" wire:click="setOrientation('portrait')" title="Portrait Orientation (54mm x 85.6mm)" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center {{ $orientation === 'portrait' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white' }}">
+                <button type="button" wire:click="setOrientation('portrait')" title="Portrait Orientation (54mm x 85.6mm)" class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center {{ $orientation === 'portrait' ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30' : 'text-slate-600 hover:text-slate-900' }}">
                     <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 4v16M18 4v16"/></svg>
                     Portrait
                 </button>
             </div>
 
-            <button type="button" wire:click="$toggle('showGrid')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center {{ $showGrid ? 'bg-indigo-600/20 border border-indigo-500/30 text-indigo-400' : 'bg-slate-800 text-slate-400' }}">
-                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button type="button" wire:click="$toggle('showGrid')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center border {{ $showGrid ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100' }}">
+                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                 </svg>
                 Grid: {{ $showGrid ? 'ON' : 'OFF' }}
             </button>
 
-            <button type="button" wire:click="$toggle('enableSnapping')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center {{ $enableSnapping ? 'bg-indigo-600/20 border border-indigo-500/30 text-indigo-400' : 'bg-slate-800 text-slate-400' }}">
-                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+            <button type="button" wire:click="$toggle('enableSnapping')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center border {{ $enableSnapping ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100' }}">
+                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 022 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
                 </svg>
                 Snap: {{ $enableSnapping ? 'ON' : 'OFF' }}
             </button>
 
-            <button type="button" wire:click="$toggle('livePreviewMode')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center {{ $livePreviewMode ? 'bg-emerald-600/20 border border-emerald-500/30 text-emerald-400' : 'bg-slate-800 text-slate-400' }}">
-                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button type="button" wire:click="$toggle('livePreviewMode')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center border {{ $livePreviewMode ? 'bg-emerald-50 border-emerald-200 text-emerald-700 shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100' }}">
+                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                 </svg>
                 Preview: {{ $livePreviewMode ? 'Live Data' : 'Tags' }}
             </button>
 
-            <button type="button" wire:click="saveStudioDesign" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-indigo-600/25 flex items-center">
+            <button type="button" wire:click="saveStudioDesign" class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded-xl text-xs font-black transition shadow-lg shadow-indigo-600/25 flex items-center transform hover:-translate-y-0.5">
                 <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
                 </svg>
                 Save Design
             </button>
@@ -2073,21 +2076,21 @@ new class extends Component {
     </div>
 
     <!-- Main Workspace Split -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start w-full">
-        <!-- Left: Interactive Canva Canvas Studio (7 Cols) -->
-        <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center min-h-[620px] shadow-2xl relative overflow-hidden">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">
+        <!-- Left: Interactive Canva Canvas Studio Workbench (7 Cols) -->
+        <div class="lg:col-span-7 bg-[#0f172a] border border-slate-800 rounded-3xl p-5 flex flex-col items-center justify-center min-h-[620px] shadow-2xl relative overflow-hidden">
             <!-- Studio Canvas Header Info -->
-            <div class="w-full flex items-center justify-between mb-4 px-2">
+            <div class="w-full flex items-center justify-between mb-3 px-1">
                 <div class="flex items-center space-x-2">
-                    <span class="text-[10px] font-black uppercase tracking-widest text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-lg mr-2">
-                        Interactive Canva Studio (CR-80 Scale)
+                    <span class="text-[10px] font-black uppercase tracking-widest text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-lg">
+                        Interactive Studio (CR-80 Scale)
                     </span>
                     <!-- Undo / Redo Buttons -->
                     <button type="button" 
                         wire:click="undo" 
                         title="Undo (Ctrl+Z)"
                         @if(empty($undoStack)) disabled @endif
-                        class="p-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white disabled:opacity-30 disabled:hover:bg-slate-950 disabled:hover:text-slate-300 transition"
+                        class="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white disabled:opacity-30 disabled:hover:bg-slate-900 disabled:hover:text-slate-300 transition"
                     >
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"></path>
@@ -2097,15 +2100,15 @@ new class extends Component {
                         wire:click="redo" 
                         title="Redo (Ctrl+Y)"
                         @if(empty($redoStack)) disabled @endif
-                        class="p-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white disabled:opacity-30 disabled:hover:bg-slate-950 disabled:hover:text-slate-300 transition"
+                        class="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white disabled:opacity-30 disabled:hover:bg-slate-900 disabled:hover:text-slate-300 transition"
                     >
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3"></path>
                         </svg>
                     </button>
                 </div>
-                <span class="text-xs text-slate-400 font-mono">85.6mm × 54mm</span>
-            </div>
+                <span class="text-xs text-slate-400 font-mono bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-800">85.6mm × 54.0mm</span>
+            </div>/div>
 
             <!-- Canvas Container with Drag & Snap Capabilities -->
 
@@ -2274,22 +2277,22 @@ new class extends Component {
                                     <div @mousedown.stop.prevent="startResize({{ $idx }}, 'n', $event)" @touchstart.stop.prevent="startResize({{ $idx }}, 'n', $event)" title="Stretch Top" class="absolute w-3 h-2.5 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ns-resize z-50 transition-transform" style="top: 0; left: 50%; transform: translate(-50%, -50%);"></div>
                                     <div @mousedown.stop.prevent="startResize({{ $idx }}, 's', $event)" @touchstart.stop.prevent="startResize({{ $idx }}, 's', $event)" title="Stretch Bottom" class="absolute w-3 h-2.5 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ns-resize z-50 transition-transform" style="top: 100%; left: 50%; transform: translate(-50%, -50%);"></div>
                                     <div @mousedown.stop.prevent="startResize({{ $idx }}, 'w', $event)" @touchstart.stop.prevent="startResize({{ $idx }}, 'w', $event)" title="Stretch Left" class="absolute w-2.5 h-3 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ew-resize z-50 transition-transform" style="top: 50%; left: 0; transform: translate(-50%, -50%);"></div>
-                                    <div @mousedown.stop.prevent="startResize({{ $idx }}, 'e', $event)" @touchstart.stop.prevent="startResize({{ $idx }}, 'e', $event)" title="Stretch Right" class="absolute w-2.5 h-3 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ew-resize z-50 transition-transform" style="top: 50%; left: 100%; transform: translate(-50%, -50%);"></div>
+                    <div @mousedown.stop.prevent="startResize({{ $idx }}, 'e', $event)" @touchstart.stop.prevent="startResize({{ $idx }}, 'e', $event)" title="Stretch Right" class="absolute w-2.5 h-3 bg-indigo-500 border border-white rounded-sm shadow-md hover:scale-125 cursor-ew-resize z-50 transition-transform" style="top: 50%; left: 100%; transform: translate(-50%, -50%);"></div>
                                 @endif
                             </div>
                         @endforeach
                     </div>
                 </div>
 
-                <!-- Canvas Bottom Toolbar: Zoom Controls & Presets Bar -->
-                <div class="w-full bg-slate-950/90 border border-slate-800 rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 shadow-inner">
-                    <div class="flex items-center space-x-4">
+                <!-- Canvas Bottom Toolbar: Zoom Controls & Presets Floating Bar -->
+                <div class="w-full bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 shadow-xl">
+                    <div class="flex items-center space-x-3">
                         <!-- Mode Selector (Select vs Pan Tool) -->
-                        <div class="flex items-center bg-slate-900 border border-slate-800 p-1 rounded-xl">
+                        <div class="flex items-center bg-slate-950 border border-slate-800 p-1 rounded-xl">
                             <button 
                                 type="button" 
                                 @click="toggleTool('select')"
-                                :class="activeTool === 'select' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'"
+                                :class="activeTool === 'select' ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30' : 'text-slate-400 hover:text-white'"
                                 class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center"
                                 title="Select Tool (V)"
                             >
@@ -2299,7 +2302,7 @@ new class extends Component {
                             <button 
                                 type="button" 
                                 @click="toggleTool('pan')"
-                                :class="(activeTool === 'pan' || isSpacePressed) ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'"
+                                :class="(activeTool === 'pan' || isSpacePressed) ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30' : 'text-slate-400 hover:text-white'"
                                 class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center"
                                 title="Pan Tool (Hold Spacebar)"
                             >
@@ -2328,11 +2331,11 @@ new class extends Component {
                                 Zoom:
                             </span>
                             <div class="flex items-center space-x-2">
-                                <button type="button" @click="setZoom(Math.max(30, parseInt(zoomLevel) - 10))" title="Zoom Out" class="w-7 h-7 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold flex items-center justify-center transition">
+                                <button type="button" @click="setZoom(Math.max(30, parseInt(zoomLevel) - 10))" title="Zoom Out" class="w-7 h-7 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold flex items-center justify-center transition">
                                     &minus;
                                 </button>
                                 <input type="range" min="30" max="200" step="5" :value="zoomLevel" @input="setZoom($event.target.value)" class="w-24 sm:w-32 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
-                                <button type="button" @click="setZoom(Math.min(200, parseInt(zoomLevel) + 10))" title="Zoom In" class="w-7 h-7 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold flex items-center justify-center transition">
+                                <button type="button" @click="setZoom(Math.min(200, parseInt(zoomLevel) + 10))" title="Zoom In" class="w-7 h-7 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold flex items-center justify-center transition">
                                     &#43;
                                 </button>
                             </div>
@@ -2344,24 +2347,24 @@ new class extends Component {
 
                     <!-- Quick Zoom Preset Buttons & LocalStorage Badge -->
                     <div class="flex items-center space-x-1.5">
-                        <button type="button" @click="setZoom(50)" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 50 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">50%</button>
-                        <button type="button" @click="setZoom(75)" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 75 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">75%</button>
-                        <button type="button" @click="setZoom(100)" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 100 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">100%</button>
-                        <button type="button" @click="setZoom(125)" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 125 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">125%</button>
-                        <button type="button" @click="setZoom(150)" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 150 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'">150%</button>
+                        <button type="button" @click="setZoom(50)" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 50 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'">50%</button>
+                        <button type="button" @click="setZoom(75)" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 75 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'">75%</button>
+                        <button type="button" @click="setZoom(100)" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 100 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'">100%</button>
+                        <button type="button" @click="setZoom(125)" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 125 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'">125%</button>
+                        <button type="button" @click="setZoom(150)" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition" :class="zoomLevel == 150 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'">150%</button>
 
-                        <span title="Your preferred zoom, tool, grid, and snapping preferences are saved automatically in your browser" class="text-[10px] text-emerald-400 font-extrabold bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md flex items-center ml-2">
+                        <span title="Preferences are saved automatically in your browser" class="text-[10px] text-emerald-400 font-extrabold bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md flex items-center ml-2">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>
-                            Saved in Browser ⚡
+                            Saved ⚡
                         </span>
                     </div>
                 </div>
             </div>
 
             <!-- Clickable Variable Inserter Toolbar Pills -->
-            <div class="w-full mt-6 space-y-3 bg-slate-950/60 border border-slate-800 rounded-2xl p-4">
+            <div class="w-full mt-5 space-y-3 bg-white/90 backdrop-blur-xl border border-slate-200/80 rounded-2xl p-4 shadow-md">
                 <div>
-                    <span class="text-[11px] font-extrabold text-indigo-400 uppercase tracking-wider block mb-2">🏫 School Variable Tags:</span>
+                    <span class="text-[11px] font-extrabold text-indigo-700 uppercase tracking-wider block mb-2">🏫 School Variable Tags (Click to Insert):</span>
                     <div class="flex flex-wrap gap-1.5">
                         @php
                             $schoolVars = [
@@ -2370,7 +2373,7 @@ new class extends Component {
                             ];
                         @endphp
                         @foreach($schoolVars as $v)
-                            <button type="button" wire:click="appendVariableToSelected('{{ $v }}')" class="px-2.5 py-1 {{ $v === '{School Logo}' ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-indigo-500/10 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/20' }} rounded-lg text-xs font-bold transition shadow-sm">
+                            <button type="button" wire:click="appendVariableToSelected('{{ $v }}')" class="px-2.5 py-1 {{ $v === '{School Logo}' ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-600/25' : 'bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200/80' }} rounded-lg text-xs font-bold transition">
                                 + {{ $v }}
                             </button>
                         @endforeach
@@ -2378,7 +2381,7 @@ new class extends Component {
                 </div>
 
                 <div>
-                    <span class="text-[11px] font-extrabold text-amber-400 uppercase tracking-wider block mb-2">🎓 Student Variable Tags:</span>
+                    <span class="text-[11px] font-extrabold text-amber-700 uppercase tracking-wider block mb-2">🎓 Student Variable Tags (Click to Insert):</span>
                     <div class="flex flex-wrap gap-1.5">
                         @php
                             $studentVars = [
@@ -2389,7 +2392,7 @@ new class extends Component {
                             ];
                         @endphp
                         @foreach($studentVars as $v)
-                            <button type="button" wire:click="appendVariableToSelected('{{ $v }}')" class="px-2.5 py-1 {{ $v === '{Student Photo}' ? 'bg-amber-600 text-white hover:bg-amber-700' : 'bg-amber-500/10 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/20' }} rounded-lg text-xs font-bold transition shadow-sm">
+                            <button type="button" wire:click="appendVariableToSelected('{{ $v }}')" class="px-2.5 py-1 {{ $v === '{Student Photo}' ? 'bg-amber-600 text-white hover:bg-amber-700 shadow-sm shadow-amber-600/25' : 'bg-amber-50 hover:bg-amber-600 text-amber-800 hover:text-white border border-amber-200/80' }} rounded-lg text-xs font-bold transition">
                                 + {{ $v }}
                             </button>
                         @endforeach
@@ -2398,210 +2401,125 @@ new class extends Component {
             </div>
         </div>
 
-        <!-- Right: Canva Element Control Panel (5 Cols) -->
+        <!-- Right: Canva Element Inspector & Layer Directory Panel (5 Cols) -->
         <div class="lg:col-span-5 space-y-5">
-            <!-- Alignment & Layer Tools -->
+            <!-- Layers Header & Add Elements Bar -->
+            <div class="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-xl shadow-slate-200/40 space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                        <h3 class="text-sm font-black text-slate-900">Template Layers & Assets</h3>
+                        <p class="text-[11px] text-slate-500 font-medium">Add, reorder, or style elements on your ID card template</p>
+                    </div>
+                    <div class="flex items-center space-x-1.5">
+                        <button type="button" wire:click="addTextLayer" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-md shadow-indigo-600/20">
+                            + Text
+                        </button>
+                        <button type="button" wire:click="addPhotoLayer" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-md shadow-amber-600/20">
+                            + Photo
+                        </button>
+                        <button type="button" wire:click="addLogoLayer" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition flex items-center border border-indigo-200">
+                            + Logo
+                        </button>
+                        <div class="relative" x-data="{ shapeMenuOpen: false }" @click.outside="shapeMenuOpen = false">
+                            <button type="button" @click="shapeMenuOpen = !shapeMenuOpen" class="px-3 py-1.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl text-xs font-bold transition flex items-center shadow-md shadow-emerald-600/20">
+                                + Shape ▾
+                            </button>
+                            <div x-show="shapeMenuOpen" @click="shapeMenuOpen = false" class="absolute right-0 mt-1.5 w-40 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden py-1">
+                                <button type="button" wire:click="addShapeLayer('rectangle')" class="w-full text-left px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center space-x-2.5">
+                                    <span class="w-3.5 h-3.5 rounded bg-indigo-500 inline-block shadow-sm"></span>
+                                    <span>Rectangle Box</span>
+                                </button>
+                                <button type="button" wire:click="addShapeLayer('circle')" class="w-full text-left px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center space-x-2.5">
+                                    <span class="w-3.5 h-3.5 rounded-full bg-indigo-500 inline-block shadow-sm"></span>
+                                    <span>Circle Shape</span>
+                                </button>
+                                <button type="button" wire:click="addShapeLayer('line')" class="w-full text-left px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center space-x-2.5">
+                                    <span class="w-4 h-1 bg-indigo-500 rounded-full inline-block"></span>
+                                    <span>Line Divider</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Layer List Cards -->
+                <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
+                    @foreach($layers as $idx => $layer)
+                        @php
+                            $isSelectedInList = in_array($idx, $selectedLayerIndices);
+                            $layerTypeDisplay = ($layer['type'] ?? 'layer') === 'shape' ? ($layer['shape_type'] ?? 'shape') : ($layer['type'] ?? 'layer');
+                        @endphp
+                        <div 
+                            wire:key="list-layer-{{ $layer['id'] ?? $idx }}"
+                            @click.prevent="$wire.selectLayer({{ $idx }}, $event.shiftKey)"
+                            class="p-3 rounded-2xl border transition flex items-center justify-between cursor-pointer {{ $isSelectedInList ? 'bg-indigo-50/90 border-indigo-300 text-indigo-950 shadow-sm' : 'bg-slate-50/70 border-slate-200/80 text-slate-700 hover:bg-slate-100 hover:border-slate-300' }}"
+                        >
+                            <div class="flex items-center space-x-3">
+                                <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border {{ $isSelectedInList ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-indigo-50 text-indigo-700 border-indigo-200' }}">
+                                    {{ $layerTypeDisplay }}
+                                </span>
+                                <div>
+                                    <span class="text-xs font-bold block text-slate-900">{{ $layer['label'] ?? 'Layer #' . ($idx + 1) }}</span>
+                                    <span class="text-[10px] text-slate-500 font-mono">X: {{ $layer['x'] ?? 0 }}px, Y: {{ $layer['y'] ?? 0 }}px</span>
+                                </div>
+                            </div>
+                            <span class="text-xs font-bold {{ $isSelectedInList ? 'text-indigo-600' : 'text-slate-400' }}">&rarr;</span>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Alignment & Layer Tools for Multiple Selections -->
             @if(count($selectedLayerIndices) > 1)
-                <div wire:key="controls-panel-multi" class="bg-slate-900 border border-indigo-500/40 rounded-3xl p-6 shadow-xl space-y-5">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div wire:key="controls-panel-multi" class="bg-white border border-indigo-200 rounded-3xl p-6 shadow-xl shadow-indigo-100/50 space-y-5">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                         <div class="flex items-center space-x-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-indigo-400"></span>
-                            <h3 class="text-sm font-black text-white flex items-center">
+                            <span class="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-ping"></span>
+                            <h3 class="text-sm font-black text-slate-900 flex items-center">
                                 Multiple Selection
-                                <span class="ml-2 text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full">
+                                <span class="ml-2 text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold">
                                     {{ count($selectedLayerIndices) }} elements
                                 </span>
                             </h3>
                         </div>
-                        <button type="button" wire:click="selectLayer(null)" class="text-xs font-bold text-slate-400 hover:text-white">Deselect</button>
+                        <button type="button" wire:click="selectLayer(null)" class="text-xs font-bold text-slate-500 hover:text-slate-900">Deselect</button>
                     </div>
 
                     <!-- Alignment Section -->
                     <div class="space-y-3">
                         <!-- Align Target Selector Segment -->
-                        <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800">
-                            <button type="button" @click="alignMode = 'page'" class="flex-1 py-1.5 text-center text-xs font-bold rounded-lg transition" :class="alignMode === 'page' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'">
+                        <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+                            <button type="button" @click="alignMode = 'page'" class="flex-1 py-1.5 text-center text-xs font-bold rounded-lg transition" :class="alignMode === 'page' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'">
                                 Align to page
                             </button>
-                            <button type="button" @click="alignMode = 'selection'" class="flex-1 py-1.5 text-center text-xs font-bold rounded-lg transition" :class="alignMode === 'selection' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'">
+                            <button type="button" @click="alignMode = 'selection'" class="flex-1 py-1.5 text-center text-xs font-bold rounded-lg transition" :class="alignMode === 'selection' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'">
                                 Align selection
                             </button>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3">
-                            <button type="button" @click="alignMode === 'page' ? alignSelectedToPage('top') : alignSelectedToSelection('top')" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-xs font-bold transition">
-                                <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="4" y1="4" x2="20" y2="4"></line>
-                                    <rect x="6" y="8" width="12" height="12" rx="1.5"></rect>
-                                </svg>
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <button type="button" @click="alignMode === 'page' ? alignSelectedToPage('top') : alignSelectedToSelection('top')" class="flex items-center justify-center space-x-2 px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-700 text-xs font-bold transition">
                                 <span>Top</span>
                             </button>
-                            <button type="button" @click="alignMode === 'page' ? alignSelectedToPage('left') : alignSelectedToSelection('left')" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-xs font-bold transition">
-                                <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="4" y1="4" x2="4" y2="20"></line>
-                                    <rect x="8" y="6" width="12" height="12" rx="1.5"></rect>
-                                </svg>
+                            <button type="button" @click="alignMode === 'page' ? alignSelectedToPage('left') : alignSelectedToSelection('left')" class="flex items-center justify-center space-x-2 px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-700 text-xs font-bold transition">
                                 <span>Left</span>
                             </button>
-                            <button type="button" @click="alignMode === 'page' ? alignSelectedToPage('middle') : alignSelectedToSelection('middle')" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-xs font-bold transition">
-                                <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="4" y1="12" x2="20" y2="12"></line>
-                                    <rect x="6" y="6" width="12" height="4" rx="1"></rect>
-                                    <rect x="8" y="14" width="8" height="4" rx="1"></rect>
-                                </svg>
+                            <button type="button" @click="alignMode === 'page' ? alignSelectedToPage('middle') : alignSelectedToSelection('middle')" class="flex items-center justify-center space-x-2 px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-700 text-xs font-bold transition">
                                 <span>Middle</span>
                             </button>
-                            <button type="button" @click="alignMode === 'page' ? alignSelectedToPage('center') : alignSelectedToSelection('center')" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-xs font-bold transition">
-                                <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="12" y1="4" x2="12" y2="20"></line>
-                                    <rect x="6" y="6" width="4" height="12" rx="1"></rect>
-                                    <rect x="14" y="8" width="4" height="8" rx="1"></rect>
-                                </svg>
+                            <button type="button" @click="alignMode === 'page' ? alignSelectedToPage('center') : alignSelectedToSelection('center')" class="flex items-center justify-center space-x-2 px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-700 text-xs font-bold transition">
                                 <span>Center</span>
                             </button>
-                            <button type="button" @click="alignMode === 'page' ? alignSelectedToPage('bottom') : alignSelectedToSelection('bottom')" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-xs font-bold transition">
-                                <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="4" y1="20" x2="20" y2="20"></line>
-                                    <rect x="6" y="4" width="12" height="12" rx="1.5"></rect>
-                                </svg>
+                            <button type="button" @click="alignMode === 'page' ? alignSelectedToPage('bottom') : alignSelectedToSelection('bottom')" class="flex items-center justify-center space-x-2 px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-700 text-xs font-bold transition">
                                 <span>Bottom</span>
                             </button>
-                            <button type="button" @click="alignMode === 'page' ? alignSelectedToPage('right') : alignSelectedToSelection('right')" class="flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-xs font-bold transition">
-                                <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="20" y1="4" x2="20" y2="20"></line>
-                                    <rect x="4" y="6" width="12" height="12" rx="1.5"></rect>
-                                </svg>
+                            <button type="button" @click="alignMode === 'page' ? alignSelectedToPage('right') : alignSelectedToSelection('right')" class="flex items-center justify-center space-x-2 px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-700 text-xs font-bold transition">
                                 <span>Right</span>
                             </button>
                         </div>
                     </div>
 
-                    <!-- Space Evenly Section -->
-                    <div class="space-y-2">
-                        <span class="text-xs font-bold text-slate-300 block">Space evenly</span>
-                        <div class="grid grid-cols-3 gap-2.5">
-                            <button type="button" @click="spaceSelectedEvenly('vertical')" class="flex flex-col items-center justify-center p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-[10px] font-bold transition space-y-1">
-                                <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="4" y1="6" x2="20" y2="6"></line>
-                                    <line x1="4" y1="12" x2="20" y2="12"></line>
-                                    <line x1="4" y1="18" x2="20" y2="18"></line>
-                                </svg>
-                                <span>Vertically</span>
-                            </button>
-                            <button type="button" @click="spaceSelectedEvenly('horizontal')" class="flex flex-col items-center justify-center p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-[10px] font-bold transition space-y-1">
-                                <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="6" y1="4" x2="6" y2="20"></line>
-                                    <line x1="12" y1="4" x2="12" y2="20"></line>
-                                    <line x1="18" y1="4" x2="18" y2="20"></line>
-                                </svg>
-                                <span>Horizontally</span>
-                            </button>
-                            <button type="button" @click="tidyUpSelected()" class="flex flex-col items-center justify-center p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-slate-200 text-[10px] font-bold transition space-y-1">
-                                <svg class="w-4 h-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="3" width="7" height="7"></rect>
-                                    <rect x="14" y="3" width="7" height="7"></rect>
-                                    <rect x="14" y="14" width="7" height="7"></rect>
-                                    <rect x="3" y="14" width="7" height="7"></rect>
-                                </svg>
-                                <span class="text-indigo-400">Tidy up</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Advanced Section (Common values) -->
-                    @php
-                        $commonW = null;
-                        $commonH = null;
-                        $commonX = null;
-                        $commonY = null;
-                        $commonRot = null;
-
-                        foreach($selectedLayerIndices as $sIdx) {
-                            if(isset($layers[$sIdx])) {
-                                $lay = $layers[$sIdx];
-                                if ($commonW === null) $commonW = $lay['width'] ?? 0;
-                                elseif ($commonW !== ($lay['width'] ?? 0)) $commonW = '';
-
-                                if ($commonH === null) $commonH = $lay['height'] ?? 0;
-                                elseif ($commonH !== ($lay['height'] ?? 0)) $commonH = '';
-
-                                if ($commonX === null) $commonX = $lay['x'] ?? 0;
-                                elseif ($commonX !== ($lay['x'] ?? 0)) $commonX = '';
-
-                                if ($commonY === null) $commonY = $lay['y'] ?? 0;
-                                elseif ($commonY !== ($lay['y'] ?? 0)) $commonY = '';
-
-                                if ($commonRot === null) $commonRot = $lay['rotation'] ?? 0;
-                                elseif ($commonRot !== ($lay['rotation'] ?? 0)) $commonRot = '';
-                            }
-                        }
-                    @endphp
-
-                    <div class="space-y-4 pt-3 border-t border-slate-800">
-                        <span class="text-xs font-bold text-slate-300 block">Advanced</span>
-                        
-                        <div class="grid grid-cols-3 gap-3">
-                            <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Width</label>
-                                <input type="number" step="0.1" 
-                                    value="{{ $commonW !== '' && $commonW !== null ? round($commonW / 11.8128 * 10) / 10 : '' }}"
-                                    placeholder="--"
-                                    @input="$wire.updateCommonProperty('width', Math.round((parseFloat($event.target.value) || 0) * 11.8128))"
-                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500"
-                                >
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Height</label>
-                                <input type="number" step="0.1" 
-                                    value="{{ $commonH !== '' && $commonH !== null ? round($commonH / 11.8128 * 10) / 10 : '' }}"
-                                    placeholder="--"
-                                    @input="$wire.updateCommonProperty('height', Math.round((parseFloat($event.target.value) || 0) * 11.8128))"
-                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500"
-                                >
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Ratio</label>
-                                <div class="flex items-center justify-center w-full h-8 bg-slate-950 border border-slate-800 rounded-xl text-slate-400">
-                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-3 gap-3">
-                            <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">X</label>
-                                <input type="number" step="0.1" 
-                                    value="{{ $commonX !== '' && $commonX !== null ? round($commonX / 11.8128 * 10) / 10 : '' }}"
-                                    placeholder="--"
-                                    @input="$wire.updateCommonProperty('x', Math.round((parseFloat($event.target.value) || 0) * 11.8128))"
-                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500"
-                                >
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Y</label>
-                                <input type="number" step="0.1" 
-                                    value="{{ $commonY !== '' && $commonY !== null ? round($commonY / 11.8128 * 10) / 10 : '' }}"
-                                    placeholder="--"
-                                    @input="$wire.updateCommonProperty('y', Math.round((parseFloat($event.target.value) || 0) * 11.8128))"
-                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500"
-                                >
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Rotate</label>
-                                <input type="number" 
-                                    value="{{ $commonRot !== '' && $commonRot !== null ? $commonRot : '' }}"
-                                    placeholder="--"
-                                    @input="$wire.updateCommonProperty('rotation', parseInt($event.target.value) || 0)"
-                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500"
-                                >
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between pt-3 border-t border-slate-800">
+                    <div class="flex items-center justify-between pt-3 border-t border-slate-100">
                         @php
                             $hasGroup = false;
                             foreach ($selectedLayerIndices as $idx) {
@@ -2616,122 +2534,120 @@ new class extends Component {
                             @if($hasGroup)
                                 <button type="button" 
                                     wire:click="ungroupSelected" 
-                                    class="px-3.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-xl text-xs font-bold transition flex items-center shadow-sm"
+                                    class="px-3.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold transition"
                                 >
                                     Ungroup
                                 </button>
                             @else
                                 <button type="button" 
                                     wire:click="groupSelected" 
-                                    class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-sm"
+                                    class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm"
                                 >
                                     Group
                                 </button>
                             @endif
                             <button type="button" 
                                 wire:click="duplicateSelected" 
-                                class="px-3.5 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-xl text-xs font-bold transition flex items-center shadow-sm"
+                                class="px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition"
                             >
                                 Duplicate
                             </button>
                             <button type="button" 
                                 wire:click="removeLayer(-1)" 
-                                class="px-3.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl text-xs font-bold transition flex items-center shadow-sm"
+                                class="px-3.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl text-xs font-bold transition"
                             >
-                                Delete Selected
+                                Delete
                             </button>
                         </div>
                     </div>
                 </div>
             @endif
 
+            <!-- Selected Single Layer Element Controls -->
             @if($selectedLayerIndex !== null && isset($layers[$selectedLayerIndex]))
                 @php $selectedLayer = $layers[$selectedLayerIndex]; @endphp
-                <div wire:key="controls-panel-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? 'layer' }}" class="bg-slate-900 border border-indigo-500/40 rounded-3xl p-6 shadow-xl space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div wire:key="controls-panel-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? 'layer' }}" class="bg-white border border-indigo-200 rounded-3xl p-6 shadow-xl shadow-indigo-100/50 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                         <div class="flex items-center space-x-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-indigo-400"></span>
-                            <h3 class="text-sm font-black text-white">Element Controls ({{ $selectedLayer['label'] ?? 'Layer' }})</h3>
+                            <span class="w-3 h-3 rounded-full bg-indigo-600 inline-block shadow-sm"></span>
+                            <h3 class="text-sm font-black text-slate-900">Element Controls ({{ $selectedLayer['label'] ?? 'Layer' }})</h3>
                         </div>
-                        <button type="button" wire:click="$set('selectedLayerIndex', null)" class="text-xs font-bold text-slate-400 hover:text-white">Deselect</button>
+                        <button type="button" wire:click="$set('selectedLayerIndex', null)" class="text-xs font-bold text-slate-500 hover:text-slate-900">Deselect</button>
                     </div>
 
                     <!-- Alignment Actions Bar -->
                     <div class="space-y-2">
-                        <span class="text-[11px] font-bold text-slate-400 block">Quick Align Canvas:</span>
+                        <span class="text-[11px] font-bold text-slate-500 block">Quick Align Canvas:</span>
                         <div class="grid grid-cols-6 gap-1.5">
-                            <button type="button" wire:click="alignSelectedLayer('left')" title="Align Left" class="p-2 bg-slate-950 hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-bold flex justify-center">Left</button>
-                            <button type="button" wire:click="alignSelectedLayer('center_h')" title="Center Horizontally" class="p-2 bg-slate-950 hover:bg-slate-800 text-indigo-400 rounded-lg text-xs font-bold flex justify-center">Center H</button>
-                            <button type="button" wire:click="alignSelectedLayer('right')" title="Align Right" class="p-2 bg-slate-950 hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-bold flex justify-center">Right</button>
-                            <button type="button" wire:click="alignSelectedLayer('top')" title="Align Top" class="p-2 bg-slate-950 hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-bold flex justify-center">Top</button>
-                            <button type="button" wire:click="alignSelectedLayer('center_v')" title="Center Vertically" class="p-2 bg-slate-950 hover:bg-slate-800 text-indigo-400 rounded-lg text-xs font-bold flex justify-center">Center V</button>
-                            <button type="button" wire:click="alignSelectedLayer('bottom')" title="Align Bottom" class="p-2 bg-slate-950 hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-bold flex justify-center">Bottom</button>
+                            <button type="button" wire:click="alignSelectedLayer('left')" title="Align Left" class="p-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold flex justify-center">Left</button>
+                            <button type="button" wire:click="alignSelectedLayer('center_h')" title="Center Horizontally" class="p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold flex justify-center">Center H</button>
+                            <button type="button" wire:click="alignSelectedLayer('right')" title="Align Right" class="p-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold flex justify-center">Right</button>
+                            <button type="button" wire:click="alignSelectedLayer('top')" title="Align Top" class="p-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold flex justify-center">Top</button>
+                            <button type="button" wire:click="alignSelectedLayer('center_v')" title="Center Vertically" class="p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold flex justify-center">Center V</button>
+                            <button type="button" wire:click="alignSelectedLayer('bottom')" title="Align Bottom" class="p-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-bold flex justify-center">Bottom</button>
                         </div>
                     </div>
 
                     <!-- Layer Name / Label & Millimeter Position Controls -->
                     <div class="space-y-3 pt-1">
                         <div>
-                            <label class="block text-[11px] font-bold text-indigo-400 mb-1">Layer Name / Label in List</label>
-                            <input type="text" wire:key="input-label-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.label" placeholder="e.g. Header Title, Student Roll Tag" class="w-full bg-slate-950 border border-indigo-500/30 rounded-xl px-3.5 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                            <label class="block text-[11px] font-bold text-indigo-700 mb-1">Layer Label Name</label>
+                            <input type="text" wire:key="input-label-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.label" placeholder="e.g. Header Title, Student Roll Tag" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600 transition">
                         </div>
 
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Position X (mm)</label>
+                                <label class="block text-[11px] font-bold text-slate-500 mb-1">Position X (mm)</label>
                                 <div class="relative">
-                                    <input type="number" step="0.1" wire:key="input-x-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(curX / 11.8128 * 10) / 10" @input="curX = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].x = curX; $wire.updateLayerCoordinates({{ $selectedLayerIndex }}, curX, curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
-                                    <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="curX + 'px'"></span>
+                                    <input type="number" step="0.1" wire:key="input-x-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(curX / 11.8128 * 10) / 10" @input="curX = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].x = curX; $wire.updateLayerCoordinates({{ $selectedLayerIndex }}, curX, curY);" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600">
+                                    <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-mono" x-text="curX + 'px'"></span>
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Position Y (mm)</label>
+                                <label class="block text-[11px] font-bold text-slate-500 mb-1">Position Y (mm)</label>
                                 <div class="relative">
-                                    <input type="number" step="0.1" wire:key="input-y-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(curY / 11.8128 * 10) / 10" @input="curY = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].y = curY; $wire.updateLayerCoordinates({{ $selectedLayerIndex }}, curX, curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
-                                    <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="curY + 'px'"></span>
+                                    <input type="number" step="0.1" wire:key="input-y-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(curY / 11.8128 * 10) / 10" @input="curY = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].y = curY; $wire.updateLayerCoordinates({{ $selectedLayerIndex }}, curX, curY);" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600">
+                                    <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-mono" x-text="curY + 'px'"></span>
                                 </div>
                             </div>
                         </div>
- 
+
                         @if(in_array($selectedLayer['type'] ?? '', ['photo', 'logo', 'qr', 'text', 'shape']))
                             <div class="grid grid-cols-2 gap-3 pt-1">
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">
+                                    <label class="block text-[11px] font-bold text-slate-500 mb-1">
                                         {{ ($selectedLayer['type'] ?? '') === 'text' ? 'Max Width (mm)' : 'Width (mm)' }}
                                     </label>
                                     <div class="relative">
-                                        <input type="number" step="0.1" wire:key="input-w-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(curW / 11.8128 * 10) / 10" @input="curW = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].width = curW; $wire.updateLayerDimensions({{ $selectedLayerIndex }}, curW, curH, curFontSize, curX, curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
-                                        <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="curW + 'px'"></span>
+                                        <input type="number" step="0.1" wire:key="input-w-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(curW / 11.8128 * 10) / 10" @input="curW = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].width = curW; $wire.updateLayerDimensions({{ $selectedLayerIndex }}, curW, curH, curFontSize, curX, curY);" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600">
+                                        <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-mono" x-text="curW + 'px'"></span>
                                     </div>
-                                    @if(($selectedLayer['type'] ?? '') === 'text')
-                                        <span class="text-[9px] text-slate-500 mt-1 block">0 = auto-width (no wrap).</span>
-                                    @endif
                                 </div>
                                 @if(($selectedLayer['type'] ?? '') !== 'text')
                                     <div>
-                                        <label class="block text-[11px] font-bold text-slate-400 mb-1">Height (mm)</label>
+                                        <label class="block text-[11px] font-bold text-slate-500 mb-1">Height (mm)</label>
                                         <div class="relative">
-                                            <input type="number" step="0.1" wire:key="input-h-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(curH / 11.8128 * 10) / 10" @input="curH = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].height = curH; $wire.updateLayerDimensions({{ $selectedLayerIndex }}, curW, curH, curFontSize, curX, curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
-                                            <span class="absolute right-3 top-2 text-[10px] text-slate-500 font-mono" x-text="curH + 'px'"></span>
+                                            <input type="number" step="0.1" wire:key="input-h-mm-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="Math.round(curH / 11.8128 * 10) / 10" @input="curH = Math.round((parseFloat($event.target.value) || 0) * 11.8128); $wire.layers[{{ $selectedLayerIndex }}].height = curH; $wire.updateLayerDimensions({{ $selectedLayerIndex }}, curW, curH, curFontSize, curX, curY);" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600">
+                                            <span class="absolute right-3 top-2 text-[10px] text-slate-400 font-mono" x-text="curH + 'px'"></span>
                                         </div>
                                     </div>
                                 @endif
                             </div>
                         @endif
                     </div>
- 
+
                     <!-- Text Specific Formatting Controls -->
                     @if(($selectedLayer['type'] ?? '') === 'text')
                         <div class="space-y-3 pt-2">
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Text Content / Template Code</label>
-                                <input type="text" wire:key="input-text-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.text" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                <label class="block text-[11px] font-bold text-slate-500 mb-1">Text Content / Template Code</label>
+                                <input type="text" wire:key="input-text-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.text" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600">
                             </div>
 
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Font Family</label>
-                                    <select wire:key="select-font-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.font_family" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                    <label class="block text-[11px] font-bold text-slate-500 mb-1">Font Family</label>
+                                    <select wire:key="select-font-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.font_family" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600">
                                         <optgroup label="Sans-Serif (Modern & Clean)">
                                             <option value="Inter">Inter</option>
                                             <option value="Poppins">Poppins</option>
@@ -2742,195 +2658,94 @@ new class extends Component {
                                             <option value="Open Sans">Open Sans</option>
                                             <option value="Raleway">Raleway</option>
                                             <option value="Nunito">Nunito</option>
-                                            <option value="Work Sans">Work Sans</option>
-                                            <option value="Rubik">Rubik</option>
-                                            <option value="DM Sans">DM Sans</option>
-                                            <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
-                                            <option value="Urbanist">Urbanist</option>
-                                            <option value="Kanit">Kanit</option>
-                                            <option value="Quicksand">Quicksand</option>
-                                            <option value="Barlow">Barlow</option>
-                                            <option value="Manrope">Manrope</option>
-                                            <option value="Jost">Jost</option>
-                                            <option value="Mulish">Mulish</option>
-                                            <option value="Cabin">Cabin</option>
-                                            <option value="Noto Sans">Noto Sans</option>
-                                            <option value="Syne">Syne</option>
-                                            <option value="Space Grotesk">Space Grotesk</option>
-                                            <option value="Lexend">Lexend</option>
-                                            <option value="Figtree">Figtree</option>
-                                        </optgroup>
-                                        <optgroup label="Serif (Classic & Elegant)">
-                                            <option value="Playfair Display">Playfair Display</option>
-                                            <option value="Lora">Lora</option>
-                                            <option value="Merriweather">Merriweather</option>
-                                            <option value="Cinzel">Cinzel</option>
-                                            <option value="Cormorant Garamond">Cormorant Garamond</option>
-                                            <option value="EB Garamond">EB Garamond</option>
-                                            <option value="PT Serif">PT Serif</option>
-                                            <option value="Libre Baskerville">Libre Baskerville</option>
-                                            <option value="Bodoni Moda">Bodoni Moda</option>
-                                            <option value="Spectral">Spectral</option>
-                                            <option value="Prata">Prata</option>
-                                            <option value="Marcellus">Marcellus</option>
-                                            <option value="Noto Serif">Noto Serif</option>
-                                            <option value="Volkhov">Volkhov</option>
-                                            <option value="Bitter">Bitter</option>
-                                            <option value="Cardo">Cardo</option>
-                                            <option value="Arvo">Arvo</option>
-                                            <option value="Crimson Text">Crimson Text</option>
-                                            <option value="Domine">Domine</option>
-                                            <option value="Sorts Mill Goudy">Sorts Mill Goudy</option>
-                                        </optgroup>
-                                        <optgroup label="Script & Handwriting">
-                                            <option value="Dancing Script">Dancing Script</option>
-                                            <option value="Pacifico">Pacifico</option>
-                                            <option value="Great Vibes">Great Vibes</option>
-                                            <option value="Alex Brush">Alex Brush</option>
-                                            <option value="Sacramento">Sacramento</option>
-                                            <option value="Caveat">Caveat</option>
-                                            <option value="Satisfy">Satisfy</option>
-                                            <option value="Kalam">Kalam</option>
-                                            <option value="Yellowtail">Yellowtail</option>
-                                            <option value="Shadows Into Light">Shadows Into Light</option>
-                                            <option value="Allura">Allura</option>
-                                            <option value="Parisienne">Parisienne</option>
-                                            <option value="Cookie">Cookie</option>
-                                            <option value="Kaushan Script">Kaushan Script</option>
-                                            <option value="Marck Script">Marck Script</option>
-                                            <option value="Courgette">Courgette</option>
-                                            <option value="Tangerine">Tangerine</option>
-                                            <option value="Bad Script">Bad Script</option>
-                                            <option value="Damion">Damion</option>
-                                            <option value="Reenie Beanie">Reenie Beanie</option>
-                                        </optgroup>
-                                        <optgroup label="Display & Impact">
-                                            <option value="Oswald">Oswald</option>
-                                            <option value="Bebas Neue">Bebas Neue</option>
-                                            <option value="Anton">Anton</option>
-                                            <option value="Lobster">Lobster</option>
-                                            <option value="Abril Fatface">Abril Fatface</option>
-                                            <option value="Righteous">Righteous</option>
-                                            <option value="Play">Play</option>
-                                            <option value="Changa One">Changa One</option>
-                                            <option value="Permanent Marker">Permanent Marker</option>
-                                            <option value="Bungee">Bungee</option>
-                                            <option value="Monoton">Monoton</option>
-                                            <option value="Press Start 2P">Press Start 2P</option>
-                                            <option value="Creepster">Creepster</option>
-                                            <option value="Special Elite">Special Elite</option>
-                                            <option value="Titan One">Titan One</option>
-                                            <option value="Bangers">Bangers</option>
-                                            <option value="Shrikhand">Shrikhand</option>
-                                            <option value="Ultra">Ultra</option>
-                                            <option value="UnifrakturMaguntia">UnifrakturMaguntia</option>
-                                            <option value="Rubik Mono One">Rubik Mono One</option>
-                                        </optgroup>
-                                        <optgroup label="Monospace & Tech">
-                                            <option value="Fira Code">Fira Code</option>
-                                            <option value="JetBrains Mono">JetBrains Mono</option>
-                                            <option value="Source Code Pro">Source Code Pro</option>
-                                            <option value="Space Mono">Space Mono</option>
-                                            <option value="Inconsolata">Inconsolata</option>
-                                            <option value="Roboto Mono">Roboto Mono</option>
-                                            <option value="IBM Plex Mono">IBM Plex Mono</option>
-                                            <option value="VT323">VT323</option>
-                                            <option value="Share Tech Mono">Share Tech Mono</option>
-                                            <option value="Cousine">Cousine</option>
                                         </optgroup>
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Text Align</label>
-                                    <select wire:key="select-align-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.align" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
-                                        <option value="left">Left</option>
-                                        <option value="center">Center</option>
-                                        <option value="right">Right</option>
-                                        <option value="justify">Justify</option>
-                                    </select>
-                                </div>
-                            </div>
- 
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Font Size (pt)</label>
-                                    <div class="relative">
-                                        <input type="number" min="4" max="120" step="1" wire:key="input-size-pt-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" :value="curFontSize" @input="curFontSize = parseInt($event.target.value) || 14; $wire.layers[{{ $selectedLayerIndex }}].font_size = curFontSize; $wire.updateLayerDimensions({{ $selectedLayerIndex }}, curW, curH, curFontSize, curX, curY);" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
-                                        <span class="absolute right-3 top-2 text-[10px] text-indigo-400 font-mono font-bold">pt</span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Text Color (Hex)</label>
-                                    <div class="flex items-center space-x-2">
-                                        <input type="color" wire:key="input-color-picker-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.color" class="w-8 h-8 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer">
-                                        <input type="text" wire:key="input-color-text-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.color" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 uppercase">
-                                    </div>
+                                    <label class="block text-[11px] font-bold text-slate-500 mb-1">Font Size (pt)</label>
+                                    <input type="number" min="6" max="140" wire:key="input-fsize-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.font_size" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600">
                                 </div>
                             </div>
 
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Font Weight</label>
-                                    <select wire:key="select-weight-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.font_weight" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                    <label class="block text-[11px] font-bold text-slate-500 mb-1">Font Weight</label>
+                                    <select wire:key="select-weight-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.font_weight" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600">
                                         <option value="normal">Normal</option>
-                                        <option value="semibold">SemiBold</option>
+                                        <option value="semibold">Semi Bold</option>
                                         <option value="bold">Bold</option>
-                                        <option value="extrabold">ExtraBold</option>
+                                        <option value="extrabold">Extra Bold</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Rotation Angle (°)</label>
-                                    <input type="number" wire:key="input-rot-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.rotation" min="0" max="360" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                    <label class="block text-[11px] font-bold text-slate-500 mb-1">Text Alignment</label>
+                                    <select wire:key="select-align-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.align" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600">
+                                        <option value="left">Left Align</option>
+                                        <option value="center">Center Align</option>
+                                        <option value="right">Right Align</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 mb-1">Text Color (Hex)</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="color" wire:key="input-color-picker-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.color" class="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer shadow-sm">
+                                    <input type="text" wire:key="input-color-text-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.color" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600 uppercase">
                                 </div>
                             </div>
                         </div>
                     @endif
 
-                    <!-- Shape Specific Fill, Stroke & Geometry Controls -->
+                    <!-- Shape Specific Controls -->
                     @if(($selectedLayer['type'] ?? '') === 'shape')
-                        @php $shapeType = $selectedLayer['shape_type'] ?? 'rectangle'; @endphp
-                        <div class="space-y-3 pt-2">
+                        @php
+                            $shapeType = $selectedLayer['shape_type'] ?? 'rectangle';
+                        @endphp
+                        <div class="space-y-3 pt-2 border-t border-slate-100">
+                            <span class="text-xs font-extrabold text-indigo-700 block">Shape Formatting ({{ ucfirst($shapeType) }}):</span>
+
                             @if($shapeType !== 'line')
-                                <div>
-                                    <label class="block text-[11px] font-bold text-indigo-400 mb-1">Fill</label>
-                                    <div class="grid grid-cols-2 gap-3">
-                                        <select wire:key="select-fill-type-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:change="updateShapeProperty('fill_type', $event.target.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-500 mb-1">Fill Mode</label>
+                                        <select wire:key="select-fill-type-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:change="updateShapeProperty('fill_type', $event.target.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600">
                                             <option value="solid" {{ ($selectedLayer['fill_type'] ?? 'solid') === 'solid' ? 'selected' : '' }}>Solid</option>
                                             <option value="none" {{ ($selectedLayer['fill_type'] ?? 'solid') === 'none' ? 'selected' : '' }}>None (Outline only)</option>
                                         </select>
-                                        <div>
-                                            <label class="block text-[11px] font-bold text-slate-400 mb-1">Opacity</label>
-                                            <input type="range" min="0" max="100" wire:key="range-fill-opacity-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" value="{{ $selectedLayer['fill_opacity'] ?? 100 }}" @change="$wire.updateShapeProperty('fill_opacity', parseInt($event.target.value))" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 mt-2.5">
-                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-500 mb-1">Opacity (%)</label>
+                                        <input type="range" min="0" max="100" wire:key="range-fill-opacity-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" value="{{ $selectedLayer['fill_opacity'] ?? 100 }}" @change="$wire.updateShapeProperty('fill_opacity', parseInt($event.target.value))" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 mt-2.5">
                                     </div>
                                 </div>
                                 @if(($selectedLayer['fill_type'] ?? 'solid') !== 'none')
                                     <div>
-                                        <label class="block text-[11px] font-bold text-slate-400 mb-1">Fill Color (Hex)</label>
+                                        <label class="block text-[11px] font-bold text-slate-500 mb-1">Fill Color (Hex)</label>
                                         <div class="flex items-center space-x-2">
-                                            <input type="color" wire:key="input-fill-picker-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" value="{{ $selectedLayer['fill_color'] ?? '#4f46e5' }}" @change="$wire.updateShapeProperty('fill_color', $event.target.value)" class="w-8 h-8 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer">
-                                            <input type="text" wire:key="input-fill-text-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" value="{{ $selectedLayer['fill_color'] ?? '#4f46e5' }}" @change="$wire.updateShapeProperty('fill_color', $event.target.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 uppercase">
+                                            <input type="color" wire:key="input-fill-picker-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" value="{{ $selectedLayer['fill_color'] ?? '#4f46e5' }}" @change="$wire.updateShapeProperty('fill_color', $event.target.value)" class="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer shadow-sm">
+                                            <input type="text" wire:key="input-fill-text-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" value="{{ $selectedLayer['fill_color'] ?? '#4f46e5' }}" @change="$wire.updateShapeProperty('fill_color', $event.target.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600 uppercase">
                                         </div>
                                     </div>
                                 @endif
                             @endif
 
                             <div>
-                                <label class="block text-[11px] font-bold text-indigo-400 mb-1">Stroke Color (Hex)</label>
+                                <label class="block text-[11px] font-bold text-indigo-700 mb-1">Stroke Color (Hex)</label>
                                 <div class="flex items-center space-x-2">
-                                    <input type="color" wire:key="input-stroke-picker-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" value="{{ $selectedLayer['stroke_color'] ?? '#312e81' }}" @change="$wire.updateShapeProperty('stroke_color', $event.target.value)" class="w-8 h-8 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer">
-                                    <input type="text" wire:key="input-stroke-text-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" value="{{ $selectedLayer['stroke_color'] ?? '#312e81' }}" @change="$wire.updateShapeProperty('stroke_color', $event.target.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 uppercase">
+                                    <input type="color" wire:key="input-stroke-picker-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" value="{{ $selectedLayer['stroke_color'] ?? '#312e81' }}" @change="$wire.updateShapeProperty('stroke_color', $event.target.value)" class="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer shadow-sm">
+                                    <input type="text" wire:key="input-stroke-text-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" value="{{ $selectedLayer['stroke_color'] ?? '#312e81' }}" @change="$wire.updateShapeProperty('stroke_color', $event.target.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600 uppercase">
                                 </div>
                             </div>
 
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Stroke Width (px)</label>
-                                    <input type="number" min="0" max="40" wire:key="input-stroke-width-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" value="{{ $selectedLayer['stroke_width'] ?? 0 }}" @change="$wire.updateShapeProperty('stroke_width', parseInt($event.target.value) || 0)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                    <label class="block text-[11px] font-bold text-slate-500 mb-1">Stroke Width (px)</label>
+                                    <input type="number" min="0" max="40" wire:key="input-stroke-width-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" value="{{ $selectedLayer['stroke_width'] ?? 0 }}" @change="$wire.updateShapeProperty('stroke_width', parseInt($event.target.value) || 0)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600">
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Stroke Style</label>
-                                    <select wire:key="select-stroke-style-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:change="updateShapeProperty('stroke_style', $event.target.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                    <label class="block text-[11px] font-bold text-slate-500 mb-1">Stroke Style</label>
+                                    <select wire:key="select-stroke-style-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:change="updateShapeProperty('stroke_style', $event.target.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600">
                                         <option value="solid" {{ ($selectedLayer['stroke_style'] ?? 'solid') === 'solid' ? 'selected' : '' }}>Solid</option>
                                         <option value="dashed" {{ ($selectedLayer['stroke_style'] ?? 'solid') === 'dashed' ? 'selected' : '' }}>Dashed</option>
                                         <option value="dotted" {{ ($selectedLayer['stroke_style'] ?? 'solid') === 'dotted' ? 'selected' : '' }}>Dotted</option>
@@ -2941,28 +2756,28 @@ new class extends Component {
                             @if($shapeType === 'rectangle')
                                 <div class="grid grid-cols-2 gap-3 items-end">
                                     <div>
-                                        <label class="block text-[11px] font-bold text-slate-400 mb-1">Corner Radius (px)</label>
-                                        <input type="number" min="0" max="500" wire:key="input-corner-radius-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" value="{{ $selectedLayer['corner_radius'] ?? 0 }}" @change="$wire.updateShapeProperty('corner_radius', parseInt($event.target.value) || 0)" {{ !empty($selectedLayer['corner_radius_pill']) ? 'disabled' : '' }} class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 disabled:opacity-40">
+                                        <label class="block text-[11px] font-bold text-slate-500 mb-1">Corner Radius (px)</label>
+                                        <input type="number" min="0" max="500" wire:key="input-corner-radius-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" value="{{ $selectedLayer['corner_radius'] ?? 0 }}" @change="$wire.updateShapeProperty('corner_radius', parseInt($event.target.value) || 0)" {{ !empty($selectedLayer['corner_radius_pill']) ? 'disabled' : '' }} class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600 disabled:opacity-40">
                                     </div>
                                     <label class="flex items-center space-x-2 pb-2 cursor-pointer">
-                                        <input type="checkbox" wire:key="check-pill-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" {{ !empty($selectedLayer['corner_radius_pill']) ? 'checked' : '' }} @change="$wire.updateShapeProperty('corner_radius_pill', $event.target.checked)" class="rounded border-slate-700 bg-slate-950 text-indigo-600 focus:ring-indigo-500">
-                                        <span class="text-[11px] font-bold text-slate-400">Pill Shape</span>
+                                        <input type="checkbox" wire:key="check-pill-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" {{ !empty($selectedLayer['corner_radius_pill']) ? 'checked' : '' }} @change="$wire.updateShapeProperty('corner_radius_pill', $event.target.checked)" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                                        <span class="text-[11px] font-bold text-slate-700">Pill Shape</span>
                                     </label>
                                 </div>
                             @endif
 
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Layer Opacity</label>
-                                <input type="range" min="0" max="100" wire:key="range-opacity-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" value="{{ $selectedLayer['opacity'] ?? 100 }}" @change="$wire.updateShapeProperty('opacity', parseInt($event.target.value))" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+                                <label class="block text-[11px] font-bold text-slate-500 mb-1">Layer Opacity (%)</label>
+                                <input type="range" min="0" max="100" wire:key="range-opacity-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" value="{{ $selectedLayer['opacity'] ?? 100 }}" @change="$wire.updateShapeProperty('opacity', parseInt($event.target.value))" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
                             </div>
                         </div>
                     @endif
 
                     <!-- Photo Specific Shape & Frame Formatting Controls -->
                     @if(($selectedLayer['type'] ?? '') === 'photo')
-                        <div class="space-y-3 pt-2">
+                        <div class="space-y-3 pt-2 border-t border-slate-100">
                             <div>
-                                <label class="block text-[11px] font-bold text-indigo-400 mb-1.5">Photo Frame Shape & Aspect Ratio</label>
+                                <label class="block text-[11px] font-bold text-indigo-700 mb-1.5">Photo Frame Shape & Aspect Ratio</label>
                                 <div class="grid grid-cols-3 gap-2">
                                     <!-- 1:1 Square Option -->
                                     <button 
@@ -2975,7 +2790,7 @@ new class extends Component {
                                             $wire.updateLayerDimensions({{ $selectedLayerIndex }}, curW, curW, curFontSize, curX, curY);
                                         "
                                         class="py-2.5 px-2 rounded-xl border text-xs font-extrabold flex flex-col items-center justify-center space-y-1 transition active:scale-95"
-                                        :class="($wire.layers[{{ $selectedLayerIndex }}].shape === 'square' || ($wire.layers[{{ $selectedLayerIndex }}].border_radius < 999 && Math.abs(curW - curH) < 5)) ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/30' : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'"
+                                        :class="($wire.layers[{{ $selectedLayerIndex }}].shape === 'square' || ($wire.layers[{{ $selectedLayerIndex }}].border_radius < 999 && Math.abs(curW - curH) < 5)) ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/30' : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'"
                                     >
                                         <span class="w-4 h-4 rounded-md border-2 border-current block"></span>
                                         <span>1:1 Square</span>
@@ -2992,7 +2807,7 @@ new class extends Component {
                                             $wire.updateLayerDimensions({{ $selectedLayerIndex }}, curW, curH, curFontSize, curX, curY);
                                         "
                                         class="py-2.5 px-2 rounded-xl border text-xs font-extrabold flex flex-col items-center justify-center space-y-1 transition active:scale-95"
-                                        :class="($wire.layers[{{ $selectedLayerIndex }}].shape === 'portrait' || ($wire.layers[{{ $selectedLayerIndex }}].border_radius < 999 && curH > curW)) ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/30' : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'"
+                                        :class="($wire.layers[{{ $selectedLayerIndex }}].shape === 'portrait' || ($wire.layers[{{ $selectedLayerIndex }}].border_radius < 999 && curH > curW)) ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/30' : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'"
                                     >
                                         <span class="w-3.5 h-4.5 rounded-md border-2 border-current block"></span>
                                         <span>3:4 Portrait</span>
@@ -3009,7 +2824,7 @@ new class extends Component {
                                             $wire.updateLayerDimensions({{ $selectedLayerIndex }}, curW, curW, curFontSize, curX, curY);
                                         "
                                         class="py-2.5 px-2 rounded-xl border text-xs font-extrabold flex flex-col items-center justify-center space-y-1 transition active:scale-95"
-                                        :class="($wire.layers[{{ $selectedLayerIndex }}].shape === 'round' || $wire.layers[{{ $selectedLayerIndex }}].border_radius >= 999) ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/30' : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'"
+                                        :class="($wire.layers[{{ $selectedLayerIndex }}].shape === 'round' || $wire.layers[{{ $selectedLayerIndex }}].border_radius >= 999) ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/30' : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'"
                                     >
                                         <span class="w-4 h-4 rounded-full border-2 border-current block"></span>
                                         <span>Round ⭕</span>
@@ -3019,123 +2834,68 @@ new class extends Component {
 
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Border Radius (px)</label>
-                                    <input type="number" min="0" max="9999" wire:key="input-radius-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.border_radius" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                    <label class="block text-[11px] font-bold text-slate-500 mb-1">Border Radius (px)</label>
+                                    <input type="number" min="0" max="9999" wire:key="input-radius-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.border_radius" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600">
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] font-bold text-slate-400 mb-1">Border Width (px)</label>
-                                    <input type="number" min="0" max="20" wire:key="input-bwidth-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.border_width" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500">
+                                    <label class="block text-[11px] font-bold text-slate-500 mb-1">Border Width (px)</label>
+                                    <input type="number" min="0" max="20" wire:key="input-bwidth-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.border_width" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600">
                                 </div>
                             </div>
 
                             <div>
-                                <label class="block text-[11px] font-bold text-slate-400 mb-1">Border Color (Hex)</label>
+                                <label class="block text-[11px] font-bold text-slate-500 mb-1">Border Color (Hex)</label>
                                 <div class="flex items-center space-x-2">
-                                    <input type="color" wire:key="input-bcolor-picker-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.border_color" class="w-8 h-8 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer">
-                                    <input type="text" wire:key="input-bcolor-text-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.border_color" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 uppercase">
+                                    <input type="color" wire:key="input-bcolor-picker-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.border_color" class="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer shadow-sm">
+                                    <input type="text" wire:key="input-bcolor-text-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.border_color" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600 uppercase">
                                 </div>
                             </div>
                         </div>
                     @endif
 
                     <!-- Layer Action Buttons -->
-                    <div class="flex items-center justify-between pt-3 border-t border-slate-800">
-                        <div class="flex space-x-2">
-                            <button type="button" wire:click="moveLayer({{ $selectedLayerIndex }}, 'up')" class="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-bold">Move Up</button>
-                            <button type="button" wire:click="moveLayer({{ $selectedLayerIndex }}, 'down')" class="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-bold">Move Down</button>
-                            <button type="button" wire:click="duplicateSelected" class="px-2.5 py-1 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-lg text-xs font-bold">Duplicate</button>
+                    <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+                        <div class="flex space-x-1.5">
+                            <button type="button" wire:click="moveLayer({{ $selectedLayerIndex }}, 'up')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition">Up</button>
+                            <button type="button" wire:click="moveLayer({{ $selectedLayerIndex }}, 'down')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition">Down</button>
+                            <button type="button" wire:click="duplicateSelected" class="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition">Duplicate</button>
                             @if(!empty($selectedLayer['group_id']))
-                                <button type="button" wire:click="ungroupSelected" class="px-2.5 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-lg text-xs font-bold transition">Ungroup</button>
+                                <button type="button" wire:click="ungroupSelected" class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold transition">Ungroup</button>
                             @endif
                         </div>
-                        <button type="button" wire:click="removeLayer({{ $selectedLayerIndex }})" class="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-bold">Delete Layer</button>
+                        <button type="button" wire:click="removeLayer({{ $selectedLayerIndex }})" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl text-xs font-bold transition">Delete</button>
                     </div>
                 </div>
             @endif
 
-            <!-- Layers Directory & Add Elements -->
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <h3 class="text-sm font-black text-white">Template Layers List</h3>
-                    <div class="flex items-center space-x-1.5">
-                        <button type="button" wire:click="addTextLayer" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-sm">
-                            + Text
-                        </button>
-                        <button type="button" wire:click="addPhotoLayer" class="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-sm">
-                            + Photo
-                        </button>
-                        <button type="button" wire:click="addLogoLayer" class="px-2.5 py-1.5 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 rounded-xl text-xs font-bold transition flex items-center border border-indigo-500/30">
-                            + Logo
-                        </button>
-                        <div class="relative" x-data="{ shapeMenuOpen: false }" @click.outside="shapeMenuOpen = false">
-                            <button type="button" @click="shapeMenuOpen = !shapeMenuOpen" class="px-2.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 rounded-xl text-xs font-bold transition flex items-center border border-emerald-500/30">
-                                + Shape
-                            </button>
-                            <div x-show="shapeMenuOpen" @click="shapeMenuOpen = false" class="absolute right-0 mt-1.5 w-36 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden py-1">
-                                <button type="button" wire:click="addShapeLayer('rectangle')" class="w-full text-left px-3 py-2 text-xs font-bold text-slate-200 hover:bg-slate-800 flex items-center space-x-2">
-                                    <span class="w-3 h-3 rounded-sm bg-indigo-400 inline-block"></span>
-                                    <span>Rectangle</span>
-                                </button>
-                                <button type="button" wire:click="addShapeLayer('circle')" class="w-full text-left px-3 py-2 text-xs font-bold text-slate-200 hover:bg-slate-800 flex items-center space-x-2">
-                                    <span class="w-3 h-3 rounded-full bg-indigo-400 inline-block"></span>
-                                    <span>Circle</span>
-                                </button>
-                                <button type="button" wire:click="addShapeLayer('line')" class="w-full text-left px-3 py-2 text-xs font-bold text-slate-200 hover:bg-slate-800 flex items-center space-x-2">
-                                    <span class="w-3 h-0.5 bg-indigo-400 inline-block"></span>
-                                    <span>Line</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="space-y-2 max-h-60 overflow-y-auto pr-1">
-                    @foreach($layers as $idx => $layer)
-                        <div 
-                            wire:key="list-layer-{{ $layer['id'] ?? $idx }}"
-                            @click.prevent="$wire.selectLayer({{ $idx }}, $event.shiftKey)"
-                            class="p-3 rounded-2xl border transition flex items-center justify-between cursor-pointer {{ in_array($idx, $selectedLayerIndices) ? 'bg-indigo-500/10 border-indigo-500/40 text-white' : 'bg-slate-950/60 border-slate-800 text-slate-300 hover:border-slate-700' }}"
-                        >
-                            <div class="flex items-center space-x-3">
-                                <span class="text-[10px] font-black uppercase tracking-wider text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md">
-                                    {{ ($layer['type'] ?? 'layer') === 'shape' ? ($layer['shape_type'] ?? 'shape') : ($layer['type'] ?? 'layer') }}
-                                </span>
-                                <div>
-                                    <span class="text-xs font-bold block">{{ $layer['label'] ?? 'Layer #' . ($idx + 1) }}</span>
-                                    <span class="text-[10px] text-slate-400">X: {{ $layer['x'] ?? 0 }}px, Y: {{ $layer['y'] ?? 0 }}px</span>
-                                </div>
-                            </div>
-                            <span class="text-xs text-slate-500">&rarr;</span>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-
             <!-- Background Graphic Management -->
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <h3 class="text-sm font-black text-white">Background Template Graphic</h3>
+            <div class="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xl shadow-slate-200/40 space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                        <h3 class="text-sm font-black text-slate-900">Background Graphic</h3>
+                        <p class="text-[11px] text-slate-500 font-medium">Upload or update the master card background graphic</p>
+                    </div>
                     @if($template && $template->background_image)
-                        <button type="button" wire:click="deleteBackgroundImage" wire:confirm="Are you sure you want to delete the current background image?" class="px-2.5 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-bold transition flex items-center space-x-1">
+                        <button type="button" wire:click="deleteBackgroundImage" wire:confirm="Are you sure you want to delete the current background image?" class="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl text-xs font-bold transition flex items-center space-x-1">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            <span>Delete Background</span>
+                            <span>Delete</span>
                         </button>
                     @endif
                 </div>
 
                 @if($template && $template->background_image)
-                    <div class="relative group rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 p-2">
+                    <div class="relative group rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 p-2">
                         @php
                             $bgImgUrl = str_starts_with($template->background_image, 'http') 
                                 ? $template->background_image 
                                 : asset('storage/' . $template->background_image);
                         @endphp
-                        <div class="h-28 rounded-xl overflow-hidden bg-slate-900 flex items-center justify-center">
+                        <div class="h-28 rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center border border-slate-200/60">
                             <img src="{{ $bgImgUrl }}" class="w-full h-full object-cover" alt="Background Graphic Preview" />
                         </div>
-                        <div class="mt-2 flex items-center justify-between text-[11px] font-bold text-slate-400 px-1">
-                            <span class="text-emerald-400 font-semibold flex items-center">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block mr-1.5"></span>
+                        <div class="mt-2 flex items-center justify-between text-[11px] font-bold text-slate-600 px-1">
+                            <span class="text-emerald-700 font-bold flex items-center">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block mr-1.5 animate-pulse"></span>
                                 Active Background Image
                             </span>
                         </div>
@@ -3143,24 +2903,25 @@ new class extends Component {
                 @endif
 
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-400 mb-1">
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">
                         {{ ($template && $template->background_image) ? 'Update / Replace Background Graphic' : 'Upload New Background Graphic' }}
                     </label>
-                    <input type="file" wire:model="bgUpload" accept="image/*" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 transition">
+                    <input type="file" wire:model="bgUpload" accept="image/*" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-700 focus:outline-none focus:border-indigo-600 transition">
                     @if($bgUpload)
-                        <span class="text-[11px] font-bold text-indigo-400 mt-1 block">New background file selected. Click 'Save Design' to apply update!</span>
+                        <span class="text-[11px] font-bold text-indigo-700 mt-1 block">New background file selected. Click 'Save Design' to apply update!</span>
                     @else
                         <span class="text-[10px] text-slate-500 mt-1 block">Upload custom background graphic (CR-80 85.6mm x 54mm equivalent ratio)</span>
                     @endif
                 </div>
             </div>
         </div>
+    </div>
     <link rel="stylesheet" href="{{ asset('css/fonts.css') }}">
     <style>
     .canvas-grid-bg {
         background-image: 
-            linear-gradient(to right, rgba(99, 102, 241, 0.07) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(99, 102, 241, 0.07) 1px, transparent 1px);
+            linear-gradient(to right, rgba(99, 102, 241, 0.09) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(99, 102, 241, 0.09) 1px, transparent 1px);
         background-size: 10px 10px;
     }
     </style>
