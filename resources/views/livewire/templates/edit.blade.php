@@ -960,362 +960,365 @@ new class extends Component {
     }
 }; ?>
 
-<div class="space-y-6 notranslate" translate="no" x-data="{
-    @php
-        $isPortrait = $orientation === 'portrait';
-        $canvasW = $isPortrait ? 638 : 1011;
-        $canvasH = $isPortrait ? 1011 : 638;
-        $bgPath = $template->background_image ?? null;
-        $bgUrl = $bgPath ? (str_starts_with($bgPath, 'http') ? $bgPath : asset('storage/' . $bgPath)) : null;
-    @endphp
-    zoomLevel: (function() {
-        try {
-            const savedZoom = localStorage.getItem('canva_studio_zoom');
-            return savedZoom ? parseInt(savedZoom) : 100;
-        } catch (e) {
-            return 100;
-        }
-    })(),
-    activeInspectorTab: 'layers',
-    alignMode: 'page',
-    activeTool: 'select',
-    isSpacePressed: false,
-    isPanning: false,
-    panStartX: 0,
-    panStartY: 0,
-    panOffsetX: 0,
-    panOffsetY: 0,
-    isDragging: false,
-    dragLayerIndex: null,
-    startX: 0,
-    startY: 0,
-    origX: 0,
-    origY: 0,
-    curX: 0,
-    curY: 0,
-    curW: 150,
-    curH: 30,
-    curFontSize: 14,
-    isResizing: false,
-    resizeHandle: null,
-    origW: 0,
-    origH: 0,
-    isSelectingBox: false,
-    boxStartX: 0,
-    boxStartY: 0,
-    boxRect: { left: 0, top: 0, width: 0, height: 0 },
-    snapLines: { x: null, y: null },
-    setZoom(val) {
-        this.zoomLevel = val;
-        try {
-            localStorage.setItem('canva_studio_zoom', val);
-        } catch (e) {}
-    },
-    toggleTool(tool) {
-        this.activeTool = tool;
-        if (tool === 'select') {
-            this.isPanning = false;
-        }
-    },
-    resetPan() {
-        this.panOffsetX = 0;
-        this.panOffsetY = 0;
-    },
-    onViewportMouseDown(e) {
-        if (this.activeTool === 'pan' || this.isSpacePressed || e.button === 1) {
-            this.isPanning = true;
-            this.panStartX = e.clientX - this.panOffsetX;
-            this.panStartY = e.clientY - this.panOffsetY;
-            e.preventDefault();
-        }
-    },
-    onViewportMouseMove(e) {
-        if (this.isPanning) {
-            this.panOffsetX = e.clientX - this.panStartX;
-            this.panOffsetY = e.clientY - this.panStartY;
-        }
-    },
-    onViewportMouseUp(e) {
-        if (this.isPanning) {
-            this.isPanning = false;
-        }
-    },
-    init() {
-        window.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
-                this.isSpacePressed = true;
-            }
-            if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
-                e.preventDefault();
-                this.$wire.undo();
-            }
-            if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
-                e.preventDefault();
-                this.$wire.redo();
-            }
-        });
-        window.addEventListener('keyup', (e) => {
-            if (e.code === 'Space') {
-                this.isSpacePressed = false;
-                this.isPanning = false;
-            }
-        });
-        window.addEventListener('mousemove', (e) => {
-            if (this.isDragging) {
-                const zoomFactor = (parseFloat(this.zoomLevel) || 100) / 100;
-                let dx = (e.clientX - this.startX) / zoomFactor;
-                let dy = (e.clientY - this.startY) / zoomFactor;
-                let targetX = Math.round(this.origX + dx);
-                let targetY = Math.round(this.origY + dy);
+@php
+    $isPortrait = $orientation === 'portrait';
+    $canvasW = $isPortrait ? 638 : 1011;
+    $canvasH = $isPortrait ? 1011 : 638;
+    $bgPath = $template->background_image ?? null;
+    $bgUrl = $bgPath ? (str_starts_with($bgPath, 'http') ? $bgPath : asset('storage/' . $bgPath)) : null;
+@endphp
 
-                if (this.$wire.enableSnapping) {
-                    const snapThreshold = 6;
-                    this.snapLines = { x: null, y: null };
+<script>
+    function templateStudio(canvasW, canvasH) {
+        return {
+            zoomLevel: 100,
+            activeInspectorTab: 'layers',
+            alignMode: 'page',
+            activeTool: 'select',
+            isSpacePressed: false,
+            isPanning: false,
+            panStartX: 0,
+            panStartY: 0,
+            panOffsetX: 0,
+            panOffsetY: 0,
+            isDragging: false,
+            dragLayerIndex: null,
+            startX: 0,
+            startY: 0,
+            origX: 0,
+            origY: 0,
+            curX: 0,
+            curY: 0,
+            curW: 150,
+            curH: 30,
+            curFontSize: 14,
+            isResizing: false,
+            resizeHandle: null,
+            origW: 0,
+            origH: 0,
+            isSelectingBox: false,
+            boxStartX: 0,
+            boxStartY: 0,
+            boxRect: { left: 0, top: 0, width: 0, height: 0 },
+            snapLines: { x: null, y: null },
+            setZoom(val) {
+                this.zoomLevel = val;
+                try {
+                    localStorage.setItem('canva_studio_zoom', val);
+                } catch (e) {}
+            },
+            toggleTool(tool) {
+                this.activeTool = tool;
+                if (tool === 'select') {
+                    this.isPanning = false;
+                }
+            },
+            resetPan() {
+                this.panOffsetX = 0;
+                this.panOffsetY = 0;
+            },
+            onViewportMouseDown(e) {
+                if (this.activeTool === 'pan' || this.isSpacePressed || e.button === 1) {
+                    this.isPanning = true;
+                    this.panStartX = e.clientX - this.panOffsetX;
+                    this.panStartY = e.clientY - this.panOffsetY;
+                    e.preventDefault();
+                }
+            },
+            onViewportMouseMove(e) {
+                if (this.isPanning) {
+                    this.panOffsetX = e.clientX - this.panStartX;
+                    this.panOffsetY = e.clientY - this.panStartY;
+                }
+            },
+            onViewportMouseUp(e) {
+                if (this.isPanning) {
+                    this.isPanning = false;
+                }
+            },
+            init() {
+                try {
+                    const savedZoom = localStorage.getItem('canva_studio_zoom');
+                    if (savedZoom) this.zoomLevel = parseInt(savedZoom);
+                } catch(e) {}
 
-                    const canvasCenterX = {{ $canvasW }} / 2;
-                    const canvasCenterY = {{ $canvasH }} / 2;
-
-                    const layerW = this.curW || 150;
-                    const layerH = this.curH || 30;
-                    const layerCenterX = targetX + layerW / 2;
-                    const layerCenterY = targetY + layerH / 2;
-
-                    if (Math.abs(layerCenterX - canvasCenterX) < snapThreshold) {
-                        targetX = Math.round(canvasCenterX - layerW / 2);
-                        this.snapLines.x = canvasCenterX;
+                window.addEventListener('keydown', (e) => {
+                    if (e.code === 'Space' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+                        this.isSpacePressed = true;
                     }
-                    if (Math.abs(layerCenterY - canvasCenterY) < snapThreshold) {
-                        targetY = Math.round(canvasCenterY - layerH / 2);
-                        this.snapLines.y = canvasCenterY;
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                        e.preventDefault();
+                        this.$wire.undo();
                     }
-                } else {
-                    this.snapLines = { x: null, y: null };
-                }
-
-                this.curX = targetX;
-                this.curY = targetY;
-
-                const layerEl = document.querySelector('[data-layer-index="' + this.dragLayerIndex + '"]');
-                if (layerEl) {
-                    layerEl.style.left = targetX + 'px';
-                    layerEl.style.top = targetY + 'px';
-                }
-            } else if (this.isResizing) {
-                const zoomFactor = (parseFloat(this.zoomLevel) || 100) / 100;
-                let dx = (e.clientX - this.startX) / zoomFactor;
-                let dy = (e.clientY - this.startY) / zoomFactor;
-
-                let newW = this.origW;
-                let newH = this.origH;
-                let newX = this.origX;
-                let newY = this.origY;
-
-                const handle = this.resizeHandle;
-                if (handle.includes('e')) newW = Math.max(10, this.origW + dx);
-                if (handle.includes('s')) newH = Math.max(10, this.origH + dy);
-                if (handle.includes('w')) {
-                    newW = Math.max(10, this.origW - dx);
-                    newX = this.origX + (this.origW - newW);
-                }
-                if (handle.includes('n')) {
-                    newH = Math.max(10, this.origH - dy);
-                    newY = this.origY + (this.origH - newH);
-                }
-
-                newW = Math.round(newW);
-                newH = Math.round(newH);
-                newX = Math.round(newX);
-                newY = Math.round(newY);
-
-                this.curW = newW;
-                this.curH = newH;
-                this.curX = newX;
-                this.curY = newY;
-
-                const layerEl = document.querySelector('[data-layer-index="' + this.dragLayerIndex + '"]');
-                if (layerEl) {
-                    layerEl.style.left = newX + 'px';
-                    layerEl.style.top = newY + 'px';
-                    const contentEl = layerEl.querySelector('[data-layer-content]');
-                    if (contentEl) {
-                        contentEl.style.width = newW + 'px';
-                        contentEl.style.height = newH + 'px';
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+                        e.preventDefault();
+                        this.$wire.redo();
                     }
-                }
-            } else if (this.isSelectingBox) {
-                const canvasEl = document.getElementById('canva-studio-canvas');
-                if (canvasEl) {
-                    const rect = canvasEl.getBoundingClientRect();
-                    const zoomFactor = (parseFloat(this.zoomLevel) || 100) / 100;
-                    const currX = (e.clientX - rect.left) / zoomFactor;
-                    const currY = (e.clientY - rect.top) / zoomFactor;
+                });
+                window.addEventListener('keyup', (e) => {
+                    if (e.code === 'Space') {
+                        this.isSpacePressed = false;
+                        this.isPanning = false;
+                    }
+                });
+                window.addEventListener('mousemove', (e) => {
+                    if (this.isDragging) {
+                        const zoomFactor = (parseFloat(this.zoomLevel) || 100) / 100;
+                        let dx = (e.clientX - this.startX) / zoomFactor;
+                        let dy = (e.clientY - this.startY) / zoomFactor;
+                        let targetX = Math.round(this.origX + dx);
+                        let targetY = Math.round(this.origY + dy);
 
-                    const left = Math.min(this.boxStartX, currX);
-                    const top = Math.min(this.boxStartY, currY);
-                    const width = Math.abs(currX - this.boxStartX);
-                    const height = Math.abs(currY - this.boxStartY);
+                        if (this.$wire.enableSnapping) {
+                            const snapThreshold = 6;
+                            this.snapLines = { x: null, y: null };
 
-                    this.boxRect = { left, top, width, height };
-                }
-            }
-        });
-        window.addEventListener('mouseup', () => {
-            if (this.isDragging) {
-                this.isDragging = false;
-                this.snapLines = { x: null, y: null };
-                this.$wire.updateLayerCoordinates(this.dragLayerIndex, this.curX, this.curY);
-            }
-            if (this.isResizing) {
-                this.isResizing = false;
-                this.snapLines = { x: null, y: null };
-                this.$wire.updateLayerDimensions(this.dragLayerIndex, this.curW, this.curH, this.curFontSize, this.curX, this.curY);
-            }
-            if (this.isSelectingBox) {
-                this.isSelectingBox = false;
-                const selRect = this.boxRect;
-                if (selRect.width > 5 && selRect.height > 5) {
-                    const selectedIndices = [];
-                    const layerElements = document.querySelectorAll('[data-layer-box]');
-                    layerElements.forEach(el => {
-                        const idx = parseInt(el.getAttribute('data-layer-index'));
-                        const x = parseInt(el.style.left) || 0;
-                        const y = parseInt(el.style.top) || 0;
-                        const w = el.offsetWidth || 50;
-                        const h = el.offsetHeight || 20;
+                            const canvasCenterX = canvasW / 2;
+                            const canvasCenterY = canvasH / 2;
 
-                        if (x < selRect.left + selRect.width &&
-                            x + w > selRect.left &&
-                            y < selRect.top + selRect.height &&
-                            y + h > selRect.top) {
-                            selectedIndices.push(idx);
+                            const layerW = this.curW || 150;
+                            const layerH = this.curH || 30;
+                            const layerCenterX = targetX + layerW / 2;
+                            const layerCenterY = targetY + layerH / 2;
+
+                            if (Math.abs(layerCenterX - canvasCenterX) < snapThreshold) {
+                                targetX = Math.round(canvasCenterX - layerW / 2);
+                                this.snapLines.x = canvasCenterX;
+                            }
+                            if (Math.abs(layerCenterY - canvasCenterY) < snapThreshold) {
+                                targetY = Math.round(canvasCenterY - layerH / 2);
+                                this.snapLines.y = canvasCenterY;
+                            }
+                        } else {
+                            this.snapLines = { x: null, y: null };
                         }
-                    });
-                    if (selectedIndices.length > 0) {
-                        this.$wire.selectMultipleLayers(selectedIndices);
+
+                        this.curX = targetX;
+                        this.curY = targetY;
+
+                        const layerEl = document.querySelector('[data-layer-index="' + this.dragLayerIndex + '"]');
+                        if (layerEl) {
+                            layerEl.style.left = targetX + 'px';
+                            layerEl.style.top = targetY + 'px';
+                        }
+                    } else if (this.isResizing) {
+                        const zoomFactor = (parseFloat(this.zoomLevel) || 100) / 100;
+                        let dx = (e.clientX - this.startX) / zoomFactor;
+                        let dy = (e.clientY - this.startY) / zoomFactor;
+
+                        let newW = this.origW;
+                        let newH = this.origH;
+                        let newX = this.origX;
+                        let newY = this.origY;
+
+                        const handle = this.resizeHandle;
+                        if (handle.includes('e')) newW = Math.max(10, this.origW + dx);
+                        if (handle.includes('s')) newH = Math.max(10, this.origH + dy);
+                        if (handle.includes('w')) {
+                            newW = Math.max(10, this.origW - dx);
+                            newX = this.origX + (this.origW - newW);
+                        }
+                        if (handle.includes('n')) {
+                            newH = Math.max(10, this.origH - dy);
+                            newY = this.origY + (this.origH - newH);
+                        }
+
+                        newW = Math.round(newW);
+                        newH = Math.round(newH);
+                        newX = Math.round(newX);
+                        newY = Math.round(newY);
+
+                        this.curW = newW;
+                        this.curH = newH;
+                        this.curX = newX;
+                        this.curY = newY;
+
+                        const layerEl = document.querySelector('[data-layer-index="' + this.dragLayerIndex + '"]');
+                        if (layerEl) {
+                            layerEl.style.left = newX + 'px';
+                            layerEl.style.top = newY + 'px';
+                            const contentEl = layerEl.querySelector('[data-layer-content]');
+                            if (contentEl) {
+                                contentEl.style.width = newW + 'px';
+                                contentEl.style.height = newH + 'px';
+                            }
+                        }
+                    } else if (this.isSelectingBox) {
+                        const canvasEl = document.getElementById('canva-studio-canvas');
+                        if (canvasEl) {
+                            const rect = canvasEl.getBoundingClientRect();
+                            const zoomFactor = (parseFloat(this.zoomLevel) || 100) / 100;
+                            const currX = (e.clientX - rect.left) / zoomFactor;
+                            const currY = (e.clientY - rect.top) / zoomFactor;
+
+                            const left = Math.min(this.boxStartX, currX);
+                            const top = Math.min(this.boxStartY, currY);
+                            const width = Math.abs(currX - this.boxStartX);
+                            const height = Math.abs(currY - this.boxStartY);
+
+                            this.boxRect = { left, top, width, height };
+                        }
                     }
-                }
+                });
+                window.addEventListener('mouseup', () => {
+                    if (this.isDragging) {
+                        this.isDragging = false;
+                        this.snapLines = { x: null, y: null };
+                        this.$wire.updateLayerCoordinates(this.dragLayerIndex, this.curX, this.curY);
+                    }
+                    if (this.isResizing) {
+                        this.isResizing = false;
+                        this.snapLines = { x: null, y: null };
+                        this.$wire.updateLayerDimensions(this.dragLayerIndex, this.curW, this.curH, this.curFontSize, this.curX, this.curY);
+                    }
+                    if (this.isSelectingBox) {
+                        this.isSelectingBox = false;
+                        const selRect = this.boxRect;
+                        if (selRect.width > 5 && selRect.height > 5) {
+                            const selectedIndices = [];
+                            const layerElements = document.querySelectorAll('[data-layer-box]');
+                            layerElements.forEach(el => {
+                                const idx = parseInt(el.getAttribute('data-layer-index'));
+                                const x = parseInt(el.style.left) || 0;
+                                const y = parseInt(el.style.top) || 0;
+                                const w = el.offsetWidth || 50;
+                                const h = el.offsetHeight || 20;
+
+                                if (x < selRect.left + selRect.width &&
+                                    x + w > selRect.left &&
+                                    y < selRect.top + selRect.height &&
+                                    y + h > selRect.top) {
+                                    selectedIndices.push(idx);
+                                }
+                            });
+                            if (selectedIndices.length > 0) {
+                                this.$wire.selectMultipleLayers(selectedIndices);
+                            }
+                        }
+                    }
+                });
+            },
+            startDrag(idx, e) {
+                if (this.activeTool === 'pan' || this.isSpacePressed) return;
+                this.isDragging = true;
+                this.dragLayerIndex = idx;
+                this.startX = e.clientX;
+                this.startY = e.clientY;
+                const layer = this.$wire.layers[idx] || {};
+                this.origX = layer.x || 0;
+                this.origY = layer.y || 0;
+                this.curX = this.origX;
+                this.curY = this.origY;
+                this.curW = layer.width || 150;
+                this.curH = layer.height || 30;
+                this.curFontSize = layer.font_size || 14;
+            },
+            startResize(idx, handle, e) {
+                if (this.activeTool === 'pan' || this.isSpacePressed) return;
+                this.isResizing = true;
+                this.dragLayerIndex = idx;
+                this.resizeHandle = handle;
+                this.startX = e.clientX;
+                this.startY = e.clientY;
+                const layer = this.$wire.layers[idx] || {};
+                this.origX = layer.x || 0;
+                this.origY = layer.y || 0;
+                this.origW = layer.width || 150;
+                this.origH = layer.height || 30;
+                this.curX = this.origX;
+                this.curY = this.origY;
+                this.curW = this.origW;
+                this.curH = this.origH;
+                this.curFontSize = layer.font_size || 14;
+            },
+            alignSelectedToPage(position) {
+                if (!this.$wire.selectedLayerIndices || this.$wire.selectedLayerIndices.length === 0) return;
+                const updates = [];
+
+                this.$wire.selectedLayerIndices.forEach(idx => {
+                    const layer = this.$wire.layers[idx];
+                    if (!layer) return;
+                    const el = document.querySelector('[data-layer-index="' + idx + '"]');
+                    const w = el ? el.offsetWidth : (layer.width || 100);
+                    const h = el ? el.offsetHeight : (layer.height || 30);
+
+                    let newX = layer.x;
+                    let newY = layer.y;
+
+                    switch(position) {
+                        case 'top': newY = 0; break;
+                        case 'bottom': newY = canvasH - h; break;
+                        case 'middle': newY = Math.round((canvasH - h) / 2); break;
+                        case 'left': newX = 0; break;
+                        case 'right': newX = canvasW - w; break;
+                        case 'center': newX = Math.round((canvasW - w) / 2); break;
+                    }
+
+                    if (el) {
+                        el.style.left = newX + 'px';
+                        el.style.top = newY + 'px';
+                    }
+                    updates.push({ idx: idx, x: newX, y: newY });
+                });
+
+                this.$wire.updateMultipleLayersCoordinates(updates);
+            },
+            alignSelectedToSelection(position) {
+                if (!this.$wire.selectedLayerIndices || this.$wire.selectedLayerIndices.length < 2) return;
+                const items = [];
+                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+                this.$wire.selectedLayerIndices.forEach(idx => {
+                    const layer = this.$wire.layers[idx];
+                    if (!layer) return;
+                    const el = document.querySelector('[data-layer-index="' + idx + '"]');
+                    const x = layer.x || 0;
+                    const y = layer.y || 0;
+                    const w = el ? el.offsetWidth : (layer.width || 100);
+                    const h = el ? el.offsetHeight : (layer.height || 30);
+
+                    minX = Math.min(minX, x);
+                    minY = Math.min(minY, y);
+                    maxX = Math.max(maxX, x + w);
+                    maxY = Math.max(maxY, y + h);
+
+                    items.push({ idx: idx, el: el, x: x, y: y, w: w, h: h });
+                });
+
+                const groupW = maxX - minX;
+                const groupH = maxY - minY;
+                const updates = [];
+
+                items.forEach(item => {
+                    let finalX = item.x;
+                    let finalY = item.y;
+
+                    switch(position) {
+                        case 'left': finalX = minX; break;
+                        case 'center': finalX = minX + (groupW - item.w) / 2; break;
+                        case 'right': finalX = maxX - item.w; break;
+                        case 'top': finalY = minY; break;
+                        case 'middle': finalY = minY + (groupH - item.h) / 2; break;
+                        case 'bottom': finalY = maxY - item.h; break;
+                    }
+
+                    finalX = Math.round(finalX);
+                    finalY = Math.round(finalY);
+
+                    if (item.el) {
+                        item.el.style.left = finalX + 'px';
+                        item.el.style.top = finalY + 'px';
+                    }
+                    updates.push({ idx: item.idx, x: finalX, y: finalY });
+                });
+
+                this.$wire.updateMultipleLayersCoordinates(updates);
             }
-        });
-    },
-    startDrag(idx, e) {
-        if (this.activeTool === 'pan' || this.isSpacePressed) return;
-        this.isDragging = true;
-        this.dragLayerIndex = idx;
-        this.startX = e.clientX;
-        this.startY = e.clientY;
-        const layer = this.$wire.layers[idx] || {};
-        this.origX = layer.x || 0;
-        this.origY = layer.y || 0;
-        this.curX = this.origX;
-        this.curY = this.origY;
-        this.curW = layer.width || 150;
-        this.curH = layer.height || 30;
-        this.curFontSize = layer.font_size || 14;
-    },
-    startResize(idx, handle, e) {
-        if (this.activeTool === 'pan' || this.isSpacePressed) return;
-        this.isResizing = true;
-        this.dragLayerIndex = idx;
-        this.resizeHandle = handle;
-        this.startX = e.clientX;
-        this.startY = e.clientY;
-        const layer = this.$wire.layers[idx] || {};
-        this.origX = layer.x || 0;
-        this.origY = layer.y || 0;
-        this.origW = layer.width || 150;
-        this.origH = layer.height || 30;
-        this.curX = this.origX;
-        this.curY = this.origY;
-        this.curW = this.origW;
-        this.curH = this.origH;
-        this.curFontSize = layer.font_size || 14;
-    },
-    alignSelectedToPage(position) {
-        if (!this.$wire.selectedLayerIndices || this.$wire.selectedLayerIndices.length === 0) return;
-        const canvasW = {{ $canvasW }};
-        const canvasH = {{ $canvasH }};
-        const updates = [];
-
-        this.$wire.selectedLayerIndices.forEach(idx => {
-            const layer = this.$wire.layers[idx];
-            if (!layer) return;
-            const el = document.querySelector('[data-layer-index="' + idx + '"]');
-            const w = el ? el.offsetWidth : (layer.width || 100);
-            const h = el ? el.offsetHeight : (layer.height || 30);
-
-            let newX = layer.x;
-            let newY = layer.y;
-
-            switch(position) {
-                case 'top': newY = 0; break;
-                case 'bottom': newY = canvasH - h; break;
-                case 'middle': newY = Math.round((canvasH - h) / 2); break;
-                case 'left': newX = 0; break;
-                case 'right': newX = canvasW - w; break;
-                case 'center': newX = Math.round((canvasW - w) / 2); break;
-            }
-
-            if (el) {
-                el.style.left = newX + 'px';
-                el.style.top = newY + 'px';
-            }
-            updates.push({ idx: idx, x: newX, y: newY });
-        });
-
-        this.$wire.updateMultipleLayersCoordinates(updates);
-    },
-    alignSelectedToSelection(position) {
-        if (!this.$wire.selectedLayerIndices || this.$wire.selectedLayerIndices.length < 2) return;
-        const items = [];
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-
-        this.$wire.selectedLayerIndices.forEach(idx => {
-            const layer = this.$wire.layers[idx];
-            if (!layer) return;
-            const el = document.querySelector('[data-layer-index="' + idx + '"]');
-            const x = layer.x || 0;
-            const y = layer.y || 0;
-            const w = el ? el.offsetWidth : (layer.width || 100);
-            const h = el ? el.offsetHeight : (layer.height || 30);
-
-            minX = Math.min(minX, x);
-            minY = Math.min(minY, y);
-            maxX = Math.max(maxX, x + w);
-            maxY = Math.max(maxY, y + h);
-
-            items.push({ idx: idx, el: el, x: x, y: y, w: w, h: h });
-        });
-
-        const groupW = maxX - minX;
-        const groupH = maxY - minY;
-        const updates = [];
-
-        items.forEach(item => {
-            let finalX = item.x;
-            let finalY = item.y;
-
-            switch(position) {
-                case 'left': finalX = minX; break;
-                case 'center': finalX = minX + (groupW - item.w) / 2; break;
-                case 'right': finalX = maxX - item.w; break;
-                case 'top': finalY = minY; break;
-                case 'middle': finalY = minY + (groupH - item.h) / 2; break;
-                case 'bottom': finalY = maxY - item.h; break;
-            }
-
-            finalX = Math.round(finalX);
-            finalY = Math.round(finalY);
-
-            if (item.el) {
-                item.el.style.left = finalX + 'px';
-                item.el.style.top = finalY + 'px';
-            }
-            updates.push({ idx: item.idx, x: finalX, y: finalY });
-        });
-
-        this.$wire.updateMultipleLayersCoordinates(updates);
+        };
     }
-}">
+</script>
+
+<div class="space-y-6 notranslate" translate="no" x-data="templateStudio({{ $canvasW }}, {{ $canvasH }})">
 
     @if(session()->has('message'))
         <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-2xl flex items-center justify-between text-sm font-semibold">
