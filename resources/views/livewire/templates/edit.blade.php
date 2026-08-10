@@ -439,6 +439,42 @@ new class extends Component {
         $this->selectLayer($newIndex, false);
     }
 
+    public function addQrLayer()
+    {
+        $this->recordHistory();
+        $newIndex = count($this->layers);
+
+        // Find last QR layer to copy its styling settings
+        $lastQrLayer = null;
+        if ($this->selectedLayerIndex !== null && isset($this->layers[$this->selectedLayerIndex]) && $this->layers[$this->selectedLayerIndex]['type'] === 'qr') {
+            $lastQrLayer = $this->layers[$this->selectedLayerIndex];
+        } else {
+            for ($i = count($this->layers) - 1; $i >= 0; $i--) {
+                if ($this->layers[$i]['type'] === 'qr') {
+                    $lastQrLayer = $this->layers[$i];
+                    break;
+                }
+            }
+        }
+
+        $w = $lastQrLayer ? ($lastQrLayer['width'] ?? 60) : 60;
+        $h = $lastQrLayer ? ($lastQrLayer['height'] ?? 60) : 60;
+        $x = $lastQrLayer ? (($lastQrLayer['x'] ?? 300) + 15) : 300;
+        $y = $lastQrLayer ? (($lastQrLayer['y'] ?? 200) + 15) : 200;
+
+        $this->layers[] = [
+            'id' => 'qr_' . microtime(true) . '_' . rand(1000, 9999),
+            'type' => 'qr',
+            'label' => 'QR Code',
+            'x' => $x,
+            'y' => $y,
+            'width' => $w,
+            'height' => $h,
+            'value' => '{Ref No}',
+        ];
+        $this->selectLayer($newIndex, false);
+    }
+
     private function shapeDefaults(string $shapeType): array
     {
         $shapeType = in_array($shapeType, ['rectangle', 'circle', 'line']) ? $shapeType : 'rectangle';
@@ -629,6 +665,10 @@ new class extends Component {
         }
         if ($tag === '{Student Photo}') {
             $this->addPhotoLayer();
+            return;
+        }
+        if ($tag === '{QR Code}') {
+            $this->addQrLayer();
             return;
         }
 
@@ -2399,14 +2439,22 @@ new class extends Component {
                     <div class="flex flex-wrap gap-1.5">
                         @php
                             $studentVars = [
-                                '{Student Photo}', '{First Name}', '{Middle Name}', '{Last Name}',
+                                '{Student Photo}', '{QR Code}', '{First Name}', '{Middle Name}', '{Last Name}',
                                 '{Roll No}', '{Ref No}', '{Campaign}', '{Standard}', '{Division}',
                                 'Grade ({grade}) Div ({division})', '{Blood Group}', '{Gender}',
                                 '{DOB}', '{Contact Number}', '{Address}', '{Pincode}'
                             ];
                         @endphp
                         @foreach($studentVars as $v)
-                            <button type="button" wire:click="appendVariableToSelected('{{ $v }}')" class="px-2.5 py-1 {{ $v === '{Student Photo}' ? 'bg-amber-600 text-white hover:bg-amber-700 shadow-sm shadow-amber-600/25' : 'bg-amber-50 hover:bg-amber-600 text-amber-800 hover:text-white border border-amber-200/80' }} rounded-lg text-xs font-bold transition">
+                            @php
+                                $btnStyle = 'bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200/80';
+                                if ($v === '{Student Photo}') {
+                                    $btnStyle = 'bg-amber-600 text-white hover:bg-amber-700 shadow-sm shadow-amber-600/25';
+                                } elseif ($v === '{QR Code}') {
+                                    $btnStyle = 'bg-violet-600 text-white hover:bg-violet-700 shadow-sm shadow-violet-600/25';
+                                }
+                            @endphp
+                            <button type="button" wire:click="appendVariableToSelected('{{ $v }}')" class="px-2.5 py-1 {{ $btnStyle }} rounded-lg text-xs font-bold transition">
                                 + {{ $v }}
                             </button>
                         @endforeach
@@ -2468,6 +2516,9 @@ new class extends Component {
                         <div class="flex items-center space-x-1.5">
                             <button type="button" wire:click="addTextLayer" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-md shadow-indigo-600/20">
                                 + Text
+                            </button>
+                            <button type="button" wire:click="addQrLayer" class="px-2.5 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold transition flex items-center shadow-md shadow-violet-600/20">
+                                + QR Code
                             </button>
                             <div class="relative" x-data="{ shapeMenuOpen: false }" @click.outside="shapeMenuOpen = false">
                                 <button type="button" @click="shapeMenuOpen = !shapeMenuOpen" class="px-2.5 py-1.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl text-xs font-bold transition flex items-center shadow-md shadow-emerald-600/20">
@@ -2741,6 +2792,18 @@ new class extends Component {
                                             <input type="color" wire:key="input-color-picker-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.color" class="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer shadow-sm">
                                             <input type="text" wire:key="input-color-text-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.color" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600 uppercase">
                                         </div>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- QR Code Specific Controls -->
+                            @if(($selectedLayer['type'] ?? '') === 'qr')
+                                <div class="space-y-3 pt-2 border-t border-slate-100">
+                                    <span class="text-xs font-extrabold text-violet-700 block">QR Code Data Settings:</span>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-500 mb-1">QR Encoded Value / Variable Tag</label>
+                                        <input type="text" wire:key="input-qr-value-{{ $selectedLayerIndex }}-{{ $selectedLayer['id'] ?? '' }}" wire:model.live="layers.{{ $selectedLayerIndex }}.value" placeholder="e.g. {Ref No}, {Roll No}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-600">
+                                        <span class="text-[10px] text-slate-500 mt-1 block">Specify variable tag or static string encoded in the QR code (defaults to {Ref No}).</span>
                                     </div>
                                 </div>
                             @endif
