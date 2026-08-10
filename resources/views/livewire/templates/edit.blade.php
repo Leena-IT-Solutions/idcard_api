@@ -39,8 +39,16 @@ new class extends Component {
 
         if ($this->type === 'school') {
             $this->template = SchoolTemplate::find($templateId);
+            if (!$this->template) {
+                $this->template = Template::find($templateId);
+                if ($this->template) $this->type = 'master';
+            }
         } else {
             $this->template = Template::find($templateId);
+            if (!$this->template) {
+                $this->template = SchoolTemplate::find($templateId);
+                if ($this->template) $this->type = 'school';
+            }
         }
 
         if (!$this->template) {
@@ -952,15 +960,14 @@ new class extends Component {
     }
 }; ?>
 
-@php
-    $isPortrait = $orientation === 'portrait';
-    $canvasW = $isPortrait ? 638 : 1011;
-    $canvasH = $isPortrait ? 1011 : 638;
-    $bgPath = $template->background_image;
-    $bgUrl = $bgPath ? (str_starts_with($bgPath, 'http') ? $bgPath : asset('storage/' . $bgPath)) : null;
-@endphp
-
 <div class="space-y-6 notranslate" translate="no" x-data="{
+    @php
+        $isPortrait = $orientation === 'portrait';
+        $canvasW = $isPortrait ? 638 : 1011;
+        $canvasH = $isPortrait ? 1011 : 638;
+        $bgPath = $template->background_image ?? null;
+        $bgUrl = $bgPath ? (str_starts_with($bgPath, 'http') ? $bgPath : asset('storage/' . $bgPath)) : null;
+    @endphp
     zoomLevel: (function() {
         try {
             const savedZoom = localStorage.getItem('canva_studio_zoom');
@@ -2444,6 +2451,7 @@ new class extends Component {
                                 data-layer-type="{{ $type }}"
                                 class="absolute cursor-move select-none transition-shadow group {{ $isSelected ? 'ring-2 ring-indigo-500 ring-offset-1 ring-offset-slate-900' : 'hover:ring-1 hover:ring-indigo-400/50' }}"
                                 style="left: {{ $x }}px; top: {{ $y }}px; transform: rotate({{ $rot }}deg); transform-origin: center center; z-index: {{ $idx + 10 }};"
+                            >
                                 @php
                                     $layerOpacity = max(0, min(100, (float)($layer['opacity'] ?? 100))) / 100;
                                     $layerFadeMode = $layer['fade_mode'] ?? 'none';
