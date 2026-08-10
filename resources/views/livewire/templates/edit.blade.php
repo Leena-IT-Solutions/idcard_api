@@ -2953,20 +2953,23 @@ new class extends Component {
                     </div>
 
                     @if($template && $template->background_image)
-                        <div class="relative group rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 p-2">
+                        <div class="relative group rounded-2xl overflow-hidden border border-slate-200/80 bg-slate-100/70 p-3 space-y-2">
                             @php
                                 $bgImgUrl = str_starts_with($template->background_image, 'http') 
                                     ? $template->background_image 
                                     : asset('storage/' . $template->background_image);
                             @endphp
-                            <div class="h-32 rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center border border-slate-200/60">
-                                <img src="{{ $bgImgUrl }}" class="w-full h-full object-cover" alt="Background Graphic Preview" />
+                            <div class="w-full rounded-xl overflow-hidden bg-slate-900/90 border border-slate-300/80 p-2 flex items-center justify-center shadow-inner">
+                                <img src="{{ $bgImgUrl }}" class="w-full h-auto max-h-[380px] object-contain rounded-lg shadow-md" alt="Full Master Background Graphic" />
                             </div>
-                            <div class="mt-2 flex items-center justify-between text-[11px] font-bold text-slate-600 px-1">
+                            <div class="flex items-center justify-between text-[11px] font-bold text-slate-600 px-1 pt-1">
                                 <span class="text-emerald-700 font-bold flex items-center">
                                     <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block mr-1.5 animate-pulse"></span>
-                                    Active Background Image
+                                    Active Background Graphic (Full View)
                                 </span>
+                                <a href="{{ $bgImgUrl }}" target="_blank" class="text-indigo-600 hover:text-indigo-800 font-extrabold flex items-center space-x-1">
+                                    <span>🔍 Open Original</span>
+                                </a>
                             </div>
                         </div>
                     @endif
