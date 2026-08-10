@@ -1229,6 +1229,9 @@ new class extends Component {
             },
             startDrag(idx, e) {
                 if (this.activeTool === 'pan' || this.isSpacePressed) return;
+
+                this.$wire.selectLayer(idx, e ? e.shiftKey : false);
+
                 const el = document.querySelector('[data-layer-index="' + idx + '"]');
                 if (!el) return;
 
