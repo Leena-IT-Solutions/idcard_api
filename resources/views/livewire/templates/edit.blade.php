@@ -2317,36 +2317,40 @@ new class extends Component {
                         </svg>
                     </button>
 
-                    <!-- Layer Order / Position Dropdown Option -->
-                    <div class="relative" x-data="{ orderMenuOpen: false }" @click.outside="orderMenuOpen = false">
+                    <!-- 4 Direct Layer Order Buttons -->
+                    <div class="flex items-center space-x-1 pl-1 border-l border-slate-800">
                         <button type="button" 
-                            @click="orderMenuOpen = !orderMenuOpen" 
-                            title="Layer Order / Position"
+                            wire:click="moveLayer(null, 'front')" 
+                            title="Bring to Front"
                             @if($selectedLayerIndex === null) disabled @endif
-                            class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white disabled:opacity-30 disabled:hover:bg-slate-900 disabled:hover:text-slate-300 transition text-xs font-bold flex items-center space-x-1.5"
+                            class="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white disabled:opacity-30 disabled:hover:bg-slate-900 disabled:hover:text-slate-300 transition text-xs font-bold"
                         >
-                            <span>📚 Order</span>
-                            <span class="text-[10px] text-slate-400">▾</span>
+                            <span>⏫</span>
                         </button>
-
-                        <div x-show="orderMenuOpen" @click="orderMenuOpen = false" class="absolute left-0 mt-1.5 w-44 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden py-1">
-                            <button type="button" wire:click="moveLayer(null, 'front')" class="w-full text-left px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-indigo-600 hover:text-white flex items-center space-x-2 transition">
-                                <span>⏫</span>
-                                <span>Bring to Front</span>
-                            </button>
-                            <button type="button" wire:click="moveLayer(null, 'up')" class="w-full text-left px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-indigo-600 hover:text-white flex items-center space-x-2 transition">
-                                <span>🔼</span>
-                                <span>Bring Forward</span>
-                            </button>
-                            <button type="button" wire:click="moveLayer(null, 'down')" class="w-full text-left px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-indigo-600 hover:text-white flex items-center space-x-2 transition">
-                                <span>🔽</span>
-                                <span>Send Backward</span>
-                            </button>
-                            <button type="button" wire:click="moveLayer(null, 'back')" class="w-full text-left px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-indigo-600 hover:text-white flex items-center space-x-2 transition">
-                                <span>⏬</span>
-                                <span>Send to Back</span>
-                            </button>
-                        </div>
+                        <button type="button" 
+                            wire:click="moveLayer(null, 'up')" 
+                            title="Bring Forward"
+                            @if($selectedLayerIndex === null) disabled @endif
+                            class="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white disabled:opacity-30 disabled:hover:bg-slate-900 disabled:hover:text-slate-300 transition text-xs font-bold"
+                        >
+                            <span>🔼</span>
+                        </button>
+                        <button type="button" 
+                            wire:click="moveLayer(null, 'down')" 
+                            title="Send Backward"
+                            @if($selectedLayerIndex === null) disabled @endif
+                            class="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white disabled:opacity-30 disabled:hover:bg-slate-900 disabled:hover:text-slate-300 transition text-xs font-bold"
+                        >
+                            <span>🔽</span>
+                        </button>
+                        <button type="button" 
+                            wire:click="moveLayer(null, 'back')" 
+                            title="Send to Back"
+                            @if($selectedLayerIndex === null) disabled @endif
+                            class="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white disabled:opacity-30 disabled:hover:bg-slate-900 disabled:hover:text-slate-300 transition text-xs font-bold"
+                        >
+                            <span>⏬</span>
+                        </button>
                     </div>
                 </div>
                 <span class="text-xs text-slate-400 font-mono bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-800">85.6mm × 54.0mm</span>
