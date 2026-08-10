@@ -736,21 +736,39 @@ new class extends Component {
         }
     }
 
-    public function moveLayer(int $index, string $direction)
+    public function moveLayer(?int $index, string $direction)
     {
-        if (!isset($this->layers[$index])) return;
+        if ($index === null) {
+            $index = $this->selectedLayerIndex;
+        }
+        if ($index === null || !isset($this->layers[$index])) return;
 
         $this->recordHistory();
-        if ($direction === 'up' && $index > 0) {
-            $temp = $this->layers[$index];
-            $this->layers[$index] = $this->layers[$index - 1];
-            $this->layers[$index - 1] = $temp;
-            $this->selectedLayerIndex = $index - 1;
-        } elseif ($direction === 'down' && $index < count($this->layers) - 1) {
+        $layer = $this->layers[$index];
+        $total = count($this->layers);
+
+        if ($direction === 'front' || $direction === 'top') {
+            // Bring to Front (Move to end of array)
+            array_splice($this->layers, $index, 1);
+            $this->layers[] = $layer;
+            $this->selectedLayerIndex = count($this->layers) - 1;
+        } elseif ($direction === 'back' || $direction === 'bottom') {
+            // Send to Back (Move to start of array)
+            array_splice($this->layers, $index, 1);
+            array_unshift($this->layers, $layer);
+            $this->selectedLayerIndex = 0;
+        } elseif (($direction === 'up' || $direction === 'forward') && $index < $total - 1) {
+            // Move up in stack (+1 in array)
             $temp = $this->layers[$index];
             $this->layers[$index] = $this->layers[$index + 1];
             $this->layers[$index + 1] = $temp;
             $this->selectedLayerIndex = $index + 1;
+        } elseif (($direction === 'down' || $direction === 'backward') && $index > 0) {
+            // Move down in stack (-1 in array)
+            $temp = $this->layers[$index];
+            $this->layers[$index] = $this->layers[$index - 1];
+            $this->layers[$index - 1] = $temp;
+            $this->selectedLayerIndex = $index - 1;
         }
     }
 
@@ -2298,6 +2316,38 @@ new class extends Component {
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3"></path>
                         </svg>
                     </button>
+
+                    <!-- Layer Order / Position Dropdown Option -->
+                    <div class="relative" x-data="{ orderMenuOpen: false }" @click.outside="orderMenuOpen = false">
+                        <button type="button" 
+                            @click="orderMenuOpen = !orderMenuOpen" 
+                            title="Layer Order / Position"
+                            @if($selectedLayerIndex === null) disabled @endif
+                            class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white disabled:opacity-30 disabled:hover:bg-slate-900 disabled:hover:text-slate-300 transition text-xs font-bold flex items-center space-x-1.5"
+                        >
+                            <span>📚 Order</span>
+                            <span class="text-[10px] text-slate-400">▾</span>
+                        </button>
+
+                        <div x-show="orderMenuOpen" @click="orderMenuOpen = false" class="absolute left-0 mt-1.5 w-44 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden py-1">
+                            <button type="button" wire:click="moveLayer(null, 'front')" class="w-full text-left px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-indigo-600 hover:text-white flex items-center space-x-2 transition">
+                                <span>⏫</span>
+                                <span>Bring to Front</span>
+                            </button>
+                            <button type="button" wire:click="moveLayer(null, 'up')" class="w-full text-left px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-indigo-600 hover:text-white flex items-center space-x-2 transition">
+                                <span>🔼</span>
+                                <span>Bring Forward</span>
+                            </button>
+                            <button type="button" wire:click="moveLayer(null, 'down')" class="w-full text-left px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-indigo-600 hover:text-white flex items-center space-x-2 transition">
+                                <span>🔽</span>
+                                <span>Send Backward</span>
+                            </button>
+                            <button type="button" wire:click="moveLayer(null, 'back')" class="w-full text-left px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-indigo-600 hover:text-white flex items-center space-x-2 transition">
+                                <span>⏬</span>
+                                <span>Send to Back</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <span class="text-xs text-slate-400 font-mono bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-800">85.6mm × 54.0mm</span>
             </div>
