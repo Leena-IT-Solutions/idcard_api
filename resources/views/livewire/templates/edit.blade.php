@@ -1105,6 +1105,10 @@ new class extends Component {
                         e.preventDefault();
                         this.$wire.redo();
                     }
+                    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+                        e.preventDefault();
+                        this.$wire.saveStudioDesign();
+                    }
                 });
                 window.addEventListener('keyup', (e) => {
                     if (e.code === 'Space') {
