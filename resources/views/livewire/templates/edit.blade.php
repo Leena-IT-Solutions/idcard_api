@@ -970,6 +970,31 @@ new class extends Component {
     $bgUrl = $bgPath ? (str_starts_with($bgPath, 'http') ? $bgPath : asset('storage/' . $bgPath)) : null;
 @endphp
 
+<div class="space-y-6 notranslate" translate="no" x-data="templateStudio({{ $canvasW }}, {{ $canvasH }})">
+
+    @if(session()->has('message'))
+        <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-2xl flex items-center justify-between text-sm font-semibold">
+            <span>{{ session('message') }}</span>
+            <button type="button" onclick="this.parentElement.remove()" class="text-emerald-400 hover:text-white">&times;</button>
+        </div>
+    @endif
+
+    @include('livewire.templates.partials.top-bar')
+
+    <!-- Main Workspace Split Container (2 Columns: Workbench Left, Inspector Panel Right) -->
+    <div class="flex flex-col lg:flex-row items-start gap-6 w-full">
+        <!-- Left Column: Interactive Studio Workbench & Variable Tags (7 Cols / 58% Width) -->
+        <div class="w-full lg:w-[58%] min-w-0 space-y-5">
+            @include('livewire.templates.partials.canvas-workbench')
+            @include('livewire.templates.partials.variable-inserter')
+        </div>
+
+        <!-- Right Column: Canva Studio Tabbed Inspector Panel (5 Cols / 42% Width) -->
+        <div class="w-full lg:w-[42%] min-w-0 flex flex-col space-y-4">
+            @include('livewire.templates.partials.inspector-panel')
+        </div>
+    </div>
+</div>
 <script>
     function templateStudio(canvasW, canvasH) {
         return {
@@ -1379,29 +1404,3 @@ new class extends Component {
         };
     }
 </script>
-
-<div class="space-y-6 notranslate" translate="no" x-data="templateStudio({{ $canvasW }}, {{ $canvasH }})">
-
-    @if(session()->has('message'))
-        <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-2xl flex items-center justify-between text-sm font-semibold">
-            <span>{{ session('message') }}</span>
-            <button type="button" onclick="this.parentElement.remove()" class="text-emerald-400 hover:text-white">&times;</button>
-        </div>
-    @endif
-
-    @include('livewire.templates.partials.top-bar')
-
-    <!-- Main Workspace Split Container (2 Columns: Workbench Left, Inspector Panel Right) -->
-    <div class="flex flex-col lg:flex-row items-start gap-6 w-full">
-        <!-- Left Column: Interactive Studio Workbench & Variable Tags (7 Cols / 58% Width) -->
-        <div class="w-full lg:w-[58%] min-w-0 space-y-5">
-            @include('livewire.templates.partials.canvas-workbench')
-            @include('livewire.templates.partials.variable-inserter')
-        </div>
-
-        <!-- Right Column: Canva Studio Tabbed Inspector Panel (5 Cols / 42% Width) -->
-        <div class="w-full lg:w-[42%] min-w-0 flex flex-col space-y-4">
-            @include('livewire.templates.partials.inspector-panel')
-        </div>
-    </div>
-</div>
