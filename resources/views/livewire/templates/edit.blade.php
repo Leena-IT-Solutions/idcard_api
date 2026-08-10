@@ -513,13 +513,32 @@ new class extends Component {
         $this->selectLayer($newIndex, false);
     }
 
+    public function getUploadedAssetsProperty()
+    {
+        try {
+            $files = Storage::disk('public')->files('uploads');
+            $images = array_filter($files, function ($file) {
+                $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                return in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'svg']);
+            });
+
+            usort($images, function ($a, $b) {
+                return Storage::disk('public')->lastModified($b) <=> Storage::disk('public')->lastModified($a);
+            });
+
+            return array_values($images);
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
     public function updatedUploadedImage()
     {
         $this->validate([
             'uploadedImage' => 'image|max:10240', // 10MB max JPG, PNG, WEBP, SVG
         ]);
 
-        $path = $this->uploadedImage->store('template_assets', 'public');
+        $path = $this->uploadedImage->store('uploads', 'public');
 
         $this->recordHistory();
 
@@ -530,7 +549,7 @@ new class extends Component {
             $this->layers[] = [
                 'id' => 'image_' . microtime(true) . '_' . rand(1000, 9999),
                 'type' => 'image',
-                'label' => 'Custom Image',
+                'label' => 'Uploaded Image',
                 'image_path' => $path,
                 'x' => 100,
                 'y' => 80,
@@ -547,6 +566,43 @@ new class extends Component {
         }
 
         $this->uploadedImage = null;
+    }
+
+    public function addAssetToCanvas(string $assetPath)
+    {
+        $this->recordHistory();
+
+        if ($this->selectedLayerIndex !== null && isset($this->layers[$this->selectedLayerIndex]) && ($this->layers[$this->selectedLayerIndex]['type'] ?? '') === 'image') {
+            $this->layers[$this->selectedLayerIndex]['image_path'] = $assetPath;
+            return;
+        }
+
+        $newIndex = count($this->layers);
+        $this->layers[] = [
+            'id' => 'image_' . microtime(true) . '_' . rand(1000, 9999),
+            'type' => 'image',
+            'label' => 'Uploaded Image',
+            'image_path' => $assetPath,
+            'x' => 100,
+            'y' => 80,
+            'width' => 90,
+            'height' => 90,
+            'border_radius' => 8,
+            'border_color' => '#818cf8',
+            'border_width' => 0,
+            'opacity' => 100,
+            'rotation' => 0,
+            'object_fit' => 'contain',
+        ];
+
+        $this->selectLayer($newIndex, false);
+    }
+
+    public function deleteUploadedAsset(string $assetPath)
+    {
+        if (Storage::disk('public')->exists($assetPath)) {
+            Storage::disk('public')->delete($assetPath);
+        }
     }
 
     private function shapeDefaults(string $shapeType): array
@@ -2743,6 +2799,53 @@ new class extends Component {
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Canva-Style Uploaded Assets Library Grid Panel -->
+                    <div class="bg-slate-50/90 border border-slate-200/80 rounded-2xl p-3 space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs">📁</span>
+                                <h4 class="text-[11px] font-black text-slate-800 uppercase tracking-wider">Uploads Media Library</h4>
+                                <span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-[10px] font-bold">
+                                    {{ count($this->uploadedAssets) }} files
+                                </span>
+                            </div>
+                            <label class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[11px] font-bold transition flex items-center shadow-sm cursor-pointer">
+                                <span>+ Upload</span>
+                                <input type="file" wire:model.live="uploadedImage" accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml" class="hidden">
+                            </label>
+                        </div>
+
+                        @if(count($this->uploadedAssets) > 0)
+                            <div class="grid grid-cols-4 gap-2 max-h-36 overflow-y-auto pr-1">
+                                @foreach($this->uploadedAssets as $assetPath)
+                                    @php
+                                        $assetUrl = asset('storage/' . $assetPath);
+                                    @endphp
+                                    <div wire:key="asset-thumb-{{ md5($assetPath) }}" class="relative group aspect-square rounded-xl bg-white border border-slate-200/80 shadow-sm overflow-hidden hover:border-amber-500 hover:shadow-md transition">
+                                        <img src="{{ $assetUrl }}" 
+                                            wire:click="addAssetToCanvas('{{ $assetPath }}')" 
+                                            title="Click to insert or replace on ID Card" 
+                                            class="w-full h-full object-contain p-1 cursor-pointer transition transform group-hover:scale-105" 
+                                        />
+                                        <button type="button" 
+                                            wire:click="deleteUploadedAsset('{{ $assetPath }}')" 
+                                            wire:confirm="Delete this image from uploads library?" 
+                                            title="Delete image asset" 
+                                            class="absolute top-1 right-1 bg-red-600/90 text-white p-1 rounded-md text-[9px] opacity-0 group-hover:opacity-100 transition shadow-sm hover:bg-red-700"
+                                        >
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="text-center py-2.5 border-2 border-dashed border-slate-200/80 rounded-xl bg-white">
+                                <p class="text-[11px] font-bold text-slate-500">No images in uploads folder yet.</p>
+                                <p class="text-[10px] text-slate-400 mt-0.5">Click + Upload to dump JPG, PNG, WEBP or SVG images here to use anytime.</p>
+                            </div>
+                        @endif
                     </div>
 
                     <!-- Layer List Cards -->
