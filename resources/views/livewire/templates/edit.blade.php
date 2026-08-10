@@ -743,32 +743,46 @@ new class extends Component {
         }
         if ($index === null || !isset($this->layers[$index])) return;
 
+        $targetLayer = $this->layers[$index];
+        $targetId = $targetLayer['id'] ?? null;
+
         $this->recordHistory();
-        $layer = $this->layers[$index];
         $total = count($this->layers);
 
         if ($direction === 'front' || $direction === 'top') {
             // Bring to Front (Move to end of array)
             array_splice($this->layers, $index, 1);
-            $this->layers[] = $layer;
-            $this->selectedLayerIndex = count($this->layers) - 1;
+            $this->layers[] = $targetLayer;
         } elseif ($direction === 'back' || $direction === 'bottom') {
             // Send to Back (Move to start of array)
             array_splice($this->layers, $index, 1);
-            array_unshift($this->layers, $layer);
-            $this->selectedLayerIndex = 0;
+            array_unshift($this->layers, $targetLayer);
         } elseif (($direction === 'up' || $direction === 'forward') && $index < $total - 1) {
-            // Move up in stack (+1 in array)
+            // Move up in stack (+1 position)
             $temp = $this->layers[$index];
             $this->layers[$index] = $this->layers[$index + 1];
             $this->layers[$index + 1] = $temp;
-            $this->selectedLayerIndex = $index + 1;
         } elseif (($direction === 'down' || $direction === 'backward') && $index > 0) {
-            // Move down in stack (-1 in array)
+            // Move down in stack (-1 position)
             $temp = $this->layers[$index];
             $this->layers[$index] = $this->layers[$index - 1];
             $this->layers[$index - 1] = $temp;
-            $this->selectedLayerIndex = $index - 1;
+        }
+
+        // Re-locate target layer index by ID to guarantee selection stays locked on selected element
+        $newIndex = null;
+        if ($targetId) {
+            foreach ($this->layers as $i => $l) {
+                if (($l['id'] ?? null) === $targetId) {
+                    $newIndex = $i;
+                    break;
+                }
+            }
+        }
+
+        if ($newIndex !== null) {
+            $this->selectedLayerIndex = $newIndex;
+            $this->selectedLayerIndices = [$newIndex];
         }
     }
 
