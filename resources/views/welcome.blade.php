@@ -140,12 +140,24 @@
                         <a href="{{ url('/dashboard') }}" class="inline-flex items-center justify-center px-6 py-4 text-base font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 rounded-2xl transition duration-200 shadow-lg shadow-amber-500/20">
                             Go to Dashboard &rarr;
                         </a>
+                        <a href="/mobile-app" class="inline-flex items-center justify-center px-6 py-4 text-base font-bold text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-2xl transition duration-200">
+                            <svg class="w-5 h-5 mr-2 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            Download App
+                        </a>
                     @else
                         <a href="{{ route('register') }}" class="inline-flex items-center justify-center px-6 py-4 text-base font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 rounded-2xl transition duration-200 shadow-lg shadow-amber-500/20">
                             Start Free Trial
                         </a>
                         <a href="{{ route('contact') }}" class="inline-flex items-center justify-center px-6 py-4 text-base font-bold text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-2xl transition duration-200">
                             Book Demo
+                        </a>
+                        <a href="/mobile-app" class="inline-flex items-center justify-center px-6 py-4 text-base font-bold text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-2xl transition duration-200">
+                            <svg class="w-5 h-5 mr-2 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            Download App
                         </a>
                     @endauth
                 </div>

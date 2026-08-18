@@ -132,11 +132,23 @@
                     Give parents a simple way to submit student information, photographs and other required details from their phones.
                 </p>
                 <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <a href="/register" class="inline-flex items-center justify-center px-6 py-3.5 text-base font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 rounded-xl transition duration-200 shadow-lg shadow-amber-500/20">
-                        Get Started Free
+                    <a href="https://play.google.com/store/apps/details?id=com.infoleena.icard.maker&hl=en_IN" target="_blank" class="inline-flex items-center space-x-3 px-6 py-3 rounded-2xl bg-black border border-slate-800 hover:border-slate-700 transition duration-200 shadow-xl w-full sm:w-auto max-w-xs text-left group">
+                        <svg class="w-8 h-8 text-white group-hover:scale-105 transition" viewBox="0 0 512 512" fill="currentColor">
+                            <path d="M325.3 234.3L104.6 14l280.8 161.2-60.1 59.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6l-58 33.3-60.7-59.7 60.1-59.1 58.6 33.6c24.8 14.2 24.8 37.6 0 51.9zM104.6 498L325.3 277.7l60.7 59.7L104.6 498z" />
+                        </svg>
+                        <div>
+                            <span class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold block leading-none mb-1">Get it on</span>
+                            <span class="text-base font-bold text-white leading-none">Google Play</span>
+                        </div>
                     </a>
-                    <a href="/how-it-works" class="inline-flex items-center justify-center px-6 py-3.5 text-base font-bold text-slate-300 hover:text-white bg-slate-900/60 border border-slate-800 hover:bg-slate-850 rounded-xl transition duration-200">
-                        See How It Works
+                    <a href="https://apps.apple.com/in/app/icard-maker/id6792461176" target="_blank" class="inline-flex items-center space-x-3 px-6 py-3 rounded-2xl bg-black border border-slate-800 hover:border-slate-700 transition duration-200 shadow-xl w-full sm:w-auto max-w-xs text-left group">
+                        <svg class="w-8 h-8 text-white group-hover:scale-105 transition" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.1 22C7.79 22.05 6.8 20.68 5.96 19.47C4.25 17 2.94 12.45 4.7 9.39C5.57 7.87 7.13 6.91 8.82 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.1 16.67C20.08 16.74 19.67 18.11 18.71 19.5M15.97 4.17C16.63 3.37 17.07 2.28 16.95 1C16 1.04 14.9 1.6 14.24 2.38C13.68 3.04 13.19 4.14 13.34 5.39C14.39 5.47 15.4 4.88 15.97 4.17Z" />
+                        </svg>
+                        <div>
+                            <span class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold block leading-none mb-1">Download on the</span>
+                            <span class="text-base font-bold text-white leading-none">App Store</span>
+                        </div>
                     </a>
                 </div>
             </div>
@@ -272,14 +284,23 @@
                     <p class="text-slate-400 text-sm max-w-md mx-auto">
                         Get the official iCard app to submit, update, and manage your school profile assets directly from your mobile phone.
                     </p>
-                    <div class="pt-4 flex justify-center">
-                        <a href="https://play.google.com/store" target="_blank" class="inline-flex items-center space-x-3 px-6 py-3 rounded-2xl bg-black border border-slate-800 hover:border-slate-700 transition duration-200 shadow-xl max-w-xs text-left group">
+                    <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <a href="https://play.google.com/store/apps/details?id=com.infoleena.icard.maker&hl=en_IN" target="_blank" class="inline-flex items-center space-x-3 px-6 py-3 rounded-2xl bg-black border border-slate-800 hover:border-slate-700 transition duration-200 shadow-xl w-full sm:w-auto max-w-xs text-left group">
                             <svg class="w-8 h-8 text-white group-hover:scale-105 transition" viewBox="0 0 512 512" fill="currentColor">
                                 <path d="M325.3 234.3L104.6 14l280.8 161.2-60.1 59.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6l-58 33.3-60.7-59.7 60.1-59.1 58.6 33.6c24.8 14.2 24.8 37.6 0 51.9zM104.6 498L325.3 277.7l60.7 59.7L104.6 498z" />
                             </svg>
                             <div>
                                 <span class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold block leading-none mb-1">Get it on</span>
                                 <span class="text-base font-bold text-white leading-none">Google Play</span>
+                            </div>
+                        </a>
+                        <a href="https://apps.apple.com/in/app/icard-maker/id6792461176" target="_blank" class="inline-flex items-center space-x-3 px-6 py-3 rounded-2xl bg-black border border-slate-800 hover:border-slate-700 transition duration-200 shadow-xl w-full sm:w-auto max-w-xs text-left group">
+                            <svg class="w-8 h-8 text-white group-hover:scale-105 transition" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.1 22C7.79 22.05 6.8 20.68 5.96 19.47C4.25 17 2.94 12.45 4.7 9.39C5.57 7.87 7.13 6.91 8.82 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.1 16.67C20.08 16.74 19.67 18.11 18.71 19.5M15.97 4.17C16.63 3.37 17.07 2.28 16.95 1C16 1.04 14.9 1.6 14.24 2.38C13.68 3.04 13.19 4.14 13.34 5.39C14.39 5.47 15.4 4.88 15.97 4.17Z" />
+                            </svg>
+                            <div>
+                                <span class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold block leading-none mb-1">Download on the</span>
+                                <span class="text-base font-bold text-white leading-none">App Store</span>
                             </div>
                         </a>
                     </div>
