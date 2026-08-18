@@ -912,7 +912,29 @@ new class extends Component {
             if ($bgPath && !str_starts_with($bgPath, 'http') && Storage::disk('public')->exists($bgPath)) {
                 Storage::disk('public')->delete($bgPath);
             }
-            $bgPath = $this->bgUpload->store('templates/backgrounds', 'public');
+
+            $ext = strtolower($this->bgUpload->getClientOriginalExtension());
+            if ($ext === 'svg') {
+                // SVG backgrounds from design tools commonly rely on <filter>
+                // (feColorMatrix-into-mask for opacity) which flutter_svg
+                // cannot render, leaving the background blank in the mobile
+                // app. Rasterize through Chromium (via Browsershot) instead,
+                // which renders filters correctly, and store a PNG.
+                $widthPx = $this->orientation === 'portrait' ? 638 : 1011;
+                $heightPx = $this->orientation === 'portrait' ? 1011 : 638;
+                try {
+                    $svgContents = file_get_contents($this->bgUpload->getRealPath());
+                    $png = (new \App\Services\CardRenderService())->rasterizeSvgToPng($svgContents, $widthPx, $heightPx);
+                    $bgPath = 'templates/backgrounds/' . uniqid('bg_', true) . '.png';
+                    Storage::disk('public')->put($bgPath, $png);
+                } catch (\Throwable $e) {
+                    report($e);
+                    $bgPath = $this->bgUpload->store('templates/backgrounds', 'public');
+                    session()->flash('error', 'Could not convert the SVG background for mobile compatibility, so it was saved as-is. It may not display correctly in the mobile app. (' . $e->getMessage() . ')');
+                }
+            } else {
+                $bgPath = $this->bgUpload->store('templates/backgrounds', 'public');
+            }
         }
 
         $this->template->update([

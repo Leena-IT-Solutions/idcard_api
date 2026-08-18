@@ -201,6 +201,27 @@ class CardRenderService
     }
 
     /**
+     * Rasterize raw SVG markup to a PNG at an exact pixel size.
+     *
+     * flutter_svg's renderer (vector_graphics_compiler) does not implement
+     * SVG <filter> primitives, so design-tool-exported SVGs that rely on the
+     * feColorMatrix-into-mask idiom for opacity render blank in the mobile
+     * app even though they display correctly in any real browser. Rendering
+     * through Chromium (which does support filters) and shipping a PNG
+     * sidesteps that renderer gap entirely.
+     */
+    public function rasterizeSvgToPng(string $svgContents, int $widthPx, int $heightPx): string
+    {
+        $html = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>'
+            . '*{margin:0;padding:0;}'
+            . 'html,body{width:' . $widthPx . 'px;height:' . $heightPx . 'px;overflow:hidden;background:transparent;}'
+            . 'svg{display:block;width:' . $widthPx . 'px;height:' . $heightPx . 'px;}'
+            . '</style></head><body>' . $svgContents . '</body></html>';
+
+        return $this->toPng($html, $widthPx, $heightPx);
+    }
+
+    /**
      * Render HTML to a PDF document.
      */
     public function toPdf(string $html, float $widthMm, float $heightMm): string
