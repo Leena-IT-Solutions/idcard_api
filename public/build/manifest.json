@@ -30,11 +30,7 @@
     ]
   },
   "resources/css/app.css": {
-<<<<<<< HEAD
-    "file": "assets/app-311TJCTW.css",
-=======
-    "file": "assets/app-CF24iSq2.css",
->>>>>>> leena
+    "file": "assets/app-MDb6IAI4.css",
     "name": "app",
     "names": [
       "app.css"
