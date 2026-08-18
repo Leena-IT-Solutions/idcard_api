@@ -182,12 +182,15 @@ new class extends Component {
 
         $school = School::find($activeSchoolId);
         if ($school) {
-            $school->update(['template_id' => $templateId]);
+            // Unmark is_default on all custom school templates for this school first
+            SchoolTemplate::where('school_id', $activeSchoolId)->update(['is_default' => false]);
+
             if ($isSchoolTpl) {
-                SchoolTemplate::where('school_id', $activeSchoolId)->update(['is_default' => false]);
+                $school->update(['template_id' => (string) $templateId]);
                 SchoolTemplate::where('id', $templateId)->update(['is_default' => true]);
                 $this->selectedTemplateForAssign = SchoolTemplate::find($templateId);
             } else {
+                $school->update(['template_id' => (string) $templateId]);
                 $this->selectedTemplateForAssign = Template::find($templateId);
             }
 
@@ -234,9 +237,15 @@ new class extends Component {
         $grade = Grade::find($gradeId);
         if ($grade) {
             if ($isSchoolTpl) {
-                $grade->update(['school_template_id' => $templateId]);
+                $grade->update([
+                    'school_template_id' => $templateId,
+                    'template_id' => null,
+                ]);
             } else {
-                $grade->update(['template_id' => $templateId]);
+                $grade->update([
+                    'template_id' => (string) $templateId,
+                    'school_template_id' => null,
+                ]);
             }
             $this->loadGrades();
 
@@ -593,6 +602,7 @@ new class extends Component {
             @foreach($masterTemplates as $tpl)
                 @php
                     $isPortrait = $tpl->orientation === 'portrait';
+                    $isDefault = $activeSchool && ($activeSchool->template_id == $tpl->id);
                     $scale = $isPortrait ? 0.25 : 0.31;
                 @endphp
                 <div class="bg-white border border-slate-200 hover:border-indigo-500/50 text-slate-900 shadow-md hover:shadow-xl dark:bg-slate-900 dark:border-slate-800 dark:hover:border-indigo-500/50 dark:text-white rounded-3xl p-5 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden h-full">
@@ -605,9 +615,16 @@ new class extends Component {
                                     {{ $tpl->orientation }} • {{ $tpl->width_mm }}×{{ $tpl->height_mm }}mm
                                 </span>
                             </div>
-                            <span class="text-[10px] font-black text-indigo-700 dark:text-indigo-400 bg-indigo-50 border border-indigo-200 dark:bg-indigo-500/10 dark:border-indigo-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider shrink-0 shadow-sm">
-                                Master
-                            </span>
+                            <div class="flex items-center space-x-1.5 shrink-0">
+                                @if($isDefault)
+                                    <span class="text-[10px] font-black text-emerald-700 dark:text-emerald-400 bg-emerald-50 border border-emerald-200 dark:bg-emerald-500/15 dark:border-emerald-500/30 px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                                        Default ⚡
+                                    </span>
+                                @endif
+                                <span class="text-[10px] font-black text-indigo-700 dark:text-indigo-400 bg-indigo-50 border border-indigo-200 dark:bg-indigo-500/10 dark:border-indigo-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                                    Master
+                                </span>
+                            </div>
                         </div>
 
                         <!-- Canvas Stage & Card Thumbnail - Expands 100% full height & floats ID card in dead center -->

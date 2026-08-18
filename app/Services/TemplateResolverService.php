@@ -12,6 +12,8 @@ class TemplateResolverService
     public function getEffectiveTemplate($schoolId, $gradeId = null)
     {
         $tpl = null;
+
+        // 1. Grade-level specific override
         if ($gradeId) {
             $grade = Grade::find($gradeId);
             if ($grade) {
@@ -25,29 +27,32 @@ class TemplateResolverService
             }
         }
 
+        // 2. School-level default configuration
         if (!$tpl && $schoolId) {
             $school = School::find($schoolId);
-            if ($school) {
-                if ($school->school_template_id && ($st = SchoolTemplate::find($school->school_template_id))) {
+            if ($school && $school->template_id) {
+                if ($st = SchoolTemplate::find($school->template_id)) {
                     $tpl = $st;
-                } elseif ($school->template_id) {
-                    if ($st = SchoolTemplate::find($school->template_id)) $tpl = $st;
-                    elseif ($mt = Template::find($school->template_id)) $tpl = $mt;
-                    elseif ($mt = Template::where('slug', $school->template_id)->first()) $tpl = $mt;
+                } elseif ($mt = Template::find($school->template_id)) {
+                    $tpl = $mt;
+                } elseif ($mt = Template::where('slug', $school->template_id)->first()) {
+                    $tpl = $mt;
                 }
-                if (!$tpl) {
-                    $tpl = SchoolTemplate::where('school_id', $schoolId)->where('is_default', true)->first();
-                }
-                if (!$tpl) {
-                    $tpl = SchoolTemplate::where('school_id', $schoolId)->first();
-                }
+            }
+
+            if (!$tpl && $schoolId) {
+                $tpl = SchoolTemplate::where('school_id', $schoolId)->where('is_default', true)->first();
+            }
+
+            if (!$tpl && $schoolId) {
+                $tpl = SchoolTemplate::where('school_id', $schoolId)->first();
             }
         }
 
+        // 3. Fallback to system default template
         if (!$tpl) {
             $tpl = Template::where('is_active', true)->first() ?: Template::first();
         }
-
 
         return $tpl;
     }

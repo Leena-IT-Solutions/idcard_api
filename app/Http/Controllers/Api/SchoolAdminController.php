@@ -114,43 +114,8 @@ class SchoolAdminController extends Controller
 
     public function getEffectiveTemplateForGradeOrSchool($schoolId, $gradeId = null)
     {
-        $tpl = null;
-        if ($gradeId) {
-            $grade = \App\Models\Grade::find($gradeId);
-            if ($grade) {
-                if ($grade->school_template_id && ($st = \App\Models\SchoolTemplate::find($grade->school_template_id))) {
-                    $tpl = $st;
-                } elseif ($grade->template_id) {
-                    if ($st = \App\Models\SchoolTemplate::find($grade->template_id)) $tpl = $st;
-                    elseif ($mt = \App\Models\Template::find($grade->template_id)) $tpl = $mt;
-                    elseif ($mt = \App\Models\Template::where('slug', $grade->template_id)->first()) $tpl = $mt;
-                }
-            }
-        }
-
-        if (!$tpl && $schoolId) {
-            $school = \App\Models\School::find($schoolId);
-            if ($school) {
-                if ($school->school_template_id && ($st = \App\Models\SchoolTemplate::find($school->school_template_id))) {
-                    $tpl = $st;
-                } elseif ($school->template_id) {
-                    if ($st = \App\Models\SchoolTemplate::find($school->template_id)) $tpl = $st;
-                    elseif ($mt = \App\Models\Template::find($school->template_id)) $tpl = $mt;
-                    elseif ($mt = \App\Models\Template::where('slug', $school->template_id)->first()) $tpl = $mt;
-                }
-                if (!$tpl) {
-                    $tpl = \App\Models\SchoolTemplate::where('school_id', $schoolId)->where('is_default', true)->first();
-                }
-                if (!$tpl) {
-                    $tpl = \App\Models\SchoolTemplate::where('school_id', $schoolId)->first();
-                }
-            }
-        }
-
-        if (!$tpl) {
-            $tpl = \App\Models\Template::where('is_default', true)->first() ?: \App\Models\Template::first();
-        }
-
+        $resolver = app(\App\Services\TemplateResolverService::class);
+        $tpl = $resolver->getEffectiveTemplate($schoolId, $gradeId);
         return $this->formatTemplateForApi($tpl);
     }
 
