@@ -13,31 +13,29 @@ class TemplateResolverService
     {
         $tpl = null;
 
-        // 1. Grade-level specific override
+        // 1. Grade-level specific override (overrides school template if grade template exists)
         if ($gradeId) {
             $grade = Grade::find($gradeId);
             if ($grade) {
-                if ($grade->school_template_id && ($st = SchoolTemplate::find($grade->school_template_id))) {
-                    $tpl = $st;
-                } elseif ($grade->template_id) {
-                    if ($st = SchoolTemplate::find($grade->template_id)) $tpl = $st;
-                    elseif ($mt = Template::find($grade->template_id)) $tpl = $mt;
-                    elseif ($mt = Template::where('slug', $grade->template_id)->first()) $tpl = $mt;
+                if ($grade->school_template_id) {
+                    $tpl = SchoolTemplate::find($grade->school_template_id);
+                }
+                
+                if (!$tpl && $grade->template_id) {
+                    $tpl = SchoolTemplate::find($grade->template_id)
+                        ?: Template::find($grade->template_id)
+                        ?: Template::where('slug', $grade->template_id)->first();
                 }
             }
         }
 
-        // 2. School-level default configuration
+        // 2. School-level default configuration (used when grade template does not exist)
         if (!$tpl && $schoolId) {
             $school = School::find($schoolId);
             if ($school && $school->template_id) {
-                if ($st = SchoolTemplate::find($school->template_id)) {
-                    $tpl = $st;
-                } elseif ($mt = Template::find($school->template_id)) {
-                    $tpl = $mt;
-                } elseif ($mt = Template::where('slug', $school->template_id)->first()) {
-                    $tpl = $mt;
-                }
+                $tpl = SchoolTemplate::find($school->template_id)
+                    ?: Template::find($school->template_id)
+                    ?: Template::where('slug', $school->template_id)->first();
             }
 
             if (!$tpl && $schoolId) {
@@ -49,7 +47,7 @@ class TemplateResolverService
             }
         }
 
-        // 3. Fallback to system default template
+        // 3. Fallback to active system default master template
         if (!$tpl) {
             $tpl = Template::where('is_active', true)->first() ?: Template::first();
         }

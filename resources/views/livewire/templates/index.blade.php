@@ -41,7 +41,7 @@ new class extends Component {
 
     public function loadGrades()
     {
-        $activeSchoolId = session('active_school_id');
+        $activeSchoolId = session('active_school_id') ?: School::first()?->id;
         if ($activeSchoolId) {
             $this->schoolGrades = Grade::where('school_id', $activeSchoolId)
                 ->orderBy('name', 'asc')
@@ -53,7 +53,7 @@ new class extends Component {
 
     public function customizeMasterTemplate($templateId)
     {
-        $activeSchoolId = session('active_school_id');
+        $activeSchoolId = session('active_school_id') ?: School::first()?->id;
         if (!$activeSchoolId) {
             $this->addError('general', 'Please select an active school first.');
             return;
@@ -144,7 +144,7 @@ new class extends Component {
 
     public function createBlankSchoolTemplate($orientation = 'landscape')
     {
-        $activeSchoolId = session('active_school_id');
+        $activeSchoolId = session('active_school_id') ?: School::first()?->id;
         if (!$activeSchoolId) {
             $this->addError('general', 'Please select an active school first.');
             return;
@@ -174,7 +174,7 @@ new class extends Component {
 
     public function assignToSchool($templateId, $isSchoolTpl = false)
     {
-        $activeSchoolId = session('active_school_id');
+        $activeSchoolId = session('active_school_id') ?: School::first()?->id;
         if (!$activeSchoolId) {
             $this->addError('general', 'No active school selected.');
             return;
@@ -202,7 +202,7 @@ new class extends Component {
 
     public function revokeFromSchool()
     {
-        $activeSchoolId = session('active_school_id');
+        $activeSchoolId = session('active_school_id') ?: School::first()?->id;
         if (!$activeSchoolId) return;
 
         $school = School::find($activeSchoolId);
@@ -216,7 +216,7 @@ new class extends Component {
 
     public function deleteSchoolTemplate($templateId)
     {
-        $activeSchoolId = session('active_school_id');
+        $activeSchoolId = session('active_school_id') ?: School::first()?->id;
         if (!$activeSchoolId) return;
 
         $st = SchoolTemplate::where('school_id', $activeSchoolId)->where('id', $templateId)->first();
