@@ -138,6 +138,12 @@ class SchoolAdminController extends Controller
     {
         $resolver = app(\App\Services\TemplateResolverService::class);
         $tpl = $resolver->getEffectiveTemplate($schoolId, $gradeId);
+        if ($tpl && $schoolId) {
+            $school = \App\Models\School::find($schoolId);
+            if ($school) {
+                $tpl->setAttribute('school', $school);
+            }
+        }
         return $this->formatTemplateForApi($tpl);
     }
 
