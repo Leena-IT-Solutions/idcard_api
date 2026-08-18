@@ -164,7 +164,7 @@ new class extends Component {
             'orientation' => $orientation,
             'width_mm' => $width,
             'height_mm' => $height,
-            'background_image' => null,
+            'background_image' => $defaultMaster ? $defaultMaster->background_image : null,
             'layout_config' => $defaultConfig,
             'is_default' => false,
         ]);

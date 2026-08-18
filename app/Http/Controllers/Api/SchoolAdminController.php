@@ -100,13 +100,30 @@ class SchoolAdminController extends Controller
     {
         if (!$template) return null;
         
-        if ($template instanceof \App\Models\SchoolTemplate) {
-            if (empty($template->background_image) && $template->template_id) {
-                $master = \App\Models\Template::find($template->template_id);
+        $bgImage = $template->background_image;
+
+        if (empty($bgImage)) {
+            // 1. Check parent master template if this is a SchoolTemplate
+            if ($template instanceof \App\Models\SchoolTemplate && !empty($template->template_id)) {
+                $master = \App\Models\Template::find($template->template_id)
+                    ?: \App\Models\Template::where('slug', $template->template_id)->first();
                 if ($master && !empty($master->background_image)) {
-                    $template->setAttribute('background_image', $master->background_image);
+                    $bgImage = $master->background_image;
                 }
             }
+
+            // 2. Fallback to first available master preset background for orientation
+            if (empty($bgImage)) {
+                $orientation = $template->orientation ?? 'landscape';
+                $defaultMaster = \App\Models\Template::where('orientation', $orientation)
+                    ->whereNotNull('background_image')
+                    ->first();
+                if ($defaultMaster) {
+                    $bgImage = $defaultMaster->background_image;
+                }
+            }
+
+            $template->setAttribute('background_image', $bgImage);
         }
         
         return $template;
