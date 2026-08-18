@@ -32,7 +32,9 @@ new class extends Component
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
-            'mobile' => ['required', 'string', 'max:255', Rule::unique(User::class)->ignore($user->id)],
+            'mobile' => ['required', 'string', 'regex:/^[6-9]\d{9}$/', Rule::unique(User::class)->ignore($user->id)],
+        ], [
+            'mobile.regex' => 'The mobile number must be a 10-digit number starting with 6-9.',
         ]);
 
         $user->fill($validated);
@@ -110,7 +112,9 @@ new class extends Component
 
             <div>
                 <x-input-label for="mobile" :value="__('Mobile Number')" />
-                <x-text-input wire:model="mobile" id="mobile" name="mobile" type="text" class="mt-1 block w-full" required autocomplete="mobile" />
+                <x-text-input wire:model="mobile" id="mobile" name="mobile" type="text" class="mt-1 block w-full" required autocomplete="mobile" 
+                    maxlength="10"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" />
                 <x-input-error class="mt-2" :messages="$errors->get('mobile')" />
             </div>
         </div>

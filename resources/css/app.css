@@ -4,6 +4,7 @@
 @tailwind components;
 @tailwind utilities;
 
+<<<<<<< HEAD
 /* Cropper Container Overrides */
 .cropper-container {
     width: 100% !important;
@@ -14,4 +15,16 @@
     background-image: repeating-conic-gradient(#1e293b 0% 25%, #0f172a 0% 50%) !important;
     background-position: 0 0, 8px 0, 8px -8px, 0px 8px !important;
     background-size: 16px 16px !important;
+=======
+@layer utilities {
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .scrollbar-none::-webkit-scrollbar {
+        display: none;
+    }
+    /* Hide scrollbar for IE, Edge and Firefox */
+    .scrollbar-none {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+    }
+>>>>>>> leena
 }

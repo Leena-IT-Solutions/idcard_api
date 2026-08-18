@@ -30,7 +30,31 @@ class LoginForm extends Form
     {
         $this->ensureIsNotRateLimited();
 
-        $loginField = filter_var($this->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'mobile';
+        $loginField = str_contains($this->login, '@') ? 'email' : 'mobile';
+
+        if ($loginField === 'mobile') {
+            $validator = \Illuminate\Support\Facades\Validator::make(
+                ['mobile' => $this->login],
+                ['mobile' => ['required', 'regex:/^[6-9]\d{9}$/']],
+                ['mobile.regex' => 'The mobile number must be a 10-digit number starting with 6-9.']
+            );
+            if ($validator->fails()) {
+                throw ValidationException::withMessages([
+                    'form.login' => $validator->errors()->first('mobile'),
+                ]);
+            }
+        } else {
+            $validator = \Illuminate\Support\Facades\Validator::make(
+                ['email' => $this->login],
+                ['email' => ['required', 'email']],
+                ['email.email' => 'The email must be a valid email address.']
+            );
+            if ($validator->fails()) {
+                throw ValidationException::withMessages([
+                    'form.login' => $validator->errors()->first('email'),
+                ]);
+            }
+        }
 
         if (! Auth::attempt([$loginField => $this->login, 'password' => $this->password], $this->remember)) {
             RateLimiter::hit($this->throttleKey());

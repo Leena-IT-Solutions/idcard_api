@@ -83,9 +83,9 @@
 
         <!-- Footer -->
         <footer class="bg-gray-100 dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 py-8 text-center text-xs text-gray-500 dark:text-gray-400">
-            <div class="max-w-7xl mx-auto px-4">
+            <div class="max-w-7xl mx-auto px-4 space-y-1">
                 <p>&copy; {{ date('Y') }} iCard Maker. All rights reserved.</p>
-                <p class="mt-2">Created by Leena IT Solutions.</p>
+                <p>Design & Developed by <a href="https://leenaitsolutions.in" target="_blank" class="hover:underline text-indigo-600 dark:text-indigo-400 font-semibold">leenaitsolutions.in</a></p>
             </div>
         </footer>
     </body>
