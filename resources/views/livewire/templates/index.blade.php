@@ -200,6 +200,20 @@ new class extends Component {
         }
     }
 
+    public function revokeFromSchool()
+    {
+        $activeSchoolId = session('active_school_id');
+        if (!$activeSchoolId) return;
+
+        $school = School::find($activeSchoolId);
+        if ($school) {
+            $school->update(['template_id' => null]);
+            SchoolTemplate::where('school_id', $activeSchoolId)->update(['is_default' => false]);
+            $this->assignSuccessMessage = '✓ Revoked default template from ' . $school->name . '! Fallback to system default will be used.';
+            session()->flash('message', 'Default template revoked successfully!');
+        }
+    }
+
     public function deleteSchoolTemplate($templateId)
     {
         $activeSchoolId = session('active_school_id');
@@ -252,6 +266,20 @@ new class extends Component {
             $templateName = $this->selectedTemplateForAssign ? $this->selectedTemplateForAssign->name : 'Template';
             $this->assignSuccessMessage = '✓ Assigned "' . $templateName . '" to Grade ' . $grade->name . ' successfully!';
             session()->flash('message', 'Template assigned to grade successfully!');
+        }
+    }
+
+    public function revokeFromGrade($gradeId)
+    {
+        $grade = Grade::find($gradeId);
+        if ($grade) {
+            $grade->update([
+                'template_id' => null,
+                'school_template_id' => null,
+            ]);
+            $this->loadGrades();
+            $this->assignSuccessMessage = '✓ Revoked template override from Grade ' . $grade->name . '! It will now inherit the school default template.';
+            session()->flash('message', 'Template revoked from grade successfully!');
         }
     }
 
@@ -802,10 +830,16 @@ new class extends Component {
                         <span class="text-[11px] text-slate-600 dark:text-slate-400">Applies to all grades unless overridden</span>
                     </div>
                     @if($isSchoolDefault)
-                        <span class="px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-900/80 dark:border-emerald-500/60 dark:text-emerald-300 rounded-xl text-xs font-black flex items-center space-x-1.5 shadow-sm">
-                            <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                            <span class="font-black">✓ Active Default</span>
-                        </span>
+                        <button type="button" wire:click="revokeFromSchool" class="group px-4 py-2 bg-emerald-50 hover:bg-rose-50 border border-emerald-200 hover:border-rose-300 text-emerald-700 hover:text-rose-600 dark:bg-emerald-900/80 dark:hover:bg-rose-950/80 dark:border-emerald-500/60 dark:hover:border-rose-500/60 dark:text-emerald-300 dark:hover:text-rose-300 rounded-xl text-xs font-black flex items-center space-x-1.5 shadow-sm transition active:scale-95" title="Click to revoke default template">
+                            <span class="group-hover:hidden flex items-center space-x-1.5">
+                                <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                <span>✓ Active Default</span>
+                            </span>
+                            <span class="hidden group-hover:flex items-center space-x-1.5">
+                                <svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                                <span>Revoke Default</span>
+                            </span>
+                        </button>
                     @else
                         <button type="button" wire:click="assignToSchool('{{ $selectedTemplateForAssign->id }}', {{ $isSchoolTemplate ? 'true' : 'false' }})" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-extrabold transition shadow-md shadow-indigo-600/20 active:scale-95">
                             Set School Default
@@ -831,9 +865,15 @@ new class extends Component {
                                     @endif
                                 </div>
                                 @if($isAssigned)
-                                    <button type="button" wire:click="assignToGrade({{ $g->id }}, '{{ $selectedTemplateForAssign->id }}', {{ $isSchoolTemplate ? 'true' : 'false' }})" class="px-3.5 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-900/80 dark:border-emerald-500/60 dark:text-emerald-300 rounded-xl text-xs font-bold transition flex items-center space-x-1">
-                                        <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                        <span class="font-bold">✓ Assigned</span>
+                                    <button type="button" wire:click="revokeFromGrade({{ $g->id }})" class="group px-3.5 py-1.5 bg-emerald-50 hover:bg-rose-50 border border-emerald-200 hover:border-rose-300 text-emerald-700 hover:text-rose-600 dark:bg-emerald-900/80 dark:hover:bg-rose-950/80 dark:border-emerald-500/60 dark:hover:border-rose-500/60 dark:text-emerald-300 dark:hover:text-rose-300 rounded-xl text-xs font-bold transition flex items-center space-x-1 active:scale-95" title="Click to revoke template from this grade">
+                                        <span class="group-hover:hidden flex items-center space-x-1">
+                                            <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                            <span class="font-bold">✓ Assigned</span>
+                                        </span>
+                                        <span class="hidden group-hover:flex items-center space-x-1">
+                                            <svg class="w-3 h-3 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            <span class="font-bold">Revoke</span>
+                                        </span>
                                     </button>
                                 @else
                                     <button type="button" wire:click="assignToGrade({{ $g->id }}, '{{ $selectedTemplateForAssign->id }}', {{ $isSchoolTemplate ? 'true' : 'false' }})" class="px-3.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition active:scale-95">
