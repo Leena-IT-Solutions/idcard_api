@@ -40,7 +40,7 @@ new class extends Component
         $user->fill($validated);
 
         if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
+            $user->email_verified_at = now();
         }
 
         $user->save();

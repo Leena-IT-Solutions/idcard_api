@@ -12,15 +12,21 @@ use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 use App\Support\PhoneNumber;
 
-#[Fillable(['name', 'email', 'mobile', 'password'])]
+#[Fillable(['name', 'email', 'mobile', 'password', 'email_verified_at'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
     protected static function booted()
     {
+        static::creating(function ($user) {
+            if (empty($user->email_verified_at)) {
+                $user->email_verified_at = now();
+            }
+        });
+
         static::created(function ($user) {
             $user->linkUnlinkedStudents();
         });

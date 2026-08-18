@@ -13,7 +13,7 @@ Route::view('contact', 'contact')->name('contact');
 Route::view('privacy-policy', 'privacy')->name('privacy');
 
 Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth'])
     ->name('dashboard');
 
 Route::get('users', function () {
