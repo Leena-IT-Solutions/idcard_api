@@ -465,6 +465,7 @@ class SchoolAdminController extends Controller
             'division_id' => 'required|exists:divisions,id',
             'serial_number' => 'nullable|string|max:100',
             'blood_group' => 'nullable|string|max:10',
+            'gender' => 'nullable|string|max:50',
             'dob' => 'nullable|date',
             'address' => 'required|string',
             'pincode' => 'required|string|max:20',
@@ -485,6 +486,7 @@ class SchoolAdminController extends Controller
             'first_name' => $request->first_name,
             'middle_name' => $request->middle_name ?: null,
             'last_name' => $request->last_name,
+            'gender' => $request->gender ?: null,
             'blood_group' => $request->blood_group ?: null,
             'dob' => $request->dob ?: null,
             'address' => $request->address,
@@ -528,11 +530,7 @@ class SchoolAdminController extends Controller
 
             if ($student) {
                 $wasMatched = true;
-                // Matched an existing student — do not overwrite their data.
-                // Clean up the just-uploaded photo, if any, since it won't be attached.
-                if ($request->photo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($request->photo_path)) {
-                    \Illuminate\Support\Facades\Storage::disk('public')->delete($request->photo_path);
-                }
+                $student->update($studentData);
             } else {
                 $student = Student::create($studentData);
             }
@@ -556,10 +554,16 @@ class SchoolAdminController extends Controller
         $student->load(['campaignStudents' => function($q) use ($schoolId) {
             $q->whereHas('campaign', function($inner) use ($schoolId) {
                 $inner->where('school_id', $schoolId);
-            })->with(['grade', 'division', 'campaign']);
+            })->with(['grade', 'division', 'campaign', 'verifier']);
         }]);
 
-        return response()->json($student->setAttribute('matched_existing', $wasMatched));
+        $firstE = $student->campaignStudents ? $student->campaignStudents->first() : null;
+        $gradeId = $request->grade_id ?: ($firstE ? $firstE->grade_id : null);
+        $tpl = $this->getEffectiveTemplateForGradeOrSchool($schoolId, $gradeId);
+        $student->setAttribute('effective_template', $tpl);
+        $student->setAttribute('matched_existing', $wasMatched);
+
+        return response()->json($student);
     }
  
     public function deleteStudent(Request $request, string $id)
