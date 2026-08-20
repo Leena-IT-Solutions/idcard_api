@@ -799,6 +799,43 @@ new class extends Component
         ];
     }
 
+    public function getExportStudentCounts()
+    {
+        $activeSchoolId = session('active_school_id');
+        if (!$activeSchoolId) {
+            return ['total' => 0, 'verified' => 0, 'unverified' => 0, 'is_custom_selection' => false];
+        }
+
+        if (!empty($this->selectedStudentIds)) {
+            $selectedCount = count($this->selectedStudentIds);
+            $verifiedCount = \App\Models\CampaignStudent::whereIn('student_id', $this->selectedStudentIds)
+                ->whereHas('campaign', fn($q) => $q->where('school_id', $activeSchoolId))
+                ->where(function($q) {
+                    $q->where('status', 'verified')->orWhereNotNull('verified_at');
+                })
+                ->distinct('student_id')
+                ->count('student_id');
+
+            return [
+                'total' => $selectedCount,
+                'verified' => $verifiedCount,
+                'unverified' => max(0, $selectedCount - $verifiedCount),
+                'is_custom_selection' => true,
+            ];
+        }
+
+        $counts = $this->getStudentCounts();
+        $total = $counts['is_filtered'] ? $counts['filtered'] : $counts['total'];
+        $verified = $counts['status_counts']['verified'] ?? 0;
+
+        return [
+            'total' => $total,
+            'verified' => $verified,
+            'unverified' => max(0, $total - $verified),
+            'is_custom_selection' => false,
+        ];
+    }
+
     public function resetFilters()
     {
         $this->reset(['filterCampaign', 'filterGrade', 'filterDivision', 'filterStatus', 'search']);
@@ -2884,22 +2921,10 @@ new class extends Component
                     </div>
 
                     @php
-                        $effectiveStudents = !empty($selectedStudentIds) 
-                            ? collect($studentsList)->filter(fn($s) => in_array((string)(is_array($s) ? $s['id'] : $s->id), $selectedStudentIds)) 
-                            : collect($studentsList);
-
-                        $targetStudentsCount = $effectiveStudents->count();
-
-                        $verifiedCount = $effectiveStudents->filter(function($s) {
-                            $enrollments = is_array($s) ? ($s['campaign_students'] ?? []) : ($s->campaignStudents ?? []);
-                            $first = collect($enrollments)->first();
-                            if (!$first) return false;
-                            $status = is_array($first) ? ($first['status'] ?? null) : ($first->status ?? null);
-                            $verifiedAt = is_array($first) ? ($first['verified_at'] ?? null) : ($first->verified_at ?? null);
-                            return $status === 'verified' || !empty($verifiedAt);
-                        })->count();
-
-                        $unverifiedCount = max(0, $targetStudentsCount - $verifiedCount);
+                        $exportCounts = $this->getExportStudentCounts();
+                        $targetStudentsCount = $exportCounts['total'];
+                        $verifiedCount = $exportCounts['verified'];
+                        $unverifiedCount = $exportCounts['unverified'];
                     @endphp
 
                     @if ($exportOnlyVerified)
