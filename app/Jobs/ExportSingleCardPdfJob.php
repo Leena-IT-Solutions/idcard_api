@@ -75,14 +75,28 @@ class ExportSingleCardPdfJob implements ShouldQueue
 
             $isMirrored = (bool) ($export->params['mirror_print'] ?? false);
 
-            $html = view('exports.single-card-pdf', [
-                'cardWidthMm' => $cardWidthMm,
-                'cardHeightMm' => $cardHeightMm,
-                'items' => $items,
-                'isMirrored' => $isMirrored,
-            ])->render();
+            $itemChunks = array_chunk($items, 30);
+            $chunkPdfPaths = [];
+            $tempDir = storage_path('app/temp');
+            if (!file_exists($tempDir)) {
+                @mkdir($tempDir, 0777, true);
+            }
 
-            $pdf = $renderer->toPdf($html, $cardWidthMm, $cardHeightMm);
+            foreach ($itemChunks as $chunkIdx => $itemChunk) {
+                $html = view('exports.single-card-pdf', [
+                    'cardWidthMm' => $cardWidthMm,
+                    'cardHeightMm' => $cardHeightMm,
+                    'items' => $itemChunk,
+                    'isMirrored' => $isMirrored,
+                ])->render();
+
+                $chunkPdf = $renderer->toPdf($html, $cardWidthMm, $cardHeightMm);
+                $chunkPath = $tempDir . "/exp_{$export->id}_single_chunk_{$chunkIdx}.pdf";
+                file_put_contents($chunkPath, $chunkPdf);
+                $chunkPdfPaths[] = $chunkPath;
+
+                unset($html, $chunkPdf);
+            }
 
             $pdfRelativePath = 'exports/' . $export->id . '/single_cards_printer.pdf';
             $fullPdfPath = storage_path('app/private/' . $pdfRelativePath);
@@ -91,7 +105,15 @@ class ExportSingleCardPdfJob implements ShouldQueue
                 mkdir(dirname($fullPdfPath), 0755, true);
             }
 
-            file_put_contents($fullPdfPath, $pdf);
+            if (count($chunkPdfPaths) === 1) {
+                rename($chunkPdfPaths[0], $fullPdfPath);
+            } else {
+                $mergedPdf = $renderer->mergePdfs($chunkPdfPaths);
+                file_put_contents($fullPdfPath, $mergedPdf);
+                foreach ($chunkPdfPaths as $cp) {
+                    @unlink($cp);
+                }
+            }
 
             $export->update([
                 'status' => 'completed',

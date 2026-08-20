@@ -100,13 +100,29 @@ class ExportImpositionPdfJob implements ShouldQueue
                 $pages[] = $currentPageCards;
             }
 
-            $html = view('exports.imposition-sheet', [
-                'layout' => $layout,
-                'pages' => $pages,
-                'isMirrored' => $isMirrored,
-            ])->render();
+            $totalPagesCount = count($pages);
+            $pagesPerBatch = 5; // 5 imposition pages (approx 40-50 cards) per batch for sub-2s Chrome render speed
+            $pageChunks = array_chunk($pages, $pagesPerBatch);
+            $chunkPdfPaths = [];
+            $tempDir = storage_path('app/temp');
+            if (!file_exists($tempDir)) {
+                @mkdir($tempDir, 0777, true);
+            }
 
-            $pdf = $renderer->toPdf($html, $layout['page_width_mm'], $layout['page_height_mm']);
+            foreach ($pageChunks as $chunkIdx => $pageChunk) {
+                $html = view('exports.imposition-sheet', [
+                    'layout' => $layout,
+                    'pages' => $pageChunk,
+                    'isMirrored' => $isMirrored,
+                ])->render();
+
+                $chunkPdf = $renderer->toPdf($html, $layout['page_width_mm'], $layout['page_height_mm']);
+                $chunkPath = $tempDir . "/exp_{$export->id}_imposition_chunk_{$chunkIdx}.pdf";
+                file_put_contents($chunkPath, $chunkPdf);
+                $chunkPdfPaths[] = $chunkPath;
+
+                unset($html, $chunkPdf);
+            }
 
             $pdfRelativePath = 'exports/' . $export->id . '/imposition_print.pdf';
             $fullPdfPath = storage_path('app/private/' . $pdfRelativePath);
@@ -115,7 +131,15 @@ class ExportImpositionPdfJob implements ShouldQueue
                 mkdir(dirname($fullPdfPath), 0755, true);
             }
 
-            file_put_contents($fullPdfPath, $pdf);
+            if (count($chunkPdfPaths) === 1) {
+                rename($chunkPdfPaths[0], $fullPdfPath);
+            } else {
+                $mergedPdf = $renderer->mergePdfs($chunkPdfPaths);
+                file_put_contents($fullPdfPath, $mergedPdf);
+                foreach ($chunkPdfPaths as $cp) {
+                    @unlink($cp);
+                }
+            }
 
             $export->update([
                 'status' => 'completed',

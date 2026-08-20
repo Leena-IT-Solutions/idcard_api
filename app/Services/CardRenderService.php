@@ -53,10 +53,18 @@ class CardRenderService
      */
     protected function createBrowsershot(string $html): Browsershot
     {
-        $b = (new Browsershot())
-            ->setHtml($html);
+        $tempDir = storage_path('app/temp');
+        if (!file_exists($tempDir)) {
+            @mkdir($tempDir, 0777, true);
+        }
 
-        return $this->configureBrowsershot($b);
+        $b = (new Browsershot())
+            ->setCustomTempPath($tempDir);
+
+        $this->configureBrowsershot($b);
+        $b->setHtml($html);
+
+        return $b;
     }
 
     /**
@@ -235,6 +243,36 @@ class CardRenderService
             ->paperSize($widthMm, $heightMm, 'mm')
             ->margins(0, 0, 0, 0)
             ->pdf();
+    }
+
+    /**
+     * Merge multiple PDF binary files on disk into one final PDF string.
+     */
+    public function mergePdfs(array $pdfFilePaths): string
+    {
+        if (empty($pdfFilePaths)) {
+            return '';
+        }
+
+        if (count($pdfFilePaths) === 1) {
+            return file_get_contents($pdfFilePaths[0]);
+        }
+
+        $pdf = new \setasign\Fpdi\Fpdi();
+
+        foreach ($pdfFilePaths as $filePath) {
+            if (!file_exists($filePath)) continue;
+            $pageCount = $pdf->setSourceFile($filePath);
+            for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                $templateId = $pdf->importPage($pageNo);
+                $size = $pdf->getTemplateSize($templateId);
+                $orientation = ($size['width'] > $size['height']) ? 'L' : 'P';
+                $pdf->AddPage($orientation, [$size['width'], $size['height']]);
+                $pdf->useTemplate($templateId);
+            }
+        }
+
+        return $pdf->Output('S');
     }
 
     /**
