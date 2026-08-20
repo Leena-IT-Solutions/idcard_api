@@ -3074,6 +3074,18 @@ new class extends Component
                                     </div>
                                 </div>
                             @empty
+                                <div class="text-center py-4 text-xs text-gray-400">
+                                    {{ __('No recent export tasks found.') }}
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- Bulk Status by Grade/Division Modal -->
     @if ($isBulkStatusModalOpen)
         <div class="fixed inset-0 z-50 overflow-y-auto">
