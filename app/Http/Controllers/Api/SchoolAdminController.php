@@ -170,11 +170,22 @@ class SchoolAdminController extends Controller
         $school = \App\Models\School::find($schoolId);
         $effectiveTemplate = $this->getEffectiveTemplateForGradeOrSchool($schoolId);
 
+        $totalStudentsQuery = \App\Models\Student::whereHas('campaignStudents.campaign', function($q) use ($schoolId) {
+            $q->where('school_id', $schoolId);
+        });
+        if ($scopes['restricted']) {
+            $totalStudentsQuery->whereHas('campaignStudents', function($q) use ($scopes) {
+                $q->whereIn('grade_id', $scopes['grades'])->whereIn('division_id', $scopes['divisions']);
+            });
+        }
+        $totalStudentsCount = $totalStudentsQuery->count();
+
         return response()->json([
             'grades' => $grades,
             'campaigns' => $campaigns,
             'school' => $school,
             'effective_template' => $effectiveTemplate,
+            'total_students_count' => $totalStudentsCount,
         ]);
     }
  
