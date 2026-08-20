@@ -1479,6 +1479,9 @@ new class extends Component
             @php
                 $studentTemplate = $this->getEffectiveTemplate($student);
                 $isTemplateMode = ($viewMode === 'template') || ($viewMode === 'auto' && $studentTemplate !== null);
+
+                $firstEnrollment = $student->campaignStudents ? $student->campaignStudents->first() : null;
+                $isVerified = $firstEnrollment && !empty($firstEnrollment->verified_at);
             @endphp
 
             @if($isTemplateMode && $studentTemplate)
@@ -1486,10 +1489,23 @@ new class extends Component
                 <div class="bg-white dark:bg-gray-800 rounded-3xl p-5 shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 hover:border-indigo-500/30 transition-all duration-300 flex flex-col justify-between items-center gap-4">
                     <!-- Top Info Header -->
                     <div class="w-full flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-700">
-                        <div class="space-y-0.5">
-                            <h4 class="font-extrabold text-gray-900 dark:text-gray-100 text-base leading-tight">
-                                {{ $student->first_name }} {{ $student->last_name }}
-                            </h4>
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h4 class="font-extrabold text-gray-900 dark:text-gray-100 text-base leading-tight">
+                                    {{ $student->first_name }} {{ $student->last_name }}
+                                </h4>
+                                @if($isVerified)
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 inline-flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                        VERIFIED
+                                    </span>
+                                @else
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 inline-flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        PENDING
+                                    </span>
+                                @endif
+                            </div>
                             <div class="flex items-center gap-2">
                                 <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
                                     Template: {{ $studentTemplate->name }}
@@ -1551,9 +1567,22 @@ new class extends Component
                     <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
                         <div>
                             <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                                <h4 class="text-xl font-extrabold text-gray-900 dark:text-gray-100">
-                                    {{ $student->first_name }} {{ $student->middle_name ? $student->middle_name . ' ' : '' }}{{ $student->last_name }}
-                                </h4>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <h4 class="text-xl font-extrabold text-gray-900 dark:text-gray-100">
+                                        {{ $student->first_name }} {{ $student->middle_name ? $student->middle_name . ' ' : '' }}{{ $student->last_name }}
+                                    </h4>
+                                    @if($isVerified)
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 inline-flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            VERIFIED
+                                        </span>
+                                    @else
+                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 inline-flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            PENDING
+                                        </span>
+                                    @endif
+                                </div>
                                 @if ($student->roll_no)
                                     <span class="px-3 py-1 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-xl text-xs font-bold">
                                         Roll No: {{ $student->roll_no }}
@@ -2361,6 +2390,8 @@ new class extends Component
             $targetStudent = \App\Models\Student::with('campaignStudents.grade', 'campaignStudents.division', 'campaignStudents.campaign')->find($previewStudentId);
             $targetTemplate = $targetStudent ? $this->getEffectiveTemplate($targetStudent) : null;
             $activeSchoolObj = session('active_school_id') ? \App\Models\School::find(session('active_school_id')) : null;
+            $targetEnrollment = $targetStudent && $targetStudent->campaignStudents ? $targetStudent->campaignStudents->first() : null;
+            $targetIsVerified = $targetEnrollment && !empty($targetEnrollment->verified_at);
         @endphp
         @if($targetStudent && $targetTemplate)
             <div class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
@@ -2372,6 +2403,17 @@ new class extends Component
                         <div class="space-y-1">
                             <h3 class="text-xl font-black text-white flex items-center gap-2">
                                 <span>🪪 Student ID Card Preview</span>
+                                @if($targetIsVerified)
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 inline-flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                        VERIFIED
+                                    </span>
+                                @else
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-400 border border-amber-500/30 inline-flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        PENDING
+                                    </span>
+                                @endif
                             </h3>
                             <p class="text-xs text-slate-400">
                                 {{ $targetStudent->first_name }} {{ $targetStudent->last_name }} &bull; Active Template: <strong class="text-indigo-400">{{ $targetTemplate->name }}</strong>
