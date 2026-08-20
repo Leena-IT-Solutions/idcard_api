@@ -1799,9 +1799,9 @@ new class extends Component
 
             @if($isTemplateMode && $studentTemplate)
                 <!-- Template Design ID Card Box -->
-                <div class="bg-white dark:bg-gray-800 rounded-3xl p-5 shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 hover:border-indigo-500/30 transition-all duration-300 flex flex-col justify-between items-center gap-4 relative">
+                <div class="bg-white dark:bg-gray-800 rounded-3xl p-5 shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 hover:border-indigo-500/30 transition-all duration-300 flex flex-col justify-between items-center gap-4 relative" x-data="{ cardDropdownOpen: false }" :class="cardDropdownOpen ? 'z-40' : 'z-0'">
                     <!-- Top Info Header -->
-                    <div class="w-full flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-700">
+                    <div class="w-full flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-700 relative z-30">
                         <div class="space-y-1">
                             <div class="flex items-center gap-2 flex-wrap">
                                 <input type="checkbox" wire:model.live="selectedStudentIds" value="{{ (string)$student->id }}" class="w-4 h-4 text-indigo-600 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-indigo-500 cursor-pointer shrink-0" />
@@ -1809,13 +1809,13 @@ new class extends Component
                                     {{ $student->first_name }} {{ $student->last_name }}
                                 </h4>
                                 <!-- Interactive Status Dropdown Badge -->
-                                <div x-data="{ open: false, curOrder: {{ $activeStatusData['order'] }} }" class="relative inline-block text-left" @click.outside="open = false">
+                                <div x-data="{ open: false, curOrder: {{ $activeStatusData['order'] }} }" x-init="$watch('open', val => cardDropdownOpen = val)" class="relative inline-block text-left" @click.outside="open = false">
                                     <button type="button" @click.stop="open = !open" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold {{ $activeStatusData['bg'] }} border inline-flex items-center gap-1.5 shadow-sm transition hover:opacity-80 cursor-pointer" title="Click to change status">
                                         {!! $activeStatusData['icon'] !!}
                                         <span>{{ $activeStatusData['label'] }}</span>
                                         <svg class="w-2.5 h-2.5 opacity-60 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                                     </button>
-                                    <div x-show="open" x-cloak class="absolute left-0 mt-1.5 w-44 rounded-2xl bg-white dark:bg-gray-800 shadow-2xl border border-gray-100 dark:border-gray-700 py-1.5 z-30 divide-y divide-gray-100 dark:divide-gray-700/50">
+                                    <div x-show="open" x-cloak class="absolute left-0 mt-1.5 w-44 rounded-2xl bg-white dark:bg-gray-800 shadow-2xl border border-gray-100 dark:border-gray-700 py-1.5 z-50 divide-y divide-gray-100 dark:divide-gray-700/50">
                                         <div class="px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-gray-400">Change Status</div>
                                         <div class="py-1">
                                             @foreach ($statusConfig as $sKey => $sVal)
@@ -1852,7 +1852,7 @@ new class extends Component
                     </div>
 
                     <!-- Scaled Canvas Template Card Component -->
-                    <div class="py-2 cursor-pointer transition-transform hover:scale-[1.02]" wire:click="openPreviewIdCard({{ $student->id }})">
+                    <div class="py-2 cursor-pointer transition-transform hover:scale-[1.02] relative z-0" wire:click="openPreviewIdCard({{ $student->id }})">
                         <x-id-card-renderer 
                             :template="$studentTemplate" 
                             :student="$student" 
@@ -1884,9 +1884,9 @@ new class extends Component
                 </div>
             @else
                 <!-- Standard Info List Item -->
-                <div class="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 hover:border-indigo-500/30 dark:hover:border-indigo-400/20 transition-all duration-300 flex flex-col md:flex-row group relative">
+                <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 hover:border-indigo-500/30 dark:hover:border-indigo-400/20 transition-all duration-300 flex flex-col md:flex-row group relative" x-data="{ cardDropdownOpen: false }" :class="cardDropdownOpen ? 'z-40' : 'z-0'">
                     <!-- Left Side Square Photo -->
-                    <div class="relative w-full md:w-56 h-56 md:h-auto md:aspect-square bg-gray-100 dark:bg-gray-900 overflow-hidden shrink-0 border-r border-gray-200 dark:border-gray-700">
+                    <div class="relative w-full md:w-56 h-56 md:h-auto md:aspect-square bg-gray-100 dark:bg-gray-900 overflow-hidden shrink-0 border-r border-gray-200 dark:border-gray-700 rounded-t-3xl md:rounded-l-3xl md:rounded-tr-none">
                         @if ($student->photo_path)
                             <img src="{{ asset('storage/' . $student->photo_path) }}" alt="{{ $student->first_name }}" class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
                         @else
@@ -1899,20 +1899,20 @@ new class extends Component
                     <!-- Right Side Details -->
                     <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
                         <div>
-                            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                            <div class="flex flex-wrap items-center justify-between gap-2 mb-2 relative z-30">
                                 <div class="flex items-center gap-2 flex-wrap">
                                     <input type="checkbox" wire:model.live="selectedStudentIds" value="{{ (string)$student->id }}" class="w-4 h-4 text-indigo-600 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-indigo-500 cursor-pointer shrink-0" />
                                     <h4 class="text-xl font-extrabold text-gray-900 dark:text-gray-100">
                                         {{ $student->first_name }} {{ $student->middle_name ? $student->middle_name . ' ' : '' }}{{ $student->last_name }}
                                     </h4>
                                     <!-- Interactive Status Dropdown Badge -->
-                                    <div x-data="{ open: false, curOrder: {{ $activeStatusData['order'] }} }" class="relative inline-block text-left" @click.outside="open = false">
+                                    <div x-data="{ open: false, curOrder: {{ $activeStatusData['order'] }} }" x-init="$watch('open', val => cardDropdownOpen = val)" class="relative inline-block text-left" @click.outside="open = false">
                                         <button type="button" @click.stop="open = !open" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold {{ $activeStatusData['bg'] }} border inline-flex items-center gap-1.5 shadow-sm transition hover:opacity-80 cursor-pointer" title="Click to change status">
                                             {!! $activeStatusData['icon'] !!}
                                             <span>{{ $activeStatusData['label'] }}</span>
                                             <svg class="w-2.5 h-2.5 opacity-60 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                                         </button>
-                                        <div x-show="open" x-cloak class="absolute left-0 mt-1.5 w-44 rounded-2xl bg-white dark:bg-gray-800 shadow-2xl border border-gray-100 dark:border-gray-700 py-1.5 z-30 divide-y divide-gray-100 dark:divide-gray-700/50">
+                                        <div x-show="open" x-cloak class="absolute left-0 mt-1.5 w-44 rounded-2xl bg-white dark:bg-gray-800 shadow-2xl border border-gray-100 dark:border-gray-700 py-1.5 z-50 divide-y divide-gray-100 dark:divide-gray-700/50">
                                             <div class="px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-gray-400">Change Status</div>
                                             <div class="py-1">
                                                 @foreach ($statusConfig as $sKey => $sVal)
