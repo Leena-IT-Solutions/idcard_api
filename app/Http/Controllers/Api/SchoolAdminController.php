@@ -442,6 +442,8 @@ class SchoolAdminController extends Controller
             return $student;
         };
 
+        $totalMatchingCount = (clone $query)->count();
+
         if ($request->has('page')) {
             $studentsPaginator = $query->with(['campaignStudents' => function($q) use ($schoolId) {
                 $q->whereHas('campaign', function($inner) use ($schoolId) {
@@ -450,7 +452,7 @@ class SchoolAdminController extends Controller
             }])->simplePaginate($perPage);
             
             $items = collect($studentsPaginator->items())->map($mapStudentTemplate);
-            return response()->json($items);
+            return response()->json($items)->header('X-Total-Count', $totalMatchingCount);
         } else {
             $students = $query->with(['campaignStudents' => function($q) use ($schoolId) {
                 $q->whereHas('campaign', function($inner) use ($schoolId) {
@@ -458,7 +460,7 @@ class SchoolAdminController extends Controller
                 })->with(['grade', 'division', 'campaign', 'verifier']);
             }])->get()->map($mapStudentTemplate);
             
-            return response()->json($students);
+            return response()->json($students)->header('X-Total-Count', $totalMatchingCount);
         }
     }
  
