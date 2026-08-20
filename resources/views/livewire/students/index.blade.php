@@ -36,6 +36,7 @@ new class extends Component
     public $bulkStatus = 'sent_for_printing';
 
     public bool $exportSendForPrinting = false;
+    public bool $exportOnlyVerified = false;
 
     public function mount()
     {
@@ -176,10 +177,23 @@ new class extends Component
             });
         }
 
+        if (!empty($this->selectedStudentIds)) {
+            $query->whereIn('id', $this->selectedStudentIds);
+        }
+
+        if ($this->exportOnlyVerified) {
+            $query->whereHas('campaignStudents', function($csQ) {
+                $csQ->where(function($sq) {
+                    $sq->where('status', \App\Models\CampaignStudent::STATUS_VERIFIED)
+                       ->orWhereNotNull('verified_at');
+                });
+            });
+        }
+
         $targetStudentIds = $query->pluck('id')->all();
 
         if (empty($targetStudentIds)) {
-            session()->flash('message', 'No eligible students found to export for active filter selection.');
+            session()->flash('message', 'No eligible students found to export for active selection and filters.');
             return;
         }
 
@@ -2870,20 +2884,49 @@ new class extends Component
                     </div>
 
                     @php
-                        $targetStudentsCount = count($studentsList);
-                        $unverifiedCount = collect($studentsList)->filter(function($s) {
+                        $effectiveStudents = !empty($selectedStudentIds) 
+                            ? collect($studentsList)->filter(fn($s) => in_array((string)(is_array($s) ? $s['id'] : $s->id), $selectedStudentIds)) 
+                            : collect($studentsList);
+
+                        $targetStudentsCount = $effectiveStudents->count();
+
+                        $verifiedCount = $effectiveStudents->filter(function($s) {
                             $enrollments = is_array($s) ? ($s['campaign_students'] ?? []) : ($s->campaignStudents ?? []);
                             $first = collect($enrollments)->first();
-                            return !($first && !empty(is_array($first) ? $first['verified_at'] : $first->verified_at));
+                            if (!$first) return false;
+                            $status = is_array($first) ? ($first['status'] ?? null) : ($first->status ?? null);
+                            $verifiedAt = is_array($first) ? ($first['verified_at'] ?? null) : ($first->verified_at ?? null);
+                            return $status === 'verified' || !empty($verifiedAt);
                         })->count();
+
+                        $unverifiedCount = max(0, $targetStudentsCount - $verifiedCount);
                     @endphp
 
-                    @if ($unverifiedCount > 0)
-                        <div class="mt-4 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 rounded-2xl flex items-center gap-3 text-xs text-amber-800 dark:text-amber-400">
-                            <svg class="w-5 h-5 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                            </svg>
-                            <span><strong>{{ __('Verification Warning') }}:</strong> {{ __(':unverified of :total selected students are not yet verified.', ['unverified' => $unverifiedCount, 'total' => $targetStudentsCount]) }} {{ __('You may proceed with export.') }}</span>
+                    @if ($exportOnlyVerified)
+                        <div class="mt-4 p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/40 rounded-2xl flex items-center justify-between gap-3 text-xs text-emerald-800 dark:text-emerald-300">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span><strong>{{ __('Verified Filter Active') }}:</strong> {{ __('Exporting only :verified verified students (:unverified unverified students excluded).', ['verified' => $verifiedCount, 'unverified' => $unverifiedCount]) }}</span>
+                            </div>
+                            <button type="button" wire:click="$set('exportOnlyVerified', false)" class="text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline shrink-0">
+                                {{ __('Include All (:total)', ['total' => $targetStudentsCount]) }}
+                            </button>
+                        </div>
+                    @elseif ($unverifiedCount > 0)
+                        <div class="mt-4 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 rounded-2xl flex items-center justify-between gap-3 text-xs text-amber-800 dark:text-amber-400">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                </svg>
+                                <span><strong>{{ __('Verification Warning') }}:</strong> {{ __(':unverified of :total selected students are not yet verified.', ['unverified' => $unverifiedCount, 'total' => $targetStudentsCount]) }}</span>
+                            </div>
+                            @if ($verifiedCount > 0)
+                                <button type="button" wire:click="$set('exportOnlyVerified', true)" class="px-3 py-1.5 bg-amber-200/80 dark:bg-amber-900/60 hover:bg-amber-300 dark:hover:bg-amber-800 text-amber-950 dark:text-amber-200 rounded-xl font-bold text-[11px] transition shrink-0 cursor-pointer shadow-sm">
+                                    {{ __('Filter Verified Only (:count)', ['count' => $verifiedCount]) }}
+                                </button>
+                            @endif
                         </div>
                     @endif
 
@@ -2913,6 +2956,29 @@ new class extends Component
                                     <span class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">{{ __('Multi-card layout sheet with trim marks & bleed.') }}</span>
                                 </label>
                             </div>
+                        </div>
+
+                        <!-- Export Only Verified Students Toggle Switch -->
+                        <div class="p-4 border rounded-2xl flex items-start justify-between gap-4 transition {{ $exportOnlyVerified ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/20' : 'border-gray-200 dark:border-gray-700' }}">
+                            <div>
+                                <span class="font-bold text-xs text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    {{ __('Export Only Verified Students') }}
+                                    @if ($exportOnlyVerified)
+                                        <span class="px-2 py-0.5 bg-emerald-600 text-white rounded-md text-[9px] font-extrabold uppercase tracking-wider">{{ __('Active (:count Students)', ['count' => $verifiedCount]) }}</span>
+                                    @endif
+                                </span>
+                                <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">
+                                    {{ __('If checked, exports only students with "Verified" status (:verifiedCount). Automatically excludes :unverifiedCount drafting and pending profiles.', ['verifiedCount' => $verifiedCount, 'unverifiedCount' => $unverifiedCount]) }}
+                                </p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                                <input type="checkbox" wire:model.live="exportOnlyVerified" class="sr-only peer" />
+                                <div class="w-11 h-6 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-emerald-600 transition-colors"></div>
+                                <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+                            </label>
                         </div>
 
                         @if ($exportType !== 'excel_photo_zip')
@@ -2949,6 +3015,12 @@ new class extends Component
                                     {{ __('If checked, automatically marks the status of all exported students as "Sent for Printing" upon successful generation to prevent duplicate print orders.') }}
                                 </p>
                             </div>
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                                <input type="checkbox" wire:model.live="exportSendForPrinting" class="sr-only peer" />
+                                <div class="w-11 h-6 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 transition-colors"></div>
+                                <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+                            </label>
+                        </div>
                             <label class="relative inline-flex items-center cursor-pointer shrink-0">
                                 <input type="checkbox" wire:model.live="exportSendForPrinting" class="sr-only peer" />
                                 <div class="w-11 h-6 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 transition-colors"></div>
@@ -3002,7 +3074,13 @@ new class extends Component
                             <button wire:click="triggerExport" wire:loading.attr="disabled" wire:target="triggerExport" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow cursor-pointer flex items-center justify-center gap-2">
                                 <span wire:loading.remove wire:target="triggerExport" class="flex items-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                    <span>{{ __('Start Background Export') }}</span>
+                                    <span>
+                                        @if ($exportOnlyVerified)
+                                            {{ __('Start Export (:count Verified)', ['count' => $verifiedCount]) }}
+                                        @else
+                                            {{ __('Start Export (:count Cards)', ['count' => $targetStudentsCount]) }}
+                                        @endif
+                                    </span>
                                 </span>
                                 <span wire:loading wire:target="triggerExport" class="flex items-center gap-2">
                                     <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
