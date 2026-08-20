@@ -24,7 +24,7 @@ class ExportImpositionPdfJob implements ShouldQueue
 
     public function handle(CardRenderService $renderer, ImpositionLayoutService $layoutService, TemplateResolverService $templateResolver): void
     {
-        ini_set('memory_limit', '1024M');
+        ini_set('memory_limit', '-1');
         set_time_limit(3600);
 
         $export = Export::findOrFail($this->exportId);

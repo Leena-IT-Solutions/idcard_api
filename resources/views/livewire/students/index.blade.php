@@ -206,6 +206,9 @@ new class extends Component
         ]);
 
         try {
+            ini_set('memory_limit', '-1');
+            set_time_limit(3600);
+
             match ($this->exportType) {
                 'excel_photo_zip' => \App\Jobs\ExportExcelPhotoZipJob::dispatchSync($export->id),
                 'png_zip' => \App\Jobs\ExportPngZipJob::dispatchSync($export->id),

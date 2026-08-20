@@ -166,6 +166,13 @@
             $cleanPath = substr($cleanPath, 8);
         }
         if ($forExport) {
+            if (!isset($GLOBALS['_idCardBase64Cache'])) {
+                $GLOBALS['_idCardBase64Cache'] = [];
+            }
+            if (isset($GLOBALS['_idCardBase64Cache'][$cleanPath])) {
+                return $GLOBALS['_idCardBase64Cache'][$cleanPath];
+            }
+
             $localPath = storage_path('app/public/' . $cleanPath);
             if (!file_exists($localPath)) {
                 $localPath = public_path('storage/' . $cleanPath);
@@ -178,7 +185,9 @@
                 if (str_ends_with(strtolower($localPath), '.svg')) {
                     $mime = 'image/svg+xml';
                 }
-                return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($localPath));
+                $encoded = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($localPath));
+                $GLOBALS['_idCardBase64Cache'][$cleanPath] = $encoded;
+                return $encoded;
             }
         }
         if (file_exists(public_path($cleanPath))) {
