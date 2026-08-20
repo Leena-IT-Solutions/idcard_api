@@ -23,6 +23,19 @@ new class extends Component
     public $filterCampaign = '';
     public $filterGrade = '';
     public $filterDivision = '';
+    public $filterStatus = '';
+
+    // Bulk selection & modal state
+    public array $selectedStudentIds = [];
+    public bool $selectAll = false;
+    public string $bulkTargetStatus = 'verified';
+
+    public bool $isBulkStatusModalOpen = false;
+    public $bulkGradeId = '';
+    public $bulkDivisionId = '';
+    public $bulkStatus = 'sent_for_printing';
+
+    public bool $exportSendForPrinting = false;
 
     public function mount()
     {
@@ -30,6 +43,7 @@ new class extends Component
         $this->filterCampaign = session('students_filter_campaign', '');
         $this->filterGrade = session('students_filter_grade', '');
         $this->filterDivision = session('students_filter_division', '');
+        $this->filterStatus = session('students_filter_status', '');
         $this->viewMode = session('students_view_mode', 'auto');
     }
 
@@ -198,6 +212,20 @@ new class extends Component
                 'single_card_pdf' => \App\Jobs\ExportSingleCardPdfJob::dispatchSync($export->id),
                 'imposition_pdf' => \App\Jobs\ExportImpositionPdfJob::dispatchSync($export->id),
             };
+
+            // If user checked "Mark exported students as Sent for Printing"
+            if ($this->exportSendForPrinting && !empty($targetStudentIds)) {
+                $campQuery = \App\Models\CampaignStudent::whereIn('student_id', $targetStudentIds);
+                if ($this->filterCampaign) {
+                    $campQuery->where('campaign_id', $this->filterCampaign);
+                }
+                $campQuery->update([
+                    'status' => \App\Models\CampaignStudent::STATUS_SENT_FOR_PRINTING,
+                    'status_updated_at' => now(),
+                    'status_updated_by' => auth()->id(),
+                ]);
+            }
+
             session()->flash('message', 'Export completed successfully! Click Download to save file.');
         } catch (\Throwable $e) {
             $export->update(['status' => 'failed', 'error_message' => $e->getMessage()]);
@@ -349,6 +377,12 @@ new class extends Component
         session(['students_filter_division' => $this->filterDivision]);
     }
 
+    public function updatedFilterStatus()
+    {
+        $this->perPage = 12;
+        session(['students_filter_status' => $this->filterStatus]);
+    }
+
     public function updatedViewMode()
     {
         session(['students_view_mode' => $this->viewMode]);
@@ -357,6 +391,151 @@ new class extends Component
     public function updatedFilterBloodGroup()
     {
         $this->perPage = 12;
+    }
+
+    public function updateStudentStatus($studentId, $status)
+    {
+        $activeSchoolId = session('active_school_id');
+        if (!$activeSchoolId) return;
+
+        $enrollment = \App\Models\CampaignStudent::where('student_id', $studentId)
+            ->whereHas('campaign', function($q) use ($activeSchoolId) {
+                $q->where('school_id', $activeSchoolId);
+            })
+            ->first();
+
+        if (!$enrollment) return;
+
+        $scopes = $this->getPermittedScopes();
+        if ($scopes['restricted']) {
+            if (!in_array($enrollment->grade_id, $scopes['grades']) || !in_array($enrollment->division_id, $scopes['divisions'])) {
+                session()->flash('error', 'You do not have permission to update student status in this grade/division.');
+                return;
+            }
+        }
+
+        $updateData = [
+            'status' => $status,
+            'status_updated_at' => now(),
+            'status_updated_by' => auth()->id(),
+        ];
+
+        if ($status === \App\Models\CampaignStudent::STATUS_VERIFIED && !$enrollment->verified_at) {
+            $updateData['verified_at'] = now();
+            $updateData['verified_by'] = auth()->id();
+        } elseif ($status === \App\Models\CampaignStudent::STATUS_DRAFTING && $enrollment->verified_at) {
+            $updateData['verified_at'] = null;
+            $updateData['verified_by'] = null;
+        }
+
+        $enrollment->update($updateData);
+        session()->flash('message', "Student status updated to " . (\App\Models\CampaignStudent::STATUSES[$status]['label'] ?? $status));
+    }
+
+    public function updatedSelectAll($value)
+    {
+        if ($value) {
+            $this->selectedStudentIds = collect($this->loadStudents())->pluck('id')->map(fn($id) => (string)$id)->all();
+        } else {
+            $this->selectedStudentIds = [];
+        }
+    }
+
+    public function bulkUpdateStatusBySelection($status)
+    {
+        if (empty($this->selectedStudentIds)) {
+            session()->flash('error', 'No students selected.');
+            return;
+        }
+
+        $activeSchoolId = session('active_school_id');
+        if (!$activeSchoolId) return;
+
+        $scopes = $this->getPermittedScopes();
+        $query = \App\Models\CampaignStudent::whereIn('student_id', $this->selectedStudentIds)
+            ->whereHas('campaign', function($q) use ($activeSchoolId) {
+                $q->where('school_id', $activeSchoolId);
+            });
+
+        if ($scopes['restricted']) {
+            $query->whereIn('grade_id', $scopes['grades'])->whereIn('division_id', $scopes['divisions']);
+        }
+
+        $updateData = [
+            'status' => $status,
+            'status_updated_at' => now(),
+            'status_updated_by' => auth()->id(),
+        ];
+
+        if ($status === \App\Models\CampaignStudent::STATUS_VERIFIED) {
+            $updateData['verified_at'] = now();
+            $updateData['verified_by'] = auth()->id();
+        } elseif ($status === \App\Models\CampaignStudent::STATUS_DRAFTING) {
+            $updateData['verified_at'] = null;
+            $updateData['verified_by'] = null;
+        }
+
+        $count = $query->update($updateData);
+        $this->selectedStudentIds = [];
+        $this->selectAll = false;
+        session()->flash('message', "Updated status to " . (\App\Models\CampaignStudent::STATUSES[$status]['label'] ?? $status) . " for {$count} student(s).");
+    }
+
+    public function openBulkStatusModal()
+    {
+        $this->bulkGradeId = $this->filterGrade ?: '';
+        $this->bulkDivisionId = $this->filterDivision ?: '';
+        $this->bulkStatus = 'sent_for_printing';
+        $this->isBulkStatusModalOpen = true;
+    }
+
+    public function closeBulkStatusModal()
+    {
+        $this->isBulkStatusModalOpen = false;
+    }
+
+    public function bulkUpdateStatusByGradeDivision()
+    {
+        $activeSchoolId = session('active_school_id');
+        if (!$activeSchoolId) return;
+
+        $scopes = $this->getPermittedScopes();
+        $query = \App\Models\CampaignStudent::whereHas('campaign', function($q) use ($activeSchoolId) {
+            $q->where('school_id', $activeSchoolId);
+        });
+
+        if ($this->filterCampaign) {
+            $query->where('campaign_id', $this->filterCampaign);
+        }
+
+        if ($this->bulkGradeId) {
+            $query->where('grade_id', $this->bulkGradeId);
+        }
+        if ($this->bulkDivisionId) {
+            $query->where('division_id', $this->bulkDivisionId);
+        }
+
+        if ($scopes['restricted']) {
+            $query->whereIn('grade_id', $scopes['grades'])->whereIn('division_id', $scopes['divisions']);
+        }
+
+        $updateData = [
+            'status' => $this->bulkStatus,
+            'status_updated_at' => now(),
+            'status_updated_by' => auth()->id(),
+        ];
+
+        if ($this->bulkStatus === \App\Models\CampaignStudent::STATUS_VERIFIED) {
+            $updateData['verified_at'] = now();
+            $updateData['verified_by'] = auth()->id();
+        } elseif ($this->bulkStatus === \App\Models\CampaignStudent::STATUS_DRAFTING) {
+            $updateData['verified_at'] = null;
+            $updateData['verified_by'] = null;
+        }
+
+        $count = $query->update($updateData);
+        $this->isBulkStatusModalOpen = false;
+        session()->flash('message', "Updated status to " . (\App\Models\CampaignStudent::STATUSES[$this->bulkStatus]['label'] ?? $this->bulkStatus) . " for {$count} student(s).");
     }
 
     public function getPermittedScopes()
@@ -448,6 +627,12 @@ new class extends Component
             });
         }
 
+        if ($this->filterStatus) {
+            $query->whereHas('campaignStudents', function($q) {
+                $q->where('status', $this->filterStatus);
+            });
+        }
+
         if (!empty(trim($this->search))) {
             $s = '%' . trim($this->search) . '%';
             $query->where(function($q) use ($s) {
@@ -480,7 +665,18 @@ new class extends Component
     {
         $activeSchoolId = session('active_school_id');
         if (!$activeSchoolId) {
-            return ['total' => 0, 'filtered' => 0, 'is_filtered' => false];
+            return [
+                'total' => 0,
+                'filtered' => 0,
+                'is_filtered' => false,
+                'status_counts' => [
+                    'drafting' => 0,
+                    'verified' => 0,
+                    'sent_for_printing' => 0,
+                    'printed' => 0,
+                    'distributed' => 0,
+                ]
+            ];
         }
 
         $scopes = $this->getPermittedScopes();
@@ -501,6 +697,36 @@ new class extends Component
 
         $totalCount = $buildBaseQuery()->count();
 
+        // Status breakdown counts
+        $statusCountsQuery = \App\Models\CampaignStudent::whereHas('campaign', function($q) use ($activeSchoolId) {
+            $q->where('school_id', $activeSchoolId);
+        });
+        if ($scopes['restricted']) {
+            $statusCountsQuery->whereIn('grade_id', $scopes['grades'])->whereIn('division_id', $scopes['divisions']);
+        }
+        if ($this->filterCampaign) {
+            $statusCountsQuery->where('campaign_id', $this->filterCampaign);
+        }
+        if ($this->filterGrade) {
+            $statusCountsQuery->where('grade_id', $this->filterGrade);
+        }
+        if ($this->filterDivision) {
+            $statusCountsQuery->where('division_id', $this->filterDivision);
+        }
+        $rawStatusCounts = (clone $statusCountsQuery)
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->toArray();
+
+        $statusCounts = [
+            'drafting' => (int)($rawStatusCounts['drafting'] ?? 0),
+            'verified' => (int)($rawStatusCounts['verified'] ?? 0),
+            'sent_for_printing' => (int)($rawStatusCounts['sent_for_printing'] ?? 0),
+            'printed' => (int)($rawStatusCounts['printed'] ?? 0),
+            'distributed' => (int)($rawStatusCounts['distributed'] ?? 0),
+        ];
+
         $filteredQuery = $buildBaseQuery();
 
         if ($this->filterCampaign) {
@@ -518,6 +744,12 @@ new class extends Component
         if ($this->filterDivision) {
             $filteredQuery->whereHas('campaignStudents', function($q) {
                 $q->where('division_id', $this->filterDivision);
+            });
+        }
+
+        if ($this->filterStatus) {
+            $filteredQuery->whereHas('campaignStudents', function($q) {
+                $q->where('status', $this->filterStatus);
             });
         }
 
@@ -540,23 +772,25 @@ new class extends Component
         }
 
         $filteredCount = $filteredQuery->count();
-        $isFiltered = !empty($this->filterCampaign) || !empty($this->filterGrade) || !empty($this->filterDivision) || !empty(trim($this->search));
+        $isFiltered = !empty($this->filterCampaign) || !empty($this->filterGrade) || !empty($this->filterDivision) || !empty($this->filterStatus) || !empty(trim($this->search));
 
         return [
             'total' => $totalCount,
             'filtered' => $filteredCount,
-            'is_filtered' => $isFiltered
+            'is_filtered' => $isFiltered,
+            'status_counts' => $statusCounts,
         ];
     }
 
     public function resetFilters()
     {
-        $this->reset(['filterCampaign', 'filterGrade', 'filterDivision', 'search']);
+        $this->reset(['filterCampaign', 'filterGrade', 'filterDivision', 'filterStatus', 'search']);
         session()->forget([
             'students_filter_search',
             'students_filter_campaign',
             'students_filter_grade',
             'students_filter_division',
+            'students_filter_status',
         ]);
     }
 
@@ -1299,28 +1533,58 @@ new class extends Component
                         </span>
                     @endif
                 </div>
+
+                <!-- 5-Stage Status Counters Row -->
+                <div class="mt-2.5 flex flex-wrap items-center gap-1.5 text-[11px]">
+                    <button type="button" wire:click="$set('filterStatus', 'drafting')" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold transition cursor-pointer {{ $filterStatus === 'drafting' ? 'bg-slate-600 text-white shadow-sm ring-2 ring-slate-400' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-slate-200' }}" title="Click to filter by Drafting">
+                        <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                        <span>Drafting: <strong>{{ $studentCounts['status_counts']['drafting'] ?? 0 }}</strong></span>
+                    </button>
+                    <button type="button" wire:click="$set('filterStatus', 'verified')" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold transition cursor-pointer {{ $filterStatus === 'verified' ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-400' : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100' }}" title="Click to filter by Verified">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        <span>Verified: <strong>{{ $studentCounts['status_counts']['verified'] ?? 0 }}</strong></span>
+                    </button>
+                    <button type="button" wire:click="$set('filterStatus', 'sent_for_printing')" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold transition cursor-pointer {{ $filterStatus === 'sent_for_printing' ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-400' : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100' }}" title="Click to filter by Sent for Printing">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                        <span>Sent to Print: <strong>{{ $studentCounts['status_counts']['sent_for_printing'] ?? 0 }}</strong></span>
+                    </button>
+                    <button type="button" wire:click="$set('filterStatus', 'printed')" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold transition cursor-pointer {{ $filterStatus === 'printed' ? 'bg-purple-600 text-white shadow-sm ring-2 ring-purple-400' : 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 hover:bg-purple-100' }}" title="Click to filter by Printed">
+                        <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                        <span>Printed: <strong>{{ $studentCounts['status_counts']['printed'] ?? 0 }}</strong></span>
+                    </button>
+                    <button type="button" wire:click="$set('filterStatus', 'distributed')" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold transition cursor-pointer {{ $filterStatus === 'distributed' ? 'bg-teal-600 text-white shadow-sm ring-2 ring-teal-400' : 'bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 hover:bg-teal-100' }}" title="Click to filter by Distributed">
+                        <span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
+                        <span>Distributed: <strong>{{ $studentCounts['status_counts']['distributed'] ?? 0 }}</strong></span>
+                    </button>
+                </div>
             </div>
         </div>
-        <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-            <button wire:click="syncParentLinks" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-indigo-600 dark:text-indigo-400 font-bold text-xs uppercase tracking-wider rounded-xl transition shadow hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
+        <div class="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto flex-wrap">
+            <button wire:click="openBulkStatusModal" class="inline-flex items-center justify-center gap-1.5 w-full sm:w-auto px-4 py-2.5 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200/80 dark:border-indigo-700/60 text-indigo-600 dark:text-indigo-400 font-bold text-xs uppercase tracking-wider rounded-xl transition shadow-sm cursor-pointer" title="Update status by Class/Grade">
+                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+                <span>{{ __('Bulk Status') }}</span>
+            </button>
+            <button wire:click="syncParentLinks" class="inline-flex items-center justify-center gap-1.5 w-full sm:w-auto px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-indigo-600 dark:text-indigo-400 font-bold text-xs uppercase tracking-wider rounded-xl transition shadow hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
                 <svg class="w-4 h-4 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 <span>{{ __('Sync Links') }}</span>
             </button>
-            <button wire:click="openExportModal" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow cursor-pointer">
+            <button wire:click="openExportModal" class="inline-flex items-center justify-center gap-1.5 w-full sm:w-auto px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
                 <span>{{ __('Export Center') }}</span>
             </button>
-            <button wire:click="openBulkModal" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold text-xs uppercase tracking-wider rounded-xl transition shadow hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
+            <button wire:click="openBulkModal" class="inline-flex items-center justify-center gap-1.5 w-full sm:w-auto px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold text-xs uppercase tracking-wider rounded-xl transition shadow hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                 </svg>
                 <span>{{ __('Bulk Import') }}</span>
             </button>
-            <button wire:click="openCreateModal" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow cursor-pointer">
+            <button wire:click="openCreateModal" class="inline-flex items-center justify-center gap-1.5 w-full sm:w-auto px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow cursor-pointer">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
                 </svg>
@@ -1330,7 +1594,7 @@ new class extends Component
     </div>
 
     <!-- Filters Bar -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 bg-white dark:bg-gray-800 p-5 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 bg-white dark:bg-gray-800 p-5 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none">
         <!-- Search Input -->
         <div>
             <label class="text-[9px] uppercase font-bold text-gray-500 dark:text-gray-400 tracking-wider block mb-1.5">{{ __('Search Student') }}</label>
@@ -1401,6 +1665,17 @@ new class extends Component
             </select>
         </div>
 
+        <!-- Status Filter -->
+        <div>
+            <label class="text-[9px] uppercase font-bold text-gray-500 dark:text-gray-400 tracking-wider block mb-1.5">{{ __('Status') }}</label>
+            <select wire:model.live="filterStatus" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-xl text-xs focus:ring-indigo-500 focus:border-indigo-500">
+                <option value="">{{ __('All Statuses') }}</option>
+                @foreach (\App\Models\CampaignStudent::STATUSES as $statusKey => $statusInfo)
+                    <option value="{{ $statusKey }}">{{ $statusInfo['label'] }}</option>
+                @endforeach
+            </select>
+        </div>
+
         <!-- Actions / Clear Filters -->
         <div class="flex items-end">
             @if ($studentCounts['is_filtered'])
@@ -1412,8 +1687,6 @@ new class extends Component
                 </button>
             @endif
         </div>
-
-
     </div>
 
     <!-- View Switcher & Template Status Bar -->
@@ -1482,29 +1755,89 @@ new class extends Component
 
                 $firstEnrollment = $student->campaignStudents ? $student->campaignStudents->first() : null;
                 $isVerified = $firstEnrollment && !empty($firstEnrollment->verified_at);
+                $curStatus = $firstEnrollment->status ?? ($isVerified ? 'verified' : 'drafting');
+
+                $statusConfig = [
+                    'drafting' => [
+                        'label' => 'Drafting',
+                        'bg' => 'bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/20',
+                        'dot' => 'bg-slate-400',
+                        'order' => 1,
+                        'icon' => '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>',
+                    ],
+                    'verified' => [
+                        'label' => 'Verified',
+                        'bg' => 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+                        'dot' => 'bg-emerald-500',
+                        'order' => 2,
+                        'icon' => '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>',
+                    ],
+                    'sent_for_printing' => [
+                        'label' => 'Sent for Printing',
+                        'bg' => 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+                        'dot' => 'bg-blue-500',
+                        'order' => 3,
+                        'icon' => '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2z"/></svg>',
+                    ],
+                    'printed' => [
+                        'label' => 'Printed',
+                        'bg' => 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+                        'dot' => 'bg-purple-500',
+                        'order' => 4,
+                        'icon' => '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>',
+                    ],
+                    'distributed' => [
+                        'label' => 'Distributed',
+                        'bg' => 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20',
+                        'dot' => 'bg-teal-500',
+                        'order' => 5,
+                        'icon' => '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7m-4 6l2 2 4-4"/></svg>',
+                    ],
+                ];
+                $activeStatusData = $statusConfig[$curStatus] ?? $statusConfig['drafting'];
             @endphp
 
             @if($isTemplateMode && $studentTemplate)
                 <!-- Template Design ID Card Box -->
-                <div class="bg-white dark:bg-gray-800 rounded-3xl p-5 shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 hover:border-indigo-500/30 transition-all duration-300 flex flex-col justify-between items-center gap-4">
+                <div class="bg-white dark:bg-gray-800 rounded-3xl p-5 shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 hover:border-indigo-500/30 transition-all duration-300 flex flex-col justify-between items-center gap-4 relative">
                     <!-- Top Info Header -->
                     <div class="w-full flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-700">
                         <div class="space-y-1">
                             <div class="flex items-center gap-2 flex-wrap">
+                                <input type="checkbox" wire:model.live="selectedStudentIds" value="{{ (string)$student->id }}" class="w-4 h-4 text-indigo-600 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-indigo-500 cursor-pointer shrink-0" />
                                 <h4 class="font-extrabold text-gray-900 dark:text-gray-100 text-base leading-tight">
                                     {{ $student->first_name }} {{ $student->last_name }}
                                 </h4>
-                                @if($isVerified)
-                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 inline-flex items-center gap-1">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                        VERIFIED
-                                    </span>
-                                @else
-                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 inline-flex items-center gap-1">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                        PENDING
-                                    </span>
-                                @endif
+                                <!-- Interactive Status Dropdown Badge -->
+                                <div x-data="{ open: false, curOrder: {{ $activeStatusData['order'] }} }" class="relative inline-block text-left" @click.outside="open = false">
+                                    <button type="button" @click.stop="open = !open" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold {{ $activeStatusData['bg'] }} border inline-flex items-center gap-1.5 shadow-sm transition hover:opacity-80 cursor-pointer" title="Click to change status">
+                                        {!! $activeStatusData['icon'] !!}
+                                        <span>{{ $activeStatusData['label'] }}</span>
+                                        <svg class="w-2.5 h-2.5 opacity-60 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                    </button>
+                                    <div x-show="open" x-cloak class="absolute left-0 mt-1.5 w-44 rounded-2xl bg-white dark:bg-gray-800 shadow-2xl border border-gray-100 dark:border-gray-700 py-1.5 z-30 divide-y divide-gray-100 dark:divide-gray-700/50">
+                                        <div class="px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-gray-400">Change Status</div>
+                                        <div class="py-1">
+                                            @foreach ($statusConfig as $sKey => $sVal)
+                                                <button type="button" @click="
+                                                    if (Math.abs({{ $sVal['order'] }} - curOrder) > 1) {
+                                                        if (!confirm('You are skipping stage(s). Are you sure you want to change status to {{ $sVal['label'] }}?')) return;
+                                                    }
+                                                    $wire.updateStudentStatus({{ $student->id }}, '{{ $sKey }}');
+                                                    open = false;
+                                                " class="w-full text-left px-3 py-1.5 text-xs flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition cursor-pointer {{ $curStatus === $sKey ? 'font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/20' : 'text-gray-700 dark:text-gray-300' }}">
+                                                    <span class="flex items-center gap-2">
+                                                        <span class="w-2 h-2 rounded-full {{ $sVal['dot'] }}"></span>
+                                                        <span>{{ $sVal['label'] }}</span>
+                                                    </span>
+                                                    @if ($curStatus === $sKey)
+                                                        <svg class="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                    @endif
+                                                </button>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div class="flex items-center gap-2">
                                 <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
@@ -1551,7 +1884,7 @@ new class extends Component
                 </div>
             @else
                 <!-- Standard Info List Item -->
-                <div class="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 hover:border-indigo-500/30 dark:hover:border-indigo-400/20 transition-all duration-300 flex flex-col md:flex-row group">
+                <div class="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 hover:border-indigo-500/30 dark:hover:border-indigo-400/20 transition-all duration-300 flex flex-col md:flex-row group relative">
                     <!-- Left Side Square Photo -->
                     <div class="relative w-full md:w-56 h-56 md:h-auto md:aspect-square bg-gray-100 dark:bg-gray-900 overflow-hidden shrink-0 border-r border-gray-200 dark:border-gray-700">
                         @if ($student->photo_path)
@@ -1568,20 +1901,40 @@ new class extends Component
                         <div>
                             <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
                                 <div class="flex items-center gap-2 flex-wrap">
+                                    <input type="checkbox" wire:model.live="selectedStudentIds" value="{{ (string)$student->id }}" class="w-4 h-4 text-indigo-600 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-indigo-500 cursor-pointer shrink-0" />
                                     <h4 class="text-xl font-extrabold text-gray-900 dark:text-gray-100">
                                         {{ $student->first_name }} {{ $student->middle_name ? $student->middle_name . ' ' : '' }}{{ $student->last_name }}
                                     </h4>
-                                    @if($isVerified)
-                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 inline-flex items-center gap-1">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                            VERIFIED
-                                        </span>
-                                    @else
-                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 inline-flex items-center gap-1">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                            PENDING
-                                        </span>
-                                    @endif
+                                    <!-- Interactive Status Dropdown Badge -->
+                                    <div x-data="{ open: false, curOrder: {{ $activeStatusData['order'] }} }" class="relative inline-block text-left" @click.outside="open = false">
+                                        <button type="button" @click.stop="open = !open" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold {{ $activeStatusData['bg'] }} border inline-flex items-center gap-1.5 shadow-sm transition hover:opacity-80 cursor-pointer" title="Click to change status">
+                                            {!! $activeStatusData['icon'] !!}
+                                            <span>{{ $activeStatusData['label'] }}</span>
+                                            <svg class="w-2.5 h-2.5 opacity-60 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                        </button>
+                                        <div x-show="open" x-cloak class="absolute left-0 mt-1.5 w-44 rounded-2xl bg-white dark:bg-gray-800 shadow-2xl border border-gray-100 dark:border-gray-700 py-1.5 z-30 divide-y divide-gray-100 dark:divide-gray-700/50">
+                                            <div class="px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-gray-400">Change Status</div>
+                                            <div class="py-1">
+                                                @foreach ($statusConfig as $sKey => $sVal)
+                                                    <button type="button" @click="
+                                                        if (Math.abs({{ $sVal['order'] }} - curOrder) > 1) {
+                                                            if (!confirm('You are skipping stage(s). Are you sure you want to change status to {{ $sVal['label'] }}?')) return;
+                                                        }
+                                                        $wire.updateStudentStatus({{ $student->id }}, '{{ $sKey }}');
+                                                        open = false;
+                                                    " class="w-full text-left px-3 py-1.5 text-xs flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition cursor-pointer {{ $curStatus === $sKey ? 'font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/20' : 'text-gray-700 dark:text-gray-300' }}">
+                                                        <span class="flex items-center gap-2">
+                                                            <span class="w-2 h-2 rounded-full {{ $sVal['dot'] }}"></span>
+                                                            <span>{{ $sVal['label'] }}</span>
+                                                        </span>
+                                                        @if ($curStatus === $sKey)
+                                                            <svg class="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                        @endif
+                                                    </button>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 @if ($student->roll_no)
                                     <span class="px-3 py-1 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-xl text-xs font-bold">
@@ -1655,6 +2008,31 @@ new class extends Component
             </div>
         @endforelse
     </div>
+
+    <!-- Floating Bulk Selection Bar -->
+    @if(count($selectedStudentIds) > 0)
+        <div class="fixed bottom-6 inset-x-0 z-40 flex justify-center px-4">
+            <div class="bg-gray-900 dark:bg-black text-white px-6 py-3.5 rounded-3xl shadow-2xl border border-gray-700 flex items-center gap-4 flex-wrap max-w-2xl w-full justify-between backdrop-blur-md">
+                <div class="flex items-center gap-2.5 text-xs font-bold">
+                    <span class="px-2.5 py-1 bg-indigo-600 rounded-xl text-white font-extrabold shadow-sm">{{ count($selectedStudentIds) }}</span>
+                    <span>{{ __('Students Selected') }}</span>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <select wire:model="bulkTargetStatus" class="bg-gray-800 border-gray-700 text-white text-xs rounded-xl px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 font-medium">
+                        @foreach (\App\Models\CampaignStudent::STATUSES as $k => $s)
+                            <option value="{{ $k }}">{{ $s['label'] }}</option>
+                        @endforeach
+                    </select>
+                    <button type="button" wire:click="bulkUpdateStatusBySelection(bulkTargetStatus)" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-sm">
+                        {{ __('Apply Status') }}
+                    </button>
+                    <button type="button" wire:click="$set('selectedStudentIds', [])" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium rounded-xl transition cursor-pointer">
+                        {{ __('Clear') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 
     @if ($this->hasMore)
         <div 
@@ -2555,6 +2933,26 @@ new class extends Component
                             </div>
                         @endif
 
+                        <!-- Send for Printing Lifecycle Checkbox -->
+                        <div class="p-4 border rounded-2xl flex items-start justify-between gap-4 transition {{ $exportSendForPrinting ? 'border-blue-400 bg-blue-50/60 dark:bg-blue-950/20' : 'border-gray-200 dark:border-gray-700' }}">
+                            <div>
+                                <span class="font-bold text-xs text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                                    {{ __('Mark exported students as "Sent for Printing"') }}
+                                    @if ($exportSendForPrinting)
+                                        <span class="px-2 py-0.5 bg-blue-600 text-white rounded-md text-[9px] font-extrabold uppercase tracking-wider">{{ __('Enabled') }}</span>
+                                    @endif
+                                </span>
+                                <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">
+                                    {{ __('If checked, automatically marks the status of all exported students as "Sent for Printing" upon successful generation to prevent duplicate print orders.') }}
+                                </p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                                <input type="checkbox" wire:model.live="exportSendForPrinting" class="sr-only peer" />
+                                <div class="w-11 h-6 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 transition-colors"></div>
+                                <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+                            </label>
+                        </div>
+
                         @if ($exportType === 'imposition_pdf')
                             <div class="p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-2xl space-y-3 text-xs">
                                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -2676,16 +3074,125 @@ new class extends Component
                                     </div>
                                 </div>
                             @empty
-                                <div class="text-center py-4 text-xs text-gray-400">
-                                    {{ __('No recent export tasks found.') }}
-                                </div>
-                            @endforelse
+    <!-- Bulk Status by Grade/Division Modal -->
+    @if ($isBulkStatusModalOpen)
+        <div class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 transition-opacity bg-gray-900/60 dark:bg-black/80 backdrop-blur-sm" wire:click="closeBulkStatusModal"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+
+                <div class="inline-block w-full max-w-lg p-6 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-700 sm:my-8">
+                    <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-700">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-xl">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ __('Bulk Update Status') }}</h3>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ __('Update status for an entire Standard or Division at once.') }}</p>
+                            </div>
+                        </div>
+                        <button wire:click="closeBulkStatusModal" class="text-gray-400 hover:text-gray-500 focus:outline-none cursor-pointer">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
+                    <div class="mt-6 space-y-4 text-xs">
+                        <!-- Standard / Class Dropdown -->
+                        <div>
+                            <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1.5 uppercase text-[10px] tracking-wider">{{ __('Standard / Class') }} <span class="text-gray-400 font-normal">(Leave empty for all standards)</span></label>
+                            <select wire:model.live="bulkGradeId" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-xl text-xs focus:ring-indigo-500 focus:border-indigo-500 font-medium">
+                                <option value="">{{ __('All Standards') }}</option>
+                                @php
+                                    $scopes = $this->getPermittedScopes();
+                                    $bulkGradesQuery = \App\Models\Grade::where('school_id', session('active_school_id'))->orderBy('name', 'asc');
+                                    if ($scopes['restricted']) {
+                                        $bulkGradesQuery->whereIn('id', $scopes['grades']);
+                                    }
+                                    $bulkGradesList = $bulkGradesQuery->get();
+                                @endphp
+                                @foreach ($bulkGradesList as $g)
+                                    <option value="{{ $g->id }}">{{ $g->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Division Dropdown -->
+                        @if ($bulkGradeId)
+                            <div>
+                                <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1.5 uppercase text-[10px] tracking-wider">{{ __('Division / Section') }} <span class="text-gray-400 font-normal">(Leave empty for all divisions in standard)</span></label>
+                                <select wire:model.live="bulkDivisionId" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-xl text-xs focus:ring-indigo-500 focus:border-indigo-500 font-medium">
+                                    <option value="">{{ __('All Divisions') }}</option>
+                                    @php
+                                        $bulkDivsQuery = \App\Models\Division::where('grade_id', $bulkGradeId)->orderBy('name', 'asc');
+                                        if ($scopes['restricted']) {
+                                            $bulkDivsQuery->whereIn('id', $scopes['divisions']);
+                                        }
+                                        $bulkDivsList = $bulkDivsQuery->get();
+                                    @endphp
+                                    @foreach ($bulkDivsList as $d)
+                                        <option value="{{ $d->id }}">{{ $d->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
+
+                        <!-- Target Status Dropdown -->
+                        <div>
+                            <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1.5 uppercase text-[10px] tracking-wider">{{ __('New Target Status') }}</label>
+                            <div class="grid grid-cols-1 gap-2">
+                                @foreach (\App\Models\CampaignStudent::STATUSES as $k => $s)
+                                    <label class="p-3 border rounded-2xl flex items-center justify-between cursor-pointer transition {{ $bulkStatus === $k ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-900 dark:text-indigo-200' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40' }}">
+                                        <div class="flex items-center gap-2.5">
+                                            <input type="radio" wire:model="bulkStatus" value="{{ $k }}" class="text-indigo-600 focus:ring-indigo-500" />
+                                            <span class="font-bold text-xs">{{ $s['label'] }}</span>
+                                        </div>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <!-- Affected Students Calculation -->
+                        @php
+                            $previewQuery = \App\Models\CampaignStudent::whereHas('campaign', function($q) {
+                                $q->where('school_id', session('active_school_id'));
+                            });
+                            if ($this->filterCampaign) {
+                                $previewQuery->where('campaign_id', $this->filterCampaign);
+                            }
+                            if ($bulkGradeId) {
+                                $previewQuery->where('grade_id', $bulkGradeId);
+                            }
+                            if ($bulkDivisionId) {
+                                $previewQuery->where('division_id', $bulkDivisionId);
+                            }
+                            if ($scopes['restricted']) {
+                                $previewQuery->whereIn('grade_id', $scopes['grades'])->whereIn('division_id', $scopes['divisions']);
+                            }
+                            $affectedCount = $previewQuery->count();
+                        @endphp
+
+                        <div class="p-3.5 bg-gray-50 dark:bg-gray-900/60 rounded-2xl border border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                            <span class="text-gray-500 font-semibold">Total Students Affected:</span>
+                            <span class="font-black text-indigo-600 dark:text-indigo-400 text-sm">{{ $affectedCount }}</span>
                         </div>
                     </div>
 
+                    <div class="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+                        <button type="button" wire:click="closeBulkStatusModal" class="px-5 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-bold text-xs uppercase tracking-wider transition cursor-pointer">
+                            {{ __('Cancel') }}
+                        </button>
+                        <button type="button" wire:click="bulkUpdateStatusByGradeDivision" wire:confirm="Are you sure you want to update status for all matching students in this class?" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-indigo-600/20 transition cursor-pointer">
+                            {{ __('Apply to All Matching') }}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     @endif
 </div>
+
 

@@ -43,6 +43,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/school-admin/students/{id}', [\App\Http\Controllers\Api\SchoolAdminController::class, 'deleteStudent']);
     Route::post('/school-admin/students/{id}/verify', [\App\Http\Controllers\Api\SchoolAdminController::class, 'verifyStudent']);
     Route::post('/school-admin/students/{id}/unverify', [\App\Http\Controllers\Api\SchoolAdminController::class, 'unverifyStudent']);
+    Route::post('/school-admin/students/{id}/status', [\App\Http\Controllers\Api\SchoolAdminController::class, 'updateStudentStatus']);
+    Route::post('/school-admin/students/bulk-status', [\App\Http\Controllers\Api\SchoolAdminController::class, 'bulkUpdateStudentStatus']);
 
     // User Invitations API routes
     Route::get('/user/invitations', [\App\Http\Controllers\Api\SchoolAdminController::class, 'userInvitations']);

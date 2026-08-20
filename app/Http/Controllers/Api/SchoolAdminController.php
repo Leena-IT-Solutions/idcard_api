@@ -180,12 +180,35 @@ class SchoolAdminController extends Controller
         }
         $totalStudentsCount = $totalStudentsQuery->count();
 
+        // Status counts breakdown
+        $statusCountsQuery = \App\Models\CampaignStudent::whereHas('campaign', function($q) use ($schoolId) {
+            $q->where('school_id', $schoolId);
+        });
+        if ($scopes['restricted']) {
+            $statusCountsQuery->whereIn('grade_id', $scopes['grades'])->whereIn('division_id', $scopes['divisions']);
+        }
+        $rawStatusCounts = (clone $statusCountsQuery)
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->toArray();
+
+        $statusCounts = [
+            'drafting' => (int)($rawStatusCounts['drafting'] ?? 0),
+            'verified' => (int)($rawStatusCounts['verified'] ?? 0),
+            'sent_for_printing' => (int)($rawStatusCounts['sent_for_printing'] ?? 0),
+            'printed' => (int)($rawStatusCounts['printed'] ?? 0),
+            'distributed' => (int)($rawStatusCounts['distributed'] ?? 0),
+        ];
+
         return response()->json([
             'grades' => $grades,
             'campaigns' => $campaigns,
             'school' => $school,
             'effective_template' => $effectiveTemplate,
             'total_students_count' => $totalStudentsCount,
+            'status_counts' => $statusCounts,
+            'statuses' => \App\Models\CampaignStudent::STATUSES,
         ]);
     }
  
@@ -391,6 +414,12 @@ class SchoolAdminController extends Controller
         if ($request->filter_division) {
             $query->whereHas('campaignStudents', function($q) use ($request) {
                 $q->where('division_id', $request->filter_division);
+            });
+        }
+
+        if ($request->filter_status) {
+            $query->whereHas('campaignStudents', function($q) use ($request) {
+                $q->where('status', $request->filter_status);
             });
         }
  
@@ -652,9 +681,12 @@ class SchoolAdminController extends Controller
         $enrollment->update([
             'verified_at' => now(),
             'verified_by' => auth()->id(),
+            'status' => \App\Models\CampaignStudent::STATUS_VERIFIED,
+            'status_updated_at' => now(),
+            'status_updated_by' => auth()->id(),
         ]);
 
-        return response()->json($enrollment->load(['grade', 'division', 'campaign', 'verifier']));
+        return response()->json($enrollment->load(['grade', 'division', 'campaign', 'verifier', 'statusUpdater']));
     }
 
     public function unverifyStudent(Request $request, string $id)
@@ -683,9 +715,117 @@ class SchoolAdminController extends Controller
         $enrollment->update([
             'verified_at' => null,
             'verified_by' => null,
+            'status' => \App\Models\CampaignStudent::STATUS_DRAFTING,
+            'status_updated_at' => now(),
+            'status_updated_by' => auth()->id(),
         ]);
 
-        return response()->json($enrollment->load(['grade', 'division', 'campaign']));
+        return response()->json($enrollment->load(['grade', 'division', 'campaign', 'statusUpdater']));
+    }
+
+    public function updateStudentStatus(Request $request, string $id)
+    {
+        $request->validate([
+            'school_id' => 'required|exists:schools,id',
+            'campaign_id' => 'required|exists:campaigns,id',
+            'status' => 'required|in:drafting,verified,sent_for_printing,printed,distributed',
+        ]);
+
+        $schoolId = $request->school_id;
+        $scopes = $this->getPermittedScopes($schoolId);
+
+        $enrollment = \App\Models\CampaignStudent::where('student_id', $id)
+            ->where('campaign_id', $request->campaign_id)
+            ->whereHas('campaign', function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            })
+            ->firstOrFail();
+
+        if ($scopes['restricted']) {
+            if (!in_array($enrollment->grade_id, $scopes['grades']) || !in_array($enrollment->division_id, $scopes['divisions'])) {
+                return response()->json(['message' => 'You do not have permission to update student status in this grade/division.'], 403);
+            }
+        }
+
+        $updateData = [
+            'status' => $request->status,
+            'status_updated_at' => now(),
+            'status_updated_by' => auth()->id(),
+        ];
+
+        if ($request->status === \App\Models\CampaignStudent::STATUS_VERIFIED && !$enrollment->verified_at) {
+            $updateData['verified_at'] = now();
+            $updateData['verified_by'] = auth()->id();
+        } elseif ($request->status === \App\Models\CampaignStudent::STATUS_DRAFTING && $enrollment->verified_at) {
+            $updateData['verified_at'] = null;
+            $updateData['verified_by'] = null;
+        }
+
+        $enrollment->update($updateData);
+
+        return response()->json([
+            'success' => true,
+            'enrollment' => $enrollment->fresh(['grade', 'division', 'campaign', 'verifier', 'statusUpdater']),
+        ]);
+    }
+
+    public function bulkUpdateStudentStatus(Request $request)
+    {
+        $request->validate([
+            'school_id' => 'required|exists:schools,id',
+            'campaign_id' => 'required|exists:campaigns,id',
+            'status' => 'required|in:drafting,verified,sent_for_printing,printed,distributed',
+            'student_ids' => 'nullable|array',
+            'student_ids.*' => 'exists:students,id',
+            'grade_id' => 'nullable|exists:grades,id',
+            'division_id' => 'nullable|exists:divisions,id',
+        ]);
+
+        $schoolId = $request->school_id;
+        $scopes = $this->getPermittedScopes($schoolId);
+
+        $query = \App\Models\CampaignStudent::where('campaign_id', $request->campaign_id)
+            ->whereHas('campaign', function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            });
+
+        if ($scopes['restricted']) {
+            $query->whereIn('grade_id', $scopes['grades'])
+                ->whereIn('division_id', $scopes['divisions']);
+        }
+
+        if (!empty($request->student_ids)) {
+            $query->whereIn('student_id', $request->student_ids);
+        } else {
+            if ($request->grade_id) {
+                $query->where('grade_id', $request->grade_id);
+            }
+            if ($request->division_id) {
+                $query->where('division_id', $request->division_id);
+            }
+        }
+
+        $updateData = [
+            'status' => $request->status,
+            'status_updated_at' => now(),
+            'status_updated_by' => auth()->id(),
+        ];
+
+        if ($request->status === \App\Models\CampaignStudent::STATUS_VERIFIED) {
+            $updateData['verified_at'] = now();
+            $updateData['verified_by'] = auth()->id();
+        } elseif ($request->status === \App\Models\CampaignStudent::STATUS_DRAFTING) {
+            $updateData['verified_at'] = null;
+            $updateData['verified_by'] = null;
+        }
+
+        $count = $query->update($updateData);
+
+        return response()->json([
+            'success' => true,
+            'updated_count' => $count,
+            'status' => $request->status,
+        ]);
     }
 
     public function updateMember(Request $request, string $id)
