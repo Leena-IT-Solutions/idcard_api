@@ -2902,7 +2902,7 @@ new class extends Component
 
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
 
-                <div class="inline-block w-full max-w-3xl p-6 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-700 sm:my-8">
+                <div class="inline-block w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 text-left align-middle transition-all transform bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-700 sm:my-8">
                     <div class="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-700">
                         <div class="flex items-center gap-3">
                             <div class="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-xl">
@@ -3040,12 +3040,6 @@ new class extends Component
                                     {{ __('If checked, automatically marks the status of all exported students as "Sent for Printing" upon successful generation to prevent duplicate print orders.') }}
                                 </p>
                             </div>
-                            <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                                <input type="checkbox" wire:model.live="exportSendForPrinting" class="sr-only peer" />
-                                <div class="w-11 h-6 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 transition-colors"></div>
-                                <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
-                            </label>
-                        </div>
                             <label class="relative inline-flex items-center cursor-pointer shrink-0">
                                 <input type="checkbox" wire:model.live="exportSendForPrinting" class="sr-only peer" />
                                 <div class="w-11 h-6 bg-gray-200 dark:bg-gray-700 rounded-full peer peer-checked:bg-blue-600 transition-colors"></div>
