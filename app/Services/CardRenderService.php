@@ -113,6 +113,7 @@ class CardRenderService
             '--disable-web-security',
             '--disable-dev-shm-usage',
             '--disable-gpu',
+            '--js-flags=--max-old-space-size=4096',
             '--user-data-dir=' . $chromeDataDir,
             '--crash-dumps-dir=' . $crashDumpsDir,
             '--disable-crash-reporter',
@@ -122,6 +123,9 @@ class CardRenderService
             '--disable-component-update',
             '--disable-default-apps',
         ]);
+
+        // Timeout (1200s for large multi-page imposition PDFs)
+        $browsershot->timeout(1200);
 
         // --- Chrome binary ---
         $chromePath = $this->resolveFromEnvOrPaths('CHROME_PATH', [
