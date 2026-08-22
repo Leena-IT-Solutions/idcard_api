@@ -308,8 +308,8 @@ new class extends Component {
     @endif
 
     <!-- SaaS Business Intelligence Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none">
-        <div class="flex items-start gap-4">
+    <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6 bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none">
+        <div class="flex items-start gap-4 max-w-3xl">
             <div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-indigo-100/60 dark:border-indigo-900/40 mt-0.5">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
@@ -326,13 +326,13 @@ new class extends Component {
                 <h1 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight">
                     {{ __('Credits & Revenue Command Center') }}
                 </h1>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-xl">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
                     {{ __('Manage school wallet balances, configure dynamic volume bonus slabs, review recharge requests, and audit full transaction history.') }}
                 </p>
             </div>
         </div>
 
-        <div class="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0">
+        <div class="flex flex-wrap items-center gap-3 shrink-0 pt-1 xl:pt-0">
             <button wire:click="openGrantModal" 
                     class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow-md flex items-center gap-2 whitespace-nowrap">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
