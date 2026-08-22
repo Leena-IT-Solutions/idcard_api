@@ -545,7 +545,7 @@ new class extends Component {
                     <input type="text" wire:model="whatsappOtpTemplate" placeholder="otp_verification" 
                            class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700 rounded-2xl text-xs font-mono text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition" />
                     <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-1">
-                        {{ __('Meta template name (e.g. otp_verification) with parameter {{1}}') }}
+                        {{ __('Meta template name (e.g. otp_verification) with dynamic parameter {1}') }}
                     </p>
                     @error('whatsappOtpTemplate') <p class="text-rose-500 text-[11px] mt-1">{{ $message }}</p> @enderror
                 </div>
