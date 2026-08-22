@@ -197,6 +197,16 @@ new class extends Component
             return;
         }
 
+        // 1. Hard Credit Balance Verification (1 Credit = 1 Student ID Card)
+        $school = \App\Models\School::find($activeSchoolId);
+        $neededCredits = count($targetStudentIds);
+
+        if (!$school || !$school->hasCredits($neededCredits)) {
+            $available = $school?->credits_balance ?? 0;
+            session()->flash('message', "⚠️ Insufficient wallet credits! This export requires {$neededCredits} credits ({$neededCredits} cards), but your current school wallet balance is {$available} credits. Please recharge your wallet in Credits & Billing.");
+            return;
+        }
+
         $params = [
             'campaign_id' => $this->filterCampaign ?: null,
             'student_ids' => $targetStudentIds,
@@ -230,6 +240,14 @@ new class extends Component
                 'imposition_pdf' => \App\Jobs\ExportImpositionPdfJob::dispatchSync($export->id),
             };
 
+            // 2. Deduct credits from school wallet upon successful generation
+            $school->deductCredits(
+                $neededCredits,
+                "Export: " . str_replace('_', ' ', strtoupper($this->exportType)) . " — {$neededCredits} student cards (Export #{$export->id})",
+                $export,
+                $user
+            );
+
             // If user checked "Mark exported students as Sent for Printing"
             if ($this->exportSendForPrinting && !empty($targetStudentIds)) {
                 $campQuery = \App\Models\CampaignStudent::whereIn('student_id', $targetStudentIds);
@@ -243,7 +261,7 @@ new class extends Component
                 ]);
             }
 
-            session()->flash('message', 'Export completed successfully! Click Download to save file.');
+            session()->flash('message', "Export completed successfully! Deducted {$neededCredits} credits from wallet. Click Download to save file.");
         } catch (\Throwable $e) {
             $export->update(['status' => 'failed', 'error_message' => $e->getMessage()]);
             session()->flash('message', 'Export failed: ' . $e->getMessage());
@@ -3089,8 +3107,42 @@ new class extends Component
                             </div>
                         @endif
 
+                        @php
+                            $activeSchool = \App\Models\School::find(session('active_school_id'));
+                            $currentBalance = $activeSchool?->credits_balance ?? 0;
+                            $neededCount = $exportOnlyVerified ? $verifiedCount : $targetStudentsCount;
+                            $hasSufficientCredits = $currentBalance >= $neededCount;
+                        @endphp
+
+                        <!-- Wallet Credits Verification Bar -->
+                        <div class="p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition {{ $hasSufficientCredits ? 'bg-indigo-50/60 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-900/40 text-indigo-950 dark:text-indigo-200' : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900/60 text-rose-950 dark:text-rose-200' }}">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-base {{ $hasSufficientCredits ? 'bg-indigo-600 text-white' : 'bg-rose-600 text-white' }}">
+                                    💳
+                                </div>
+                                <div>
+                                    <div class="font-bold text-xs flex items-center gap-1.5">
+                                        <span>{{ __('Wallet Balance') }}:</span>
+                                        <span class="font-mono font-black text-sm {{ $hasSufficientCredits ? 'text-indigo-600 dark:text-indigo-400' : 'text-rose-600 dark:text-rose-400' }}">{{ number_format($currentBalance) }} cards</span>
+                                    </div>
+                                    <div class="text-[11px] text-gray-500 dark:text-gray-400">
+                                        {{ __('This export will deduct :needed credits (1 credit per card).', ['needed' => $neededCount]) }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if (!$hasSufficientCredits)
+                                <a href="{{ route('billing') }}" target="_blank" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl transition shadow flex items-center gap-1.5 self-start sm:self-auto shrink-0">
+                                    <span>{{ __('Recharge Wallet') }}</span>
+                                    <span>→</span>
+                                </a>
+                            @endif
+                        </div>
+
                         <div class="flex justify-end pt-2">
-                            <button wire:click="triggerExport" wire:loading.attr="disabled" wire:target="triggerExport" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow cursor-pointer flex items-center justify-center gap-2">
+                            <button wire:click="triggerExport" wire:loading.attr="disabled" wire:target="triggerExport" 
+                                    @if(!$hasSufficientCredits) disabled @endif
+                                    class="px-6 py-2.5 {{ $hasSufficientCredits ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-gray-400 cursor-not-allowed' }} disabled:opacity-60 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow cursor-pointer flex items-center justify-center gap-2">
                                 <span wire:loading.remove wire:target="triggerExport" class="flex items-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                                     <span>
