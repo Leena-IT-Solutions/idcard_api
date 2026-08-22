@@ -241,68 +241,74 @@ new class extends Component
     @endif
 
     <!-- Header & Action Row -->
-    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center shrink-0">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                </svg>
-            </div>
-            <div>
-                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ __('System Users') }}</h3>
-                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 flex flex-wrap items-center gap-2 sm:gap-3">
-                    <span class="inline-flex items-center gap-1.5 text-gray-600 dark:text-gray-300 font-medium whitespace-nowrap">
-                        <span class="w-2 h-2 rounded-full bg-indigo-500 shrink-0"></span>
-                        <strong class="font-bold text-gray-900 dark:text-gray-100">{{ $totalUsersCount }}</strong> {{ __('Total Registered Users') }}
-                    </span>
-                    @if (!empty($search) || !empty($filterRole))
-                        <span class="text-gray-300 dark:text-gray-600 select-none">•</span>
-                        <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200/80 dark:border-indigo-700/40 whitespace-nowrap shadow-sm">
-                            <svg class="w-3.5 h-3.5 shrink-0 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
-                            </svg>
-                            <span><strong class="font-bold text-indigo-700 dark:text-indigo-300">{{ $filteredUsersCount }}</strong> {{ __('Filtered') }}</span>
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none space-y-5">
+        <!-- Top Row: Title, Icon, Counts, & Add User Button -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-indigo-100/50 dark:border-indigo-900/30">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight">{{ __('System Users') }}</h3>
+                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 flex flex-wrap items-center gap-2">
+                        <span class="inline-flex items-center gap-1.5 text-gray-600 dark:text-gray-300 font-medium">
+                            <span class="w-2 h-2 rounded-full bg-indigo-500 shrink-0"></span>
+                            <strong class="font-bold text-gray-900 dark:text-gray-100">{{ $totalUsersCount }}</strong> {{ __('Total Registered Users') }}
                         </span>
-                    @endif
+                        @if (!empty($search) || !empty($filterRole))
+                            <span class="text-gray-300 dark:text-gray-600 select-none">•</span>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200/80 dark:border-indigo-700/40">
+                                <svg class="w-3 h-3 shrink-0 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                                </svg>
+                                <span><strong class="font-bold text-indigo-700 dark:text-indigo-300">{{ $filteredUsersCount }}</strong> {{ __('Filtered') }}</span>
+                            </span>
+                        @endif
+                    </div>
                 </div>
+            </div>
 
-                <!-- Role Breakdown Quick Filter Pills -->
-                <div class="mt-3 flex flex-wrap items-center gap-1.5 text-[11px]">
-                    <button type="button" wire:click="$set('filterRole', '')" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold transition cursor-pointer {{ empty($filterRole) ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-400' : 'bg-gray-100 dark:bg-gray-700/80 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }}" title="Show All Users">
-                        <span>All: <strong>{{ $totalUsersCount }}</strong></span>
-                    </button>
-                    @foreach ($roles as $r)
-                        @php
-                            $rClass = match($r->slug) {
-                                'saas_admin' => $filterRole === $r->slug ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-400' : 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100',
-                                'school_admin' => $filterRole === $r->slug ? 'bg-amber-600 text-white shadow-sm ring-2 ring-amber-400' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100',
-                                'teacher' => $filterRole === $r->slug ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-400' : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100',
-                                'parent' => $filterRole === $r->slug ? 'bg-purple-600 text-white shadow-sm ring-2 ring-purple-400' : 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 hover:bg-purple-100',
-                                default => $filterRole === $r->slug ? 'bg-slate-700 text-white shadow-sm ring-2 ring-slate-400' : 'bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-100',
-                            };
-                            $dotColor = match($r->slug) {
-                                'saas_admin' => 'bg-indigo-400',
-                                'school_admin' => 'bg-amber-400',
-                                'teacher' => 'bg-emerald-400',
-                                'parent' => 'bg-purple-400',
-                                default => 'bg-gray-400',
-                            };
-                        @endphp
-                        <button type="button" wire:click="setRoleFilter('{{ $r->slug }}')" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-bold transition cursor-pointer {{ $rClass }}" title="Click to filter by {{ $r->name }}">
-                            <span class="w-1.5 h-1.5 rounded-full {{ $dotColor }}"></span>
-                            <span>{{ $r->name }}: <strong>{{ $roleCounts[$r->slug] ?? 0 }}</strong></span>
-                        </button>
-                    @endforeach
-                </div>
+            <!-- Add User Button on the far right -->
+            <div class="flex items-center gap-2">
+                <button wire:click="openCreateModal" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow cursor-pointer">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    <span>{{ __('Add User') }}</span>
+                </button>
             </div>
         </div>
-        <div>
-            <button wire:click="openCreateModal" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow cursor-pointer">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-                </svg>
-                <span>{{ __('Add User') }}</span>
+
+        <!-- Role Breakdown Quick Filter Pills on full width row -->
+        <div class="pt-4 border-t border-gray-100 dark:border-gray-700/80 flex flex-wrap items-center gap-2 text-xs">
+            <span class="text-[10px] uppercase font-extrabold tracking-wider text-gray-400 dark:text-gray-500 mr-1">{{ __('Filter Role:') }}</span>
+            <button type="button" wire:click="$set('filterRole', '')" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl font-bold transition cursor-pointer text-xs {{ empty($filterRole) ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-400' : 'bg-gray-100 dark:bg-gray-700/80 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }}" title="Show All Users">
+                <span>All: <strong>{{ $totalUsersCount }}</strong></span>
             </button>
+            @foreach ($roles as $r)
+                @php
+                    $rClass = match($r->slug) {
+                        'saas_admin' => $filterRole === $r->slug ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-400' : 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border border-indigo-100 dark:border-indigo-900/30',
+                        'school_admin' => $filterRole === $r->slug ? 'bg-amber-600 text-white shadow-sm ring-2 ring-amber-400' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-100 dark:border-amber-900/30',
+                        'teacher' => $filterRole === $r->slug ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-400' : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 border border-emerald-100 dark:border-emerald-900/30',
+                        'parent' => $filterRole === $r->slug ? 'bg-purple-600 text-white shadow-sm ring-2 ring-purple-400' : 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40 border border-purple-100 dark:border-purple-900/30',
+                        default => $filterRole === $r->slug ? 'bg-slate-700 text-white shadow-sm ring-2 ring-slate-400' : 'bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-100 border border-gray-100 dark:border-gray-800',
+                    };
+                    $dotColor = match($r->slug) {
+                        'saas_admin' => 'bg-indigo-400',
+                        'school_admin' => 'bg-amber-400',
+                        'teacher' => 'bg-emerald-400',
+                        'parent' => 'bg-purple-400',
+                        default => 'bg-gray-400',
+                    };
+                @endphp
+                <button type="button" wire:click="setRoleFilter('{{ $r->slug }}')" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl font-bold transition cursor-pointer text-xs {{ $rClass }}" title="Click to filter by {{ $r->name }}">
+                    <span class="w-1.5 h-1.5 rounded-full {{ $dotColor }}"></span>
+                    <span>{{ $r->name }}: <strong>{{ $roleCounts[$r->slug] ?? 0 }}</strong></span>
+                </button>
+            @endforeach
         </div>
     </div>
 
@@ -342,14 +348,14 @@ new class extends Component
         <!-- Reset Button -->
         <div class="flex items-end">
             @if(!empty($search) || !empty($filterRole))
-                <button type="button" wire:click="resetFilters" class="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer">
+                <button type="button" wire:click="resetFilters" class="w-full px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
                     <span>{{ __('Reset Filters') }}</span>
                 </button>
             @else
-                <div class="text-[11px] text-gray-400 dark:text-gray-500 py-2 flex items-center gap-1.5">
+                <div class="text-[11px] text-gray-400 dark:text-gray-500 py-2.5 flex items-center gap-1.5">
                     <span>{{ __('Showing') }} <strong class="text-gray-700 dark:text-gray-300">{{ count($users) }}</strong> {{ __('of') }} <strong class="text-gray-700 dark:text-gray-300">{{ $totalUsersCount }}</strong> {{ __('users') }}</span>
                 </div>
             @endif
