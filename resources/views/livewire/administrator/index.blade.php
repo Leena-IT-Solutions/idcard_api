@@ -160,47 +160,49 @@ new class extends Component
     }
 }; ?>
 
-<div class="space-y-8">
+<div class="space-y-6">
     <!-- SaaS Business Intelligence Header -->
-    <div class="relative overflow-hidden bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-2xl border border-indigo-700/40">
-        <div class="absolute -right-10 -bottom-10 w-72 h-72 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="absolute -left-10 -top-10 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-        <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div class="space-y-2">
-                <div class="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-indigo-200 border border-white/10">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-indigo-100/60 dark:border-indigo-900/40">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+            </div>
+            <div>
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-full text-[10px] font-extrabold uppercase tracking-wider mb-1 border border-indigo-100 dark:border-indigo-900/30">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     <span>{{ __('SaaS Platform Intelligence') }}</span>
                 </div>
-                <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                <h1 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight">
                     {{ __('Business & System Administration') }}
                 </h1>
-                <p class="text-sm text-indigo-200/90 max-w-2xl leading-relaxed">
-                    {{ __('Comprehensive live overview of multi-school operations, user base, student enrollment pipelines, card print engine throughput, and infrastructure statistics.') }}
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 max-w-2xl">
+                    {{ __('Live multi-school operations overview, user base, student enrollment pipelines, card print engine throughput, and infrastructure statistics.') }}
                 </p>
             </div>
+        </div>
 
-            <div class="flex flex-wrap items-center gap-3">
-                <a href="{{ route('schools') }}" wire:navigate class="px-4 py-2.5 bg-white text-indigo-900 hover:bg-indigo-50 font-bold text-xs uppercase tracking-wider rounded-xl transition shadow-md flex items-center gap-2">
-                    <svg class="w-4 h-4 text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                    </svg>
-                    <span>{{ __('Manage Schools') }}</span>
-                </a>
-                <a href="{{ route('users.index') }}" wire:navigate class="px-4 py-2.5 bg-indigo-600/80 hover:bg-indigo-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition border border-indigo-400/30 flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                    </svg>
-                    <span>{{ __('User Manager') }}</span>
-                </a>
-            </div>
+        <div class="flex flex-wrap items-center gap-2.5">
+            <a href="{{ route('schools') }}" wire:navigate class="px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-bold text-xs uppercase tracking-wider rounded-xl transition shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2">
+                <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+                <span>{{ __('Manage Schools') }}</span>
+            </a>
+            <a href="{{ route('users.index') }}" wire:navigate class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                <span>{{ __('User Manager') }}</span>
+            </a>
         </div>
     </div>
 
     <!-- 4 Primary KPI Statistics Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <!-- Total Schools Card -->
-        <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 relative overflow-hidden group hover:border-indigo-400/40 transition">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 relative overflow-hidden group hover:border-amber-400/40 transition">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">{{ __('Total Schools') }}</span>
                 <div class="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
@@ -249,7 +251,7 @@ new class extends Component
             </div>
             <div class="mt-4 flex items-baseline justify-between">
                 <span class="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">{{ number_format($totalStudents) }}</span>
-                <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">{{ $photoCoveragePct }}% {{ __('Photos') }}</span>
+                <span class="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 font-extrabold text-[11px] rounded-lg">{{ $photoCoveragePct }}% {{ __('Photos') }}</span>
             </div>
             <div class="mt-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-3 border-t border-gray-100 dark:border-gray-700/60">
                 <span>{{ $studentsWithPhoto }} {{ __('With Photo') }}</span>
@@ -291,7 +293,7 @@ new class extends Component
                     {{ __('Real-time stage distribution across all :count total active student campaign enrollments.', ['count' => number_format($totalEnrollments)]) }}
                 </p>
             </div>
-            <span class="px-3 py-1 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-extrabold text-xs rounded-xl self-start sm:self-auto">
+            <span class="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-extrabold text-xs rounded-xl border border-indigo-100 dark:border-indigo-900/30 self-start sm:self-auto">
                 {{ number_format($totalEnrollments) }} {{ __('Total Enrolled Cards') }}
             </span>
         </div>
@@ -304,12 +306,33 @@ new class extends Component
             $pctPrinted = $totalEnrollments > 0 ? round(($lifecycle['printed'] / $totalEnrollments) * 100, 1) : 0;
             $pctDistributed = $totalEnrollments > 0 ? round(($lifecycle['distributed'] / $totalEnrollments) * 100, 1) : 0;
         @endphp
-        <div class="w-full h-4 bg-gray-100 dark:bg-gray-700/60 rounded-full overflow-hidden flex shadow-inner">
-            <div style="width: {{ $pctDrafting }}%" class="bg-slate-400 transition-all duration-500" title="Drafting: {{ $lifecycle['drafting'] }} ({{ $pctDrafting }}%)"></div>
-            <div style="width: {{ $pctVerified }}%" class="bg-emerald-500 transition-all duration-500" title="Verified: {{ $lifecycle['verified'] }} ({{ $pctVerified }}%)"></div>
-            <div style="width: {{ $pctSent }}%" class="bg-blue-500 transition-all duration-500" title="Sent to Print: {{ $lifecycle['sent_for_printing'] }} ({{ $pctSent }}%)"></div>
-            <div style="width: {{ $pctPrinted }}%" class="bg-purple-500 transition-all duration-500" title="Printed: {{ $lifecycle['printed'] }} ({{ $pctPrinted }}%)"></div>
-            <div style="width: {{ $pctDistributed }}%" class="bg-teal-500 transition-all duration-500" title="Distributed: {{ $lifecycle['distributed'] }} ({{ $pctDistributed }}%)"></div>
+        <div class="space-y-3">
+            <div class="w-full h-5 bg-gray-100 dark:bg-gray-700/80 rounded-full overflow-hidden flex shadow-inner border border-gray-200 dark:border-gray-700">
+                @if($pctDrafting > 0)
+                    <div style="width: {{ $pctDrafting }}%" class="bg-slate-600 dark:bg-slate-500 transition-all duration-500" title="Drafting: {{ $lifecycle['drafting'] }} ({{ $pctDrafting }}%)"></div>
+                @endif
+                @if($pctVerified > 0)
+                    <div style="width: {{ $pctVerified }}%" class="bg-emerald-500 transition-all duration-500" title="Verified: {{ $lifecycle['verified'] }} ({{ $pctVerified }}%)"></div>
+                @endif
+                @if($pctSent > 0)
+                    <div style="width: {{ $pctSent }}%" class="bg-blue-600 transition-all duration-500" title="Sent to Print: {{ $lifecycle['sent_for_printing'] }} ({{ $pctSent }}%)"></div>
+                @endif
+                @if($pctPrinted > 0)
+                    <div style="width: {{ $pctPrinted }}%" class="bg-purple-600 transition-all duration-500" title="Printed: {{ $lifecycle['printed'] }} ({{ $pctPrinted }}%)"></div>
+                @endif
+                @if($pctDistributed > 0)
+                    <div style="width: {{ $pctDistributed }}%" class="bg-teal-500 transition-all duration-500" title="Distributed: {{ $lifecycle['distributed'] }} ({{ $pctDistributed }}%)"></div>
+                @endif
+            </div>
+
+            <!-- Progress Bar Legend -->
+            <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] text-gray-500 dark:text-gray-400 px-1">
+                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-600"></span> Drafting ({{ $pctDrafting }}%)</span>
+                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Verified ({{ $pctVerified }}%)</span>
+                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Sent to Print ({{ $pctSent }}%)</span>
+                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-purple-600"></span> Printed ({{ $pctPrinted }}%)</span>
+                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-teal-500"></span> Distributed ({{ $pctDistributed }}%)</span>
+            </div>
         </div>
 
         <!-- 5-Stage Counters Cards Grid -->
@@ -317,51 +340,51 @@ new class extends Component
             <!-- 1. Drafting -->
             <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800">
                 <div class="flex items-center justify-between mb-2">
-                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-400">{{ __('1. Drafting') }}</span>
-                    <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">{{ __('1. Drafting') }}</span>
+                    <span class="w-2 h-2 rounded-full bg-slate-600"></span>
                 </div>
-                <div class="text-xl font-black text-slate-900 dark:text-slate-100">{{ number_format($lifecycle['drafting']) }}</div>
-                <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">{{ $pctDrafting }}% {{ __('of total') }}</div>
+                <div class="text-2xl font-black text-slate-900 dark:text-slate-100">{{ number_format($lifecycle['drafting']) }}</div>
+                <div class="text-[11px] text-slate-600 dark:text-slate-400 mt-1 font-semibold">{{ $pctDrafting }}% {{ __('of total') }}</div>
             </div>
 
             <!-- 2. Verified -->
             <div class="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/40">
                 <div class="flex items-center justify-between mb-2">
-                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">{{ __('2. Verified') }}</span>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">{{ __('2. Verified') }}</span>
                     <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                 </div>
-                <div class="text-xl font-black text-emerald-900 dark:text-emerald-100">{{ number_format($lifecycle['verified']) }}</div>
-                <div class="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 font-semibold">{{ $pctVerified }}% {{ __('ready to print') }}</div>
+                <div class="text-2xl font-black text-emerald-900 dark:text-emerald-100">{{ number_format($lifecycle['verified']) }}</div>
+                <div class="text-[11px] text-emerald-700 dark:text-emerald-400 mt-1 font-semibold">{{ $pctVerified }}% {{ __('ready to print') }}</div>
             </div>
 
             <!-- 3. Sent to Print -->
             <div class="p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-900/40">
                 <div class="flex items-center justify-between mb-2">
-                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-blue-700 dark:text-blue-400">{{ __('3. Sent to Print') }}</span>
-                    <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-blue-800 dark:text-blue-300">{{ __('3. Sent to Print') }}</span>
+                    <span class="w-2 h-2 rounded-full bg-blue-600"></span>
                 </div>
-                <div class="text-xl font-black text-blue-900 dark:text-blue-100">{{ number_format($lifecycle['sent_for_printing']) }}</div>
-                <div class="text-[11px] text-blue-600 dark:text-blue-400 mt-1 font-semibold">{{ $pctSent }}% {{ __('at press') }}</div>
+                <div class="text-2xl font-black text-blue-900 dark:text-blue-100">{{ number_format($lifecycle['sent_for_printing']) }}</div>
+                <div class="text-[11px] text-blue-700 dark:text-blue-400 mt-1 font-semibold">{{ $pctSent }}% {{ __('at press') }}</div>
             </div>
 
             <!-- 4. Printed -->
             <div class="p-4 rounded-2xl bg-purple-50 dark:bg-purple-950/30 border border-purple-200/80 dark:border-purple-900/40">
                 <div class="flex items-center justify-between mb-2">
-                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-purple-700 dark:text-purple-400">{{ __('4. Printed') }}</span>
-                    <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-purple-800 dark:text-purple-300">{{ __('4. Printed') }}</span>
+                    <span class="w-2 h-2 rounded-full bg-purple-600"></span>
                 </div>
-                <div class="text-xl font-black text-purple-900 dark:text-purple-100">{{ number_format($lifecycle['printed']) }}</div>
-                <div class="text-[11px] text-purple-600 dark:text-purple-400 mt-1 font-semibold">{{ $pctPrinted }}% {{ __('completed') }}</div>
+                <div class="text-2xl font-black text-purple-900 dark:text-purple-100">{{ number_format($lifecycle['printed']) }}</div>
+                <div class="text-[11px] text-purple-700 dark:text-purple-400 mt-1 font-semibold">{{ $pctPrinted }}% {{ __('completed') }}</div>
             </div>
 
             <!-- 5. Distributed -->
             <div class="p-4 rounded-2xl bg-teal-50 dark:bg-teal-950/30 border border-teal-200/80 dark:border-teal-900/40 col-span-2 sm:col-span-1">
                 <div class="flex items-center justify-between mb-2">
-                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-teal-700 dark:text-teal-400">{{ __('5. Distributed') }}</span>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-teal-800 dark:text-teal-300">{{ __('5. Distributed') }}</span>
                     <span class="w-2 h-2 rounded-full bg-teal-500"></span>
                 </div>
-                <div class="text-xl font-black text-teal-900 dark:text-teal-100">{{ number_format($lifecycle['distributed']) }}</div>
-                <div class="text-[11px] text-teal-600 dark:text-teal-400 mt-1 font-semibold">{{ $pctDistributed }}% {{ __('delivered') }}</div>
+                <div class="text-2xl font-black text-teal-900 dark:text-teal-100">{{ number_format($lifecycle['distributed']) }}</div>
+                <div class="text-[11px] text-teal-700 dark:text-teal-400 mt-1 font-semibold">{{ $pctDistributed }}% {{ __('delivered') }}</div>
             </div>
         </div>
     </div>
