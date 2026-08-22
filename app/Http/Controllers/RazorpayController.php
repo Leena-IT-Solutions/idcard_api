@@ -190,7 +190,8 @@ class RazorpayController extends Controller
             // Add credits to School Wallet
             $school = $order->school;
             $school->addCredits(
-                $order->total_credited,
+                (int) $order->total_credited,
+                'recharge',
                 "Online Recharge (Razorpay #{$request->razorpay_payment_id}) — Order #{$order->id}",
                 $order,
                 $user
@@ -264,7 +265,8 @@ class RazorpayController extends Controller
                     ]);
 
                     $order->school->addCredits(
-                        $order->total_credited,
+                        (int) $order->total_credited,
+                        'recharge',
                         "Webhook Settlement (Razorpay #{$rzpPaymentId}) — Order #{$order->id}",
                         $order
                     );
