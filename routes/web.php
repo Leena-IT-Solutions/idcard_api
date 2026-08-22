@@ -16,6 +16,13 @@ Route::view('dashboard', 'dashboard')
     ->middleware(['auth'])
     ->name('dashboard');
 
+Route::get('administrator', function () {
+    if (! auth()->user()->hasRole('saas_admin')) {
+        abort(403);
+    }
+    return view('administrator');
+})->middleware(['auth'])->name('administrator');
+
 Route::get('users', function () {
     if (! auth()->user()->hasRole('saas_admin')) {
         abort(403);
