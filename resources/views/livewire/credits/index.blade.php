@@ -308,9 +308,9 @@ new class extends Component {
     @endif
 
     <!-- SaaS Business Intelligence Header -->
-    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none">
-        <div class="flex items-start sm:items-center gap-4">
-            <div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-indigo-100/60 dark:border-indigo-900/40 mt-1 sm:mt-0">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none">
+        <div class="flex items-start gap-4">
+            <div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-indigo-100/60 dark:border-indigo-900/40 mt-0.5">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                 </svg>
@@ -326,22 +326,22 @@ new class extends Component {
                 <h1 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight">
                     {{ __('Credits & Revenue Command Center') }}
                 </h1>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 max-w-2xl">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-xl">
                     {{ __('Manage school wallet balances, configure dynamic volume bonus slabs, review recharge requests, and audit full transaction history.') }}
                 </p>
             </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-3 shrink-0">
+        <div class="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0">
             <button wire:click="openGrantModal" 
-                    class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow-md flex items-center gap-2">
+                    class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow-md flex items-center gap-2 whitespace-nowrap">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
                 <span>{{ __('Grant / Adjust Credits') }}</span>
             </button>
             <button wire:click="openNewPlanModal" 
-                    class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow-md flex items-center gap-2">
+                    class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow-md flex items-center gap-2 whitespace-nowrap">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
@@ -363,9 +363,9 @@ new class extends Component {
             <div class="mt-4">
                 <span class="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">₹{{ number_format($totalRevenue, 2) }}</span>
             </div>
-            <div class="mt-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-3 border-t border-gray-100 dark:border-gray-700/60">
-                <span>{{ __('Paid Recharges') }}</span>
-                <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ number_format($totalCreditsGranted) }} {{ __('Cards Sold') }}</span>
+            <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
+                <span class="truncate">{{ __('Paid Recharges') }}</span>
+                <span class="font-bold text-emerald-600 dark:text-emerald-400 shrink-0 ml-2">{{ number_format($totalCreditsGranted) }} {{ __('Sold') }}</span>
             </div>
         </div>
 
@@ -382,9 +382,9 @@ new class extends Component {
             <div class="mt-4">
                 <span class="text-3xl font-black text-indigo-600 dark:text-indigo-400 tracking-tight">{{ number_format($totalCreditsInCirculation) }}</span>
             </div>
-            <div class="mt-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-3 border-t border-gray-100 dark:border-gray-700/60">
-                <span>{{ __('Circulation') }}</span>
-                <span class="font-bold text-indigo-600 dark:text-indigo-400">{{ $schoolsCount }} {{ __('Institutions') }}</span>
+            <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
+                <span class="truncate">{{ __('Circulation') }}</span>
+                <span class="font-bold text-indigo-600 dark:text-indigo-400 shrink-0 ml-2">{{ $schoolsCount }} {{ __('Schools') }}</span>
             </div>
         </div>
 
@@ -401,9 +401,9 @@ new class extends Component {
             <div class="mt-4">
                 <span class="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">{{ number_format($totalExportsDeductions) }}</span>
             </div>
-            <div class="mt-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-3 border-t border-gray-100 dark:border-gray-700/60">
-                <span>{{ __('Print Engine') }}</span>
-                <span class="font-bold text-purple-600 dark:text-purple-400">{{ __('PDF / Sheets') }}</span>
+            <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
+                <span class="truncate">{{ __('Print Engine') }}</span>
+                <span class="font-bold text-purple-600 dark:text-purple-400 shrink-0 ml-2">{{ __('PDF / Sheets') }}</span>
             </div>
         </div>
 
@@ -421,21 +421,21 @@ new class extends Component {
                 <span class="text-3xl font-black {{ $pendingOrdersCount > 0 ? 'text-amber-600' : 'text-gray-900 dark:text-gray-100' }} tracking-tight">{{ $pendingOrdersCount }}</span>
                 <span class="text-xs text-gray-500 dark:text-gray-400">/ {{ $totalOrdersCount }} total</span>
             </div>
-            <div class="mt-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-3 border-t border-gray-100 dark:border-gray-700/60">
-                <span>{{ __('Review Queue') }}</span>
-                <span class="font-bold {{ $pendingOrdersCount > 0 ? 'text-amber-600' : 'text-emerald-600' }}">{{ $pendingOrdersCount > 0 ? 'Action Required' : 'All Clear' }}</span>
+            <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
+                <span class="truncate">{{ __('Review Queue') }}</span>
+                <span class="font-bold {{ $pendingOrdersCount > 0 ? 'text-amber-600' : 'text-emerald-600' }} shrink-0 ml-2">{{ $pendingOrdersCount > 0 ? 'Action Req.' : 'All Clear' }}</span>
             </div>
         </div>
     </div>
 
     <!-- Tab Navigation & Content Box -->
     <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-8 shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 space-y-6">
-        <!-- Top Toolbar: Horizontal Tabs + Search Input -->
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-700 pb-5">
-            <!-- Tabs -->
-            <div class="flex flex-wrap items-center gap-2.5">
+        <!-- Top Toolbar: Horizontal Scrolling Tabs + Search Input -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-700 pb-5">
+            <!-- Horizontal Tabs -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-1 max-w-full">
                 <button wire:click="$set('activeTab', 'plans')" 
-                        class="px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition flex items-center gap-2 
+                        class="shrink-0 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition flex items-center gap-2 whitespace-nowrap 
                         {{ $activeTab === 'plans' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
@@ -444,7 +444,7 @@ new class extends Component {
                 </button>
 
                 <button wire:click="$set('activeTab', 'orders')" 
-                        class="px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition flex items-center gap-2 
+                        class="shrink-0 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition flex items-center gap-2 whitespace-nowrap 
                         {{ $activeTab === 'orders' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -456,7 +456,7 @@ new class extends Component {
                 </button>
 
                 <button wire:click="$set('activeTab', 'schools')" 
-                        class="px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition flex items-center gap-2 
+                        class="shrink-0 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition flex items-center gap-2 whitespace-nowrap 
                         {{ $activeTab === 'schools' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -465,7 +465,7 @@ new class extends Component {
                 </button>
 
                 <button wire:click="$set('activeTab', 'transactions')" 
-                        class="px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition flex items-center gap-2 
+                        class="shrink-0 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition flex items-center gap-2 whitespace-nowrap 
                         {{ $activeTab === 'transactions' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -475,7 +475,7 @@ new class extends Component {
             </div>
 
             <!-- Search filter -->
-            <div class="relative w-full lg:w-72 shrink-0">
+            <div class="relative w-full sm:w-64 lg:w-72 shrink-0">
                 <input type="text" wire:model.live.debounce.300ms="searchSchool" 
                        placeholder="{{ __('Search by school name...') }}" 
                        class="w-full pl-9 pr-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl text-xs text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 font-medium" />
@@ -501,32 +501,46 @@ new class extends Component {
                 <!-- Responsive Grid: 1 col on mobile, 2 on tablet, 3 on desktop, 5 on wide screens -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
                     @foreach($plans as $plan)
-                        <div class="bg-gray-50/70 dark:bg-gray-900/60 rounded-3xl p-6 border-2 {{ $plan->is_active ? 'border-indigo-100 dark:border-gray-700 hover:border-indigo-500' : 'border-gray-200/50 opacity-60' }} flex flex-col justify-between transition group shadow-sm">
+                        @php
+                            $badgeBg = match(strtolower(trim($plan->badge_text ?? ''))) {
+                                'popular' => 'bg-blue-600 text-white',
+                                'recommended' => 'bg-indigo-600 text-white',
+                                'best value' => 'bg-emerald-600 text-white',
+                                'mega volume' => 'bg-purple-600 text-white',
+                                default => 'bg-indigo-600 text-white'
+                            };
+                        @endphp
+                        <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 border-2 {{ $plan->is_active ? 'border-indigo-100 dark:border-gray-700 hover:border-indigo-500 shadow-xl shadow-gray-200/40 dark:shadow-none' : 'border-gray-200/50 opacity-60' }} flex flex-col justify-between transition group">
                             <div>
-                                <!-- Top Row: Name & Badge -->
-                                <div class="flex items-start justify-between gap-2 min-h-[32px]">
-                                    <h4 class="font-black text-xs uppercase tracking-wider text-gray-800 dark:text-gray-200">
-                                        {{ $plan->name }}
-                                    </h4>
-                                    @if($plan->badge_text)
-                                        <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider {{ $plan->badge_color ?? 'bg-indigo-600 text-white' }} shrink-0 shadow-sm">
+                                <!-- Top Row: Badge & Status Dot -->
+                                <div class="flex items-center justify-between min-h-[24px] mb-2">
+                                    @if(!empty($plan->badge_text))
+                                        <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider {{ $badgeBg }} shadow-sm">
                                             {{ $plan->badge_text }}
                                         </span>
+                                    @else
+                                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Tier #{{ $plan->sort_order }}</span>
                                     @endif
+                                    <span class="w-2.5 h-2.5 rounded-full {{ $plan->is_active ? 'bg-emerald-500' : 'bg-gray-300' }}" title="{{ $plan->is_active ? 'Active' : 'Disabled' }}"></span>
                                 </div>
+
+                                <!-- Plan Title (Full Width - No Wrapping!) -->
+                                <h4 class="text-sm font-black text-gray-900 dark:text-gray-100 uppercase tracking-tight">
+                                    {{ $plan->name }}
+                                </h4>
 
                                 <!-- Price Display -->
                                 <div class="my-3">
                                     <div class="text-3xl font-black text-gray-900 dark:text-gray-100 font-mono tracking-tight">
                                         ₹{{ number_format($plan->price_per_credit, 2) }}
                                     </div>
-                                    <div class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">
+                                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">
                                         {{ __('per student card') }}
                                     </div>
                                 </div>
 
                                 <!-- Details List -->
-                                <div class="space-y-2.5 py-3.5 border-y border-gray-200/70 dark:border-gray-700/60 text-xs">
+                                <div class="space-y-2.5 py-3 border-y border-gray-100 dark:border-gray-700/60 text-xs">
                                     <div class="flex items-center justify-between">
                                         <span class="text-gray-500 dark:text-gray-400 font-medium">{{ __('Quantity:') }}</span>
                                         <span class="font-black font-mono text-gray-900 dark:text-gray-100">
@@ -549,11 +563,11 @@ new class extends Component {
                             </div>
 
                             <!-- Card Footer Actions -->
-                            <div class="mt-4 pt-3 flex items-center justify-between">
-                                <button wire:click="togglePlanStatus({{ $plan->id }})" class="text-xs font-bold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                            <div class="mt-4 pt-3 flex items-center justify-between text-xs">
+                                <button wire:click="togglePlanStatus({{ $plan->id }})" class="font-bold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
                                     {{ $plan->is_active ? 'Disable' : 'Enable' }}
                                 </button>
-                                <button wire:click="editPlan({{ $plan->id }})" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 inline-flex items-center gap-1">
+                                <button wire:click="editPlan({{ $plan->id }})" class="font-bold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 inline-flex items-center gap-1">
                                     <span>{{ __('Edit Slab') }}</span>
                                     <span>→</span>
                                 </button>
