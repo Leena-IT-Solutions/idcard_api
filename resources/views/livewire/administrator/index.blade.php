@@ -47,8 +47,12 @@ new class extends Component
         ];
 
         // Academic Structure
+        $today = now()->toDateString();
         $totalCampaigns = Campaign::count();
-        $activeCampaigns = Campaign::where('is_active', true)->count();
+        $activeCampaigns = Campaign::where(function($q) use ($today) {
+            $q->whereNull('registration_end_date')
+              ->orWhere('registration_end_date', '>=', $today);
+        })->count();
         $totalGrades = Grade::count();
         $totalDivisions = Division::count();
         $totalTemplates = Template::count();
@@ -84,14 +88,16 @@ new class extends Component
             });
         }
 
-        $schoolsList = $schoolsQuery->get()->map(function($school) {
+        $schoolsList = $schoolsQuery->get()->map(function($school) use ($today) {
             $teacherCount = SchoolUserRole::where('school_id', $school->id)
                 ->whereHas('role', fn($q) => $q->where('slug', 'teacher'))
                 ->distinct('user_id')
                 ->count('user_id');
 
-            $schoolCampaigns = Campaign::where('school_id', $school->id)->get();
-            $activeCampaign = $schoolCampaigns->firstWhere('is_active', true) ?? $schoolCampaigns->first();
+            $schoolCampaigns = Campaign::where('school_id', $school->id)->orderBy('created_at', 'desc')->get();
+            $activeCampaign = $schoolCampaigns->first(function($c) use ($today) {
+                return empty($c->registration_end_date) || $c->registration_end_date->format('Y-m-d') >= $today;
+            }) ?? $schoolCampaigns->first();
 
             $verifiedStudents = 0;
             if ($activeCampaign) {
