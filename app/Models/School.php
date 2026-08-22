@@ -20,8 +20,16 @@ class School extends Model
         'website',
         'school_code',
         'principal_name',
+        'credits_balance',
         'template_id',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'credits_balance' => 'integer',
+        ];
+    }
 
     public function grades()
     {
@@ -43,9 +51,92 @@ class School extends Model
         return $this->hasManyThrough(CampaignStudent::class, Campaign::class);
     }
 
+    public function creditOrders()
+    {
+        return $this->hasMany(CreditOrder::class);
+    }
+
+    public function creditTransactions()
+    {
+        return $this->hasMany(CreditTransaction::class)->orderBy('id', 'desc');
+    }
+
+    /**
+     * Check if school has sufficient credits
+     */
+    public function hasCredits(int $needed): bool
+    {
+        return (int) $this->credits_balance >= $needed;
+    }
+
+    /**
+     * Add credits to school wallet and log transaction
+     */
+    public function addCredits(
+        int $amount,
+        string $type,
+        string $description,
+        ?Model $reference = null,
+        ?User $performer = null
+    ): CreditTransaction {
+        $amount = abs($amount);
+        $this->increment('credits_balance', $amount);
+        $this->refresh();
+
+        return CreditTransaction::create([
+            'school_id' => $this->id,
+            'type' => $type,
+            'credits' => $amount,
+            'balance_after' => $this->credits_balance,
+            'reference_type' => $reference ? get_class($reference) : null,
+            'reference_id' => $reference?->id,
+            'description' => $description,
+            'performed_by' => $performer?->id ?? auth()->id(),
+        ]);
+    }
+
+    /**
+     * Deduct credits from school wallet and log transaction
+     */
+    public function deductCredits(
+        int $amount,
+        string $description,
+        ?Model $reference = null,
+        ?User $performer = null
+    ): CreditTransaction {
+        $amount = abs($amount);
+        $newBalance = max(0, (int) $this->credits_balance - $amount);
+        $this->update(['credits_balance' => $newBalance]);
+        $this->refresh();
+
+        return CreditTransaction::create([
+            'school_id' => $this->id,
+            'type' => 'export_deduction',
+            'credits' => -$amount,
+            'balance_after' => $this->credits_balance,
+            'reference_type' => $reference ? get_class($reference) : null,
+            'reference_id' => $reference?->id,
+            'description' => $description,
+            'performed_by' => $performer?->id ?? auth()->id(),
+        ]);
+    }
+
     protected static function boot()
     {
         parent::boot();
+
+        // Auto-grant 50 welcome credits on new school registration
+        static::created(function ($school) {
+            $school->update(['credits_balance' => 50]);
+            CreditTransaction::create([
+                'school_id' => $school->id,
+                'type' => 'welcome_bonus',
+                'credits' => 50,
+                'balance_after' => 50,
+                'description' => 'Welcome Free Starter Credits (50 Cards)',
+                'performed_by' => auth()->id(),
+            ]);
+        });
 
         static::deleting(function ($school) {
             $campaignIds = $school->campaigns()->pluck('id');

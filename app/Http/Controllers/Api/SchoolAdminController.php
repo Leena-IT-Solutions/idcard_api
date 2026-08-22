@@ -1114,6 +1114,19 @@ class SchoolAdminController extends Controller
             return response()->json(['success' => false, 'message' => 'No eligible students found for export scope.'], 422);
         }
 
+        // Credit balance verification (1 Credit = 1 Student ID Card)
+        $school = \App\Models\School::findOrFail($schoolId);
+        $neededCredits = count($targetStudentIds);
+
+        if (!$school->hasCredits($neededCredits)) {
+            return response()->json([
+                'success' => false,
+                'message' => "Insufficient wallet credits. This export requires {$neededCredits} credits for {$neededCredits} students, but your current balance is {$school->credits_balance} credits. Please recharge your wallet.",
+                'credits_needed' => $neededCredits,
+                'credits_available' => $school->credits_balance,
+            ], 402);
+        }
+
         $params = [
             'campaign_id' => $campaignId,
             'student_ids' => $targetStudentIds,
@@ -1151,6 +1164,14 @@ class SchoolAdminController extends Controller
                     'imposition_pdf' => \App\Jobs\ExportImpositionPdfJob::dispatch($export->id),
                 };
             }
+
+            // Deduct credits on successful dispatch/completion
+            $school->deductCredits(
+                $neededCredits,
+                "Export: {$request->type} — {$neededCredits} student cards (Export #{$export->id})",
+                $export,
+                $user
+            );
         } catch (\Throwable $e) {
             $export->update(['status' => 'failed', 'error_message' => $e->getMessage()]);
         }
@@ -1159,6 +1180,7 @@ class SchoolAdminController extends Controller
             'success' => true,
             'message' => 'Export task executed successfully.',
             'export' => $export->fresh(),
+            'credits_remaining' => $school->fresh()->credits_balance,
         ]);
 
     }

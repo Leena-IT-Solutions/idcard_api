@@ -23,12 +23,34 @@ Route::get('administrator', function () {
     return view('administrator');
 })->middleware(['auth'])->name('administrator');
 
+Route::get('credits', function () {
+    if (! auth()->user()->hasRole('saas_admin')) {
+        abort(403);
+    }
+    return view('credits');
+})->middleware(['auth'])->name('credits.index');
+
 Route::get('users', function () {
     if (! auth()->user()->hasRole('saas_admin')) {
         abort(403);
     }
     return view('users');
 })->middleware(['auth'])->name('users.index');
+
+Route::get('billing', function () {
+    $user = auth()->user();
+    $activeSchoolId = session('active_school_id');
+    $isSaasAdmin = $user->hasRole('saas_admin');
+    $isSchoolAdmin = $activeSchoolId && \App\Models\SchoolUserRole::where('user_id', $user->id)
+        ->where('school_id', $activeSchoolId)
+        ->whereHas('role', function($q) { $q->where('slug', 'school_admin'); })
+        ->exists();
+
+    if (!$isSaasAdmin && !$isSchoolAdmin) {
+        abort(403);
+    }
+    return view('billing');
+})->middleware(['auth'])->name('billing');
 
 Route::get('schools', function () {
     $user = auth()->user();
