@@ -11,7 +11,7 @@ new class extends Component {
     use WithPagination;
 
     public int $requestedCards = 1000;
-    public string $paymentMethod = 'bank_transfer'; // bank_transfer, razorpay, offline_request
+    public string $paymentMethod = 'bank_transfer'; // bank_transfer, offline_request
     public string $orderNotes = '';
     public bool $showSuccessModal = false;
     public ?int $lastSubmittedOrderId = null;
@@ -20,9 +20,40 @@ new class extends Component {
     public string $toastMessage = '';
     public string $toastType = 'success';
 
+    public function mount(): void
+    {
+        $this->ensureDefaultPlansExist();
+    }
+
+    private function ensureDefaultPlansExist(): void
+    {
+        if (CreditPlan::count() === 0) {
+            $defaultPlans = [
+                ['name' => 'Starter Pack', 'min_quantity' => 1, 'max_quantity' => 499, 'price_per_credit' => 12.00, 'bonus_percentage' => 0, 'is_active' => true, 'sort_order' => 1, 'badge_text' => null, 'badge_color' => null],
+                ['name' => 'Growth Pack', 'min_quantity' => 500, 'max_quantity' => 999, 'price_per_credit' => 10.00, 'bonus_percentage' => 10, 'is_active' => true, 'sort_order' => 2, 'badge_text' => 'Popular', 'badge_color' => 'bg-blue-600 text-white'],
+                ['name' => 'Institution Pack', 'min_quantity' => 1000, 'max_quantity' => 2499, 'price_per_credit' => 8.00, 'bonus_percentage' => 15, 'is_active' => true, 'sort_order' => 3, 'badge_text' => 'Recommended', 'badge_color' => 'bg-indigo-600 text-white'],
+                ['name' => 'Vendor Mega Pack', 'min_quantity' => 2500, 'max_quantity' => 4999, 'price_per_credit' => 6.00, 'bonus_percentage' => 20, 'is_active' => true, 'sort_order' => 4, 'badge_text' => 'Best Value', 'badge_color' => 'bg-emerald-600 text-white'],
+                ['name' => 'Commercial Press', 'min_quantity' => 5000, 'max_quantity' => null, 'price_per_credit' => 4.50, 'bonus_percentage' => 30, 'is_active' => true, 'sort_order' => 5, 'badge_text' => 'Mega Volume', 'badge_color' => 'bg-purple-600 text-white'],
+            ];
+            foreach ($defaultPlans as $p) {
+                CreditPlan::create($p);
+            }
+        }
+    }
+
     public function setPreset(int $amount): void
     {
         $this->requestedCards = $amount;
+    }
+
+    public function incrementCards(int $step = 100): void
+    {
+        $this->requestedCards = min(50000, $this->requestedCards + $step);
+    }
+
+    public function decrementCards(int $step = 100): void
+    {
+        $this->requestedCards = max(100, $this->requestedCards - $step);
     }
 
     public function getActiveSchoolProperty(): ?School
@@ -36,11 +67,13 @@ new class extends Component {
 
     public function getCalculationProperty(): array
     {
+        $this->ensureDefaultPlansExist();
         return CreditPlan::calculateForQuantity($this->requestedCards);
     }
 
     public function with(): array
     {
+        $this->ensureDefaultPlansExist();
         $school = $this->activeSchool;
         $plans = CreditPlan::active()->get();
 
@@ -109,100 +142,118 @@ new class extends Component {
     <!-- Toast Notification Banner -->
     @if($toastMessage)
         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)" 
-             class="p-4 rounded-2xl flex items-center justify-between shadow-lg transition-all 
+             class="p-4 rounded-2xl flex items-center justify-between shadow-xl transition-all 
              {{ $toastType === 'success' ? 'bg-emerald-600 text-white' : ($toastType === 'warning' ? 'bg-amber-500 text-white' : 'bg-indigo-600 text-white') }}">
             <div class="flex items-center gap-3">
                 <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span class="font-medium text-sm">{{ $toastMessage }}</span>
+                <span class="font-bold text-sm">{{ $toastMessage }}</span>
             </div>
             <button @click="show = false" class="text-white/80 hover:text-white text-sm font-bold">✕</button>
         </div>
     @endif
 
     @if(!$school)
-        <div class="bg-amber-50 dark:bg-amber-950/60 p-6 rounded-3xl border border-amber-200 dark:border-amber-800 text-center space-y-2">
-            <h3 class="text-lg font-bold text-amber-900 dark:text-amber-200">{{ __('No Active School Workspace Selected') }}</h3>
-            <p class="text-xs text-amber-700 dark:text-amber-400">{{ __('Please select a school from your dashboard or profile to view wallet balances and purchase credits.') }}</p>
+        <div class="bg-amber-50 dark:bg-amber-950/60 p-8 rounded-3xl border border-amber-200 dark:border-amber-800 text-center space-y-3 shadow-xl">
+            <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900/60 text-amber-600 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold">
+                🏫
+            </div>
+            <h3 class="text-lg font-black text-amber-900 dark:text-amber-200">{{ __('No Active School Workspace Selected') }}</h3>
+            <p class="text-xs text-amber-700 dark:text-amber-400 max-w-md mx-auto">
+                {{ __('Please select a school from the School Profiles menu to manage its wallet balance and purchase credits.') }}
+            </p>
+            <div class="pt-2">
+                <a href="{{ route('schools') }}" wire:navigate class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider inline-flex items-center gap-2 shadow">
+                    <span>{{ __('Go to School Profiles') }} →</span>
+                </a>
+            </div>
         </div>
     @else
-        <!-- Header & Balance Hero Card -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            <!-- Balance Card -->
-            <div class="lg:col-span-1 bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-950 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden flex flex-col justify-between">
-                <div class="absolute -right-6 -bottom-6 w-36 h-36 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+        <!-- Top Section: Balance Card + Value Props Banner -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Balance Card: Rock Solid Premium Dark Theme -->
+            <div class="lg:col-span-1 bg-gray-900 dark:bg-gray-950 text-white rounded-3xl p-7 border border-gray-800 shadow-2xl shadow-gray-950/30 relative overflow-hidden flex flex-col justify-between">
+                <div class="absolute -right-10 -bottom-10 w-44 h-44 bg-indigo-600/20 rounded-full blur-2xl pointer-events-none"></div>
 
                 <div>
                     <div class="flex items-center justify-between">
-                        <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-200">{{ __('Available Credit Balance') }}</span>
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                </svg>
+                            </div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-gray-400">{{ __('Wallet Balance') }}</span>
+                        </div>
+
                         @if($school->credits_balance >= 500)
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                                 🟢 {{ __('Healthy') }}
                             </span>
                         @elseif($school->credits_balance >= 100)
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                                🟡 {{ __('Running Low') }}
+                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                                🟡 {{ __('Low Balance') }}
                             </span>
                         @else
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                                🔴 {{ __('Critical — Top-up') }}
+                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                                🔴 {{ __('Empty / Top-up') }}
                             </span>
                         @endif
                     </div>
 
-                    <div class="mt-4">
-                        <span class="text-4xl sm:text-5xl font-black tracking-tight font-mono">
+                    <div class="mt-6 flex items-baseline gap-2">
+                        <span class="text-5xl sm:text-6xl font-black text-white font-mono tracking-tight">
                             {{ number_format($school->credits_balance) }}
                         </span>
-                        <span class="text-sm font-medium text-indigo-200 ml-1">cards</span>
+                        <span class="text-sm font-bold text-gray-400 uppercase tracking-wider">cards</span>
                     </div>
 
-                    <p class="text-xs text-indigo-200 mt-2">
-                        {{ __('1 Credit = 1 High-Resolution Student ID Card with single or imposition sheet print.') }}
+                    <p class="text-xs text-gray-400 mt-2 font-medium">
+                        {{ __('1 Credit = 1 Generated / Exported Student ID Card with single or imposition sheet print.') }}
                     </p>
                 </div>
 
-                <div class="mt-6 pt-4 border-t border-indigo-700/60 flex items-center justify-between text-[11px] text-indigo-200">
-                    <span class="flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="mt-6 pt-5 border-t border-gray-800 flex items-center justify-between text-xs text-gray-400">
+                    <span class="flex items-center gap-1.5 font-bold text-emerald-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                         </svg>
                         <span>{{ __('Credits Never Expire') }}</span>
                     </span>
-                    <span class="font-bold text-white">{{ $school->name }}</span>
+                    <span class="font-bold text-white truncate max-w-[140px] text-right" title="{{ $school->name }}">{{ $school->name }}</span>
                 </div>
             </div>
 
             <!-- Value Props & Highlights -->
-            <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between">
+            <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-3xl p-7 border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/40 dark:shadow-none flex flex-col justify-between">
                 <div>
                     <div class="flex items-center gap-2">
-                        <span class="px-2.5 py-1 text-xs font-bold uppercase rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 rounded-full text-[10px] font-extrabold uppercase tracking-wider border border-emerald-200 dark:border-emerald-900/30">
                             🎁 {{ __('Volume Discounts & Free Bonus') }}
                         </span>
                     </div>
-                    <h2 class="text-xl font-black text-gray-900 dark:text-gray-100 tracking-tight mt-2">
-                        {{ __('Flexible ID Card Generation Packs') }}
+                    <h2 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight mt-2">
+                        {{ __('Flexible ID Card Generation & Recharge') }}
                     </h2>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {{ __('Choose any custom number of cards or pick a preset. Higher quantities automatically unlock cheaper rates and up to +30% FREE bonus cards.') }}
+                        {{ __('Type any number of student cards you require. Higher purchase quantities automatically unlock cheaper rates and up to +30% FREE bonus cards.') }}
                     </p>
                 </div>
 
                 <!-- 3 Feature Chips -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                    <div class="p-3 rounded-2xl bg-gray-50 dark:bg-gray-900/60">
-                        <div class="font-bold text-xs text-gray-900 dark:text-gray-100">🖨️ {{ __('All Formats Included') }}</div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6 pt-5 border-t border-gray-100 dark:border-gray-700">
+                    <div class="p-3.5 rounded-2xl bg-gray-50 dark:bg-gray-900/60 border border-gray-100 dark:border-gray-700/60">
+                        <div class="font-black text-xs text-gray-900 dark:text-gray-100">🖨️ {{ __('All Formats Included') }}</div>
                         <div class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">{{ __('Single PDF, Imposition 10-Up, & PNG Zip') }}</div>
                     </div>
-                    <div class="p-3 rounded-2xl bg-gray-50 dark:bg-gray-900/60">
-                        <div class="font-bold text-xs text-gray-900 dark:text-gray-100">⚡ {{ __('Instant Deduction') }}</div>
-                        <div class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">{{ __('Deducts only on final export creation') }}</div>
+                    <div class="p-3.5 rounded-2xl bg-gray-50 dark:bg-gray-900/60 border border-gray-100 dark:border-gray-700/60">
+                        <div class="font-black text-xs text-gray-900 dark:text-gray-100">⚡ {{ __('Instant Deduction') }}</div>
+                        <div class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">{{ __('Credits deduct only upon final export generation') }}</div>
                     </div>
-                    <div class="p-3 rounded-2xl bg-gray-50 dark:bg-gray-900/60">
-                        <div class="font-bold text-xs text-gray-900 dark:text-gray-100">🔒 {{ __('Zero Hidden Charges') }}</div>
-                        <div class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">{{ __('Includes all template engine features') }}</div>
+                    <div class="p-3.5 rounded-2xl bg-gray-50 dark:bg-gray-900/60 border border-gray-100 dark:border-gray-700/60">
+                        <div class="font-black text-xs text-gray-900 dark:text-gray-100">🔒 {{ __('Zero Hidden Fees') }}</div>
+                        <div class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">{{ __('Full access to template designer & mobile app') }}</div>
                     </div>
                 </div>
             </div>
@@ -211,38 +262,54 @@ new class extends Component {
         <!-- =================== RECHARGE CALCULATOR & TIER TILES =================== -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <!-- Left: Dynamic Live Calculator (7 cols) -->
-            <div class="lg:col-span-7 bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm space-y-5">
-                <div class="border-b border-gray-100 dark:border-gray-700 pb-3">
-                    <h3 class="text-base font-black text-gray-900 dark:text-gray-100 tracking-tight">
+            <div class="lg:col-span-7 bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-8 border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/40 dark:shadow-none space-y-6">
+                <div class="border-b border-gray-100 dark:border-gray-700 pb-4">
+                    <h3 class="text-lg font-black text-gray-900 dark:text-gray-100 tracking-tight">
                         {{ __('Calculate & Purchase Credits') }}
                     </h3>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                        {{ __('Type your required quantity or drag the slider. Price & free bonus update live.') }}
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                        {{ __('Select your required quantity below. Price, volume tier, and bonus credits update in real-time.') }}
                     </p>
                 </div>
 
-                <!-- Quantity Slider & Input -->
+                <!-- Quantity Stepper & Range Slider -->
                 <div class="space-y-4">
-                    <div class="flex items-center justify-between">
-                        <label class="font-bold text-xs uppercase text-gray-700 dark:text-gray-300">{{ __('Number of Student ID Cards') }}</label>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <label class="font-black text-xs uppercase tracking-wider text-gray-700 dark:text-gray-300">{{ __('Student ID Cards Needed') }}</label>
+                        
                         <div class="flex items-center gap-2">
-                            <input type="number" wire:model.live.debounce.150ms="requestedCards" min="100" max="50000" step="50"
-                                   class="w-32 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-1.5 text-right font-mono font-black text-lg text-indigo-600 dark:text-indigo-400 focus:ring-2 focus:ring-indigo-500" />
-                            <span class="text-xs font-bold text-gray-400">cards</span>
+                            <button type="button" wire:click="decrementCards(100)" class="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-gray-700 dark:text-gray-200 font-black text-lg flex items-center justify-center transition active:scale-95 shadow-sm">
+                                −
+                            </button>
+                            <input type="number" wire:model.live.debounce.100ms="requestedCards" min="100" max="50000" step="50"
+                                   class="w-36 bg-gray-50 dark:bg-gray-900 border-2 border-indigo-500 rounded-xl px-3 py-2 text-center font-mono font-black text-xl text-indigo-600 dark:text-indigo-400 focus:ring-2 focus:ring-indigo-500 shadow-inner" />
+                            <button type="button" wire:click="incrementCards(100)" class="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-gray-700 dark:text-gray-200 font-black text-lg flex items-center justify-center transition active:scale-95 shadow-sm">
+                                +
+                            </button>
+                            <span class="text-xs font-bold text-gray-400 uppercase">cards</span>
                         </div>
                     </div>
 
                     <!-- Range Slider -->
-                    <input type="range" wire:model.live="requestedCards" min="100" max="10000" step="50" 
-                           class="w-full h-2.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-600" />
+                    <div class="pt-2">
+                        <input type="range" wire:model.live="requestedCards" min="100" max="10000" step="50" 
+                               class="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-600" />
+                        <div class="flex justify-between text-[10px] font-mono text-gray-400 font-bold mt-1">
+                            <span>100</span>
+                            <span>2,500</span>
+                            <span>5,000</span>
+                            <span>7,500</span>
+                            <span>10,000+</span>
+                        </div>
+                    </div>
 
                     <!-- Quick Preset Buttons -->
-                    <div class="flex flex-wrap items-center gap-2 pt-1">
-                        <span class="text-xs font-bold text-gray-400 mr-1">{{ __('Quick Select:') }}</span>
+                    <div class="flex flex-wrap items-center gap-2 pt-2">
+                        <span class="text-xs font-black uppercase text-gray-400 mr-1">{{ __('Presets:') }}</span>
                         @foreach([500, 1000, 2500, 5000, 10000] as $preset)
                             <button type="button" wire:click="setPreset({{ $preset }})" 
-                                    class="px-3 py-1 rounded-xl text-xs font-bold font-mono transition 
-                                    {{ $requestedCards == $preset ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200' }}">
+                                    class="px-3.5 py-1.5 rounded-xl text-xs font-black font-mono transition 
+                                    {{ $requestedCards == $preset ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
                                 {{ number_format($preset) }}
                             </button>
                         @endforeach
@@ -250,56 +317,56 @@ new class extends Component {
                 </div>
 
                 <!-- Live Price Breakdown Panel -->
-                <div class="bg-gray-50 dark:bg-gray-900/70 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 space-y-3">
-                    <div class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-300">
+                <div class="bg-indigo-50/50 dark:bg-indigo-950/30 rounded-3xl p-6 border-2 border-indigo-100 dark:border-indigo-900/60 space-y-3">
+                    <div class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-300 font-medium">
                         <span>{{ __('Base Cards Ordered:') }}</span>
-                        <span class="font-mono font-bold">{{ number_format($calc['quantity']) }}</span>
+                        <span class="font-mono font-bold text-gray-900 dark:text-gray-100 text-sm">{{ number_format($calc['quantity']) }} cards</span>
                     </div>
 
-                    <div class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-300">
-                        <span>{{ __('Rate Applied:') }}</span>
-                        <span class="font-mono font-bold text-gray-900 dark:text-gray-100">
-                            ₹{{ number_format($calc['rate'], 2) }} / card
-                            <span class="text-[10px] text-indigo-600 font-sans font-semibold ml-1">({{ $calc['plan_name'] }})</span>
+                    <div class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-300 font-medium">
+                        <span>{{ __('Volume Tier Applied:') }}</span>
+                        <span class="font-bold text-gray-900 dark:text-gray-100">
+                            <span class="font-mono">₹{{ number_format($calc['rate'], 2) }}</span> / card
+                            <span class="text-[11px] text-indigo-600 dark:text-indigo-400 font-bold ml-1">({{ $calc['plan_name'] }})</span>
                         </span>
                     </div>
 
                     @if($calc['bonus_credits'] > 0)
-                        <div class="flex items-center justify-between text-xs bg-emerald-50 dark:bg-emerald-950/60 p-2.5 rounded-xl border border-emerald-200/60 dark:border-emerald-800/60">
-                            <span class="font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
-                                🎁 {{ __('Volume Bonus (+:pct% Free):', ['pct' => $calc['bonus_percentage']]) }}
+                        <div class="flex items-center justify-between text-xs bg-emerald-100/80 dark:bg-emerald-950/80 p-3 rounded-2xl border border-emerald-300 dark:border-emerald-800">
+                            <span class="font-black text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
+                                🎁 {{ __('Volume Bonus (+:pct% FREE):', ['pct' => $calc['bonus_percentage']]) }}
                             </span>
-                            <span class="font-mono font-black text-emerald-700 dark:text-emerald-300 text-sm">
+                            <span class="font-mono font-black text-emerald-800 dark:text-emerald-300 text-sm">
                                 +{{ number_format($calc['bonus_credits']) }} FREE CARDS
                             </span>
                         </div>
                     @endif
 
-                    <div class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-300">
-                        <span class="font-bold text-gray-900 dark:text-gray-100">{{ __('Total Cards You Will Receive:') }}</span>
-                        <span class="font-mono font-black text-indigo-600 dark:text-indigo-400 text-base">
+                    <div class="flex items-center justify-between text-sm pt-2 border-t border-indigo-100 dark:border-indigo-900/60">
+                        <span class="font-black text-gray-900 dark:text-gray-100">{{ __('Total Cards You Will Receive:') }}</span>
+                        <span class="font-mono font-black text-indigo-600 dark:text-indigo-400 text-lg">
                             {{ number_format($calc['total_credits']) }} Cards
                         </span>
                     </div>
 
-                    <div class="border-t border-gray-200 dark:border-gray-700 pt-3 flex items-center justify-between text-xs text-gray-500">
-                        <span>{{ __('Effective Rate:') }}</span>
-                        <span class="font-mono font-bold text-emerald-600">₹{{ number_format($calc['effective_rate'], 2) }} / card</span>
+                    <div class="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-indigo-100 dark:border-indigo-900/60">
+                        <span>{{ __('Effective Rate per Card:') }}</span>
+                        <span class="font-mono font-black text-emerald-600">₹{{ number_format($calc['effective_rate'], 2) }} / card</span>
                     </div>
 
                     <div class="flex items-center justify-between text-xs text-gray-500">
-                        <span>{{ __('Subtotal:') }}</span>
-                        <span class="font-mono">₹{{ number_format($calc['subtotal'], 2) }}</span>
+                        <span>{{ __('Subtotal (Excl. Tax):') }}</span>
+                        <span class="font-mono font-bold">₹{{ number_format($calc['subtotal'], 2) }}</span>
                     </div>
 
                     <div class="flex items-center justify-between text-xs text-gray-500">
                         <span>{{ __('GST (18%):') }}</span>
-                        <span class="font-mono">₹{{ number_format($calc['gst'], 2) }}</span>
+                        <span class="font-mono font-bold">₹{{ number_format($calc['gst'], 2) }}</span>
                     </div>
 
-                    <div class="border-t-2 border-dashed border-gray-200 dark:border-gray-700 pt-3 flex items-center justify-between">
-                        <span class="font-bold text-sm text-gray-900 dark:text-gray-100">{{ __('Total Payable Amount:') }}</span>
-                        <span class="font-mono font-black text-2xl text-gray-900 dark:text-gray-100">
+                    <div class="border-t-2 border-dashed border-indigo-200 dark:border-indigo-900 pt-4 flex items-center justify-between">
+                        <span class="font-black text-base text-gray-900 dark:text-gray-100">{{ __('Total Payable Amount:') }}</span>
+                        <span class="font-mono font-black text-3xl text-gray-900 dark:text-gray-100">
                             ₹{{ number_format($calc['total_amount'], 2) }}
                         </span>
                     </div>
@@ -307,9 +374,10 @@ new class extends Component {
 
                 <!-- Next Tier Upsell Nudge -->
                 @if($calc['upsell_nudge'])
-                    <div class="bg-indigo-50 dark:bg-indigo-950/60 p-3.5 rounded-2xl border border-indigo-200 dark:border-indigo-800 text-xs text-indigo-800 dark:text-indigo-300 flex items-center gap-2">
-                        <span class="text-base shrink-0">💡</span>
+                    <div class="bg-amber-50 dark:bg-amber-950/60 p-4 rounded-2xl border border-amber-200 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 flex items-center gap-3 shadow-sm">
+                        <span class="text-xl shrink-0">💡</span>
                         <div>
+                            <span class="font-bold">{{ __('Pro Tip:') }}</span>
                             {{ __('Add just :needed more cards to unlock the :plan tier (:rate/card) with :bonus% FREE bonus!', [
                                 'needed' => number_format($calc['upsell_nudge']['needed_more']),
                                 'plan' => $calc['upsell_nudge']['next_plan_name'],
@@ -321,24 +389,24 @@ new class extends Component {
                 @endif
 
                 <!-- Payment Method & Notes -->
-                <div class="space-y-3 pt-2">
+                <div class="space-y-4 pt-2">
                     <div>
-                        <label class="block font-bold text-xs text-gray-700 dark:text-gray-300 uppercase mb-1">{{ __('Payment Method') }}</label>
-                        <select wire:model="paymentMethod" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-xs text-gray-900 dark:text-gray-100 font-medium">
+                        <label class="block font-black text-xs text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">{{ __('Payment Option') }}</label>
+                        <select wire:model="paymentMethod" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-xs text-gray-900 dark:text-gray-100 font-bold focus:ring-2 focus:ring-indigo-500">
                             <option value="bank_transfer">{{ __('Direct Bank Transfer / NEFT / IMPS / UPI') }}</option>
-                            <option value="offline_request">{{ __('Submit Invoice Request (Pay Offline / PO)') }}</option>
+                            <option value="offline_request">{{ __('Submit Purchase Order / Invoice Request') }}</option>
                         </select>
                     </div>
 
                     <div>
-                        <label class="block font-bold text-xs text-gray-700 dark:text-gray-300 uppercase mb-1">{{ __('UTR / Reference Number or Remarks (Optional)') }}</label>
+                        <label class="block font-black text-xs text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">{{ __('UTR / Reference Number or Remarks (Optional)') }}</label>
                         <input type="text" wire:model="orderNotes" placeholder="{{ __('e.g. Paid via PhonePe UTR #12345678 or Invoice PO request') }}" 
-                               class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-xs text-gray-900 dark:text-gray-100" />
+                               class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-xs text-gray-900 dark:text-gray-100 font-medium focus:ring-2 focus:ring-indigo-500" />
                     </div>
 
                     <button wire:click="submitRechargeRequest" 
-                            class="w-full py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg flex items-center justify-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm uppercase tracking-wider rounded-2xl shadow-xl shadow-indigo-600/30 transition transform active:scale-[0.99] flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
                         <span>{{ __('Request Recharge (:credits Cards)', ['credits' => number_format($calc['total_credits'])]) }}</span>
@@ -347,40 +415,43 @@ new class extends Component {
             </div>
 
             <!-- Right: Tier Slabs Reference (5 cols) -->
-            <div class="lg:col-span-5 space-y-4">
-                <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm space-y-4">
-                    <h3 class="text-sm font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider">{{ __('Available Volume Slabs') }}</h3>
+            <div class="lg:col-span-5 space-y-5">
+                <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-7 border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/40 dark:shadow-none space-y-4">
+                    <h3 class="text-sm font-black text-gray-900 dark:text-gray-100 uppercase tracking-wider">{{ __('Available Volume Slabs') }}</h3>
                     
                     <div class="space-y-3">
                         @foreach($plans as $plan)
-                            <div class="p-3.5 rounded-2xl bg-gray-50 dark:bg-gray-900/60 border border-gray-100 dark:border-gray-700 flex items-center justify-between">
+                            <div class="p-4 rounded-2xl bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700 flex items-center justify-between hover:border-indigo-500 transition">
                                 <div>
                                     <div class="flex items-center gap-2">
-                                        <span class="font-bold text-xs text-gray-900 dark:text-gray-100">{{ $plan->name }}</span>
+                                        <span class="font-black text-xs text-gray-900 dark:text-gray-100">{{ $plan->name }}</span>
                                         @if($plan->badge_text)
-                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase {{ $plan->badge_color ?? 'bg-indigo-600 text-white' }}">
+                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase {{ $plan->badge_color ?? 'bg-indigo-600 text-white' }} shadow-sm">
                                                 {{ $plan->badge_text }}
                                             </span>
                                         @endif
                                     </div>
-                                    <div class="text-[11px] text-gray-400 mt-0.5 font-mono">
+                                    <div class="text-[11px] text-gray-500 dark:text-gray-400 mt-1 font-mono font-bold">
                                         {{ number_format($plan->min_quantity) }} {{ $plan->max_quantity ? '– ' . number_format($plan->max_quantity) : '+' }} cards
                                     </div>
                                 </div>
 
                                 <div class="text-right">
-                                    <div class="font-black text-sm text-gray-900 dark:text-gray-100">₹{{ number_format($plan->price_per_credit, 2) }}</div>
-                                    <div class="text-[10px] font-bold text-emerald-600">+{{ $plan->bonus_percentage }}% Bonus</div>
+                                    <div class="font-black text-base text-gray-900 dark:text-gray-100 font-mono">₹{{ number_format($plan->price_per_credit, 2) }}</div>
+                                    <div class="text-[10px] font-black text-emerald-600">+{{ $plan->bonus_percentage }}% Bonus</div>
                                 </div>
                             </div>
                         @endforeach
                     </div>
 
-                    <!-- Bank Details Card -->
-                    <div class="p-4 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 text-xs text-gray-700 dark:text-gray-300 space-y-1">
-                        <div class="font-bold text-indigo-900 dark:text-indigo-200">🏦 {{ __('Direct Settlement Support') }}</div>
-                        <p class="text-[11px] text-gray-500 dark:text-gray-400">
-                            {{ __('Need custom quotation, enterprise GST billing, or purchase order support? Contact platform administrator.') }}
+                    <!-- Direct Settlement Card -->
+                    <div class="p-5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 text-xs text-gray-700 dark:text-gray-300 space-y-1.5">
+                        <div class="font-black text-indigo-900 dark:text-indigo-200 flex items-center gap-2">
+                            <span>🏦</span>
+                            <span>{{ __('Direct Settlement & Billing Support') }}</span>
+                        </div>
+                        <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">
+                            {{ __('For custom procurement invoices, corporate bank transfer verification, or enterprise agreements, please reach out to our SaaS administration team.') }}
                         </p>
                     </div>
                 </div>
@@ -390,46 +461,46 @@ new class extends Component {
         <!-- =================== ORDERS & USAGE HISTORY =================== -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Order History -->
-            <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm space-y-4">
-                <h3 class="text-sm font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider">{{ __('My Recharge Requests') }}</h3>
+            <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-7 border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/40 dark:shadow-none space-y-4">
+                <h3 class="text-sm font-black text-gray-900 dark:text-gray-100 uppercase tracking-wider">{{ __('My Recharge Requests') }}</h3>
 
                 <div class="overflow-x-auto rounded-2xl border border-gray-100 dark:border-gray-700">
                     <table class="w-full text-left text-xs text-gray-600 dark:text-gray-300">
-                        <thead class="bg-gray-50 dark:bg-gray-900/50 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                        <thead class="bg-gray-50 dark:bg-gray-900 text-[10px] font-black text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
                             <tr>
-                                <th class="py-2.5 px-3">{{ __('Order #') }}</th>
-                                <th class="py-2.5 px-3">{{ __('Credits') }}</th>
-                                <th class="py-2.5 px-3">{{ __('Amount') }}</th>
-                                <th class="py-2.5 px-3">{{ __('Status') }}</th>
+                                <th class="py-3 px-3.5">{{ __('Order #') }}</th>
+                                <th class="py-3 px-3.5">{{ __('Credits') }}</th>
+                                <th class="py-3 px-3.5">{{ __('Amount') }}</th>
+                                <th class="py-3 px-3.5">{{ __('Status') }}</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700/60">
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700/60 font-medium">
                             @forelse($orders as $ord)
-                                <tr>
-                                    <td class="py-2.5 px-3 font-mono font-bold text-gray-900 dark:text-gray-100">
+                                <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-700/20">
+                                    <td class="py-3 px-3.5 font-mono font-bold text-gray-900 dark:text-gray-100">
                                         #{{ $ord->id }}
                                         <div class="text-[10px] text-gray-400 font-sans font-normal">{{ $ord->created_at->format('d M Y') }}</div>
                                     </td>
-                                    <td class="py-2.5 px-3">
-                                        <span class="font-bold text-indigo-600">+{{ number_format($ord->total_credited) }}</span>
+                                    <td class="py-3 px-3.5">
+                                        <span class="font-black text-indigo-600 dark:text-indigo-400">+{{ number_format($ord->total_credited) }}</span>
                                         @if($ord->bonus_credits > 0)
-                                            <div class="text-[10px] text-emerald-600">+{{ $ord->bonus_credits }} bonus</div>
+                                            <div class="text-[10px] text-emerald-600 font-bold">+{{ $ord->bonus_credits }} bonus</div>
                                         @endif
                                     </td>
-                                    <td class="py-2.5 px-3 font-mono font-bold">
+                                    <td class="py-3 px-3.5 font-mono font-black text-gray-900 dark:text-gray-100">
                                         ₹{{ number_format($ord->total_amount, 2) }}
                                     </td>
-                                    <td class="py-2.5 px-3">
+                                    <td class="py-3 px-3.5">
                                         @if($ord->status === 'approved')
-                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
+                                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
                                                 {{ __('Approved') }}
                                             </span>
                                         @elseif($ord->status === 'pending')
-                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">
+                                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
                                                 {{ __('Pending') }}
                                             </span>
                                         @else
-                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700">
+                                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">
                                                 {{ ucfirst($ord->status) }}
                                             </span>
                                         @endif
@@ -437,7 +508,7 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-center py-6 text-gray-400">
+                                    <td colspan="4" class="text-center py-8 text-gray-400">
                                         {{ __('No recharge orders placed yet.') }}
                                     </td>
                                 </tr>
@@ -452,39 +523,39 @@ new class extends Component {
             </div>
 
             <!-- Usage Ledger -->
-            <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm space-y-4">
-                <h3 class="text-sm font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider">{{ __('Recent Wallet Activity') }}</h3>
+            <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-7 border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/40 dark:shadow-none space-y-4">
+                <h3 class="text-sm font-black text-gray-900 dark:text-gray-100 uppercase tracking-wider">{{ __('Recent Wallet Activity') }}</h3>
 
                 <div class="overflow-x-auto rounded-2xl border border-gray-100 dark:border-gray-700">
                     <table class="w-full text-left text-xs text-gray-600 dark:text-gray-300">
-                        <thead class="bg-gray-50 dark:bg-gray-900/50 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                        <thead class="bg-gray-50 dark:bg-gray-900 text-[10px] font-black text-gray-500 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
                             <tr>
-                                <th class="py-2.5 px-3">{{ __('Date') }}</th>
-                                <th class="py-2.5 px-3">{{ __('Description') }}</th>
-                                <th class="py-2.5 px-3">{{ __('Credits') }}</th>
-                                <th class="py-2.5 px-3">{{ __('Balance') }}</th>
+                                <th class="py-3 px-3.5">{{ __('Date') }}</th>
+                                <th class="py-3 px-3.5">{{ __('Description') }}</th>
+                                <th class="py-3 px-3.5">{{ __('Credits') }}</th>
+                                <th class="py-3 px-3.5">{{ __('Balance') }}</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700/60">
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700/60 font-medium">
                             @forelse($transactions as $trx)
-                                <tr>
-                                    <td class="py-2.5 px-3 font-mono text-[10px] text-gray-400">
+                                <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-700/20">
+                                    <td class="py-3 px-3.5 font-mono text-[10px] text-gray-400">
                                         {{ $trx->created_at->format('d M, h:i A') }}
                                     </td>
-                                    <td class="py-2.5 px-3 text-gray-800 dark:text-gray-200 truncate max-w-xs" title="{{ $trx->description }}">
+                                    <td class="py-3 px-3.5 text-gray-800 dark:text-gray-200 truncate max-w-xs font-medium" title="{{ $trx->description }}">
                                         {{ $trx->description }}
                                     </td>
-                                    <td class="py-2.5 px-3 font-mono font-bold {{ $trx->credits >= 0 ? 'text-emerald-600' : 'text-rose-600' }}">
+                                    <td class="py-3 px-3.5 font-mono font-black {{ $trx->credits >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
                                         {{ $trx->credits > 0 ? '+' : '' }}{{ number_format($trx->credits) }}
                                     </td>
-                                    <td class="py-2.5 px-3 font-mono font-bold text-gray-900 dark:text-gray-100">
+                                    <td class="py-3 px-3.5 font-mono font-black text-gray-900 dark:text-gray-100">
                                         {{ number_format($trx->balance_after) }}
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-center py-6 text-gray-400">
-                                        {{ __('No transactions found.') }}
+                                    <td colspan="4" class="text-center py-8 text-gray-400">
+                                        {{ __('No wallet transactions recorded yet.') }}
                                     </td>
                                 </tr>
                             @endforelse
@@ -502,20 +573,20 @@ new class extends Component {
     <!-- =================== SUCCESS MODAL =================== -->
     @if($showSuccessModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/80 backdrop-blur-sm" x-transition.opacity>
-            <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-gray-100 dark:border-gray-700 text-center space-y-4">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-md w-full shadow-2xl border border-gray-100 dark:border-gray-700 text-center space-y-4">
                 <div class="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
                     ✓
                 </div>
-                <h3 class="text-lg font-black text-gray-900 dark:text-gray-100">{{ __('Recharge Request Submitted!') }}</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400">
+                <h3 class="text-xl font-black text-gray-900 dark:text-gray-100">{{ __('Recharge Request Submitted!') }}</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
                     {{ __('Your order #:id for :credits credits has been sent to the SaaS administration team for review and wallet crediting.', [
                         'id' => $lastSubmittedOrderId,
                         'credits' => number_format($calc['total_credits'])
                     ]) }}
                 </p>
-                <div class="pt-2">
+                <div class="pt-3">
                     <button wire:click="$set('showSuccessModal', false)" 
-                            class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow">
+                            class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-lg">
                         {{ __('Got It, Thank You') }}
                     </button>
                 </div>

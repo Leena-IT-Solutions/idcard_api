@@ -40,8 +40,31 @@ new class extends Component {
     public string $toastMessage = '';
     public string $toastType = 'success';
 
+    public function mount(): void
+    {
+        $this->ensureDefaultPlansExist();
+    }
+
+    private function ensureDefaultPlansExist(): void
+    {
+        if (CreditPlan::count() === 0) {
+            $defaultPlans = [
+                ['name' => 'Starter Pack', 'min_quantity' => 1, 'max_quantity' => 499, 'price_per_credit' => 12.00, 'bonus_percentage' => 0, 'is_active' => true, 'sort_order' => 1, 'badge_text' => null, 'badge_color' => null],
+                ['name' => 'Growth Pack', 'min_quantity' => 500, 'max_quantity' => 999, 'price_per_credit' => 10.00, 'bonus_percentage' => 10, 'is_active' => true, 'sort_order' => 2, 'badge_text' => 'Popular', 'badge_color' => 'bg-blue-600 text-white'],
+                ['name' => 'Institution Pack', 'min_quantity' => 1000, 'max_quantity' => 2499, 'price_per_credit' => 8.00, 'bonus_percentage' => 15, 'is_active' => true, 'sort_order' => 3, 'badge_text' => 'Recommended', 'badge_color' => 'bg-indigo-600 text-white'],
+                ['name' => 'Vendor Mega Pack', 'min_quantity' => 2500, 'max_quantity' => 4999, 'price_per_credit' => 6.00, 'bonus_percentage' => 20, 'is_active' => true, 'sort_order' => 4, 'badge_text' => 'Best Value', 'badge_color' => 'bg-emerald-600 text-white'],
+                ['name' => 'Commercial Press', 'min_quantity' => 5000, 'max_quantity' => null, 'price_per_credit' => 4.50, 'bonus_percentage' => 30, 'is_active' => true, 'sort_order' => 5, 'badge_text' => 'Mega Volume', 'badge_color' => 'bg-purple-600 text-white'],
+            ];
+            foreach ($defaultPlans as $p) {
+                CreditPlan::create($p);
+            }
+        }
+    }
+
     public function with(): array
     {
+        $this->ensureDefaultPlansExist();
+
         // 1. KPI Aggregations
         $totalCreditsInCirculation = School::sum('credits_balance');
         $totalOrdersCount = CreditOrder::count();
@@ -272,42 +295,46 @@ new class extends Component {
     <!-- Toast Notification Banner -->
     @if($toastMessage)
         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)" 
-             class="p-4 rounded-2xl flex items-center justify-between shadow-lg transition-all 
+             class="p-4 rounded-2xl flex items-center justify-between shadow-xl transition-all 
              {{ $toastType === 'success' ? 'bg-emerald-600 text-white' : ($toastType === 'warning' ? 'bg-amber-500 text-white' : 'bg-indigo-600 text-white') }}">
             <div class="flex items-center gap-3">
                 <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span class="font-medium text-sm">{{ $toastMessage }}</span>
+                <span class="font-bold text-sm">{{ $toastMessage }}</span>
             </div>
             <button @click="show = false" class="text-white/80 hover:text-white text-sm font-bold">✕</button>
         </div>
     @endif
 
-    <!-- Header Actions & Headline -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm">
-        <div>
-            <div class="flex items-center gap-2">
-                <span class="px-2.5 py-1 text-xs font-bold uppercase rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-                    {{ __('SaaS Billing Engine') }}
-                </span>
-                @if($pendingOrdersCount > 0)
-                    <span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400 animate-pulse">
-                        ⚡ {{ $pendingOrdersCount }} {{ __('Pending Approval') }}
-                    </span>
-                @endif
+    <!-- SaaS Business Intelligence Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-indigo-100/60 dark:border-indigo-900/40">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
             </div>
-            <h1 class="text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight mt-1">
-                {{ __('Credits & Revenue Command Center') }}
-            </h1>
-            <p class="text-xs text-gray-500 dark:text-gray-400">
-                {{ __('Manage school wallet balances, configure volume bonus slabs, process recharge requests, and audit ledger.') }}
-            </p>
+            <div>
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-full text-[10px] font-extrabold uppercase tracking-wider mb-1 border border-indigo-100 dark:border-indigo-900/30">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>{{ __('SaaS Billing Engine') }}</span>
+                    @if($pendingOrdersCount > 0)
+                        <span class="ml-1 px-1.5 py-0.2 bg-amber-500 text-white rounded-full text-[9px] font-black">{{ $pendingOrdersCount }} pending</span>
+                    @endif
+                </div>
+                <h1 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight">
+                    {{ __('Credits & Revenue Command Center') }}
+                </h1>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 max-w-2xl">
+                    {{ __('Manage school wallet balances, configure dynamic volume bonus slabs, review recharge requests, and audit full transaction history.') }}
+                </p>
+            </div>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-2.5">
             <button wire:click="openGrantModal" 
-                    class="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow flex items-center gap-2">
+                    class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
@@ -316,17 +343,17 @@ new class extends Component {
             <button wire:click="openNewPlanModal" 
                     class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition shadow flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l4-2 4 2 4-2 4 2z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
                 <span>{{ __('Add Pricing Slab') }}</span>
             </button>
         </div>
     </div>
 
-    <!-- 4 Primary KPI Summary Cards -->
+    <!-- 4 Primary KPI Statistics Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <!-- Revenue Card -->
-        <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 relative overflow-hidden">
+        <!-- Total Revenue Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 relative overflow-hidden group hover:border-emerald-400/40 transition">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">{{ __('Total Revenue') }}</span>
                 <div class="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
@@ -335,12 +362,15 @@ new class extends Component {
             </div>
             <div class="mt-4">
                 <span class="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">₹{{ number_format($totalRevenue, 2) }}</span>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ __('From paid & approved recharge orders') }}</p>
+            </div>
+            <div class="mt-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-3 border-t border-gray-100 dark:border-gray-700/60">
+                <span>{{ __('Paid Recharges') }}</span>
+                <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ number_format($totalCreditsGranted) }} {{ __('Credits Sold') }}</span>
             </div>
         </div>
 
-        <!-- Credits in Circulation -->
-        <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 relative overflow-hidden">
+        <!-- Active Wallet Balance -->
+        <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 relative overflow-hidden group hover:border-indigo-400/40 transition">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">{{ __('Active Wallet Balance') }}</span>
                 <div class="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
@@ -351,12 +381,15 @@ new class extends Component {
             </div>
             <div class="mt-4">
                 <span class="text-3xl font-black text-indigo-600 dark:text-indigo-400 tracking-tight">{{ number_format($totalCreditsInCirculation) }}</span>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ __('Credits available across :count schools', ['count' => $schoolsCount]) }}</p>
+            </div>
+            <div class="mt-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-3 border-t border-gray-100 dark:border-gray-700/60">
+                <span>{{ __('Circulation') }}</span>
+                <span class="font-bold text-indigo-600 dark:text-indigo-400">{{ $schoolsCount }} {{ __('Institutions') }}</span>
             </div>
         </div>
 
-        <!-- Total Cards Exported / Deducted -->
-        <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 relative overflow-hidden">
+        <!-- Cards Exported / Burned -->
+        <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 relative overflow-hidden group hover:border-purple-400/40 transition">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">{{ __('Cards Exported (Burned)') }}</span>
                 <div class="w-10 h-10 rounded-2xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold">
@@ -367,12 +400,15 @@ new class extends Component {
             </div>
             <div class="mt-4">
                 <span class="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">{{ number_format($totalExportsDeductions) }}</span>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ __('PDF/Imposition cards exported') }}</p>
+            </div>
+            <div class="mt-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-3 border-t border-gray-100 dark:border-gray-700/60">
+                <span>{{ __('Print Engine') }}</span>
+                <span class="font-bold text-purple-600 dark:text-purple-400">{{ __('PDF / Imposition Sheets') }}</span>
             </div>
         </div>
 
-        <!-- Pending Orders -->
-        <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 relative overflow-hidden">
+        <!-- Pending Orders Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 relative overflow-hidden group hover:border-amber-400/40 transition">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">{{ __('Pending Orders') }}</span>
                 <div class="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
@@ -383,20 +419,23 @@ new class extends Component {
             </div>
             <div class="mt-4 flex items-baseline gap-2">
                 <span class="text-3xl font-black {{ $pendingOrdersCount > 0 ? 'text-amber-600' : 'text-gray-900 dark:text-gray-100' }} tracking-tight">{{ $pendingOrdersCount }}</span>
-                <span class="text-xs text-gray-500 dark:text-gray-400">/ {{ $totalOrdersCount }} {{ __('total') }}</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">/ {{ $totalOrdersCount }} total</span>
             </div>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ __('Awaiting admin approval & top-up') }}</p>
+            <div class="mt-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-3 border-t border-gray-100 dark:border-gray-700/60">
+                <span>{{ __('Review Queue') }}</span>
+                <span class="font-bold {{ $pendingOrdersCount > 0 ? 'text-amber-600' : 'text-gray-400' }}">{{ $pendingOrdersCount > 0 ? 'Action Required' : 'All Clear' }}</span>
+            </div>
         </div>
     </div>
 
     <!-- Tab Navigation & Filters -->
-    <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 space-y-6">
+    <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 space-y-6">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-700 pb-4">
             <!-- Tabs -->
             <div class="flex flex-wrap items-center gap-2">
                 <button wire:click="$set('activeTab', 'orders')" 
-                        class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center gap-2 
-                        {{ $activeTab === 'orders' ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200' }}">
+                        class="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center gap-2 
+                        {{ $activeTab === 'orders' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
@@ -407,8 +446,8 @@ new class extends Component {
                 </button>
 
                 <button wire:click="$set('activeTab', 'plans')" 
-                        class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center gap-2 
-                        {{ $activeTab === 'plans' ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200' }}">
+                        class="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center gap-2 
+                        {{ $activeTab === 'plans' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                     </svg>
@@ -416,8 +455,8 @@ new class extends Component {
                 </button>
 
                 <button wire:click="$set('activeTab', 'schools')" 
-                        class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center gap-2 
-                        {{ $activeTab === 'schools' ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200' }}">
+                        class="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center gap-2 
+                        {{ $activeTab === 'schools' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
@@ -425,8 +464,8 @@ new class extends Component {
                 </button>
 
                 <button wire:click="$set('activeTab', 'transactions')" 
-                        class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center gap-2 
-                        {{ $activeTab === 'transactions' ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200' }}">
+                        class="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center gap-2 
+                        {{ $activeTab === 'transactions' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
@@ -439,8 +478,8 @@ new class extends Component {
                 <div class="relative w-full sm:w-64">
                     <input type="text" wire:model.live.debounce.300ms="searchSchool" 
                            placeholder="{{ __('Search school...') }}" 
-                           class="w-full pl-9 pr-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-xs text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500" />
-                    <svg class="w-4 h-4 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           class="w-full pl-9 pr-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-xs text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 font-medium" />
+                    <svg class="w-4 h-4 text-gray-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </div>
@@ -451,9 +490,9 @@ new class extends Component {
         @if($activeTab === 'orders')
             <div class="space-y-4">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-sm font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider">{{ __('All Credit Purchase & Top-up Orders') }}</h3>
+                    <h3 class="text-sm font-black text-gray-900 dark:text-gray-100 uppercase tracking-wider">{{ __('All Credit Purchase & Top-up Orders') }}</h3>
                     <div class="flex items-center gap-2">
-                        <select wire:model.live="orderStatusFilter" class="text-xs bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-1.5 text-gray-700 dark:text-gray-300">
+                        <select wire:model.live="orderStatusFilter" class="text-xs font-bold bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-gray-700 dark:text-gray-300">
                             <option value="">{{ __('All Statuses') }}</option>
                             <option value="pending">{{ __('Pending Approval') }}</option>
                             <option value="approved">{{ __('Approved / Paid') }}</option>
@@ -462,9 +501,9 @@ new class extends Component {
                     </div>
                 </div>
 
-                <div class="overflow-x-auto rounded-2xl border border-gray-100 dark:border-gray-700">
+                <div class="overflow-x-auto rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
                     <table class="w-full text-left text-xs text-gray-600 dark:text-gray-300">
-                        <thead class="bg-gray-50 dark:bg-gray-900/50 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-900 text-[11px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
                             <tr>
                                 <th class="py-3.5 px-4">{{ __('Order #') }}</th>
                                 <th class="py-3.5 px-4">{{ __('School') }}</th>
@@ -488,9 +527,9 @@ new class extends Component {
                                         <div class="text-[10px] text-gray-400">{{ __('By:') }} {{ $order->user?->name ?? 'System/Admin' }}</div>
                                     </td>
                                     <td class="py-3.5 px-4">
-                                        <span>{{ number_format($order->ordered_credits) }}</span>
+                                        <span class="font-bold text-gray-900 dark:text-gray-100">{{ number_format($order->ordered_credits) }}</span>
                                         @if($order->bonus_credits > 0)
-                                            <span class="text-emerald-600 font-bold text-[11px] ml-1">+{{ number_format($order->bonus_credits) }} Free</span>
+                                            <span class="text-emerald-600 font-black text-[11px] ml-1">+{{ number_format($order->bonus_credits) }} Free</span>
                                         @endif
                                         <div class="text-[10px] text-gray-400">@ ₹{{ $order->price_per_credit }}/card</div>
                                     </td>
@@ -499,7 +538,7 @@ new class extends Component {
                                             +{{ number_format($order->total_credited) }}
                                         </span>
                                     </td>
-                                    <td class="py-3.5 px-4 font-bold text-gray-900 dark:text-gray-100">
+                                    <td class="py-3.5 px-4 font-black text-gray-900 dark:text-gray-100">
                                         ₹{{ number_format($order->total_amount, 2) }}
                                         @if($order->gst_amount > 0)
                                             <div class="text-[10px] text-gray-400 font-normal">{{ __('incl. ₹:gst GST', ['gst' => $order->gst_amount]) }}</div>
@@ -534,11 +573,11 @@ new class extends Component {
                                         @if($order->status === 'pending')
                                             <div class="flex items-center justify-end gap-2">
                                                 <button wire:click="approveOrder({{ $order->id }})" 
-                                                        class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-sm">
+                                                        class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow">
                                                     {{ __('Approve & Credit') }}
                                                 </button>
                                                 <button wire:click="rejectOrder({{ $order->id }})" 
-                                                        class="px-2 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-rose-100 hover:text-rose-700 text-gray-600 dark:text-gray-300 rounded-lg text-xs font-bold transition">
+                                                        class="px-2.5 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-rose-100 hover:text-rose-700 text-gray-600 dark:text-gray-300 rounded-xl text-xs font-bold transition">
                                                     {{ __('Reject') }}
                                                 </button>
                                             </div>
@@ -551,8 +590,11 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center py-8 text-gray-400">
-                                        {{ __('No recharge orders found matching current filters.') }}
+                                    <td colspan="8" class="text-center py-12 text-gray-400">
+                                        <div class="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-gray-700 text-gray-400 flex items-center justify-center mx-auto mb-2 text-xl font-bold">
+                                            📋
+                                        </div>
+                                        <p class="font-bold">{{ __('No recharge orders found matching current filters.') }}</p>
                                     </td>
                                 </tr>
                             @endforelse
@@ -571,19 +613,19 @@ new class extends Component {
             <div class="space-y-4">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="text-sm font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider">{{ __('Dynamic Volume Pricing Slabs') }}</h3>
-                        <p class="text-xs text-gray-400">{{ __('When a school selects card count, the system automatically applies cheaper rates and awards free bonus cards.') }}</p>
+                        <h3 class="text-sm font-black text-gray-900 dark:text-gray-100 uppercase tracking-wider">{{ __('Dynamic Volume Pricing Slabs') }}</h3>
+                        <p class="text-xs text-gray-500">{{ __('When a school selects card count, the system automatically applies cheaper rates and awards free bonus cards.') }}</p>
                     </div>
-                    <button wire:click="openNewPlanModal" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
+                    <button wire:click="openNewPlanModal" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow">
                         <span>+ {{ __('Add New Tier') }}</span>
                     </button>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
                     @foreach($plans as $plan)
-                        <div class="bg-gray-50 dark:bg-gray-900/60 rounded-2xl p-5 border {{ $plan->is_active ? 'border-gray-200 dark:border-gray-700' : 'border-gray-200/40 opacity-60' }} flex flex-col justify-between relative group hover:border-indigo-500 transition">
+                        <div class="bg-white dark:bg-gray-800 rounded-3xl p-5 border-2 {{ $plan->is_active ? 'border-indigo-100 dark:border-gray-700 shadow-xl shadow-gray-200/30 dark:shadow-none' : 'border-gray-200/40 opacity-60' }} flex flex-col justify-between relative group hover:border-indigo-500 transition">
                             @if($plan->badge_text)
-                                <div class="absolute -top-2.5 right-3 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider {{ $plan->badge_color ?? 'bg-indigo-600 text-white' }} shadow-sm">
+                                <div class="absolute -top-3 right-4 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider {{ $plan->badge_color ?? 'bg-indigo-600 text-white' }} shadow-md">
                                     {{ $plan->badge_text }}
                                 </div>
                             @endif
@@ -591,18 +633,18 @@ new class extends Component {
                             <div>
                                 <div class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">{{ $plan->name }}</div>
                                 <div class="mt-2 flex items-baseline gap-1">
-                                    <span class="text-2xl font-black text-gray-900 dark:text-gray-100">₹{{ number_format($plan->price_per_credit, 2) }}</span>
+                                    <span class="text-3xl font-black text-gray-900 dark:text-gray-100">₹{{ number_format($plan->price_per_credit, 2) }}</span>
                                     <span class="text-xs text-gray-400">/ card</span>
                                 </div>
 
-                                <div class="mt-3 space-y-1.5 text-xs text-gray-600 dark:text-gray-300">
+                                <div class="mt-4 space-y-2 text-xs text-gray-600 dark:text-gray-300">
                                     <div class="flex items-center justify-between">
                                         <span class="text-gray-400">{{ __('Quantity:') }}</span>
-                                        <span class="font-bold font-mono">{{ number_format($plan->min_quantity) }} {{ $plan->max_quantity ? '– ' . number_format($plan->max_quantity) : '+' }}</span>
+                                        <span class="font-black font-mono text-gray-900 dark:text-gray-100">{{ number_format($plan->min_quantity) }} {{ $plan->max_quantity ? '– ' . number_format($plan->max_quantity) : '+' }}</span>
                                     </div>
                                     <div class="flex items-center justify-between">
                                         <span class="text-gray-400">{{ __('Bonus Free:') }}</span>
-                                        <span class="font-bold text-emerald-600 dark:text-emerald-400">+{{ $plan->bonus_percentage }}% Cards</span>
+                                        <span class="font-black text-emerald-600 dark:text-emerald-400">+{{ $plan->bonus_percentage }}% Cards</span>
                                     </div>
                                     <div class="flex items-center justify-between">
                                         <span class="text-gray-400">{{ __('Status:') }}</span>
@@ -611,7 +653,7 @@ new class extends Component {
                                 </div>
                             </div>
 
-                            <div class="mt-5 pt-3 border-t border-gray-200/60 dark:border-gray-700/60 flex items-center justify-between">
+                            <div class="mt-5 pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
                                 <button wire:click="togglePlanStatus({{ $plan->id }})" class="text-[11px] font-bold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
                                     {{ $plan->is_active ? 'Disable' : 'Enable' }}
                                 </button>
@@ -629,12 +671,12 @@ new class extends Component {
         @if($activeTab === 'schools')
             <div class="space-y-4">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-sm font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider">{{ __('School Wallet Balances') }}</h3>
+                    <h3 class="text-sm font-black text-gray-900 dark:text-gray-100 uppercase tracking-wider">{{ __('School Wallet Balances') }}</h3>
                 </div>
 
-                <div class="overflow-x-auto rounded-2xl border border-gray-100 dark:border-gray-700">
+                <div class="overflow-x-auto rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
                     <table class="w-full text-left text-xs text-gray-600 dark:text-gray-300">
-                        <thead class="bg-gray-50 dark:bg-gray-900/50 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-900 text-[11px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
                             <tr>
                                 <th class="py-3.5 px-4">{{ __('School Name') }}</th>
                                 <th class="py-3.5 px-4">{{ __('Contact / Email') }}</th>
@@ -677,7 +719,7 @@ new class extends Component {
                                     </td>
                                     <td class="py-3.5 px-4 text-right">
                                         <button wire:click="openGrantModal({{ $sch->id }})" 
-                                                class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm inline-flex items-center gap-1">
+                                                class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow inline-flex items-center gap-1">
                                             <span>+ {{ __('Add / Adjust Credits') }}</span>
                                         </button>
                                     </td>
@@ -703,9 +745,9 @@ new class extends Component {
         @if($activeTab === 'transactions')
             <div class="space-y-4">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-sm font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider">{{ __('Wallet Transaction Ledger (Audit Trail)') }}</h3>
+                    <h3 class="text-sm font-black text-gray-900 dark:text-gray-100 uppercase tracking-wider">{{ __('Wallet Transaction Ledger (Audit Trail)') }}</h3>
                     <div>
-                        <select wire:model.live="transactionTypeFilter" class="text-xs bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-1.5 text-gray-700 dark:text-gray-300">
+                        <select wire:model.live="transactionTypeFilter" class="text-xs font-bold bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-gray-700 dark:text-gray-300">
                             <option value="">{{ __('All Types') }}</option>
                             <option value="recharge">{{ __('Recharges') }}</option>
                             <option value="export_deduction">{{ __('Export Deductions') }}</option>
@@ -715,9 +757,9 @@ new class extends Component {
                     </div>
                 </div>
 
-                <div class="overflow-x-auto rounded-2xl border border-gray-100 dark:border-gray-700">
+                <div class="overflow-x-auto rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
                     <table class="w-full text-left text-xs text-gray-600 dark:text-gray-300">
-                        <thead class="bg-gray-50 dark:bg-gray-900/50 text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-900 text-[11px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
                             <tr>
                                 <th class="py-3.5 px-4">{{ __('Date & Time') }}</th>
                                 <th class="py-3.5 px-4">{{ __('School') }}</th>
@@ -739,30 +781,30 @@ new class extends Component {
                                     </td>
                                     <td class="py-3.5 px-4">
                                         @if($trx->type === 'recharge')
-                                            <span class="px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] uppercase">
+                                            <span class="px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] uppercase">
                                                 {{ __('Recharge') }}
                                             </span>
                                         @elseif($trx->type === 'export_deduction')
-                                            <span class="px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-bold text-[10px] uppercase">
+                                            <span class="px-2.5 py-1 rounded-full bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-bold text-[10px] uppercase">
                                                 {{ __('Export Deduct') }}
                                             </span>
                                         @elseif($trx->type === 'welcome_bonus')
-                                            <span class="px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 font-bold text-[10px] uppercase">
+                                            <span class="px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 font-bold text-[10px] uppercase">
                                                 {{ __('Welcome Gift') }}
                                             </span>
                                         @else
-                                            <span class="px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-bold text-[10px] uppercase">
+                                            <span class="px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-bold text-[10px] uppercase">
                                                 {{ __('Adjustment') }}
                                             </span>
                                         @endif
                                     </td>
-                                    <td class="py-3.5 px-4 text-gray-700 dark:text-gray-300">
+                                    <td class="py-3.5 px-4 text-gray-700 dark:text-gray-300 font-medium">
                                         {{ $trx->description }}
                                     </td>
-                                    <td class="py-3.5 px-4 font-mono font-bold text-sm {{ $trx->credits >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
+                                    <td class="py-3.5 px-4 font-mono font-black text-sm {{ $trx->credits >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
                                         {{ $trx->credits > 0 ? '+' : '' }}{{ number_format($trx->credits) }}
                                     </td>
-                                    <td class="py-3.5 px-4 font-mono font-bold text-gray-900 dark:text-gray-100">
+                                    <td class="py-3.5 px-4 font-mono font-black text-gray-900 dark:text-gray-100">
                                         {{ number_format($trx->balance_after) }}
                                     </td>
                                     <td class="py-3.5 px-4 text-[11px] text-gray-400">
@@ -771,8 +813,11 @@ new class extends Component {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center py-8 text-gray-400">
-                                        {{ __('No transactions found.') }}
+                                    <td colspan="7" class="text-center py-12 text-gray-400">
+                                        <div class="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-gray-700 text-gray-400 flex items-center justify-center mx-auto mb-2 text-xl font-bold">
+                                            💳
+                                        </div>
+                                        <p class="font-bold">{{ __('No transactions found.') }}</p>
                                     </td>
                                 </tr>
                             @endforelse
@@ -790,7 +835,7 @@ new class extends Component {
     <!-- =================== MODAL: GRANT / ADJUST CREDITS =================== -->
     @if($showGrantModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/80 backdrop-blur-sm" x-transition.opacity>
-            <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-gray-100 dark:border-gray-700 space-y-5">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-gray-100 dark:border-gray-700 space-y-5">
                 <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-3">
                     <h3 class="text-lg font-black text-gray-900 dark:text-gray-100">{{ __('Manual Credit Grant / Adjustment') }}</h3>
                     <button wire:click="$set('showGrantModal', false)" class="text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
@@ -799,9 +844,9 @@ new class extends Component {
                 <div class="space-y-4 text-xs">
                     <div>
                         <label class="block font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">{{ __('Target School') }}</label>
-                        <select wire:model="selectedSchoolId" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-gray-900 dark:text-gray-100 font-medium">
+                        <select wire:model="selectedSchoolId" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-gray-900 dark:text-gray-100 font-bold">
                             @foreach($allSchools as $s)
-                                <option value="{{ $s->id }}">{{ $s->name }} (Current Balance: {{ number_format($s->credits_balance) }})</option>
+                                <option value="{{ $s->id }}">{{ $s->name }} (Current: {{ number_format($s->credits_balance) }} cards)</option>
                             @endforeach
                         </select>
                     </div>
@@ -810,11 +855,11 @@ new class extends Component {
                         <label class="block font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">{{ __('Action') }}</label>
                         <div class="grid grid-cols-2 gap-2">
                             <button type="button" wire:click="$set('grantAction', 'add')" 
-                                    class="py-2 rounded-xl font-bold border transition {{ $grantAction === 'add' ? 'bg-emerald-600 text-white border-emerald-600 shadow' : 'bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700' }}">
+                                    class="py-2.5 rounded-xl font-bold border transition {{ $grantAction === 'add' ? 'bg-emerald-600 text-white border-emerald-600 shadow' : 'bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700' }}">
                                 + {{ __('Add / Gift Credits') }}
                             </button>
                             <button type="button" wire:click="$set('grantAction', 'deduct')" 
-                                    class="py-2 rounded-xl font-bold border transition {{ $grantAction === 'deduct' ? 'bg-rose-600 text-white border-rose-600 shadow' : 'bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700' }}">
+                                    class="py-2.5 rounded-xl font-bold border transition {{ $grantAction === 'deduct' ? 'bg-rose-600 text-white border-rose-600 shadow' : 'bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700' }}">
                                 - {{ __('Deduct Credits') }}
                             </button>
                         </div>
@@ -822,12 +867,12 @@ new class extends Component {
 
                     <div>
                         <label class="block font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">{{ __('Number of Credits') }}</label>
-                        <input type="number" wire:model="grantCredits" min="1" max="100000" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-gray-900 dark:text-gray-100 font-mono font-bold text-base" />
+                        <input type="number" wire:model="grantCredits" min="1" max="100000" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-gray-900 dark:text-gray-100 font-mono font-black text-lg" />
                     </div>
 
                     <div>
                         <label class="block font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">{{ __('Reason / Category') }}</label>
-                        <select wire:model="grantType" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-gray-900 dark:text-gray-100">
+                        <select wire:model="grantType" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-gray-900 dark:text-gray-100 font-medium">
                             <option value="admin_adjustment">{{ __('Admin Manual Adjustment') }}</option>
                             <option value="demo_grant">{{ __('Demo / Trial Account Grant') }}</option>
                             <option value="payment_settlement">{{ __('Offline Cash / Direct Bank Settlement') }}</option>
@@ -856,7 +901,7 @@ new class extends Component {
     <!-- =================== MODAL: CREATE / EDIT PRICING SLAB =================== -->
     @if($showPlanModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/80 backdrop-blur-sm" x-transition.opacity>
-            <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-gray-100 dark:border-gray-700 space-y-5">
+            <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-gray-100 dark:border-gray-700 space-y-5">
                 <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-3">
                     <h3 class="text-lg font-black text-gray-900 dark:text-gray-100">{{ $editingPlanId ? __('Edit Pricing Slab') : __('Create Pricing Slab') }}</h3>
                     <button wire:click="$set('showPlanModal', false)" class="text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
