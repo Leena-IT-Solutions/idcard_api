@@ -138,7 +138,125 @@ new class extends Component {
     }
 }; ?>
 
-<div class="space-y-6">
+<div class="space-y-6" x-data="{
+    isProcessingRazorpay: false,
+    modal: {
+        show: false,
+        success: true,
+        title: '',
+        message: '',
+        credits: 0,
+        balance: 0,
+        paymentId: ''
+    },
+    showResultModal(success, title, message, credits = 0, balance = 0, paymentId = '') {
+        this.modal = {
+            show: true,
+            success: success,
+            title: title,
+            message: message,
+            credits: credits,
+            balance: balance,
+            paymentId: paymentId
+        };
+    },
+    closeResultModal() {
+        this.modal.show = false;
+        if (this.modal.success) {
+            window.location.reload();
+        }
+    },
+    payWithRazorpay() {
+        this.isProcessingRazorpay = true;
+        fetch('{{ route('razorpay.create-order') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                school_id: {{ $school ? $school->id : 0 }},
+                requested_cards: parseInt($wire.get('requestedCards') || $wire.requestedCards || 100),
+                notes: $wire.get('orderNotes') || $wire.orderNotes || ''
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            this.isProcessingRazorpay = false;
+            if (!data.success) {
+                this.showResultModal(false, 'Order Creation Failed', data.message || 'Unable to create Razorpay order.');
+                return;
+            }
+
+            const options = {
+                key: data.key_id,
+                amount: data.amount,
+                currency: data.currency,
+                name: data.name,
+                description: data.description,
+                order_id: data.razorpay_order_id,
+                prefill: data.prefill,
+                notes: data.notes,
+                theme: {
+                    color: '#4f46e5'
+                },
+                handler: (response) => {
+                    this.isProcessingRazorpay = true;
+                    fetch('{{ route('razorpay.verify-payment') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            credit_order_id: data.order_id,
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature
+                        })
+                    })
+                    .then(vr => vr.json())
+                    .then(vdata => {
+                        this.isProcessingRazorpay = false;
+                        if (vdata.success) {
+                            this.showResultModal(
+                                true,
+                                'Payment Successful!',
+                                vdata.message,
+                                vdata.total_credited,
+                                vdata.credits_balance,
+                                response.razorpay_payment_id
+                            );
+                        } else {
+                            this.showResultModal(false, 'Verification Failed', vdata.message || 'Unable to verify payment signature.');
+                        }
+                    })
+                    .catch(err => {
+                        this.isProcessingRazorpay = false;
+                        this.showResultModal(false, 'Verification Error', err.message);
+                    });
+                },
+                modal: {
+                    ondismiss: () => {
+                        this.isProcessingRazorpay = false;
+                    }
+                }
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.on('payment.failed', (resp) => {
+                this.showResultModal(false, 'Payment Incomplete', (resp.error && resp.error.description) ? resp.error.description : 'Payment could not be completed.');
+            });
+            rzp.open();
+        })
+        .catch(err => {
+            this.isProcessingRazorpay = false;
+            this.showResultModal(false, 'Network Error', err.message);
+        });
+    }
+}">
     <!-- Toast Notification Banner -->
     @if($toastMessage)
         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)" 
@@ -389,93 +507,7 @@ new class extends Component {
                 @endif
 
                 <!-- Payment Method & Notes -->
-                <div class="space-y-4 pt-2" x-data="{
-                    isProcessingRazorpay: false,
-                    payWithRazorpay() {
-                        this.isProcessingRazorpay = true;
-                        fetch('{{ route('razorpay.create-order') }}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Accept': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                school_id: {{ $school->id }},
-                                requested_cards: parseInt($wire.get('requestedCards') || $wire.requestedCards || 100),
-                                notes: $wire.get('orderNotes') || $wire.orderNotes || ''
-                            })
-                        })
-                        .then(r => r.json())
-                        .then(data => {
-                            this.isProcessingRazorpay = false;
-                            if (!data.success) {
-                                alert(data.message || 'Error creating Razorpay order');
-                                return;
-                            }
-
-                            const options = {
-                                key: data.key_id,
-                                amount: data.amount,
-                                currency: data.currency,
-                                name: data.name,
-                                description: data.description,
-                                order_id: data.razorpay_order_id,
-                                prefill: data.prefill,
-                                notes: data.notes,
-                                theme: {
-                                    color: '#4f46e5'
-                                },
-                                handler: (response) => {
-                                    this.isProcessingRazorpay = true;
-                                    fetch('{{ route('razorpay.verify-payment') }}', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                            'Accept': 'application/json'
-                                        },
-                                        body: JSON.stringify({
-                                            credit_order_id: data.order_id,
-                                            razorpay_order_id: response.razorpay_order_id,
-                                            razorpay_payment_id: response.razorpay_payment_id,
-                                            razorpay_signature: response.razorpay_signature
-                                        })
-                                    })
-                                    .then(vr => vr.json())
-                                    .then(vdata => {
-                                        this.isProcessingRazorpay = false;
-                                        if (vdata.success) {
-                                            alert('🎉 ' + vdata.message);
-                                            window.location.reload();
-                                        } else {
-                                            alert('⚠️ ' + vdata.message);
-                                        }
-                                    })
-                                    .catch(err => {
-                                        this.isProcessingRazorpay = false;
-                                        alert('Error verifying payment: ' + err.message);
-                                    });
-                                },
-                                modal: {
-                                    ondismiss: () => {
-                                        this.isProcessingRazorpay = false;
-                                    }
-                                }
-                            };
-
-                            const rzp = new Razorpay(options);
-                            rzp.on('payment.failed', function (resp){
-                                alert('Payment Failed: ' + (resp.error.description || 'Unknown error'));
-                            });
-                            rzp.open();
-                        })
-                        .catch(err => {
-                            this.isProcessingRazorpay = false;
-                            alert('Network error: ' + err.message);
-                        });
-                    }
-                }">
+                <div class="space-y-4 pt-2">
                     <div>
                         <label class="block font-black text-xs text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">{{ __('Payment Option') }}</label>
                         <select wire:model.live="paymentMethod" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-xs text-gray-900 dark:text-gray-100 font-bold focus:ring-2 focus:ring-indigo-500">
@@ -694,6 +726,105 @@ new class extends Component {
             </div>
         </div>
     @endif
+
+    <!-- =================== BEAUTIFUL PAYMENT RESULT MODAL =================== -->
+    <div x-show="modal.show" 
+         x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto"
+         style="display: none;">
+        <div class="flex items-center justify-center min-h-screen px-4 py-6 text-center sm:p-0">
+            <!-- Backdrop with high-end blur -->
+            <div class="fixed inset-0 bg-gray-950/80 backdrop-blur-md transition-opacity" 
+                 x-show="modal.show" 
+                 x-transition:enter="ease-out duration-300"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 @click="closeResultModal()"></div>
+
+            <!-- Modal Card Box -->
+            <div class="relative inline-block w-full max-w-md p-6 sm:p-8 my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-700 z-10"
+                 x-show="modal.show"
+                 x-transition:enter="ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave="ease-in duration-200"
+                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+                
+                <!-- Close Icon -->
+                <button @click="closeResultModal()" class="absolute top-5 right-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-2 rounded-xl transition cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+
+                <!-- Content Area -->
+                <div class="text-center space-y-4">
+                    <!-- Success Icon / Failure Icon -->
+                    <template x-if="modal.success">
+                        <div class="relative mx-auto w-20 h-20">
+                            <div class="absolute inset-0 rounded-3xl bg-emerald-500/20 animate-ping"></div>
+                            <div class="relative w-20 h-20 bg-gradient-to-tr from-emerald-600 to-teal-500 text-white rounded-3xl flex items-center justify-center text-4xl shadow-xl shadow-emerald-500/30">
+                                <span>🎉</span>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="!modal.success">
+                        <div class="mx-auto w-20 h-20 bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 rounded-3xl flex items-center justify-center text-3xl shadow-xl shadow-rose-500/10 border border-rose-200 dark:border-rose-800">
+                            <span>⚠️</span>
+                        </div>
+                    </template>
+
+                    <!-- Title & Description -->
+                    <div>
+                        <h3 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight" x-text="modal.title"></h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1.5 leading-relaxed" x-text="modal.message"></p>
+                    </div>
+
+                    <!-- Success Details: Credits Added & New Balance -->
+                    <template x-if="modal.success">
+                        <div class="pt-2 space-y-3">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 text-left">
+                                    <span class="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">Credits Added</span>
+                                    <div class="text-lg font-mono font-black text-emerald-700 dark:text-emerald-300 mt-0.5">
+                                        +<span x-text="Number(modal.credits).toLocaleString()"></span> Cards
+                                    </div>
+                                </div>
+                                <div class="p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 text-left">
+                                    <span class="text-[10px] font-black uppercase tracking-wider text-indigo-800 dark:text-indigo-300">New Balance</span>
+                                    <div class="text-lg font-mono font-black text-indigo-700 dark:text-indigo-300 mt-0.5">
+                                        <span x-text="Number(modal.balance).toLocaleString()"></span> Cards
+                                    </div>
+                                </div>
+                            </div>
+
+                            <template x-if="modal.paymentId">
+                                <div class="flex items-center justify-between px-4 py-2.5 bg-gray-50 dark:bg-gray-900/60 rounded-xl border border-gray-200 dark:border-gray-700 text-xs">
+                                    <span class="text-gray-500 dark:text-gray-400 font-medium">Payment ID</span>
+                                    <span class="font-mono font-bold text-gray-800 dark:text-gray-200" x-text="'#' + modal.paymentId"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- Action Button -->
+                    <div class="pt-3">
+                        <button type="button" 
+                                @click="closeResultModal()" 
+                                class="w-full py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider text-white shadow-xl transition transform active:scale-[0.99] cursor-pointer"
+                                :class="modal.success ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-600/30' : 'bg-gray-800 hover:bg-gray-900 dark:bg-gray-700 dark:hover:bg-gray-600 shadow-gray-800/30'">
+                            <span x-text="modal.success ? 'Continue to Workspace' : 'Dismiss'"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </div>
