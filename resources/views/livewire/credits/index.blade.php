@@ -430,23 +430,23 @@ new class extends Component {
 
     <!-- Tab Navigation & Content Box -->
     <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-8 shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 space-y-6">
-        <!-- Top Toolbar: Horizontal Scrolling Tabs + Search Input -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-700 pb-5">
-            <!-- Horizontal Tabs -->
-            <div class="flex items-center gap-2 overflow-x-auto pb-1 max-w-full">
+        <!-- Top Toolbar: Responsive Tabs + Search Input -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-700 pb-5">
+            <!-- 4 Visible Responsive Tabs -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full lg:w-auto">
                 <button wire:click="$set('activeTab', 'plans')" 
-                        class="shrink-0 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition flex items-center gap-2 whitespace-nowrap 
+                        class="px-3.5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition flex items-center justify-center gap-1.5 whitespace-nowrap 
                         {{ $activeTab === 'plans' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                     </svg>
-                    <span>{{ __('Pricing Slabs & Bonuses') }} ({{ count($plans) }})</span>
+                    <span>{{ __('Pricing Slabs') }} ({{ count($plans) }})</span>
                 </button>
 
                 <button wire:click="$set('activeTab', 'orders')" 
-                        class="shrink-0 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition flex items-center gap-2 whitespace-nowrap 
+                        class="px-3.5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition flex items-center justify-center gap-1.5 whitespace-nowrap 
                         {{ $activeTab === 'orders' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
                     <span>{{ __('Recharge Orders') }}</span>
@@ -456,18 +456,18 @@ new class extends Component {
                 </button>
 
                 <button wire:click="$set('activeTab', 'schools')" 
-                        class="shrink-0 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition flex items-center gap-2 whitespace-nowrap 
+                        class="px-3.5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition flex items-center justify-center gap-1.5 whitespace-nowrap 
                         {{ $activeTab === 'schools' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                     <span>{{ __('School Wallets') }}</span>
                 </button>
 
                 <button wire:click="$set('activeTab', 'transactions')" 
-                        class="shrink-0 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition flex items-center gap-2 whitespace-nowrap 
+                        class="px-3.5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition flex items-center justify-center gap-1.5 whitespace-nowrap 
                         {{ $activeTab === 'transactions' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     <span>{{ __('Audit Ledger') }}</span>
@@ -475,7 +475,7 @@ new class extends Component {
             </div>
 
             <!-- Search filter -->
-            <div class="relative w-full sm:w-64 lg:w-72 shrink-0">
+            <div class="relative w-full lg:w-72 shrink-0">
                 <input type="text" wire:model.live.debounce.300ms="searchSchool" 
                        placeholder="{{ __('Search by school name...') }}" 
                        class="w-full pl-9 pr-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl text-xs text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 font-medium" />
@@ -498,8 +498,8 @@ new class extends Component {
                     </button>
                 </div>
 
-                <!-- Responsive Grid: 1 col on mobile, 2 on tablet, 3 on desktop, 5 on wide screens -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+                <!-- 2 Columns Per Row Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     @foreach($plans as $plan)
                         @php
                             $badgeBg = match(strtolower(trim($plan->badge_text ?? ''))) {
