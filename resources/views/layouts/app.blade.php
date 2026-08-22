@@ -17,6 +17,12 @@
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
         <link rel="stylesheet" href="{{ asset('css/fonts.css') }}">
 
+        <!-- Preconnect to Payment Gateways for Instant Modal Opening -->
+        <link rel="preconnect" href="https://checkout.razorpay.com" crossorigin>
+        <link rel="preconnect" href="https://api.razorpay.com" crossorigin>
+        <link rel="dns-prefetch" href="https://checkout.razorpay.com">
+        <link rel="dns-prefetch" href="https://api.razorpay.com">
+
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
