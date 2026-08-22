@@ -350,8 +350,8 @@ new class extends Component {
         </div>
     </div>
 
-    <!-- 4 Primary KPI Statistics Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    <!-- 4 Primary KPI Statistics Cards (2x2 on Large, 4 on XL) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-5">
         <!-- Total Revenue Card -->
         <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 relative overflow-hidden group hover:border-emerald-400/40 transition">
             <div class="flex items-center justify-between">
@@ -363,9 +363,9 @@ new class extends Component {
             <div class="mt-4">
                 <span class="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">₹{{ number_format($totalRevenue, 2) }}</span>
             </div>
-            <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
-                <span class="truncate">{{ __('Paid Recharges') }}</span>
-                <span class="font-bold text-emerald-600 dark:text-emerald-400 shrink-0 ml-2">{{ number_format($totalCreditsGranted) }} {{ __('Sold') }}</span>
+            <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                <span>{{ __('Paid Recharges') }}</span>
+                <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ number_format($totalCreditsGranted) }} {{ __('Sold') }}</span>
             </div>
         </div>
 
@@ -382,9 +382,9 @@ new class extends Component {
             <div class="mt-4">
                 <span class="text-3xl font-black text-indigo-600 dark:text-indigo-400 tracking-tight">{{ number_format($totalCreditsInCirculation) }}</span>
             </div>
-            <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
-                <span class="truncate">{{ __('Circulation') }}</span>
-                <span class="font-bold text-indigo-600 dark:text-indigo-400 shrink-0 ml-2">{{ $schoolsCount }} {{ __('Schools') }}</span>
+            <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                <span>{{ __('Circulation') }}</span>
+                <span class="font-bold text-indigo-600 dark:text-indigo-400">{{ $schoolsCount }} {{ __('Schools') }}</span>
             </div>
         </div>
 
@@ -401,9 +401,9 @@ new class extends Component {
             <div class="mt-4">
                 <span class="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">{{ number_format($totalExportsDeductions) }}</span>
             </div>
-            <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
-                <span class="truncate">{{ __('Print Engine') }}</span>
-                <span class="font-bold text-purple-600 dark:text-purple-400 shrink-0 ml-2">{{ __('PDF / Sheets') }}</span>
+            <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                <span>{{ __('Print Engine') }}</span>
+                <span class="font-bold text-purple-600 dark:text-purple-400">{{ __('PDF / Sheets') }}</span>
             </div>
         </div>
 
@@ -421,9 +421,9 @@ new class extends Component {
                 <span class="text-3xl font-black {{ $pendingOrdersCount > 0 ? 'text-amber-600' : 'text-gray-900 dark:text-gray-100' }} tracking-tight">{{ $pendingOrdersCount }}</span>
                 <span class="text-xs text-gray-500 dark:text-gray-400">/ {{ $totalOrdersCount }} total</span>
             </div>
-            <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
-                <span class="truncate">{{ __('Review Queue') }}</span>
-                <span class="font-bold {{ $pendingOrdersCount > 0 ? 'text-amber-600' : 'text-emerald-600' }} shrink-0 ml-2">{{ $pendingOrdersCount > 0 ? 'Action Req.' : 'All Clear' }}</span>
+            <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/60 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                <span>{{ __('Review Queue') }}</span>
+                <span class="font-bold {{ $pendingOrdersCount > 0 ? 'text-amber-600' : 'text-emerald-600' }}">{{ $pendingOrdersCount > 0 ? 'Action Req.' : 'All Clear' }}</span>
             </div>
         </div>
     </div>
