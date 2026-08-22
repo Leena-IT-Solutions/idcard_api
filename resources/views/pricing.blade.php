@@ -1,20 +1,26 @@
 <x-web-layout title="Pricing & Volume Credit Slabs - iCard Maker" description="Transparent, pay-as-you-go ID card credit pricing for schools, institutes, and commercial printing vendors. Unused credits never expire.">
 <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 py-12 sm:py-16" x-data="{
-    plans: {{ Js::from($plans) }},
+    plans: {{ Js::from($plans->isNotEmpty() ? $plans : [
+        ['name' => 'Starter Pack', 'min_quantity' => 1, 'max_quantity' => 499, 'price_per_credit' => '12.00', 'bonus_percentage' => 0],
+        ['name' => 'Growth Pack', 'min_quantity' => 500, 'max_quantity' => 999, 'price_per_credit' => '10.00', 'bonus_percentage' => 10, 'badge_text' => 'Popular'],
+        ['name' => 'Institution Pack', 'min_quantity' => 1000, 'max_quantity' => 2499, 'price_per_credit' => '8.00', 'bonus_percentage' => 15, 'badge_text' => 'Recommended'],
+        ['name' => 'Vendor Mega Pack', 'min_quantity' => 2500, 'max_quantity' => 4999, 'price_per_credit' => '6.00', 'bonus_percentage' => 20, 'badge_text' => 'Best Value'],
+        ['name' => 'Commercial Press', 'min_quantity' => 5000, 'max_quantity' => null, 'price_per_credit' => '4.50', 'bonus_percentage' => 30, 'badge_text' => 'Mega Volume'],
+    ]) }},
     quantity: 1000,
     quickQuantities: [250, 500, 1000, 2500, 5000],
     
     get currentPlan() {
         const q = parseInt(this.quantity) || 1;
-        let match = this.plans.find(p => q >= p.min_quantity && (p.max_quantity === null || q <= p.max_quantity));
+        let match = this.plans.find(p => q >= parseInt(p.min_quantity) && (p.max_quantity === null || p.max_quantity === undefined || q <= parseInt(p.max_quantity)));
         if (!match && this.plans.length > 0) {
             match = this.plans[this.plans.length - 1];
         }
-        return match || { name: 'Standard', price_per_credit: 10.00, bonus_percentage: 0 };
+        return match || { name: 'Institution Pack', price_per_credit: '8.00', bonus_percentage: 15 };
     },
 
     get rate() {
-        return parseFloat(this.currentPlan.price_per_credit) || 10.00;
+        return parseFloat(this.currentPlan.price_per_credit) || 8.00;
     },
 
     get bonusPercentage() {
@@ -50,7 +56,7 @@
 
     get nextTier() {
         const q = parseInt(this.quantity) || 1;
-        return this.plans.find(p => p.min_quantity > q) || null;
+        return this.plans.find(p => parseInt(p.min_quantity) > q) || null;
     }
 }">
 
@@ -95,6 +101,7 @@
                     <div class="flex items-center gap-2">
                         <input type="number" 
                                x-model.number="quantity" 
+                               value="1000"
                                min="10" 
                                max="20000" 
                                step="50"
@@ -106,6 +113,7 @@
                 <!-- Range Slider -->
                 <input type="range" 
                        x-model.number="quantity" 
+                       value="1000"
                        min="50" 
                        max="10000" 
                        step="50"

@@ -17,6 +17,7 @@
 
         <!-- Scripts & Styles -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @livewireStyles
     </head>
     <body class="antialiased font-sans bg-slate-950 text-white min-h-screen flex flex-col justify-between selection:bg-amber-500 selection:text-slate-950">
         <!-- Background Glow Effects -->
@@ -177,5 +178,6 @@
                 </div>
             </div>
         </footer>
+        @livewireScripts
     </body>
 </html>
