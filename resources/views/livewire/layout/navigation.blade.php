@@ -38,8 +38,8 @@ new class extends Component
     <!-- Sidebar -->
     <nav :class="open ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:flex lg:flex-col justify-between">
         <!-- Top Section: Logo & Links -->
-        <div>
-            <div class="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-gray-800">
+        <div class="flex flex-col flex-1 overflow-hidden">
+            <div class="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-gray-800 shrink-0">
                 <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 font-bold text-xl">
                     <x-application-logo class="h-8 w-8" />
                     <span>{{ config('app.name', 'IdCard') }}</span>
@@ -51,8 +51,8 @@ new class extends Component
                 </button>
             </div>
 
-            <!-- Top Links -->
-            <div class="px-3 py-6 space-y-1">
+            <!-- Scrollable Top Links -->
+            <div class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
                 @php
                     $user = auth()->user();
                     $activeSchoolId = session('active_school_id');
@@ -72,6 +72,8 @@ new class extends Component
 
                     $isDashboard = request()->routeIs('dashboard');
                 @endphp
+
+                <!-- Dashboard -->
                 <a href="{{ route('dashboard') }}" wire:navigate class="group w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 {{ $isDashboard ? 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/40 hover:text-gray-900 dark:hover:text-gray-200' }}">
                     <svg class="h-5 w-5 transition-colors duration-200 {{ $isDashboard ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
@@ -80,6 +82,14 @@ new class extends Component
                 </a>
 
                 @if($isSaasAdmin)
+                    <!-- SaaS Admin Divider & Header -->
+                    <div class="pt-3 pb-1 px-3">
+                        <div class="border-t border-gray-200 dark:border-gray-800 mb-2"></div>
+                        <p class="text-[10px] font-extrabold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                            {{ __('SaaS Administration') }}
+                        </p>
+                    </div>
+
                     @php
                         $isAdministrator = request()->routeIs('administrator');
                     @endphp
@@ -89,9 +99,7 @@ new class extends Component
                         </svg>
                         <span>{{ __('Administrator') }}</span>
                     </a>
-                @endif
 
-                @if($isSaasAdmin)
                     @php
                         $isUsers = request()->routeIs('users.index');
                     @endphp
@@ -101,6 +109,16 @@ new class extends Component
                         </svg>
                         <span>{{ __('User Manager') }}</span>
                     </a>
+                @endif
+
+                @if($isSaasAdmin || $isSchoolAdmin || $isTeacher)
+                    <!-- School Management Divider & Header -->
+                    <div class="pt-3 pb-1 px-3">
+                        <div class="border-t border-gray-200 dark:border-gray-800 mb-2"></div>
+                        <p class="text-[10px] font-extrabold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                            {{ __('School Workspace') }}
+                        </p>
+                    </div>
                 @endif
 
                 @if($isSaasAdmin || $isSchoolAdmin || (!$activeSchoolId && $user->hasRole('school_admin')))
