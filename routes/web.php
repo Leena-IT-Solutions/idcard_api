@@ -37,6 +37,13 @@ Route::get('users', function () {
     return view('users');
 })->middleware(['auth'])->name('users.index');
 
+Route::get('settings', function () {
+    if (! auth()->user()->hasRole('saas_admin')) {
+        abort(403);
+    }
+    return view('settings');
+})->middleware(['auth'])->name('settings');
+
 Route::get('billing', function () {
     $user = auth()->user();
     $activeSchoolId = session('active_school_id');
@@ -366,5 +373,12 @@ Route::middleware(['auth'])->group(function () {
         ]);
     })->name('artisan.run');
 });
+
+// Razorpay Payment Routes
+Route::middleware(['auth'])->group(function () {
+    Route::post('/razorpay/create-order', [\App\Http\Controllers\RazorpayController::class, 'createOrder'])->name('razorpay.create-order');
+    Route::post('/razorpay/verify-payment', [\App\Http\Controllers\RazorpayController::class, 'verifyPayment'])->name('razorpay.verify-payment');
+});
+Route::post('/razorpay/webhook', [\App\Http\Controllers\RazorpayController::class, 'handleWebhook'])->name('razorpay.webhook');
 
 require __DIR__.'/auth.php';

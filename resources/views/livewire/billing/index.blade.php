@@ -11,7 +11,7 @@ new class extends Component {
     use WithPagination;
 
     public int $requestedCards = 1000;
-    public string $paymentMethod = 'bank_transfer'; // bank_transfer, offline_request
+    public string $paymentMethod = 'razorpay'; // razorpay, bank_transfer, offline_request
     public string $orderNotes = '';
     public bool $showSuccessModal = false;
     public ?int $lastSubmittedOrderId = null;
@@ -389,28 +389,129 @@ new class extends Component {
                 @endif
 
                 <!-- Payment Method & Notes -->
-                <div class="space-y-4 pt-2">
+                <div class="space-y-4 pt-2" x-data="{
+                    isProcessingRazorpay: false,
+                    payWithRazorpay() {
+                        this.isProcessingRazorpay = true;
+                        fetch('{{ route('razorpay.create-order') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                school_id: {{ $school->id }},
+                                requested_cards: {{ $requestedCards }},
+                                notes: @this.orderNotes || ''
+                            })
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            this.isProcessingRazorpay = false;
+                            if (!data.success) {
+                                alert(data.message || 'Error creating Razorpay order');
+                                return;
+                            }
+
+                            const options = {
+                                key: data.key_id,
+                                amount: data.amount,
+                                currency: data.currency,
+                                name: data.name,
+                                description: data.description,
+                                order_id: data.razorpay_order_id,
+                                prefill: data.prefill,
+                                notes: data.notes,
+                                theme: {
+                                    color: '#4f46e5'
+                                },
+                                handler: (response) => {
+                                    this.isProcessingRazorpay = true;
+                                    fetch('{{ route('razorpay.verify-payment') }}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                            'Accept': 'application/json'
+                                        },
+                                        body: JSON.stringify({
+                                            credit_order_id: data.order_id,
+                                            razorpay_order_id: response.razorpay_order_id,
+                                            razorpay_payment_id: response.razorpay_payment_id,
+                                            razorpay_signature: response.razorpay_signature
+                                        })
+                                    })
+                                    .then(vr => vr.json())
+                                    .then(vdata => {
+                                        this.isProcessingRazorpay = false;
+                                        if (vdata.success) {
+                                            alert('🎉 ' + vdata.message);
+                                            window.location.reload();
+                                        } else {
+                                            alert('⚠️ ' + vdata.message);
+                                        }
+                                    })
+                                    .catch(err => {
+                                        this.isProcessingRazorpay = false;
+                                        alert('Error verifying payment: ' + err.message);
+                                    });
+                                },
+                                modal: {
+                                    ondismiss: () => {
+                                        this.isProcessingRazorpay = false;
+                                    }
+                                }
+                            };
+
+                            const rzp = new Razorpay(options);
+                            rzp.on('payment.failed', function (resp){
+                                alert('Payment Failed: ' + (resp.error.description || 'Unknown error'));
+                            });
+                            rzp.open();
+                        })
+                        .catch(err => {
+                            this.isProcessingRazorpay = false;
+                            alert('Network error: ' + err.message);
+                        });
+                    }
+                }">
                     <div>
                         <label class="block font-black text-xs text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">{{ __('Payment Option') }}</label>
-                        <select wire:model="paymentMethod" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-xs text-gray-900 dark:text-gray-100 font-bold focus:ring-2 focus:ring-indigo-500">
-                            <option value="bank_transfer">{{ __('Direct Bank Transfer / NEFT / IMPS / UPI') }}</option>
+                        <select wire:model.live="paymentMethod" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-xs text-gray-900 dark:text-gray-100 font-bold focus:ring-2 focus:ring-indigo-500">
+                            <option value="razorpay">⚡ {{ __('Instant Online Payment (Razorpay — UPI / Cards / NetBanking)') }}</option>
+                            <option value="bank_transfer">{{ __('Direct Bank Transfer / NEFT / IMPS / Offline UPI') }}</option>
                             <option value="offline_request">{{ __('Submit Purchase Order / Invoice Request') }}</option>
                         </select>
                     </div>
 
-                    <div>
-                        <label class="block font-black text-xs text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">{{ __('UTR / Reference Number or Remarks (Optional)') }}</label>
-                        <input type="text" wire:model="orderNotes" placeholder="{{ __('e.g. Paid via PhonePe UTR #12345678 or Invoice PO request') }}" 
-                               class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-xs text-gray-900 dark:text-gray-100 font-medium focus:ring-2 focus:ring-indigo-500" />
-                    </div>
+                    @if($paymentMethod !== 'razorpay')
+                        <div>
+                            <label class="block font-black text-xs text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">{{ __('UTR / Reference Number or Remarks (Optional)') }}</label>
+                            <input type="text" wire:model="orderNotes" placeholder="{{ __('e.g. Paid via PhonePe UTR #12345678 or Invoice PO request') }}" 
+                                   class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-xs text-gray-900 dark:text-gray-100 font-medium focus:ring-2 focus:ring-indigo-500" />
+                        </div>
 
-                    <button wire:click="submitRechargeRequest" 
-                            class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm uppercase tracking-wider rounded-2xl shadow-xl shadow-indigo-600/30 transition transform active:scale-[0.99] flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                        <span>{{ __('Request Recharge (:credits Cards)', ['credits' => number_format($calc['total_credits'])]) }}</span>
-                    </button>
+                        <button wire:click="submitRechargeRequest" 
+                                class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm uppercase tracking-wider rounded-2xl shadow-xl shadow-indigo-600/30 transition transform active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            <span>{{ __('Submit Offline Request (:credits Cards)', ['credits' => number_format($calc['total_credits'])]) }}</span>
+                        </button>
+                    @else
+                        <button @click="payWithRazorpay()" :disabled="isProcessingRazorpay"
+                                class="w-full py-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 disabled:opacity-50 text-white font-black text-sm uppercase tracking-wider rounded-2xl shadow-xl shadow-indigo-600/30 transition transform active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer">
+                            <span x-show="!isProcessingRazorpay" class="flex items-center gap-2">
+                                <span>⚡</span>
+                                <span>{{ __('Pay ₹:amount Online Now (:credits Cards)', ['amount' => number_format($calc['total_amount'], 2), 'credits' => number_format($calc['total_credits'])]) }}</span>
+                            </span>
+                            <span x-show="isProcessingRazorpay" class="flex items-center gap-2">
+                                <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                <span>{{ __('Opening Razorpay Checkout...') }}</span>
+                            </span>
+                        </button>
+                    @endif
                 </div>
             </div>
 
@@ -593,4 +694,6 @@ new class extends Component {
             </div>
         </div>
     @endif
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </div>

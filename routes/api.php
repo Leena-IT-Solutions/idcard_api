@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\CampaignController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
+Route::post('/send-otp', [AuthController::class, 'sendOtp']);
+Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 
 Route::middleware('auth:sanctum')->group(function () {

@@ -42,4 +42,18 @@ return [
         ],
     ],
 
+    'razorpay' => [
+        'key_id' => env('RAZORPAY_KEY_ID'),
+        'key_secret' => env('RAZORPAY_KEY_SECRET'),
+        'webhook_secret' => env('RAZORPAY_WEBHOOK_SECRET'),
+    ],
+
+    'whatsapp' => [
+        'access_token' => env('WHATSAPP_ACCESS_TOKEN'),
+        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
+        'business_account_id' => env('WHATSAPP_BUSINESS_ACCOUNT_ID'),
+        'otp_template' => env('WHATSAPP_OTP_TEMPLATE', 'otp_verification'),
+        'otp_enabled' => env('WHATSAPP_OTP_ENABLED', false),
+    ],
+
 ];
