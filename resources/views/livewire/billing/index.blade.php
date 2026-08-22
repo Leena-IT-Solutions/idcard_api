@@ -402,8 +402,8 @@ new class extends Component {
                             },
                             body: JSON.stringify({
                                 school_id: {{ $school->id }},
-                                requested_cards: {{ $requestedCards }},
-                                notes: @this.orderNotes || ''
+                                requested_cards: parseInt($wire.get('requestedCards') || $wire.requestedCards || 100),
+                                notes: $wire.get('orderNotes') || $wire.orderNotes || ''
                             })
                         })
                         .then(r => r.json())
