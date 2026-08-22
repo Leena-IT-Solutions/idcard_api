@@ -148,17 +148,35 @@ class RazorpayController extends Controller
             ]);
         }
 
+        $api = $this->getRazorpayApi();
+        if (!$api) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Razorpay API credentials not configured.',
+            ], 422);
+        }
+
         $keySecret = Setting::get('razorpay_key_secret') ?: config('services.razorpay.key_secret');
 
         try {
-            // Verify HMAC SHA256 Signature
+            // Verify HMAC SHA256 Signature using Razorpay Api Utility or direct hash_hmac
             $attributes = [
                 'razorpay_order_id' => $request->razorpay_order_id,
                 'razorpay_payment_id' => $request->razorpay_payment_id,
                 'razorpay_signature' => $request->razorpay_signature,
             ];
 
-            Utility::verifyPaymentSignature($attributes, $keySecret);
+            // Method 1: Razorpay SDK Utility Instance
+            try {
+                $api->utility->verifyPaymentSignature($attributes);
+            } catch (\Throwable $sdkErr) {
+                // Method 2: Direct RFC 2104 HMAC-SHA256 verification
+                $payload = $request->razorpay_order_id . '|' . $request->razorpay_payment_id;
+                $expectedSignature = hash_hmac('sha256', $payload, (string)$keySecret);
+                if (!hash_equals($expectedSignature, (string)$request->razorpay_signature)) {
+                    throw new SignatureVerificationError('Invalid Razorpay signature passed');
+                }
+            }
 
             // Signature verified successfully -> Approve & Credit
             $order->update([
@@ -213,7 +231,15 @@ class RazorpayController extends Controller
 
         if (!empty($webhookSecret) && !empty($signature)) {
             try {
-                Utility::verifyWebhookSignature($payload, $signature, $webhookSecret);
+                $api = $this->getRazorpayApi();
+                if ($api) {
+                    $api->utility->verifyWebhookSignature($payload, $signature, $webhookSecret);
+                } else {
+                    $expected = hash_hmac('sha256', $payload, (string)$webhookSecret);
+                    if (!hash_equals($expected, (string)$signature)) {
+                        throw new \Exception('Invalid signature');
+                    }
+                }
             } catch (\Exception $e) {
                 Log::warning('Razorpay Webhook Signature Mismatch', ['error' => $e->getMessage()]);
                 return response()->json(['error' => 'Invalid signature'], 400);
