@@ -75,7 +75,7 @@ new class extends Component
         ];
 
         // School-by-School Analytics Table
-        $schoolsQuery = School::withCount(['students', 'grades'])
+        $schoolsQuery = School::withCount(['grades'])
             ->orderBy('name', 'asc');
 
         if (!empty(trim($this->schoolSearch))) {
@@ -89,6 +89,10 @@ new class extends Component
         }
 
         $schoolsList = $schoolsQuery->get()->map(function($school) use ($today) {
+            $studentCount = CampaignStudent::whereHas('campaign', fn($q) => $q->where('school_id', $school->id))
+                ->distinct('student_id')
+                ->count('student_id');
+
             $teacherCount = SchoolUserRole::where('school_id', $school->id)
                 ->whereHas('role', fn($q) => $q->where('slug', 'teacher'))
                 ->distinct('user_id')
@@ -107,7 +111,7 @@ new class extends Component
                     })->count();
             }
 
-            $totalCampaignStudents = $activeCampaign ? CampaignStudent::where('campaign_id', $activeCampaign->id)->count() : $school->students_count;
+            $totalCampaignStudents = $activeCampaign ? CampaignStudent::where('campaign_id', $activeCampaign->id)->count() : $studentCount;
             $progressPct = $totalCampaignStudents > 0 ? round(($verifiedStudents / $totalCampaignStudents) * 100, 1) : 0;
 
             return [
@@ -118,7 +122,7 @@ new class extends Component
                 'email' => $school->email,
                 'contact_number' => $school->contact_number,
                 'address' => $school->address,
-                'students_count' => $school->students_count,
+                'students_count' => $studentCount,
                 'grades_count' => $school->grades_count,
                 'teachers_count' => $teacherCount,
                 'active_campaign' => $activeCampaign?->name ?? 'None',

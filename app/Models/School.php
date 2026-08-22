@@ -33,9 +33,14 @@ class School extends Model
         return $this->hasMany(SchoolTemplate::class);
     }
 
-    public function students()
+    public function campaigns()
     {
-        return $this->hasMany(Student::class);
+        return $this->hasMany(Campaign::class);
+    }
+
+    public function campaignStudents()
+    {
+        return $this->hasManyThrough(CampaignStudent::class, Campaign::class);
     }
 
     protected static function boot()
@@ -43,8 +48,10 @@ class School extends Model
         parent::boot();
 
         static::deleting(function ($school) {
-            // Delete all student photos from storage
-            foreach ($school->students as $student) {
+            $campaignIds = $school->campaigns()->pluck('id');
+            $studentIds = CampaignStudent::whereIn('campaign_id', $campaignIds)->pluck('student_id');
+            $students = Student::whereIn('id', $studentIds)->get();
+            foreach ($students as $student) {
                 if ($student->photo_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($student->photo_path)) {
                     \Illuminate\Support\Facades\Storage::disk('public')->delete($student->photo_path);
                 }
