@@ -113,24 +113,36 @@ new class extends Component {
             'mailFromName' => 'nullable|string|max:255',
         ]);
 
-        Setting::set('mailgun_domain', trim($this->mailgunDomain), 'mailgun', false);
-        Setting::set('mailgun_endpoint', trim($this->mailgunEndpoint) ?: 'api.mailgun.net', 'mailgun', false);
-        Setting::set('mailgun_secret', trim($this->mailgunSecret), 'mailgun', true);
-        Setting::set('mail_from_address', trim($this->mailFromAddress), 'mailgun', false);
-        Setting::set('mail_from_name', trim($this->mailFromName), 'mailgun', false);
+        $domain = trim($this->mailgunDomain);
+        $secret = trim($this->mailgunSecret);
+        $endpoint = trim($this->mailgunEndpoint) ?: 'api.mailgun.net';
+        $fromAddress = trim($this->mailFromAddress);
+        $fromName = trim($this->mailFromName);
+
+        Setting::set('mailgun_domain', $domain, 'mailgun', false);
+        Setting::set('mailgun_endpoint', $endpoint, 'mailgun', false);
+        Setting::set('mailgun_secret', $secret, 'mailgun', true);
+        Setting::set('mail_from_address', $fromAddress, 'mailgun', false);
+        Setting::set('mail_from_name', $fromName, 'mailgun', false);
 
         // Update runtime config
-        config(['services.mailgun.domain' => trim($this->mailgunDomain)]);
-        config(['services.mailgun.endpoint' => trim($this->mailgunEndpoint) ?: 'api.mailgun.net']);
-        config(['services.mailgun.secret' => trim($this->mailgunSecret)]);
-        if (!empty($this->mailFromAddress)) {
-            config(['mail.from.address' => trim($this->mailFromAddress)]);
+        config(['services.mailgun.domain' => $domain]);
+        config(['services.mailgun.endpoint' => $endpoint]);
+        config(['services.mailgun.secret' => $secret]);
+        config(['services.mailgun.scheme' => 'https']);
+        config(['mail.mailers.mailgun.transport' => 'mailgun']);
+
+        if (!empty($domain) && !empty($secret)) {
+            config(['mail.default' => 'mailgun']);
         }
-        if (!empty($this->mailFromName)) {
-            config(['mail.from.name' => trim($this->mailFromName)]);
+        if (!empty($fromAddress)) {
+            config(['mail.from.address' => $fromAddress]);
+        }
+        if (!empty($fromName)) {
+            config(['mail.from.name' => $fromName]);
         }
 
-        $this->toast('Mailgun email gateway settings saved successfully!');
+        $this->toast('Mailgun email gateway settings saved and activated successfully!');
     }
 
     public function sendTestEmail(): void
@@ -148,7 +160,7 @@ new class extends Component {
             $domain = trim($this->mailgunDomain);
             $secret = trim($this->mailgunSecret);
             $endpoint = trim($this->mailgunEndpoint) ?: 'api.mailgun.net';
-            $fromAddress = trim($this->mailFromAddress) ?: 'noreply@' . $domain;
+            $fromAddress = trim($this->mailFromAddress) ?: 'no-reply@' . $domain;
             $fromName = trim($this->mailFromName) ?: config('app.name', 'iCard Studio');
 
             $response = Http::withBasicAuth('api', $secret)
@@ -164,8 +176,16 @@ new class extends Component {
                 $this->showTestEmailModal = false;
                 $this->toast("Test email sent successfully to {$this->testEmailRecipient}!", 'success');
             } else {
-                $msg = $response->json('message') ?? 'Failed to send test email through Mailgun.';
-                $this->toast('Mailgun Error: ' . $msg, 'error');
+                $status = $response->status();
+                $msg = $response->json('message') ?? $response->body() ?? 'Failed to send test email through Mailgun.';
+                
+                if ($status === 401) {
+                    $this->toast("Mailgun 401 Forbidden: Invalid API Key or Region Mismatch. Please check if your domain was created under EU Region (use api.eu.mailgun.net) or US Region (use api.mailgun.net), and ensure you are using the Private Sending API Key.", 'error');
+                } elseif ($status === 404) {
+                    $this->toast("Mailgun 404 Not Found: Domain '{$domain}' was not found in Mailgun under endpoint {$endpoint}.", 'error');
+                } else {
+                    $this->toast("Mailgun Error (HTTP {$status}): " . $msg, 'error');
+                }
             }
         } catch (\Throwable $e) {
             $this->toast('Email Error: ' . $e->getMessage(), 'error');
@@ -398,10 +418,16 @@ new class extends Component {
                 <!-- Mailgun Endpoint -->
                 <div>
                     <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">
-                        {{ __('Mailgun Endpoint') }}
+                        {{ __('Mailgun Endpoint / Region') }}
                     </label>
-                    <input type="text" wire:model="mailgunEndpoint" placeholder="api.mailgun.net (or api.eu.mailgun.net)" 
-                           class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700 rounded-2xl text-xs font-mono text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition" />
+                    <select wire:model="mailgunEndpoint" 
+                            class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700 rounded-2xl text-xs font-mono text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition">
+                        <option value="api.mailgun.net">api.mailgun.net (US / North America Region — Default)</option>
+                        <option value="api.eu.mailgun.net">api.eu.mailgun.net (EU / Europe Region)</option>
+                    </select>
+                    <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-1">
+                        {{ __('Select the region matching where your domain is hosted in Mailgun.') }}
+                    </p>
                     @error('mailgunEndpoint') <p class="text-rose-500 text-[11px] mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
@@ -410,14 +436,17 @@ new class extends Component {
             <div>
                 <div class="flex items-center justify-between mb-2">
                     <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">
-                        {{ __('Mailgun API Secret Key') }}
+                        {{ __('Mailgun API Secret / Sending Key') }}
                     </label>
                     <button type="button" wire:click="$toggle('showMailgunSecret')" class="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
                         {{ $showMailgunSecret ? __('Hide') : __('Reveal') }}
                     </button>
                 </div>
-                <input type="{{ $showMailgunSecret ? 'text' : 'password' }}" wire:model="mailgunSecret" placeholder="key-..." 
+                <input type="{{ $showMailgunSecret ? 'text' : 'password' }}" wire:model="mailgunSecret" placeholder="key-xxxxxxxx... or 32-char alphanumeric sending key" 
                        class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700 rounded-2xl text-xs font-mono text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition" />
+                <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-1">
+                    {{ __('Use the Private Sending API Key from Mailgun Dashboard (Domain Settings > Sending API Keys or Account Settings > API Security). Do not use the Public Validation or Webhook Key.') }}
+                </p>
                 @error('mailgunSecret') <p class="text-rose-500 text-[11px] mt-1">{{ $message }}</p> @enderror
             </div>
 
