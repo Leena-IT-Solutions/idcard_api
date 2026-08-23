@@ -580,6 +580,30 @@ new class extends Component {
                 </div>
             </div>
 
+            <!-- Meta Webhook Configuration for WhatsApp Dashboard -->
+            <div class="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800/60 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-black uppercase tracking-wider text-indigo-900 dark:text-indigo-200 flex items-center gap-2">
+                        <span>⚡</span> {{ __('Meta Webhook Configuration Details (For Meta Developer Dashboard)') }}
+                    </span>
+                    <span class="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold">Copy into Meta Step 2</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                    <div class="p-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Callback URL</span>
+                        <div class="font-mono font-black text-indigo-600 dark:text-indigo-400 select-all mt-0.5 break-all">
+                            {{ url('/whatsapp/webhook') }}
+                        </div>
+                    </div>
+                    <div class="p-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Verify Token</span>
+                        <div class="font-mono font-black text-emerald-600 dark:text-emerald-400 select-all mt-0.5">
+                            icard_meta_verify_token_2026
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="flex justify-end pt-2">
                 <button type="submit" wire:loading.attr="disabled" wire:target="saveWhatsapp" 
                         class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-lg shadow-indigo-600/20 cursor-pointer flex items-center gap-2">

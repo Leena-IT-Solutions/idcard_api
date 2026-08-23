@@ -52,6 +52,7 @@ return [
         'access_token' => env('WHATSAPP_ACCESS_TOKEN'),
         'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
         'business_account_id' => env('WHATSAPP_BUSINESS_ACCOUNT_ID'),
+        'verify_token' => env('WHATSAPP_VERIFY_TOKEN', 'icard_meta_verify_token_2026'),
         'otp_template' => env('WHATSAPP_OTP_TEMPLATE', 'otp_verification'),
         'otp_enabled' => env('WHATSAPP_OTP_ENABLED', false),
     ],

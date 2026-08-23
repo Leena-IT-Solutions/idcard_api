@@ -384,4 +384,8 @@ Route::middleware(['auth'])->group(function () {
 });
 Route::post('/razorpay/webhook', [\App\Http\Controllers\RazorpayController::class, 'handleWebhook'])->name('razorpay.webhook');
 
+// WhatsApp Meta Cloud API Webhook Routes
+Route::get('/whatsapp/webhook', [\App\Http\Controllers\WhatsAppWebhookController::class, 'verify'])->name('whatsapp.webhook.verify');
+Route::post('/whatsapp/webhook', [\App\Http\Controllers\WhatsAppWebhookController::class, 'handle'])->name('whatsapp.webhook.handle');
+
 require __DIR__.'/auth.php';
