@@ -27,12 +27,25 @@ class SettingsServiceProvider extends ServiceProvider
                 return;
             }
 
+            // Helper to check for placeholder values
+            $isValidKey = function (?string $val): bool {
+                if (empty($val)) return false;
+                $trimmed = strtolower(trim($val));
+                return !str_contains($trimmed, 'your-') && !str_contains($trimmed, 'placeholder') && !str_contains($trimmed, 'example');
+            };
+
             // 1. Mailgun Gateway & Mail Config
-            $mailgunDomain = Setting::get('mailgun_domain') ?: config('services.mailgun.domain');
-            $mailgunSecret = Setting::get('mailgun_secret') ?: config('services.mailgun.secret');
-            $mailgunEndpoint = Setting::get('mailgun_endpoint') ?: config('services.mailgun.endpoint', 'api.mailgun.net');
-            $mailFromAddress = Setting::get('mail_from_address') ?: config('mail.from.address');
-            $mailFromName = Setting::get('mail_from_name') ?: config('mail.from.name');
+            $dbDomain = Setting::get('mailgun_domain');
+            $dbSecret = Setting::get('mailgun_secret');
+            $dbEndpoint = Setting::get('mailgun_endpoint');
+            $dbFromAddress = Setting::get('mail_from_address');
+            $dbFromName = Setting::get('mail_from_name');
+
+            $mailgunDomain = $isValidKey($dbDomain) ? $dbDomain : ($isValidKey(config('services.mailgun.domain')) ? config('services.mailgun.domain') : null);
+            $mailgunSecret = $isValidKey($dbSecret) ? $dbSecret : ($isValidKey(config('services.mailgun.secret')) ? config('services.mailgun.secret') : null);
+            $mailgunEndpoint = !empty($dbEndpoint) ? $dbEndpoint : config('services.mailgun.endpoint', 'api.mailgun.net');
+            $mailFromAddress = !empty($dbFromAddress) ? $dbFromAddress : config('mail.from.address');
+            $mailFromName = !empty($dbFromName) ? $dbFromName : config('mail.from.name');
 
             if (!empty($mailgunDomain)) {
                 Config::set('services.mailgun.domain', $mailgunDomain);
@@ -55,8 +68,12 @@ class SettingsServiceProvider extends ServiceProvider
                 'transport' => 'mailgun',
             ]);
 
+            // Only switch default mailer to mailgun if genuine credentials exist
             if (!empty($mailgunDomain) && !empty($mailgunSecret)) {
                 Config::set('mail.default', 'mailgun');
+            } elseif (Config::get('mail.default') === 'mailgun') {
+                // If .env specified MAIL_MAILER=mailgun but credentials are placeholder or missing, fallback to 'log' to prevent 401 crashes
+                Config::set('mail.default', 'log');
             }
 
             // 2. Razorpay Gateway Config
