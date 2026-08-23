@@ -28,11 +28,11 @@ class SettingsServiceProvider extends ServiceProvider
             }
 
             // 1. Mailgun Gateway & Mail Config
-            $mailgunDomain = Setting::get('mailgun_domain');
-            $mailgunSecret = Setting::get('mailgun_secret');
-            $mailgunEndpoint = Setting::get('mailgun_endpoint');
-            $mailFromAddress = Setting::get('mail_from_address');
-            $mailFromName = Setting::get('mail_from_name');
+            $mailgunDomain = Setting::get('mailgun_domain') ?: config('services.mailgun.domain');
+            $mailgunSecret = Setting::get('mailgun_secret') ?: config('services.mailgun.secret');
+            $mailgunEndpoint = Setting::get('mailgun_endpoint') ?: config('services.mailgun.endpoint', 'api.mailgun.net');
+            $mailFromAddress = Setting::get('mail_from_address') ?: config('mail.from.address');
+            $mailFromName = Setting::get('mail_from_name') ?: config('mail.from.name');
 
             if (!empty($mailgunDomain)) {
                 Config::set('services.mailgun.domain', $mailgunDomain);
@@ -48,6 +48,15 @@ class SettingsServiceProvider extends ServiceProvider
             }
             if (!empty($mailFromName)) {
                 Config::set('mail.from.name', $mailFromName);
+            }
+
+            // Ensure mailgun mailer transport configuration is always present
+            Config::set('mail.mailers.mailgun', [
+                'transport' => 'mailgun',
+            ]);
+
+            if (!empty($mailgunDomain) && !empty($mailgunSecret)) {
+                Config::set('mail.default', 'mailgun');
             }
 
             // 2. Razorpay Gateway Config
