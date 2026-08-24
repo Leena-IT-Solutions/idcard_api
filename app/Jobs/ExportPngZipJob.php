@@ -37,7 +37,7 @@ class ExportPngZipJob implements ShouldQueue
 
             $tmpDir = storage_path('app/private/tmp/exports/' . $export->id);
             if (!file_exists($tmpDir)) {
-                mkdir($tmpDir, 0755, true);
+                @mkdir($tmpDir, 0777, true);
             }
 
             $isMirrored = (bool) ($export->params['mirror_print'] ?? false);
@@ -85,7 +85,7 @@ class ExportPngZipJob implements ShouldQueue
             $fullZipPath = storage_path('app/private/' . $zipRelativePath);
 
             if (!file_exists(dirname($fullZipPath))) {
-                mkdir(dirname($fullZipPath), 0755, true);
+                @mkdir(dirname($fullZipPath), 0777, true);
             }
 
             $zip = new ZipArchive();

@@ -35,7 +35,7 @@ class ExportExcelPhotoZipJob implements ShouldQueue
 
             $tmpDir = storage_path('app/private/tmp/exports/' . $export->id);
             if (!file_exists($tmpDir . '/photos')) {
-                mkdir($tmpDir . '/photos', 0755, true);
+                @mkdir($tmpDir . '/photos', 0777, true);
             }
 
             $exportRows = [];
@@ -84,7 +84,7 @@ class ExportExcelPhotoZipJob implements ShouldQueue
             $fullZipPath = storage_path('app/private/' . $zipRelativePath);
 
             if (!file_exists(dirname($fullZipPath))) {
-                mkdir(dirname($fullPdfPath ?? $fullZipPath), 0755, true);
+                @mkdir(dirname($fullZipPath), 0777, true);
             }
 
             $zip = new ZipArchive();

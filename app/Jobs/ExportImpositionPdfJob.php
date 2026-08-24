@@ -128,7 +128,7 @@ class ExportImpositionPdfJob implements ShouldQueue
             $fullPdfPath = storage_path('app/private/' . $pdfRelativePath);
 
             if (!file_exists(dirname($fullPdfPath))) {
-                mkdir(dirname($fullPdfPath), 0755, true);
+                @mkdir(dirname($fullPdfPath), 0777, true);
             }
 
             if (count($chunkPdfPaths) === 1) {
