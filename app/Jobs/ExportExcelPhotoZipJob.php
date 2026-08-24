@@ -71,6 +71,7 @@ class ExportExcelPhotoZipJob implements ShouldQueue
 
                 if (($i + 1) % 10 === 0 || ($i + 1) === count($studentIds)) {
                     $export->update(['processed_items' => $i + 1]);
+                    gc_collect_cycles();
                 }
             }
 
@@ -83,7 +84,7 @@ class ExportExcelPhotoZipJob implements ShouldQueue
             $fullZipPath = storage_path('app/private/' . $zipRelativePath);
 
             if (!file_exists(dirname($fullZipPath))) {
-                mkdir(dirname($fullZipPath), 0755, true);
+                mkdir(dirname($fullPdfPath ?? $fullZipPath), 0755, true);
             }
 
             $zip = new ZipArchive();
@@ -108,13 +109,41 @@ class ExportExcelPhotoZipJob implements ShouldQueue
                 'status' => 'completed',
                 'file_path' => $zipRelativePath,
                 'completed_at' => now(),
+                'processed_items' => count($studentIds),
             ]);
+
+            // Deduct credits from school wallet upon successful completion
+            $school = $export->school;
+            $neededCredits = count($studentIds);
+            if ($school && $neededCredits > 0) {
+                $school->deductCredits(
+                    $neededCredits,
+                    "Export: " . str_replace('_', ' ', strtoupper($export->type)) . " — {$neededCredits} student cards (Export #{$export->id})",
+                    $export,
+                    $export->user
+                );
+            }
+
+            // Mark exported students as Sent for Printing if requested
+            if (!empty($export->params['send_for_printing']) && !empty($studentIds)) {
+                $campQuery = CampaignStudent::whereIn('student_id', $studentIds);
+                if (!empty($export->params['campaign_id'])) {
+                    $campQuery->where('campaign_id', $export->params['campaign_id']);
+                }
+                $campQuery->update([
+                    'status' => CampaignStudent::STATUS_SENT_FOR_PRINTING,
+                    'status_updated_at' => now(),
+                    'status_updated_by' => $export->user_id,
+                ]);
+            }
         } catch (\Throwable $e) {
             $export->update([
                 'status' => 'failed',
                 'error_message' => $e->getMessage(),
             ]);
             throw $e;
+        } finally {
+            gc_collect_cycles();
         }
     }
 

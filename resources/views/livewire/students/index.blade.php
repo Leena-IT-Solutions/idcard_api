@@ -217,51 +217,28 @@ new class extends Component
             'margin_mm' => $this->exportMarginMm,
             'gutter_mm' => $this->exportGutterMm,
             'mirror_print' => $this->exportMirrorPrint,
+            'send_for_printing' => $this->exportSendForPrinting,
         ];
 
         $export = \App\Models\Export::create([
             'user_id' => $user->id,
             'school_id' => $activeSchoolId,
             'type' => $this->exportType,
-            'status' => 'processing',
+            'status' => 'pending',
             'params' => $params,
             'total_items' => count($targetStudentIds),
             'processed_items' => 0,
         ]);
 
         try {
-            ini_set('memory_limit', '-1');
-            set_time_limit(3600);
-
             match ($this->exportType) {
-                'excel_photo_zip' => \App\Jobs\ExportExcelPhotoZipJob::dispatchSync($export->id),
-                'png_zip' => \App\Jobs\ExportPngZipJob::dispatchSync($export->id),
-                'single_card_pdf' => \App\Jobs\ExportSingleCardPdfJob::dispatchSync($export->id),
-                'imposition_pdf' => \App\Jobs\ExportImpositionPdfJob::dispatchSync($export->id),
+                'excel_photo_zip' => \App\Jobs\ExportExcelPhotoZipJob::dispatch($export->id),
+                'png_zip' => \App\Jobs\ExportPngZipJob::dispatch($export->id),
+                'single_card_pdf' => \App\Jobs\ExportSingleCardPdfJob::dispatch($export->id),
+                'imposition_pdf' => \App\Jobs\ExportImpositionPdfJob::dispatch($export->id),
             };
 
-            // 2. Deduct credits from school wallet upon successful generation
-            $school->deductCredits(
-                $neededCredits,
-                "Export: " . str_replace('_', ' ', strtoupper($this->exportType)) . " — {$neededCredits} student cards (Export #{$export->id})",
-                $export,
-                $user
-            );
-
-            // If user checked "Mark exported students as Sent for Printing"
-            if ($this->exportSendForPrinting && !empty($targetStudentIds)) {
-                $campQuery = \App\Models\CampaignStudent::whereIn('student_id', $targetStudentIds);
-                if ($this->filterCampaign) {
-                    $campQuery->where('campaign_id', $this->filterCampaign);
-                }
-                $campQuery->update([
-                    'status' => \App\Models\CampaignStudent::STATUS_SENT_FOR_PRINTING,
-                    'status_updated_at' => now(),
-                    'status_updated_by' => auth()->id(),
-                ]);
-            }
-
-            session()->flash('message', "Export completed successfully! Deducted {$neededCredits} credits from wallet. Click Download to save file.");
+            session()->flash('message', "🚀 Export task #{$export->id} queued successfully! Processing {$neededCredits} cards in background — you can track live progress below.");
         } catch (\Throwable $e) {
             $export->update(['status' => 'failed', 'error_message' => $e->getMessage()]);
             session()->flash('message', 'Export failed: ' . $e->getMessage());
@@ -3180,50 +3157,74 @@ new class extends Component
                             @endif
                         </div>
 
-                        <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
+                        <div class="space-y-3 max-h-72 overflow-y-auto pr-1">
                             @forelse ($userExports as $exp)
-                                <div class="p-3 bg-gray-50 dark:bg-gray-900/60 border border-gray-100 dark:border-gray-700/60 rounded-2xl flex items-center justify-between text-xs">
-                                    <div>
-                                        <span class="font-bold text-gray-800 dark:text-gray-200 uppercase text-[11px] block flex items-center gap-1.5">
-                                            {{ str_replace('_', ' ', $exp->type) }}
-                                            @if (is_array($exp->params) && !empty($exp->params['mirror_print']))
-                                                <span class="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 rounded text-[8px] font-bold">MIRRORED</span>
-                                            @endif
-                                        </span>
-                                        <span class="text-[10px] text-gray-500">
-                                            {{ $exp->created_at->format('M d, H:i') }} • {{ $exp->processed_items }}/{{ $exp->total_items ?? 0 }} items
-                                        </span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        @if ($exp->status === 'completed')
-                                            <span class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-lg text-[10px] font-bold">COMPLETED</span>
-                                            <a href="{{ route('exports.download', $exp) }}" target="_blank" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow transition">
-                                                Download
-                                            </a>
-                                        @elseif ($exp->status === 'processing')
-                                            <span class="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-lg text-[10px] font-bold flex items-center gap-1.5">
-                                                <svg class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                                PROCESSING
-                                            </span>
-                                        @elseif ($exp->status === 'failed')
-                                            <div class="text-right">
-                                                <span class="px-2.5 py-1 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-lg text-[10px] font-bold">FAILED</span>
-                                                @if ($exp->error_message)
-                                                    <span class="block text-[9px] text-rose-500 dark:text-rose-400 max-w-xs truncate mt-1" title="{{ $exp->error_message }}">
-                                                        {{ $exp->error_message }}
-                                                    </span>
+                                @php
+                                    $totalItems = max(1, (int)($exp->total_items ?? 1));
+                                    $processedItems = min($totalItems, (int)($exp->processed_items ?? 0));
+                                    $pct = $exp->status === 'completed' ? 100 : (int)round(($processedItems / $totalItems) * 100);
+                                @endphp
+                                <div class="p-4 bg-gray-50 dark:bg-gray-900/60 border border-gray-100 dark:border-gray-700/60 rounded-2xl text-xs space-y-2.5 transition">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <span class="font-black text-gray-800 dark:text-gray-200 uppercase text-[11px] flex items-center gap-1.5">
+                                                {{ str_replace('_', ' ', $exp->type) }}
+                                                @if (is_array($exp->params) && !empty($exp->params['mirror_print']))
+                                                    <span class="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 rounded text-[8px] font-bold">MIRRORED</span>
                                                 @endif
-                                            </div>
-                                        @else
-                                            <span class="px-2.5 py-1 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-lg text-[10px] font-bold">PENDING</span>
-                                        @endif
+                                            </span>
+                                            <span class="text-[10px] text-gray-400 mt-0.5 block">
+                                                {{ $exp->created_at->format('M d, Y • H:i') }} • Total {{ $exp->total_items ?? 0 }} cards
+                                            </span>
+                                        </div>
 
-                                        <button wire:click="deleteExport({{ $exp->id }})" wire:confirm="Delete this export file and record?" type="button" class="p-1.5 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition cursor-pointer" title="Delete export">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                            </svg>
-                                        </button>
+                                        <div class="flex items-center gap-2">
+                                            @if ($exp->status === 'completed')
+                                                <span class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-lg text-[10px] font-bold flex items-center gap-1">
+                                                    ✓ COMPLETED
+                                                </span>
+                                                <a href="{{ route('exports.download', $exp) }}" target="_blank" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1">
+                                                    <span>Download</span>
+                                                    <span>↓</span>
+                                                </a>
+                                            @elseif ($exp->status === 'processing')
+                                                <span class="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-lg text-[10px] font-bold flex items-center gap-1.5 animate-pulse">
+                                                    <svg class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                    PROCESSING ({{ $pct }}%)
+                                                </span>
+                                            @elseif ($exp->status === 'failed')
+                                                <span class="px-2.5 py-1 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-lg text-[10px] font-bold">
+                                                    FAILED
+                                                </span>
+                                            @else
+                                                <span class="px-2.5 py-1 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-lg text-[10px] font-bold flex items-center gap-1">
+                                                    QUEUED IN BACKGROUND
+                                                </span>
+                                            @endif
+
+                                            <button wire:click="deleteExport({{ $exp->id }})" wire:confirm="Delete this export file and record?" type="button" class="p-1.5 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition cursor-pointer" title="Delete export">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </div>
+
+                                    @if ($exp->status === 'processing' || $exp->status === 'pending')
+                                        <div class="space-y-1">
+                                            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                                                <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 h-2 rounded-full transition-all duration-500" style="width: {{ max(5, $pct) }}%"></div>
+                                            </div>
+                                            <div class="flex justify-between items-center text-[10px] text-gray-500 dark:text-gray-400">
+                                                <span>{{ $exp->status === 'pending' ? 'Queued in background pipeline...' : 'Rendering high-resolution print cards...' }}</span>
+                                                <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">{{ $processedItems }} / {{ $exp->total_items ?? 0 }} cards ({{ $pct }}%)</span>
+                                            </div>
+                                        </div>
+                                    @elseif ($exp->status === 'failed' && $exp->error_message)
+                                        <div class="p-2 bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/40 rounded-xl text-[10px] text-rose-600 dark:text-rose-400">
+                                            ⚠️ {{ $exp->error_message }}
+                                        </div>
+                                    @endif
                                 </div>
                             @empty
                                 <div class="text-center py-4 text-xs text-gray-400">

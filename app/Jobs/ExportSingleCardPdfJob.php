@@ -44,49 +44,43 @@ class ExportSingleCardPdfJob implements ShouldQueue
             $cardWidthMm = $isPortrait ? 54.0 : 85.6;
             $cardHeightMm = $isPortrait ? 85.6 : 54.0;
 
-            $items = [];
-            $itemIndex = 0;
-            foreach ($studentIds as $studentId) {
-                $student = Student::find($studentId);
-                if (!$student) continue;
-
-                $enrollment = CampaignStudent::where('student_id', $studentId)
-                    ->when($campaignId, fn($q) => $q->where('campaign_id', $campaignId))
-                    ->with(['grade', 'division', 'verifier', 'campaign'])
-                    ->first();
-
-                if ($enrollment) {
-                    $student->setRelation('campaignStudents', collect([$enrollment]));
-                }
-
-                $template = $templateResolver->getEffectiveTemplate($export->school_id, $enrollment?->grade_id);
-
-                $items[] = [
-                    'student' => $student,
-                    'template' => $template,
-                    'school' => $export->school,
-                ];
-
-                $itemIndex++;
-                if (($itemIndex % 5) === 0 || $itemIndex === count($studentIds)) {
-                    $export->update(['processed_items' => $itemIndex]);
-                }
-            }
-
             $isMirrored = (bool) ($export->params['mirror_print'] ?? false);
-
-            $itemChunks = array_chunk($items, 30);
+            $studentIdChunks = array_chunk($studentIds, 30);
             $chunkPdfPaths = [];
             $tempDir = storage_path('app/temp');
             if (!file_exists($tempDir)) {
                 @mkdir($tempDir, 0777, true);
             }
 
-            foreach ($itemChunks as $chunkIdx => $itemChunk) {
+            $processedCount = 0;
+            foreach ($studentIdChunks as $chunkIdx => $chunkIds) {
+                $chunkItems = [];
+                foreach ($chunkIds as $studentId) {
+                    $student = Student::find($studentId);
+                    if (!$student) continue;
+
+                    $enrollment = CampaignStudent::where('student_id', $studentId)
+                        ->when($campaignId, fn($q) => $q->where('campaign_id', $campaignId))
+                        ->with(['grade', 'division', 'verifier', 'campaign'])
+                        ->first();
+
+                    if ($enrollment) {
+                        $student->setRelation('campaignStudents', collect([$enrollment]));
+                    }
+
+                    $template = $templateResolver->getEffectiveTemplate($export->school_id, $enrollment?->grade_id);
+
+                    $chunkItems[] = [
+                        'student' => $student,
+                        'template' => $template,
+                        'school' => $export->school,
+                    ];
+                }
+
                 $html = view('exports.single-card-pdf', [
                     'cardWidthMm' => $cardWidthMm,
                     'cardHeightMm' => $cardHeightMm,
-                    'items' => $itemChunk,
+                    'items' => $chunkItems,
                     'isMirrored' => $isMirrored,
                 ])->render();
 
@@ -95,7 +89,11 @@ class ExportSingleCardPdfJob implements ShouldQueue
                 file_put_contents($chunkPath, $chunkPdf);
                 $chunkPdfPaths[] = $chunkPath;
 
-                unset($html, $chunkPdf);
+                $processedCount += count($chunkIds);
+                $export->update(['processed_items' => $processedCount]);
+
+                unset($chunkItems, $html, $chunkPdf);
+                gc_collect_cycles();
             }
 
             $pdfRelativePath = 'exports/' . $export->id . '/single_cards_printer.pdf';
@@ -119,13 +117,41 @@ class ExportSingleCardPdfJob implements ShouldQueue
                 'status' => 'completed',
                 'file_path' => $pdfRelativePath,
                 'completed_at' => now(),
+                'processed_items' => count($studentIds),
             ]);
+
+            // Deduct credits from school wallet upon successful completion
+            $school = $export->school;
+            $neededCredits = count($studentIds);
+            if ($school && $neededCredits > 0) {
+                $school->deductCredits(
+                    $neededCredits,
+                    "Export: " . str_replace('_', ' ', strtoupper($export->type)) . " — {$neededCredits} student cards (Export #{$export->id})",
+                    $export,
+                    $export->user
+                );
+            }
+
+            // Mark exported students as Sent for Printing if requested
+            if (!empty($export->params['send_for_printing']) && !empty($studentIds)) {
+                $campQuery = CampaignStudent::whereIn('student_id', $studentIds);
+                if (!empty($export->params['campaign_id'])) {
+                    $campQuery->where('campaign_id', $export->params['campaign_id']);
+                }
+                $campQuery->update([
+                    'status' => CampaignStudent::STATUS_SENT_FOR_PRINTING,
+                    'status_updated_at' => now(),
+                    'status_updated_by' => $export->user_id,
+                ]);
+            }
         } catch (\Throwable $e) {
             $export->update([
                 'status' => 'failed',
                 'error_message' => $e->getMessage(),
             ]);
             throw $e;
+        } finally {
+            gc_collect_cycles();
         }
     }
 }
