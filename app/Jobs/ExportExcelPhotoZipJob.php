@@ -38,18 +38,28 @@ class ExportExcelPhotoZipJob implements ShouldQueue
                 @mkdir($tmpDir . '/photos', 0777, true);
             }
 
+            $studentsById = Student::whereIn('id', $studentIds)
+                ->with(['campaignStudents' => function($q) use ($campaignId) {
+                    $q->when($campaignId, fn($sq) => $sq->where('campaign_id', $campaignId))
+                      ->with(['grade', 'division', 'verifier', 'campaign']);
+                }])
+                ->get()
+                ->keyBy('id');
+
             $exportRows = [];
             $schoolCode = preg_replace('/[^A-Za-z0-9_-]/', '', $export->school->school_code ?? $export->school->name ?? 'SCHOOL');
 
-
             foreach ($studentIds as $i => $studentId) {
-                $student = Student::find($studentId);
+                // Abort immediately if the user deleted this export from the UI
+                if (!Export::where('id', $this->exportId)->exists()) {
+                    @unlink($tmpDir);
+                    return;
+                }
+
+                $student = $studentsById->get($studentId);
                 if (!$student) continue;
 
-                $enrollment = CampaignStudent::where('student_id', $studentId)
-                    ->when($campaignId, fn($q) => $q->where('campaign_id', $campaignId))
-                    ->with(['grade', 'division', 'verifier', 'campaign'])
-                    ->first();
+                $enrollment = $student->campaignStudents->first();
 
                 $exportRows[] = [
                     'student' => $student,

@@ -62,6 +62,12 @@ class ExportSingleCardPdfJob implements ShouldQueue
 
             $processedCount = 0;
             foreach ($studentIdChunks as $chunkIdx => $chunkIds) {
+                // Abort immediately if the user deleted this export from the UI
+                if (!Export::where('id', $this->exportId)->exists()) {
+                    foreach ($chunkPdfPaths as $cp) { @unlink($cp); }
+                    return;
+                }
+
                 $chunkItems = [];
                 foreach ($chunkIds as $studentId) {
                     $student = $studentsById->get($studentId);

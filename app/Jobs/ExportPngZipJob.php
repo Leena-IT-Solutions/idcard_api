@@ -52,6 +52,12 @@ class ExportPngZipJob implements ShouldQueue
             $schoolCode = preg_replace('/[^A-Za-z0-9_-]/', '', $export->school->school_code ?? $export->school->name ?? 'SCHOOL');
 
             foreach ($studentIds as $i => $studentId) {
+                // Abort immediately if the user deleted this export from the UI
+                if (!Export::where('id', $this->exportId)->exists()) {
+                    @unlink($tmpDir);
+                    return;
+                }
+
                 $student = $studentsById->get($studentId);
                 if (!$student) continue;
 

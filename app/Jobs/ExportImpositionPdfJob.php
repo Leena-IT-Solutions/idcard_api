@@ -109,6 +109,12 @@ class ExportImpositionPdfJob implements ShouldQueue
 
             $renderedCardsCount = 0;
             foreach ($pageChunks as $chunkIdx => $pageChunk) {
+                // Abort immediately if the user deleted this export from the UI
+                if (!Export::where('id', $this->exportId)->exists()) {
+                    foreach ($chunkPdfPaths as $cp) { @unlink($cp); }
+                    return;
+                }
+
                 $html = view('exports.imposition-sheet', [
                     'layout' => $layout,
                     'pages' => $pageChunk,
