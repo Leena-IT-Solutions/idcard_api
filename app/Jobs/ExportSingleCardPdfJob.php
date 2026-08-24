@@ -44,8 +44,16 @@ class ExportSingleCardPdfJob implements ShouldQueue
             $cardWidthMm = $isPortrait ? 54.0 : 85.6;
             $cardHeightMm = $isPortrait ? 85.6 : 54.0;
 
+            $studentsById = Student::whereIn('id', $studentIds)
+                ->with(['campaignStudents' => function($q) use ($campaignId) {
+                    $q->when($campaignId, fn($sq) => $sq->where('campaign_id', $campaignId))
+                      ->with(['grade', 'division', 'verifier', 'campaign']);
+                }])
+                ->get()
+                ->keyBy('id');
+
             $isMirrored = (bool) ($export->params['mirror_print'] ?? false);
-            $studentIdChunks = array_chunk($studentIds, 30);
+            $studentIdChunks = array_chunk($studentIds, 60);
             $chunkPdfPaths = [];
             $tempDir = storage_path('app/temp');
             if (!file_exists($tempDir)) {
@@ -56,18 +64,10 @@ class ExportSingleCardPdfJob implements ShouldQueue
             foreach ($studentIdChunks as $chunkIdx => $chunkIds) {
                 $chunkItems = [];
                 foreach ($chunkIds as $studentId) {
-                    $student = Student::find($studentId);
+                    $student = $studentsById->get($studentId);
                     if (!$student) continue;
 
-                    $enrollment = CampaignStudent::where('student_id', $studentId)
-                        ->when($campaignId, fn($q) => $q->where('campaign_id', $campaignId))
-                        ->with(['grade', 'division', 'verifier', 'campaign'])
-                        ->first();
-
-                    if ($enrollment) {
-                        $student->setRelation('campaignStudents', collect([$enrollment]));
-                    }
-
+                    $enrollment = $student->campaignStudents->first();
                     $template = $templateResolver->getEffectiveTemplate($export->school_id, $enrollment?->grade_id);
 
                     $chunkItems[] = [

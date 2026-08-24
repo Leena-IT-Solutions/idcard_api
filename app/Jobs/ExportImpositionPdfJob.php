@@ -37,8 +37,17 @@ class ExportImpositionPdfJob implements ShouldQueue
             $export->update(['total_items' => count($studentIds)]);
 
             // Get first student template to establish card orientation / size in layout calculation
-            $firstStudent = !empty($studentIds) ? Student::find($studentIds[0]) : null;
-            $firstEnrollment = $firstStudent ? CampaignStudent::where('student_id', $firstStudent->id)->first() : null;
+            // Eager-load all students and their enrollments in 1 bulk query
+            $studentsById = Student::whereIn('id', $studentIds)
+                ->with(['campaignStudents' => function($q) use ($campaignId) {
+                    $q->when($campaignId, fn($sq) => $sq->where('campaign_id', $campaignId))
+                      ->with(['grade', 'division', 'verifier', 'campaign']);
+                }])
+                ->get()
+                ->keyBy('id');
+
+            $firstStudent = $studentsById->first();
+            $firstEnrollment = $firstStudent?->campaignStudents?->first();
             $sampleTemplate = $templateResolver->getEffectiveTemplate($export->school_id, $firstEnrollment?->grade_id);
 
             $orientation = $sampleTemplate->orientation ?? 'landscape';
@@ -58,18 +67,10 @@ class ExportImpositionPdfJob implements ShouldQueue
 
             $itemIndex = 0;
             foreach ($studentIds as $studentId) {
-                $student = Student::find($studentId);
+                $student = $studentsById->get($studentId);
                 if (!$student) continue;
 
-                $enrollment = CampaignStudent::where('student_id', $studentId)
-                    ->when($campaignId, fn($q) => $q->where('campaign_id', $campaignId))
-                    ->with(['grade', 'division', 'verifier', 'campaign'])
-                    ->first();
-
-                if ($enrollment) {
-                    $student->setRelation('campaignStudents', collect([$enrollment]));
-                }
-
+                $enrollment = $student->campaignStudents->first();
                 $template = $templateResolver->getEffectiveTemplate($export->school_id, $enrollment?->grade_id);
 
                 $cardIndexInPage = count($currentPageCards);
@@ -98,7 +99,7 @@ class ExportImpositionPdfJob implements ShouldQueue
             }
 
             $totalPagesCount = count($pages);
-            $pagesPerBatch = 2; // 2 imposition pages per batch for fast sub-3s Chrome render speed and low memory footprint
+            $pagesPerBatch = 8; // 8 imposition pages per batch for maximum render throughput and minimal process overhead
             $pageChunks = array_chunk($pages, $pagesPerBatch);
             $chunkPdfPaths = [];
             $tempDir = storage_path('app/temp');
