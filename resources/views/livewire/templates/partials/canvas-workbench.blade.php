@@ -102,17 +102,12 @@
                     <img src="{{ $bgUrl }}" class="absolute inset-0 w-full h-full object-fill pointer-events-none z-0" alt="Background Graphic" />
                 @endif
 
-                <!-- Center Snap Line (Visual Indicator when Selected) -->
-                @if($selectedLayerIndex !== null)
-                    <div class="absolute top-0 bottom-0 left-1/2 w-[1px] bg-indigo-500/40 pointer-events-none border-r border-dashed border-indigo-400"></div>
-                @endif
-
-                <!-- Dynamic Snapping Alignment Guide Lines -->
+                <!-- Dynamic Snapping Alignment Guide Lines (Canva / Figma Smart Guides) -->
                 <template x-if="snapLines.x !== null">
-                    <div class="absolute top-0 bottom-0 pointer-events-none z-40 border-r border-dashed border-indigo-400" :style="'left: ' + snapLines.x + 'px; width: 1px;'"></div>
+                    <div class="absolute top-0 bottom-0 pointer-events-none z-50 border-r-2 border-dashed border-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]" :style="'left: ' + snapLines.x + 'px; width: 0px;'"></div>
                 </template>
                 <template x-if="snapLines.y !== null">
-                    <div class="absolute left-0 right-0 pointer-events-none z-40 border-b border-dashed border-indigo-400" :style="'top: ' + snapLines.y + 'px; height: 1px;'"></div>
+                    <div class="absolute left-0 right-0 pointer-events-none z-50 border-b-2 border-dashed border-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]" :style="'top: ' + snapLines.y + 'px; height: 0px;'"></div>
                 </template>
 
                 <!-- Render Interactive Canvas Layers -->

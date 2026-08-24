@@ -1164,25 +1164,106 @@ new class extends Component {
                             let targetY = Math.round(this.origY + dy);
 
                             if (this.$wire.enableSnapping) {
-                                const snapThreshold = 6;
-                                this.snapLines = { x: null, y: null };
+                                const snapThreshold = 8;
+                                let snappedX = null;
+                                let snappedY = null;
 
-                                const canvasCenterX = canvasW / 2;
-                                const canvasCenterY = canvasH / 2;
+                                const layerW = parseFloat(this.curW) || 150;
+                                const layerH = parseFloat(this.curH) || 30;
 
-                                const layerW = this.curW || 150;
-                                const layerH = this.curH || 30;
+                                const layerLeft = targetX;
                                 const layerCenterX = targetX + layerW / 2;
-                                const layerCenterY = targetY + layerH / 2;
+                                const layerRight = targetX + layerW;
 
-                                if (Math.abs(layerCenterX - canvasCenterX) < snapThreshold) {
-                                    targetX = Math.round(canvasCenterX - layerW / 2);
-                                    this.snapLines.x = canvasCenterX;
+                                const layerTop = targetY;
+                                const layerCenterY = targetY + layerH / 2;
+                                const layerBottom = targetY + layerH;
+
+                                // X-axis snap targets: Canvas center, margins & other layers
+                                const snapTargetsX = [
+                                    { target: 0, align: 'left', snapLine: 0 },
+                                    { target: 20, align: 'left', snapLine: 20 },
+                                    { target: canvasW / 2, align: 'center', snapLine: canvasW / 2 },
+                                    { target: canvasW - 20, align: 'right', snapLine: canvasW - 20 },
+                                    { target: canvasW, align: 'right', snapLine: canvasW },
+                                ];
+
+                                if (this.otherLayerBounds && this.otherLayerBounds.length) {
+                                    for (const b of this.otherLayerBounds) {
+                                        snapTargetsX.push({ target: b.left, align: 'left', snapLine: b.left });
+                                        snapTargetsX.push({ target: b.centerX, align: 'center', snapLine: b.centerX });
+                                        snapTargetsX.push({ target: b.right, align: 'right', snapLine: b.right });
+                                        snapTargetsX.push({ target: b.right, align: 'left', snapLine: b.right });
+                                        snapTargetsX.push({ target: b.left, align: 'right', snapLine: b.left });
+                                    }
                                 }
-                                if (Math.abs(layerCenterY - canvasCenterY) < snapThreshold) {
-                                    targetY = Math.round(canvasCenterY - layerH / 2);
-                                    this.snapLines.y = canvasCenterY;
+
+                                // Y-axis snap targets: Canvas center, margins & other layers
+                                const snapTargetsY = [
+                                    { target: 0, align: 'top', snapLine: 0 },
+                                    { target: 20, align: 'top', snapLine: 20 },
+                                    { target: canvasH / 2, align: 'center', snapLine: canvasH / 2 },
+                                    { target: canvasH - 20, align: 'bottom', snapLine: canvasH - 20 },
+                                    { target: canvasH, align: 'bottom', snapLine: canvasH },
+                                ];
+
+                                if (this.otherLayerBounds && this.otherLayerBounds.length) {
+                                    for (const b of this.otherLayerBounds) {
+                                        snapTargetsY.push({ target: b.top, align: 'top', snapLine: b.top });
+                                        snapTargetsY.push({ target: b.centerY, align: 'center', snapLine: b.centerY });
+                                        snapTargetsY.push({ target: b.bottom, align: 'bottom', snapLine: b.bottom });
+                                        snapTargetsY.push({ target: b.bottom, align: 'top', snapLine: b.bottom });
+                                        snapTargetsY.push({ target: b.top, align: 'bottom', snapLine: b.top });
+                                    }
                                 }
+
+                                // Check horizontal snap
+                                let minDiffX = snapThreshold;
+                                for (const sp of snapTargetsX) {
+                                    let diff = 0;
+                                    let candidateX = targetX;
+                                    if (sp.align === 'left') {
+                                        diff = Math.abs(layerLeft - sp.target);
+                                        candidateX = sp.target;
+                                    } else if (sp.align === 'center') {
+                                        diff = Math.abs(layerCenterX - sp.target);
+                                        candidateX = Math.round(sp.target - layerW / 2);
+                                    } else if (sp.align === 'right') {
+                                        diff = Math.abs(layerRight - sp.target);
+                                        candidateX = Math.round(sp.target - layerW);
+                                    }
+
+                                    if (diff < minDiffX) {
+                                        minDiffX = diff;
+                                        targetX = candidateX;
+                                        snappedX = sp.snapLine;
+                                    }
+                                }
+
+                                // Check vertical snap
+                                let minDiffY = snapThreshold;
+                                for (const sp of snapTargetsY) {
+                                    let diff = 0;
+                                    let candidateY = targetY;
+                                    if (sp.align === 'top') {
+                                        diff = Math.abs(layerTop - sp.target);
+                                        candidateY = sp.target;
+                                    } else if (sp.align === 'center') {
+                                        diff = Math.abs(layerCenterY - sp.target);
+                                        candidateY = Math.round(sp.target - layerH / 2);
+                                    } else if (sp.align === 'bottom') {
+                                        diff = Math.abs(layerBottom - sp.target);
+                                        candidateY = Math.round(sp.target - layerH);
+                                    }
+
+                                    if (diff < minDiffY) {
+                                        minDiffY = diff;
+                                        targetY = candidateY;
+                                        snappedY = sp.snapLine;
+                                    }
+                                }
+
+                                this.snapLines = { x: snappedX, y: snappedY };
                             } else {
                                 this.snapLines = { x: null, y: null };
                             }
@@ -1327,13 +1408,37 @@ new class extends Component {
                 this.hasMoved = false;
 
                 const layer = (this.$wire.layers && this.$wire.layers[idx]) ? this.$wire.layers[idx] : {};
-                this.origX = (el.style.left !== '') ? parseInt(el.style.left) : (layer.x ?? 0);
-                this.origY = (el.style.top !== '') ? parseInt(el.style.top) : (layer.y ?? 0);
+                this.origX = (el.style.left !== '') ? parseInt(el.style.left) : (parseInt(layer.x) || 0);
+                this.origY = (el.style.top !== '') ? parseInt(el.style.top) : (parseInt(layer.y) || 0);
                 this.curX = this.origX;
                 this.curY = this.origY;
-                this.curW = layer.width || el.offsetWidth || 150;
-                this.curH = layer.height || el.offsetHeight || 30;
+
+                const parsedW = parseFloat(layer.width);
+                const parsedH = parseFloat(layer.height);
+                this.curW = (!isNaN(parsedW) && parsedW > 0) ? parsedW : (el.offsetWidth || 150);
+                this.curH = (!isNaN(parsedH) && parsedH > 0) ? parsedH : (el.offsetHeight || 30);
                 this.curFontSize = layer.font_size || 14;
+
+                // Cache other layer bounds for smart alignment snapping
+                this.otherLayerBounds = [];
+                const allBoxes = document.querySelectorAll('[data-layer-box]');
+                allBoxes.forEach(box => {
+                    const boxIdx = parseInt(box.getAttribute('data-layer-index'));
+                    if (boxIdx !== idx) {
+                        const bx = parseInt(box.style.left) || 0;
+                        const by = parseInt(box.style.top) || 0;
+                        const bw = box.offsetWidth || 150;
+                        const bh = box.offsetHeight || 30;
+                        this.otherLayerBounds.push({
+                            left: bx,
+                            centerX: bx + bw / 2,
+                            right: bx + bw,
+                            top: by,
+                            centerY: by + bh / 2,
+                            bottom: by + bh,
+                        });
+                    }
+                });
             },
             startResize(idx, handle, e) {
                 if (this.activeTool === 'pan' || this.isSpacePressed) return;
@@ -1349,10 +1454,14 @@ new class extends Component {
                 this.hasMoved = false;
 
                 const layer = (this.$wire.layers && this.$wire.layers[idx]) ? this.$wire.layers[idx] : {};
-                this.origX = (el.style.left !== '') ? parseInt(el.style.left) : (layer.x ?? 0);
-                this.origY = (el.style.top !== '') ? parseInt(el.style.top) : (layer.y ?? 0);
-                this.origW = layer.width || el.offsetWidth || 150;
-                this.origH = layer.height || el.offsetHeight || 30;
+                this.origX = (el.style.left !== '') ? parseInt(el.style.left) : (parseInt(layer.x) || 0);
+                this.origY = (el.style.top !== '') ? parseInt(el.style.top) : (parseInt(layer.y) || 0);
+                
+                const parsedW = parseFloat(layer.width);
+                const parsedH = parseFloat(layer.height);
+                this.origW = (!isNaN(parsedW) && parsedW > 0) ? parsedW : (el.offsetWidth || 150);
+                this.origH = (!isNaN(parsedH) && parsedH > 0) ? parsedH : (el.offsetHeight || 30);
+
                 this.curX = this.origX;
                 this.curY = this.origY;
                 this.curW = this.origW;
