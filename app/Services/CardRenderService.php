@@ -94,23 +94,20 @@ class CardRenderService
         }
         putenv("PUPPETEER_CACHE_DIR={$cacheDir}");
 
-        // --- Chrome user data dir (writable by www-data) ---
-        $chromeDataDir = storage_path('app/chrome-data');
-        if (!file_exists($chromeDataDir)) {
-            @mkdir($chromeDataDir, 0755, true);
+        // --- Base profiles and crash dir (writable by www-data) ---
+        $baseProfileDir = storage_path('app/chrome-profiles');
+        if (!file_exists($baseProfileDir)) {
+            @mkdir($baseProfileDir, 0777, true);
         }
         $crashDumpsDir = storage_path('app/chrome-crashes');
         if (!file_exists($crashDumpsDir)) {
-            @mkdir($crashDumpsDir, 0755, true);
+            @mkdir($crashDumpsDir, 0777, true);
         }
 
         // --- Set HOME to writable dir for www-data (Chrome needs this) ---
-        $home = getenv('HOME');
-        if (!$home || !is_writable($home)) {
-            putenv("HOME={$chromeDataDir}");
-        }
-        putenv("XDG_CONFIG_HOME={$chromeDataDir}");
-        putenv("XDG_CACHE_HOME={$chromeDataDir}");
+        putenv("HOME={$baseProfileDir}");
+        putenv("XDG_CONFIG_HOME={$baseProfileDir}");
+        putenv("XDG_CACHE_HOME={$baseProfileDir}");
 
         // --- Chrome args ---
         $browsershot->setOption('args', [
@@ -122,7 +119,6 @@ class CardRenderService
             '--disable-dev-shm-usage',
             '--disable-gpu',
             '--js-flags=--max-old-space-size=4096',
-            '--user-data-dir=' . $chromeDataDir,
             '--crash-dumps-dir=' . $crashDumpsDir,
             '--disable-crash-reporter',
             '--disable-breakpad',
