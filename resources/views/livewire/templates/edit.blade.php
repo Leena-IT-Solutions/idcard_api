@@ -867,6 +867,18 @@ new class extends Component {
         }
     }
 
+    public function batchUpdateLayerCoordinates(array $updates)
+    {
+        $this->recordHistory();
+        foreach ($updates as $up) {
+            $idx = (int)($up['index'] ?? -1);
+            if ($idx >= 0 && isset($this->layers[$idx])) {
+                $this->layers[$idx]['x'] = max(0, (int)round((float)($up['x'] ?? 0)));
+                $this->layers[$idx]['y'] = max(0, (int)round((float)($up['y'] ?? 0)));
+            }
+        }
+    }
+
     public function updateLayerDimensions($index, $width = null, $height = null, $fontSize = null, $x = null, $y = null)
     {
         $this->recordHistory();
@@ -1064,6 +1076,50 @@ new class extends Component {
             boxStartY: 0,
             boxRect: { left: 0, top: 0, width: 0, height: 0 },
             snapLines: { x: null, y: null },
+            nudgeTimeout: null,
+            nudgeLayers(dx, dy) {
+                let indices = [];
+                if (this.selectedIndices && this.selectedIndices.length > 0) {
+                    indices = [...this.selectedIndices];
+                } else if (this.$wire.selectedLayerIndices && this.$wire.selectedLayerIndices.length > 0) {
+                    indices = [...this.$wire.selectedLayerIndices];
+                } else if (this.$wire.selectedLayerIndex !== null && this.$wire.selectedLayerIndex !== undefined) {
+                    indices = [this.$wire.selectedLayerIndex];
+                }
+
+                if (indices.length === 0) return;
+
+                const updates = [];
+                indices.forEach(idx => {
+                    const el = document.querySelector('[data-layer-index="' + idx + '"]');
+                    const layer = (this.$wire.layers && this.$wire.layers[idx]) ? this.$wire.layers[idx] : {};
+                    let curX = (el && el.style.left !== '') ? parseInt(el.style.left) : (parseInt(layer.x) || 0);
+                    let curY = (el && el.style.top !== '') ? parseInt(el.style.top) : (parseInt(layer.y) || 0);
+
+                    let newX = Math.max(0, curX + dx);
+                    let newY = Math.max(0, curY + dy);
+
+                    if (el) {
+                        el.style.left = newX + 'px';
+                        el.style.top = newY + 'px';
+                    }
+                    if (layer) {
+                        layer.x = newX;
+                        layer.y = newY;
+                    }
+
+                    updates.push({ index: idx, x: newX, y: newY });
+                });
+
+                clearTimeout(this.nudgeTimeout);
+                this.nudgeTimeout = setTimeout(() => {
+                    if (updates.length === 1) {
+                        this.$wire.updateLayerCoordinates(updates[0].index, updates[0].x, updates[0].y);
+                    } else if (updates.length > 1) {
+                        this.$wire.batchUpdateLayerCoordinates(updates);
+                    }
+                }, 150);
+            },
             setZoom(val) {
                 this.zoomLevel = val;
                 try {
@@ -1127,20 +1183,49 @@ new class extends Component {
                 } catch(e) {}
 
                 window.addEventListener('keydown', (e) => {
-                    if (e.code === 'Space' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+                    const activeEl = document.activeElement;
+                    const isEditing = activeEl && (['INPUT', 'TEXTAREA', 'SELECT'].includes(activeEl.tagName) || activeEl.isContentEditable);
+
+                    if (e.code === 'Space' && !isEditing) {
                         this.isSpacePressed = true;
                     }
-                    if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !isEditing) {
                         e.preventDefault();
                         this.$wire.undo();
                     }
-                    if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'y' && !isEditing) {
                         e.preventDefault();
                         this.$wire.redo();
                     }
                     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
                         e.preventDefault();
                         this.$wire.saveStudioDesign();
+                    }
+
+                    // Arrow Key Movement (Nudge 1px or Shift+Arrow 10px)
+                    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && !isEditing) {
+                        e.preventDefault();
+                        const step = e.shiftKey ? 10 : 1;
+                        let dx = 0;
+                        let dy = 0;
+                        if (e.key === 'ArrowLeft') dx = -step;
+                        if (e.key === 'ArrowRight') dx = step;
+                        if (e.key === 'ArrowUp') dy = -step;
+                        if (e.key === 'ArrowDown') dy = step;
+
+                        this.nudgeLayers(dx, dy);
+                    }
+
+                    // Delete / Backspace to remove selected layer(s)
+                    if ((e.key === 'Delete' || e.key === 'Backspace') && !isEditing) {
+                        let hasSelected = (this.selectedIndices && this.selectedIndices.length > 0) || 
+                                          (this.$wire.selectedLayerIndices && this.$wire.selectedLayerIndices.length > 0) || 
+                                          (this.$wire.selectedLayerIndex !== null);
+                        if (hasSelected) {
+                            e.preventDefault();
+                            this.selectLayer(null);
+                            this.$wire.removeLayer(-1);
+                        }
                     }
                 });
                 window.addEventListener('keyup', (e) => {
