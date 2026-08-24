@@ -86,9 +86,6 @@ class ExportImpositionPdfJob implements ShouldQueue
                 ];
 
                 $itemIndex++;
-                if (($itemIndex % 5) === 0 || $itemIndex === count($studentIds)) {
-                    $export->update(['processed_items' => $itemIndex]);
-                }
 
                 if (count($currentPageCards) >= $cardsPerPage) {
                     $pages[] = $currentPageCards;
@@ -109,6 +106,7 @@ class ExportImpositionPdfJob implements ShouldQueue
                 @mkdir($tempDir, 0777, true);
             }
 
+            $renderedCardsCount = 0;
             foreach ($pageChunks as $chunkIdx => $pageChunk) {
                 $html = view('exports.imposition-sheet', [
                     'layout' => $layout,
@@ -121,7 +119,12 @@ class ExportImpositionPdfJob implements ShouldQueue
                 file_put_contents($chunkPath, $chunkPdf);
                 $chunkPdfPaths[] = $chunkPath;
 
+                $chunkCardsCount = array_reduce($pageChunk, fn($carry, $page) => $carry + count($page), 0);
+                $renderedCardsCount += $chunkCardsCount;
+                $export->update(['processed_items' => min($renderedCardsCount, count($studentIds))]);
+
                 unset($html, $chunkPdf);
+                gc_collect_cycles();
             }
 
             $pdfRelativePath = 'exports/' . $export->id . '/imposition_print.pdf';
