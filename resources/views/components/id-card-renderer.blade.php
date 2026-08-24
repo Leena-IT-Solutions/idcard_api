@@ -166,6 +166,13 @@
             $cleanPath = substr($cleanPath, 8);
         }
         if ($forExport) {
+            if (!isset($GLOBALS['_idCardBase64Cache'])) {
+                $GLOBALS['_idCardBase64Cache'] = [];
+            }
+            if (isset($GLOBALS['_idCardBase64Cache'][$cleanPath])) {
+                return $GLOBALS['_idCardBase64Cache'][$cleanPath];
+            }
+
             $localPath = storage_path('app/public/' . $cleanPath);
             if (!file_exists($localPath)) {
                 $localPath = public_path('storage/' . $cleanPath);
@@ -174,7 +181,17 @@
                 $localPath = public_path($cleanPath);
             }
             if (file_exists($localPath)) {
-                return 'file://' . realpath($localPath);
+                $ext = strtolower(pathinfo($localPath, PATHINFO_EXTENSION));
+                $mime = match($ext) {
+                    'png' => 'image/png',
+                    'svg' => 'image/svg+xml',
+                    'gif' => 'image/gif',
+                    'webp' => 'image/webp',
+                    default => 'image/jpeg',
+                };
+                $encoded = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($localPath));
+                $GLOBALS['_idCardBase64Cache'][$cleanPath] = $encoded;
+                return $encoded;
             }
         }
         if (file_exists(public_path($cleanPath))) {
