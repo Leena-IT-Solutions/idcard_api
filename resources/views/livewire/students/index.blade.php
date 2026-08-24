@@ -24,6 +24,7 @@ new class extends Component
     public $filterGrade = '';
     public $filterDivision = '';
     public $filterStatus = '';
+    public string $filterPhoto = ''; // '', 'missing', 'uploaded'
 
     // Bulk selection & modal state
     public array $selectedStudentIds = [];
@@ -45,6 +46,7 @@ new class extends Component
         $this->filterGrade = session('students_filter_grade', '');
         $this->filterDivision = session('students_filter_division', '');
         $this->filterStatus = session('students_filter_status', '');
+        $this->filterPhoto = session('students_filter_photo', '');
         $this->viewMode = session('students_view_mode', 'auto');
     }
 
@@ -175,6 +177,14 @@ new class extends Component
                           ->orWhere('serial_number', 'like', $s);
                   });
             });
+        }
+
+        if ($this->filterPhoto === 'missing') {
+            $query->where(function($q) {
+                $q->whereNull('photo_path')->orWhere('photo_path', '');
+            });
+        } elseif ($this->filterPhoto === 'uploaded') {
+            $query->whereNotNull('photo_path')->where('photo_path', '!=', '');
         }
 
         if (!empty($this->selectedStudentIds)) {
@@ -393,6 +403,12 @@ new class extends Component
     {
         $this->perPage = 12;
         session(['students_filter_status' => $this->filterStatus]);
+    }
+
+    public function updatedFilterPhoto()
+    {
+        $this->perPage = 12;
+        session(['students_filter_photo' => $this->filterPhoto]);
     }
 
     public function updatedViewMode()
@@ -645,6 +661,14 @@ new class extends Component
             });
         }
 
+        if ($this->filterPhoto === 'missing') {
+            $query->where(function($q) {
+                $q->whereNull('photo_path')->orWhere('photo_path', '');
+            });
+        } elseif ($this->filterPhoto === 'uploaded') {
+            $query->whereNotNull('photo_path')->where('photo_path', '!=', '');
+        }
+
         if (!empty(trim($this->search))) {
             $s = '%' . trim($this->search) . '%';
             $query->where(function($q) use ($s) {
@@ -739,6 +763,12 @@ new class extends Component
             'distributed' => (int)($rawStatusCounts['distributed'] ?? 0),
         ];
 
+        $photoMissingCount = (clone $buildBaseQuery())
+            ->where(function($q) {
+                $q->whereNull('photo_path')->orWhere('photo_path', '');
+            })
+            ->count();
+
         $filteredQuery = $buildBaseQuery();
 
         if ($this->filterCampaign) {
@@ -765,6 +795,14 @@ new class extends Component
             });
         }
 
+        if ($this->filterPhoto === 'missing') {
+            $filteredQuery->where(function($q) {
+                $q->whereNull('photo_path')->orWhere('photo_path', '');
+            });
+        } elseif ($this->filterPhoto === 'uploaded') {
+            $filteredQuery->whereNotNull('photo_path')->where('photo_path', '!=', '');
+        }
+
         if (!empty(trim($this->search))) {
             $s = '%' . trim($this->search) . '%';
             $filteredQuery->where(function($q) use ($s) {
@@ -784,13 +822,14 @@ new class extends Component
         }
 
         $filteredCount = $filteredQuery->count();
-        $isFiltered = !empty($this->filterCampaign) || !empty($this->filterGrade) || !empty($this->filterDivision) || !empty($this->filterStatus) || !empty(trim($this->search));
+        $isFiltered = !empty($this->filterCampaign) || !empty($this->filterGrade) || !empty($this->filterDivision) || !empty($this->filterStatus) || !empty($this->filterPhoto) || !empty(trim($this->search));
 
         return [
             'total' => $totalCount,
             'filtered' => $filteredCount,
             'is_filtered' => $isFiltered,
             'status_counts' => $statusCounts,
+            'photo_missing_count' => $photoMissingCount,
         ];
     }
 
@@ -833,13 +872,14 @@ new class extends Component
 
     public function resetFilters()
     {
-        $this->reset(['filterCampaign', 'filterGrade', 'filterDivision', 'filterStatus', 'search']);
+        $this->reset(['filterCampaign', 'filterGrade', 'filterDivision', 'filterStatus', 'filterPhoto', 'search']);
         session()->forget([
             'students_filter_search',
             'students_filter_campaign',
             'students_filter_grade',
             'students_filter_division',
             'students_filter_status',
+            'students_filter_photo',
         ]);
     }
 
@@ -1605,6 +1645,10 @@ new class extends Component
                         <span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
                         <span>Distributed: <strong>{{ $studentCounts['status_counts']['distributed'] ?? 0 }}</strong></span>
                     </button>
+                    <button type="button" wire:click="$set('filterPhoto', '{{ $filterPhoto === 'missing' ? '' : 'missing' }}')" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold transition cursor-pointer {{ $filterPhoto === 'missing' ? 'bg-rose-600 text-white shadow-sm ring-2 ring-rose-400' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100' }}" title="Click to filter students with Missing Photos">
+                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                        <span>Photo Missing: <strong>{{ $studentCounts['photo_missing_count'] ?? 0 }}</strong></span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -1643,7 +1687,7 @@ new class extends Component
     </div>
 
     <!-- Filters Bar -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 bg-white dark:bg-gray-800 p-5 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3 sm:gap-4 bg-white dark:bg-gray-800 p-5 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none">
         <!-- Search Input -->
         <div>
             <label class="text-[9px] uppercase font-bold text-gray-500 dark:text-gray-400 tracking-wider block mb-1.5">{{ __('Search Student') }}</label>
@@ -1653,7 +1697,7 @@ new class extends Component
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
                 </div>
-                <input type="text" wire:model.live.debounce.300ms="search" placeholder="{{ __('Name, Roll, Mobile, Address...') }}" class="w-full pl-9 pr-8 border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-xl text-xs focus:ring-indigo-500 focus:border-indigo-500 placeholder-gray-400 dark:placeholder-gray-500" />
+                <input type="text" wire:model.live.debounce.300ms="search" placeholder="{{ __('Name, Roll, Mobile...') }}" class="w-full pl-9 pr-8 border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-xl text-xs focus:ring-indigo-500 focus:border-indigo-500 placeholder-gray-400 dark:placeholder-gray-500" />
                 @if(!empty($search))
                     <button type="button" wire:click="$set('search', '')" class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1725,10 +1769,20 @@ new class extends Component
             </select>
         </div>
 
+        <!-- Photo Missing Filter -->
+        <div>
+            <label class="text-[9px] uppercase font-bold text-gray-500 dark:text-gray-400 tracking-wider block mb-1.5">{{ __('Photo Filter') }}</label>
+            <select wire:model.live="filterPhoto" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-xl text-xs focus:ring-indigo-500 focus:border-indigo-500 font-medium">
+                <option value="">{{ __('All Photos') }}</option>
+                <option value="missing">📷 ⚠️ {{ __('Photo Missing') }}</option>
+                <option value="uploaded">✓ {{ __('Photo Uploaded') }}</option>
+            </select>
+        </div>
+
         <!-- Actions / Clear Filters -->
         <div class="flex items-end">
             @if ($studentCounts['is_filtered'])
-                <button wire:click="resetFilters" type="button" class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer">
+                <button wire:click="resetFilters" type="button" class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
