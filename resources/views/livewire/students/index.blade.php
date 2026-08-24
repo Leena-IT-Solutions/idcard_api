@@ -82,12 +82,12 @@ new class extends Component
     public bool $isExportModalOpen = false;
 
     public string $exportType = 'excel_photo_zip'; // 'excel_photo_zip', 'png_zip', 'imposition_pdf'
-    public string $exportPageSize = 'A4';
+    public string $exportPageSize = '297x210';
     public float $exportBleedMm = 3.0;
     public float $exportMarginMm = 3.0;
-    public float $exportGutterMm = 6.0;
-    public float $exportCustomWidthMm = 210.0;
-    public float $exportCustomHeightMm = 297.0;
+    public float $exportGutterMm = 4.0;
+    public float $exportCustomWidthMm = 297.0;
+    public float $exportCustomHeightMm = 210.0;
     public bool $exportMirrorPrint = false;
 
     public function openExportModal()
@@ -3048,8 +3048,10 @@ new class extends Component
                                     <div>
                                         <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">{{ __('Page Size') }}</label>
                                         <select wire:model.live="exportPageSize" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl text-xs font-semibold">
-                                            <option value="A4">A4 (210 x 297 mm)</option>
+                                            <option value="297x210">297 x 210 mm (A4 Landscape)</option>
+                                            <option value="A4">210 x 297 mm (A4 Portrait)</option>
                                             <option value="Letter">Letter (215.9 x 279.4 mm)</option>
+                                            <option value="A3">A3 (297 x 420 mm)</option>
                                             <option value="Custom">Custom Size</option>
                                         </select>
                                     </div>

@@ -13,12 +13,16 @@ class ImpositionLayoutService
         $trimMarkLen = (float) ($params['trim_mark_len'] ?? 4.0);
 
         [$pageWidthMm, $pageHeightMm] = match (strtoupper($pageSize)) {
+            '297X210', 'A4_LANDSCAPE' => [297.0, 210.0],
             'LETTER' => [215.9, 279.4],
+            'LETTER_LANDSCAPE' => [279.4, 215.9],
+            'A3' => [297.0, 420.0],
+            'A3_LANDSCAPE' => [420.0, 297.0],
             'CUSTOM' => [
-                (float) ($params['custom_width_mm'] ?? 210.0),
-                (float) ($params['custom_height_mm'] ?? 297.0),
+                (float) ($params['custom_width_mm'] ?? 297.0),
+                (float) ($params['custom_height_mm'] ?? 210.0),
             ],
-            default => [210.0, 297.0], // A4
+            default => [210.0, 297.0], // A4 Portrait
         };
 
         $cardOuterWidth = $cardWidthMm + (2 * $bleedMm);
