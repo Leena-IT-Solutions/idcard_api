@@ -8,4 +8,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 \Illuminate\Support\Facades\Schedule::command('exports:prune')->daily();
+\Illuminate\Support\Facades\Schedule::command('queue:work --stop-when-empty --timeout=3600')->everyMinute()->withoutOverlapping();
 
