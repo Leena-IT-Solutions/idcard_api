@@ -1662,6 +1662,85 @@ new class extends Component {
                 });
 
                 this.$wire.updateMultipleLayersCoordinates(updates);
+            },
+            distributeSelected(direction) {
+                let indices = [];
+                if (this.$wire.selectedLayerIndices && this.$wire.selectedLayerIndices.length >= 2) {
+                    indices = [...this.$wire.selectedLayerIndices];
+                } else if (this.selectedIndices && this.selectedIndices.length >= 2) {
+                    indices = [...this.selectedIndices];
+                }
+
+                if (indices.length < 2) return;
+
+                const items = [];
+                indices.forEach(idx => {
+                    const layer = (this.$wire.layers && this.$wire.layers[idx]) ? this.$wire.layers[idx] : {};
+                    const el = document.querySelector('[data-layer-index="' + idx + '"]');
+                    const x = (el && el.style.left !== '') ? parseInt(el.style.left) : (parseInt(layer.x) || 0);
+                    const y = (el && el.style.top !== '') ? parseInt(el.style.top) : (parseInt(layer.y) || 0);
+                    const parsedW = parseFloat(layer.width);
+                    const parsedH = parseFloat(layer.height);
+                    const w = (el && el.offsetWidth) ? el.offsetWidth : ((!isNaN(parsedW) && parsedW > 0) ? parsedW : 100);
+                    const h = (el && el.offsetHeight) ? el.offsetHeight : ((!isNaN(parsedH) && parsedH > 0) ? parsedH : 30);
+                    items.push({ idx, el, layer, x, y, w, h });
+                });
+
+                const updates = [];
+
+                if (direction === 'vertically') {
+                    // Sort items top to bottom by current Y
+                    items.sort((a, b) => a.y - b.y);
+
+                    const firstItem = items[0];
+                    const lastItem = items[items.length - 1];
+
+                    const totalSpan = (lastItem.y + lastItem.h) - firstItem.y;
+                    const totalItemsHeight = items.reduce((sum, it) => sum + it.h, 0);
+                    const totalGaps = items.length - 1;
+                    const gap = totalGaps > 0 ? (totalSpan - totalItemsHeight) / totalGaps : 0;
+
+                    let currentY = firstItem.y;
+                    items.forEach((item, i) => {
+                        let finalY = Math.round(currentY);
+                        if (item.el) {
+                            item.el.style.top = finalY + 'px';
+                        }
+                        if (item.layer) {
+                            item.layer.y = finalY;
+                        }
+                        updates.push({ idx: item.idx, x: item.x, y: finalY });
+                        currentY += item.h + gap;
+                    });
+                } else if (direction === 'horizontally') {
+                    // Sort items left to right by current X
+                    items.sort((a, b) => a.x - b.x);
+
+                    const firstItem = items[0];
+                    const lastItem = items[items.length - 1];
+
+                    const totalSpan = (lastItem.x + lastItem.w) - firstItem.x;
+                    const totalItemsWidth = items.reduce((sum, it) => sum + it.w, 0);
+                    const totalGaps = items.length - 1;
+                    const gap = totalGaps > 0 ? (totalSpan - totalItemsWidth) / totalGaps : 0;
+
+                    let currentX = firstItem.x;
+                    items.forEach((item, i) => {
+                        let finalX = Math.round(currentX);
+                        if (item.el) {
+                            item.el.style.left = finalX + 'px';
+                        }
+                        if (item.layer) {
+                            item.layer.x = finalX;
+                        }
+                        updates.push({ idx: item.idx, x: finalX, y: item.y });
+                        currentX += item.w + gap;
+                    });
+                }
+
+                if (updates.length > 0) {
+                    this.$wire.updateMultipleLayersCoordinates(updates);
+                }
             }
         };
     }

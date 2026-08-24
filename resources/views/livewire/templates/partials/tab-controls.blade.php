@@ -50,6 +50,25 @@
                 </div>
             </div>
 
+            <!-- Space Evenly / Distribute Section -->
+            <div class="space-y-2 pt-2 border-t border-slate-100">
+                <label class="text-[10px] uppercase font-extrabold text-slate-500 tracking-wider block">Space Evenly / Distribute</label>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <button type="button" @click="distributeSelected('vertically')" class="flex items-center justify-center space-x-2 px-3 py-2 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700 border border-slate-200 rounded-xl text-slate-700 text-xs font-bold transition shadow-sm" title="Distribute layers with equal vertical space">
+                        <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <span>Vertically</span>
+                    </button>
+                    <button type="button" @click="distributeSelected('horizontally')" class="flex items-center justify-center space-x-2 px-3 py-2 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700 border border-slate-200 rounded-xl text-slate-700 text-xs font-bold transition shadow-sm" title="Distribute layers with equal horizontal space">
+                        <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 4v16M12 4v16M18 4v16" />
+                        </svg>
+                        <span>Horizontally</span>
+                    </button>
+                </div>
+            </div>
+
             <div class="flex items-center justify-between pt-3 border-t border-slate-100">
                 @php
                     $hasGroup = false;
