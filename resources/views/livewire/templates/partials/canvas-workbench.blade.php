@@ -186,8 +186,9 @@
                                     $fontFamily = $layer['font_family'] ?? 'Inter';
                                     $color = $layer['color'] ?? '#ffffff';
                                     $align = $layer['align'] ?? 'left';
+                                    $textTransform = $layer['text_transform'] ?? $layer['text_case'] ?? 'none';
                                 @endphp
-                                <div style="font-size: {{ $fontSize }}pt; font-weight: {{ $fontWeight }}; font-family: {{ $fontFamily }}, sans-serif; color: {{ $color }}; text-align: {{ $align }}; {{ !empty($layer['width']) ? ('width: ' . $layer['width'] . 'px; max-width: ' . $layer['width'] . 'px; white-space: normal; word-break: break-word;') : 'width: max-content; white-space: nowrap;' }} padding: 2px 4px; border-radius: 4px; box-sizing: border-box; background: {{ $isSelected ? 'rgba(99, 102, 241, 0.15)' : 'transparent' }};">
+                                <div style="font-size: {{ $fontSize }}pt; font-weight: {{ $fontWeight }}; font-family: {{ $fontFamily }}, sans-serif; color: {{ $color }}; text-align: {{ $align }}; text-transform: {{ $textTransform }}; {{ !empty($layer['width']) ? ('width: ' . $layer['width'] . 'px; max-width: ' . $layer['width'] . 'px; white-space: normal; word-break: break-word;') : 'width: max-content; white-space: nowrap;' }} padding: 2px 4px; border-radius: 4px; box-sizing: border-box; background: {{ $isSelected ? 'rgba(99, 102, 241, 0.15)' : 'transparent' }};">
                                     {{ $displayText }}
                                 </div>
 

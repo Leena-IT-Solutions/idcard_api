@@ -261,13 +261,14 @@
                     $fontFamily = $layer['font_family'] ?? 'Inter';
                     $color = $layer['color'] ?? '#ffffff';
                     $align = $layer['align'] ?? 'left';
+                    $textTransform = $layer['text_transform'] ?? $layer['text_case'] ?? 'none';
 
                     $hasCustomWidth = !empty($w) && $w > 0;
                     $widthStyle = $hasCustomWidth 
                         ? "width: {$w}px; max-width: {$w}px; white-space: normal; word-break: break-word;" 
                         : "width: max-content; white-space: nowrap;";
 
-                    $textStyle = $style . " font-size: {$fontSize}pt; font-weight: {$fontWeight}; font-family: '{$fontFamily}', sans-serif; color: {$color}; text-align: {$align}; {$widthStyle}";
+                    $textStyle = $style . " font-size: {$fontSize}pt; font-weight: {$fontWeight}; font-family: '{$fontFamily}', sans-serif; color: {$color}; text-align: {$align}; text-transform: {$textTransform}; {$widthStyle}";
                 @endphp
                 <div style="{{ $textStyle }}">
                     {{ $displayText }}

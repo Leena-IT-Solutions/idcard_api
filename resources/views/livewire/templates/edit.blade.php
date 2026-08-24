@@ -344,6 +344,7 @@ new class extends Component {
         $fontFamily = $lastTextLayer ? ($lastTextLayer['font_family'] ?? 'Inter') : 'Inter';
         $color = $lastTextLayer ? ($lastTextLayer['color'] ?? '#ffffff') : '#ffffff';
         $align = $lastTextLayer ? ($lastTextLayer['align'] ?? 'left') : 'left';
+        $textTransform = $lastTextLayer ? ($lastTextLayer['text_transform'] ?? $lastTextLayer['text_case'] ?? 'none') : 'none';
         $rotation = $lastTextLayer ? ($lastTextLayer['rotation'] ?? 0) : 0;
         $x = $lastTextLayer ? (($lastTextLayer['x'] ?? 100) + 15) : 100;
         $y = $lastTextLayer ? (($lastTextLayer['y'] ?? 100) + 15) : 100;
@@ -360,6 +361,7 @@ new class extends Component {
             'font_family' => $fontFamily,
             'color' => $color,
             'align' => $align,
+            'text_transform' => $textTransform,
             'rotation' => $rotation,
         ];
         $this->selectLayer($newIndex, false);
