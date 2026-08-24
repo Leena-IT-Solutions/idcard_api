@@ -1202,6 +1202,33 @@ new class extends Component {
                         this.$wire.saveStudioDesign();
                     }
 
+                    // Duplicate Layer (Ctrl+D / Cmd+D)
+                    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd' && !isEditing) {
+                        e.preventDefault();
+                        let hasSelected = (this.selectedIndices && this.selectedIndices.length > 0) || 
+                                          (this.$wire.selectedLayerIndices && this.$wire.selectedLayerIndices.length > 0) || 
+                                          (this.$wire.selectedLayerIndex !== null);
+                        if (hasSelected) {
+                            this.$wire.duplicateSelected();
+                        }
+                    }
+
+                    // Copy / Paste Layer (Ctrl+C / Ctrl+V or Cmd+C / Cmd+V)
+                    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c' && !isEditing) {
+                        let hasSelected = (this.selectedIndices && this.selectedIndices.length > 0) || 
+                                          (this.$wire.selectedLayerIndices && this.$wire.selectedLayerIndices.length > 0) || 
+                                          (this.$wire.selectedLayerIndex !== null);
+                        if (hasSelected) {
+                            this.copiedIndices = this.selectedIndices.length > 0 ? [...this.selectedIndices] : (this.$wire.selectedLayerIndex !== null ? [this.$wire.selectedLayerIndex] : []);
+                        }
+                    }
+                    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v' && !isEditing) {
+                        if (this.copiedIndices && this.copiedIndices.length > 0) {
+                            e.preventDefault();
+                            this.$wire.duplicateSelected();
+                        }
+                    }
+
                     // Arrow Key Movement (Nudge 1px or Shift+Arrow 10px)
                     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && !isEditing) {
                         e.preventDefault();
