@@ -101,7 +101,7 @@ class ExportImpositionPdfJob implements ShouldQueue
             }
 
             $totalPagesCount = count($pages);
-            $pagesPerBatch = 5; // 5 imposition pages (approx 40-50 cards) per batch for sub-2s Chrome render speed
+            $pagesPerBatch = 2; // 2 imposition pages per batch for fast sub-3s Chrome render speed and low memory footprint
             $pageChunks = array_chunk($pages, $pagesPerBatch);
             $chunkPdfPaths = [];
             $tempDir = storage_path('app/temp');

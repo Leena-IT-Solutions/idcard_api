@@ -132,6 +132,9 @@ class CardRenderService
             '--disable-default-apps',
         ]);
 
+        // Protocol Timeout (600s for large multi-page PDF generation)
+        $browsershot->setOption('protocolTimeout', 600000);
+
         // Timeout (1200s for large multi-page imposition PDFs)
         $browsershot->timeout(1200);
 
