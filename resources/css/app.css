@@ -4,10 +4,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Cropper Container Overrides */
-.cropper-container {
-    width: 100% !important;
-    height: 100% !important;
+/* Cropper Overrides */
+.cropper-view-box,
+.cropper-face {
+    border-radius: 8px;
 }
 
 .cropper-bg {

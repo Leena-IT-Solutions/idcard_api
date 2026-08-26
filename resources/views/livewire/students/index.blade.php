@@ -2600,7 +2600,7 @@ new class extends Component
 
                                                     <!-- Crop Stage Container with Passport Oval Silhouette Overlay -->
                                                     <div class="relative w-full h-[500px] bg-gray-950 rounded-2xl overflow-hidden flex items-center justify-center border border-gray-800">
-                                                        <img x-ref="cropImage" class="w-full h-full object-contain block" />
+                                                        <img x-ref="cropImage" class="max-w-full block" style="display: block; max-width: 100%; max-height: 500px;" />
                                                         
                                                         <!-- Passport Head Oval Silhouette Overlay Guide -->
                                                         <div class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center opacity-35 z-20">

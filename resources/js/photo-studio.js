@@ -44,16 +44,19 @@ export function photoStudio() {
             this.resetState();
             this.isOpen = true;
 
-            this.$nextTick(() => {
-                const img = this.$refs.cropImage;
-                const reader = new FileReader();
-                reader.onload = (e) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.$nextTick(() => {
+                    const img = this.$refs.cropImage;
+                    if (!img) return;
+                    img.onload = () => {
+                        this.initCropper(img);
+                        this.checkResolution(img);
+                    };
                     img.src = e.target.result;
-                    this.initCropper(img);
-                    this.checkResolution(img);
-                };
-                reader.readAsDataURL(file);
-            });
+                });
+            };
+            reader.readAsDataURL(file);
 
             this.warmupEngine();
         },
@@ -65,12 +68,13 @@ export function photoStudio() {
 
             this.$nextTick(() => {
                 const img = this.$refs.cropImage;
+                if (!img) return;
                 img.crossOrigin = 'anonymous';
-                img.src = imageUrl;
                 img.onload = () => {
                     this.initCropper(img);
                     this.checkResolution(img);
                 };
+                img.src = imageUrl;
             });
 
             this.warmupEngine();
@@ -124,13 +128,15 @@ export function photoStudio() {
         initCropper(imgElement) {
             if (this.cropper) {
                 this.cropper.destroy();
+                this.cropper = null;
             }
 
             this.cropper = new Cropper(imgElement, {
                 aspectRatio: this.aspectRatio,
-                viewMode: 2,
+                viewMode: 1,
                 dragMode: 'move',
-                autoCropArea: 0.95,
+                autoCropArea: 0.85,
+                responsive: true,
                 restore: false,
                 guides: true,
                 center: true,
@@ -138,6 +144,9 @@ export function photoStudio() {
                 cropBoxMovable: true,
                 cropBoxResizable: true,
                 toggleDragModeOnDblclick: false,
+                ready: () => {
+                    this.renderCompositedCanvas();
+                }
             });
         },
 
@@ -163,14 +172,14 @@ export function photoStudio() {
         },
 
         checkResolution(imgElement) {
-            imgElement.onload = () => {
-                const minSide = Math.min(imgElement.naturalWidth, imgElement.naturalHeight);
-                if (minSide < 400) {
-                    this.resWarning = 'Photo resolution is low (' + imgElement.naturalWidth + 'x' + imgElement.naturalHeight + 'px). Print may look slightly soft.';
-                } else {
-                    this.resWarning = null;
-                }
-            };
+            const w = imgElement.naturalWidth || 0;
+            const h = imgElement.naturalHeight || 0;
+            const minSide = Math.min(w, h);
+            if (minSide > 0 && minSide < 400) {
+                this.resWarning = `Photo resolution is low (${w}x${h}px). Print may look slightly soft.`;
+            } else {
+                this.resWarning = null;
+            }
         },
 
         async removeBg() {
