@@ -50,7 +50,7 @@ class ExportImpositionPdfJob implements ShouldQueue
             $firstEnrollment = $firstStudent?->campaignStudents?->first();
             $sampleTemplate = $templateResolver->getEffectiveTemplate($export->school_id, $firstEnrollment?->grade_id);
 
-            $cardSize = $export->params['card_size'] ?? 'bleed';
+            $cardSize = $export->params['card_size'] ?? 'punch';
             $isPunch = ($cardSize === 'punch');
 
             $orientation = $sampleTemplate->orientation ?? 'landscape';

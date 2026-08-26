@@ -11,7 +11,7 @@ class CardRenderService
     /**
      * Render the front-side HTML of an ID card using the Blade component.
      */
-    public function renderFrontHtml($template, Student $student, School $school, bool $isMirrored = false, string $cardSize = 'bleed'): string
+    public function renderFrontHtml($template, Student $student, School $school, bool $isMirrored = false, string $cardSize = 'punch'): string
     {
         $cardHtml = view('components.id-card-renderer', [
             'template' => $template,

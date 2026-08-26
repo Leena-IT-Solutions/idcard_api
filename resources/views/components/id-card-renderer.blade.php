@@ -6,7 +6,7 @@
     'previewMode' => false,
     'forExport' => false,
     'isMirrored' => false,
-    'cardSize' => 'bleed', // 'bleed' (90x57mm) or 'punch' (86x54mm)
+    'cardSize' => 'punch', // 'punch' (86x54mm CR80) or 'bleed' (90x57mm canvas)
 ])
 
 @php

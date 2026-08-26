@@ -49,7 +49,7 @@ class ExportJpgZipJob implements ShouldQueue
                 ->keyBy('id');
 
             $isMirrored = (bool) ($export->params['mirror_print'] ?? false);
-            $cardSize = $export->params['card_size'] ?? 'bleed';
+            $cardSize = $export->params['card_size'] ?? 'punch';
             $schoolCode = preg_replace('/[^A-Za-z0-9_-]/', '', $export->school->school_code ?? $export->school->name ?? 'SCHOOL');
 
             foreach ($studentIds as $i => $studentId) {

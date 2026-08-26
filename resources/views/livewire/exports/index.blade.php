@@ -773,6 +773,47 @@ new class extends Component {
                         </div>
                     </label>
                 </div>
+
+                <!-- Card Cut / Bleed Dimension Selector -->
+                <div class="pt-4 border-t border-gray-100 dark:border-gray-700/80 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="text-xs font-bold text-gray-900 dark:text-gray-100 block">{{ __('Card Cut & Output Dimensions') }}</span>
+                            <span class="text-[11px] text-gray-500 dark:text-gray-400">Choose between trimmed CR80 finished size or full 2mm artwork bleed allowance.</span>
+                        </div>
+                        <span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 rounded-lg text-[10px] font-black uppercase">
+                            {{ $exportCardSize === 'punch' ? '✂️ Punch Size Active (86×54mm)' : '📐 Bleed Canvas Active (90×57mm)' }}
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <label class="p-3.5 border rounded-2xl flex items-start gap-3 cursor-pointer transition {{ $exportCardSize === 'punch' ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/20 ring-2 ring-indigo-500/20 shadow-xs' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30' }}">
+                            <input type="radio" wire:model.live="exportCardSize" value="punch" class="mt-0.5 text-indigo-600 focus:ring-indigo-500" />
+                            <div>
+                                <span class="font-bold text-xs text-gray-900 dark:text-gray-100 block flex items-center gap-1.5">
+                                    <span>✂️ {{ __('Punch Size (86 × 54 mm)') }}</span>
+                                    <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 rounded text-[9px] font-extrabold uppercase">Standard CR80</span>
+                                </span>
+                                <span class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 block">
+                                    Trims the 2mm outer bleed so the card displays and prints at exact finished CR80 standard card dimensions without extra margins.
+                                </span>
+                            </div>
+                        </label>
+
+                        <label class="p-3.5 border rounded-2xl flex items-start gap-3 cursor-pointer transition {{ $exportCardSize === 'bleed' ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/20 ring-2 ring-indigo-500/20 shadow-xs' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30' }}">
+                            <input type="radio" wire:model.live="exportCardSize" value="bleed" class="mt-0.5 text-indigo-600 focus:ring-indigo-500" />
+                            <div>
+                                <span class="font-bold text-xs text-gray-900 dark:text-gray-100 block flex items-center gap-1.5">
+                                    <span>📐 {{ __('Bleed Canvas (90 × 57 mm)') }}</span>
+                                    <span class="px-1.5 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 rounded text-[9px] font-extrabold uppercase">+2mm Bleed</span>
+                                </span>
+                                <span class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 block">
+                                    Includes 2mm extra bleed border on all 4 edges. Recommended for commercial offset printing & mechanical die-cut machines.
+                                </span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
             </div>
 
             <!-- STEP 3: IMPOSITION PRINT SETTINGS (Shown if Imposition PDF selected) -->
@@ -909,6 +950,13 @@ new class extends Component {
                         <span>Export Format</span>
                         <span class="font-bold text-gray-900 dark:text-gray-100 uppercase text-[11px]">
                             {{ str_replace('_', ' ', $exportType) }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between text-gray-600 dark:text-gray-400">
+                        <span>Card Cut Dimensions</span>
+                        <span class="font-bold text-[11px] {{ $exportCardSize === 'punch' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400' }}">
+                            {{ $exportCardSize === 'punch' ? '✂️ Punch Size (86×54mm)' : '📐 Bleed Canvas (90×57mm)' }}
                         </span>
                     </div>
 
