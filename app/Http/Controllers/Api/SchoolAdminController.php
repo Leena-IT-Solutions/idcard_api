@@ -1144,7 +1144,7 @@ class SchoolAdminController extends Controller
     {
         $request->validate([
             'school_id' => 'required|exists:schools,id',
-            'type' => 'required|in:excel_photo_zip,png_zip,single_card_pdf,imposition_pdf',
+            'type' => 'required|in:excel_photo_zip,jpg_zip,png_zip,single_card_pdf,imposition_pdf',
             'campaign_id' => 'nullable|exists:campaigns,id',
             'student_ids' => 'nullable|array',
             'student_ids.*' => 'exists:students,id',
@@ -1207,9 +1207,9 @@ class SchoolAdminController extends Controller
             'page_size' => $request->page_size ?? 'A4',
             'custom_width_mm' => $request->custom_width_mm,
             'custom_height_mm' => $request->custom_height_mm,
-            'bleed_mm' => $request->bleed_mm ?? 3.0,
-            'margin_mm' => $request->margin_mm ?? 3.0,
-            'gutter_mm' => $request->gutter_mm ?? 6.0,
+            'bleed_mm' => $request->bleed_mm ?? 0.0,
+            'margin_mm' => $request->margin_mm ?? 0.0,
+            'gutter_mm' => $request->gutter_mm ?? 4.0,
         ];
 
         $export = \App\Models\Export::create([
@@ -1226,6 +1226,7 @@ class SchoolAdminController extends Controller
             if ($request->boolean('sync', true)) {
                 match ($request->type) {
                     'excel_photo_zip' => \App\Jobs\ExportExcelPhotoZipJob::dispatchSync($export->id),
+                    'jpg_zip' => \App\Jobs\ExportJpgZipJob::dispatchSync($export->id),
                     'png_zip' => \App\Jobs\ExportPngZipJob::dispatchSync($export->id),
                     'single_card_pdf' => \App\Jobs\ExportSingleCardPdfJob::dispatchSync($export->id),
                     'imposition_pdf' => \App\Jobs\ExportImpositionPdfJob::dispatchSync($export->id),
@@ -1233,6 +1234,7 @@ class SchoolAdminController extends Controller
             } else {
                 match ($request->type) {
                     'excel_photo_zip' => \App\Jobs\ExportExcelPhotoZipJob::dispatch($export->id),
+                    'jpg_zip' => \App\Jobs\ExportJpgZipJob::dispatch($export->id),
                     'png_zip' => \App\Jobs\ExportPngZipJob::dispatch($export->id),
                     'single_card_pdf' => \App\Jobs\ExportSingleCardPdfJob::dispatch($export->id),
                     'imposition_pdf' => \App\Jobs\ExportImpositionPdfJob::dispatch($export->id),

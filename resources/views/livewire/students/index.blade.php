@@ -244,6 +244,7 @@ new class extends Component
         try {
             match ($this->exportType) {
                 'excel_photo_zip' => \App\Jobs\ExportExcelPhotoZipJob::dispatch($export->id),
+                'jpg_zip' => \App\Jobs\ExportJpgZipJob::dispatch($export->id),
                 'png_zip' => \App\Jobs\ExportPngZipJob::dispatch($export->id),
                 'single_card_pdf' => \App\Jobs\ExportSingleCardPdfJob::dispatch($export->id),
                 'imposition_pdf' => \App\Jobs\ExportImpositionPdfJob::dispatch($export->id),
@@ -3045,10 +3046,10 @@ new class extends Component
                                     <span class="font-bold text-xs">{{ __('Excel Roster + Photos ZIP') }}</span>
                                     <span class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">{{ __('Spreadsheet plus student photos directory.') }}</span>
                                 </label>
-                                <label class="p-3 border rounded-2xl flex flex-col justify-between cursor-pointer transition {{ $exportType === 'png_zip' ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-900 dark:text-indigo-200' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40' }}">
-                                    <input type="radio" wire:model.live="exportType" value="png_zip" class="hidden" />
-                                    <span class="font-bold text-xs">{{ __('Rendered Cards PNG (ZIP)') }}</span>
-                                    <span class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">{{ __('High-resolution PNG image per student.') }}</span>
+                                <label class="p-3 border rounded-2xl flex flex-col justify-between cursor-pointer transition {{ $exportType === 'jpg_zip' ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-900 dark:text-indigo-200' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40' }}">
+                                    <input type="radio" wire:model.live="exportType" value="jpg_zip" class="hidden" />
+                                    <span class="font-bold text-xs">{{ __('Rendered Cards JPG (ZIP)') }}</span>
+                                    <span class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">{{ __('High-resolution crisp JPG image per student. Lightweight & fast.') }}</span>
                                 </label>
                                 <label class="p-3 border rounded-2xl flex flex-col justify-between cursor-pointer transition {{ $exportType === 'single_card_pdf' ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-900 dark:text-indigo-200' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40' }}">
                                     <input type="radio" wire:model.live="exportType" value="single_card_pdf" class="hidden" />

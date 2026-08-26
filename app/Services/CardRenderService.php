@@ -212,6 +212,19 @@ class CardRenderService
     }
 
     /**
+     * Render HTML to a high-quality JPG screenshot.
+     */
+    public function toJpg(string $html, int $widthPx, int $heightPx, int $quality = 95): string
+    {
+        return $this->createBrowsershot($html)
+            ->windowSize($widthPx, $heightPx)
+            ->clip(0, 0, $widthPx, $heightPx)
+            ->deviceScaleFactor(2)
+            ->setScreenshotType('jpeg', $quality)
+            ->screenshot();
+    }
+
+    /**
      * Rasterize raw SVG markup to a PNG at an exact pixel size.
      *
      * flutter_svg's renderer (vector_graphics_compiler) does not implement
