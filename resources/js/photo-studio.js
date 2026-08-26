@@ -265,11 +265,19 @@ export function photoStudio() {
             this.renderCompositedCanvas();
         },
 
-        savePhoto() {
-            const canvas = this.$refs.studioCanvas || (this.cropper ? this.cropper.getCroppedCanvas() : null);
-            if (!canvas) return;
+        async savePhoto() {
+            if (!this.cropper) {
+                alert('No photo has been loaded.');
+                return;
+            }
 
-            canvas.toBlob((blob) => {
+            try {
+                const blob = await this.getFinalBlob();
+                if (!blob) {
+                    alert('Could not generate cropped photo. Please try again.');
+                    return;
+                }
+
                 const file = new File([blob], 'student_photo.png', { type: 'image/png' });
 
                 // Call Livewire's JS upload API to set $photo
@@ -281,7 +289,61 @@ export function photoStudio() {
                         alert('Photo upload failed: ' + error);
                     }
                 );
-            }, 'image/png', 0.92);
+            } catch (err) {
+                console.error('Save photo error:', err);
+                alert('Error processing photo: ' + (err.message || err));
+            }
+        },
+
+        async getFinalBlob() {
+            if (!this.cropper) return null;
+
+            const croppedCanvas = this.cropper.getCroppedCanvas({
+                maxWidth: 1200,
+                maxHeight: 1600,
+            });
+            if (!croppedCanvas) return null;
+
+            const targetCanvas = document.createElement('canvas');
+            targetCanvas.width = croppedCanvas.width;
+            targetCanvas.height = croppedCanvas.height;
+            const ctx = targetCanvas.getContext('2d');
+
+            // 1. Draw solid background color
+            if (this.bgColor) {
+                ctx.fillStyle = this.bgColor;
+                ctx.fillRect(0, 0, targetCanvas.width, targetCanvas.height);
+            }
+
+            // Helper to apply filters and draw
+            const drawSubject = (img) => {
+                ctx.save();
+                ctx.filter = `brightness(${this.brightness}%) contrast(${this.contrast}%) saturate(${this.saturation}%)`;
+                ctx.drawImage(img, 0, 0, targetCanvas.width, targetCanvas.height);
+                ctx.restore();
+            };
+
+            // 2. Draw Subject
+            if (this.bgRemovedBlob) {
+                await new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        drawSubject(img);
+                        resolve();
+                    };
+                    img.onerror = () => {
+                        drawSubject(croppedCanvas);
+                        resolve();
+                    };
+                    img.src = URL.createObjectURL(this.bgRemovedBlob);
+                });
+            } else {
+                drawSubject(croppedCanvas);
+            }
+
+            return new Promise((resolve) => {
+                targetCanvas.toBlob(resolve, 'image/png', 0.95);
+            });
         }
     };
 }
