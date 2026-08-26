@@ -473,6 +473,47 @@ class SchoolAdminController extends Controller
 
         $totalMatchingCount = (clone $query)->count();
 
+        $statusCountsQuery = \App\Models\CampaignStudent::query()
+            ->whereHas('campaign', function($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            });
+
+        if ($scopes['restricted']) {
+            $statusCountsQuery->whereIn('grade_id', $scopes['grades'])
+                ->whereIn('division_id', $scopes['divisions']);
+        }
+
+        if ($request->filter_campaign) {
+            $statusCountsQuery->where('campaign_id', $request->filter_campaign);
+        }
+        if ($request->filter_grade) {
+            $statusCountsQuery->where('grade_id', $request->filter_grade);
+        }
+        if ($request->filter_division) {
+            $statusCountsQuery->where('division_id', $request->filter_division);
+        }
+        if ($request->search) {
+            $statusCountsQuery->whereHas('student', function($q) use ($request) {
+                $q->where('first_name', 'like', '%' . $request->search . '%')
+                  ->orWhere('last_name', 'like', '%' . $request->search . '%')
+                  ->orWhere('contact_number', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        $rawCounts = (clone $statusCountsQuery)
+            ->selectRaw("COALESCE(NULLIF(status, ''), CASE WHEN verified_at IS NOT NULL THEN 'verified' ELSE 'drafting' END) as effective_status, count(*) as count")
+            ->groupBy('effective_status')
+            ->pluck('count', 'effective_status')
+            ->all();
+
+        $statusCounts = [
+            'drafting' => (int)($rawCounts['drafting'] ?? 0),
+            'verified' => (int)($rawCounts['verified'] ?? 0),
+            'sent_for_printing' => (int)($rawCounts['sent_for_printing'] ?? 0),
+            'printed' => (int)($rawCounts['printed'] ?? 0),
+            'distributed' => (int)($rawCounts['distributed'] ?? 0),
+        ];
+
         if ($request->has('page')) {
             $studentsPaginator = $query->with(['campaignStudents' => function($q) use ($schoolId) {
                 $q->whereHas('campaign', function($inner) use ($schoolId) {
@@ -484,6 +525,7 @@ class SchoolAdminController extends Controller
             return response()->json([
                 'data' => $items,
                 'total' => $totalMatchingCount,
+                'status_counts' => $statusCounts,
                 'per_page' => (int)$perPage,
                 'current_page' => (int)$request->page,
             ])->header('X-Total-Count', $totalMatchingCount);
@@ -497,6 +539,7 @@ class SchoolAdminController extends Controller
             return response()->json([
                 'data' => $students,
                 'total' => $totalMatchingCount,
+                'status_counts' => $statusCounts,
             ])->header('X-Total-Count', $totalMatchingCount);
         }
     }
