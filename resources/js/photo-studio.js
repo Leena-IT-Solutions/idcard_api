@@ -133,21 +133,28 @@ export function photoStudio() {
 
             this.cropper = new Cropper(imgElement, {
                 aspectRatio: this.aspectRatio,
-                viewMode: 1,
+                viewMode: 0,
                 dragMode: 'move',
-                autoCropArea: 0.85,
+                autoCropArea: 1.0,
                 responsive: true,
                 restore: false,
                 guides: true,
                 center: true,
-                highlight: false,
+                highlight: true,
                 cropBoxMovable: true,
                 cropBoxResizable: true,
                 toggleDragModeOnDblclick: false,
+                zoomable: true,
                 ready: () => {
                     this.renderCompositedCanvas();
                 }
             });
+        },
+
+        zoom(ratio) {
+            if (this.cropper) {
+                this.cropper.zoom(ratio);
+            }
         },
 
         setAspectRatio(ratio) {

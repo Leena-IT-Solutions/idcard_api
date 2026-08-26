@@ -2587,28 +2587,29 @@ new class extends Component
                                                     <div class="flex flex-wrap items-center justify-between gap-3 bg-gray-50 dark:bg-gray-800/60 p-3 rounded-2xl border border-gray-100 dark:border-gray-700/60">
                                                         <div class="flex items-center gap-2">
                                                             <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Aspect Ratio:</span>
-                                                            <button type="button" @click="setAspectRatio(1)" :class="aspectRatio === 1 ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-gray-300'" class="px-3 py-1.5 rounded-lg font-bold text-xs border border-gray-200 dark:border-gray-600 transition">1:1 Square</button>
-                                                            <button type="button" @click="setAspectRatio(0.75)" :class="aspectRatio === 0.75 ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-gray-300'" class="px-3 py-1.5 rounded-lg font-bold text-xs border border-gray-200 dark:border-gray-600 transition">3:4 Passport</button>
+                                                            <button type="button" @click="setAspectRatio(1)" :class="aspectRatio === 1 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-gray-300'" class="px-3 py-1.5 rounded-lg font-bold text-xs border border-gray-200 dark:border-gray-600 transition cursor-pointer">1:1 Square</button>
+                                                            <button type="button" @click="setAspectRatio(0.75)" :class="aspectRatio === 0.75 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-gray-300'" class="px-3 py-1.5 rounded-lg font-bold text-xs border border-gray-200 dark:border-gray-600 transition cursor-pointer">3:4 Passport</button>
                                                         </div>
 
                                                         <div class="flex items-center gap-2">
-                                                            <button type="button" @click="rotate(-90)" class="p-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold hover:bg-gray-100 transition" title="Rotate Left 90°">↺ 90°</button>
-                                                            <button type="button" @click="rotate(90)" class="p-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold hover:bg-gray-100 transition" title="Rotate Right 90°">↻ 90°</button>
-                                                            <button type="button" @click="flipHorizontal()" class="p-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold hover:bg-gray-100 transition" title="Flip Horizontal">⇄ Flip</button>
+                                                            <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mr-1">Controls:</span>
+                                                            <button type="button" @click="zoom(0.1)" class="px-2.5 py-1.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold hover:bg-gray-100 dark:hover:bg-gray-600 transition cursor-pointer flex items-center gap-1" title="Zoom In">
+                                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"/></svg>
+                                                                <span>Zoom +</span>
+                                                            </button>
+                                                            <button type="button" @click="zoom(-0.1)" class="px-2.5 py-1.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold hover:bg-gray-100 dark:hover:bg-gray-600 transition cursor-pointer flex items-center gap-1" title="Zoom Out">
+                                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"/></svg>
+                                                                <span>Zoom -</span>
+                                                            </button>
+                                                            <button type="button" @click="rotate(-90)" class="p-1.5 px-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold hover:bg-gray-100 transition cursor-pointer" title="Rotate Left 90°">↺ 90°</button>
+                                                            <button type="button" @click="rotate(90)" class="p-1.5 px-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold hover:bg-gray-100 transition cursor-pointer" title="Rotate Right 90°">↻ 90°</button>
+                                                            <button type="button" @click="flipHorizontal()" class="p-1.5 px-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold hover:bg-gray-100 transition cursor-pointer" title="Flip Horizontal">⇄ Flip</button>
                                                         </div>
                                                     </div>
 
-                                                    <!-- Crop Stage Container with Passport Oval Silhouette Overlay -->
-                                                    <div class="relative w-full h-[500px] bg-gray-950 rounded-2xl overflow-hidden flex items-center justify-center border border-gray-800">
-                                                        <img x-ref="cropImage" class="max-w-full block" style="display: block; max-width: 100%; max-height: 500px;" />
-                                                        
-                                                        <!-- Passport Head Oval Silhouette Overlay Guide -->
-                                                        <div class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center opacity-35 z-20">
-                                                            <div class="w-64 h-80 border-2 border-dashed border-indigo-400 rounded-[50%] flex flex-col items-center justify-start pt-8">
-                                                                <div class="w-full border-t border-indigo-300/60 my-2"></div>
-                                                                <span class="text-[10px] font-black uppercase text-indigo-300 tracking-wider bg-black/60 px-2.5 py-0.5 rounded">Eye Line</span>
-                                                            </div>
-                                                        </div>
+                                                    <!-- Crop Stage Container -->
+                                                    <div class="relative w-full h-[480px] bg-gray-950 rounded-2xl overflow-hidden flex items-center justify-center border border-gray-800">
+                                                        <img x-ref="cropImage" class="max-w-full block" style="display: block; max-width: 100%; max-height: 480px;" />
                                                     </div>
                                                 </div>
 
