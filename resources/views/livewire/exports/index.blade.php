@@ -1191,7 +1191,7 @@ new class extends Component {
                                                             </div>
                                                             <div class="flex items-center gap-2 my-1">
                                                                 @if ($slotStd->photo_path)
-                                                                    <img src="{{ route('students.photo', $slotStd) }}" class="w-8 h-10 object-cover rounded border border-gray-300 shadow-xs shrink-0" />
+                                                                    <img src="{{ asset('storage/' . $slotStd->photo_path) }}" class="w-8 h-10 object-cover rounded border border-gray-300 shadow-xs shrink-0" />
                                                                 @else
                                                                     <div class="w-8 h-10 bg-indigo-100 text-indigo-700 font-extrabold rounded flex items-center justify-center text-[10px] shrink-0">
                                                                         {{ substr($slotStd->first_name, 0, 1) }}
