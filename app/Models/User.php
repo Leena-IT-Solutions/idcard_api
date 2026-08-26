@@ -30,6 +30,12 @@ class User extends Authenticatable
         static::created(function ($user) {
             $user->linkUnlinkedStudents();
         });
+
+        static::deleting(function ($user) {
+            if ($user->hasRole('saas_admin')) {
+                throw new \Exception('SaaS Admin accounts cannot be deleted.');
+            }
+        });
     }
 
     public function students()

@@ -224,6 +224,10 @@ class AuthController extends Controller
     public function deleteAccount(Request $request)
     {
         $user = $request->user();
+
+        if ($user->hasRole('saas_admin')) {
+            return response()->json(['message' => 'SaaS Admin accounts cannot be deleted.'], 403);
+        }
         
         $user->tokens()->delete();
         $user->delete();
