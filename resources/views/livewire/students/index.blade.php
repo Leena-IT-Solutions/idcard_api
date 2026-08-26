@@ -2539,91 +2539,91 @@ new class extends Component
                                     <x-input-error :messages="$errors->get('photo')" class="mt-2" />
 
                                     <!-- PHOTO STUDIO MODAL -->
-                                    <div x-show="isOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-3 sm:p-4">
+                                    <div x-show="isOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 overflow-hidden">
                                         <div class="fixed inset-0 bg-gray-950/80 backdrop-blur-md transition-opacity" @click="closeStudio()"></div>
 
-                                        <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl max-w-4xl w-full p-5 sm:p-6 shadow-2xl relative z-10 text-gray-900 dark:text-white max-h-[96vh] flex flex-col">
+                                        <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl max-w-4xl w-full h-[90vh] max-h-[780px] p-4 sm:p-5 shadow-2xl relative z-10 text-gray-900 dark:text-white flex flex-col overflow-hidden">
                                             <!-- Modal Header -->
-                                            <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3 shrink-0">
+                                            <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5 shrink-0">
                                                 <div class="space-y-0.5">
-                                                    <h3 class="text-base sm:text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
+                                                    <h3 class="text-base font-black text-gray-900 dark:text-white flex items-center gap-2">
                                                         <span>🎨 Student Photo Studio</span>
-                                                        <span class="text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 px-2.5 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-500/30">AI Powered WASM</span>
+                                                        <span class="text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-500/30">AI Powered WASM</span>
                                                     </h3>
-                                                    <p class="text-xs text-gray-500 dark:text-gray-400">Crop, remove background, change background color, and touch-up before saving.</p>
+                                                    <p class="text-[11px] text-gray-500 dark:text-gray-400">Crop, remove background, change background color, and touch-up before saving.</p>
                                                 </div>
-                                                <button type="button" @click="closeStudio()" class="text-gray-400 hover:text-gray-600 dark:hover:text-white p-1.5 transition cursor-pointer">
-                                                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                <button type="button" @click="closeStudio()" class="text-gray-400 hover:text-gray-600 dark:hover:text-white p-1 transition cursor-pointer">
+                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                                 </button>
                                             </div>
 
                                             <!-- Step Tabs -->
-                                            <div class="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 py-2.5 shrink-0">
-                                                <button type="button" @click="step = 'crop'" :class="step === 'crop' ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'" class="px-3.5 py-1.5 rounded-xl font-extrabold text-xs transition flex items-center gap-1.5 cursor-pointer">
+                                            <div class="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 py-2 shrink-0">
+                                                <button type="button" @click="step = 'crop'" :class="step === 'crop' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'" class="px-3 py-1.5 rounded-xl font-extrabold text-xs transition flex items-center gap-1.5 cursor-pointer">
                                                     <span>1. Crop & Align</span>
                                                 </button>
-                                                <button type="button" @click="step = 'background'" :class="step === 'background' ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'" class="px-3.5 py-1.5 rounded-xl font-extrabold text-xs transition flex items-center gap-1.5 cursor-pointer">
+                                                <button type="button" @click="step = 'background'" :class="step === 'background' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'" class="px-3 py-1.5 rounded-xl font-extrabold text-xs transition flex items-center gap-1.5 cursor-pointer">
                                                     <span>2. Background</span>
                                                 </button>
-                                                <button type="button" @click="step = 'touchup'" :class="step === 'touchup' ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'" class="px-3.5 py-1.5 rounded-xl font-extrabold text-xs transition flex items-center gap-1.5 cursor-pointer">
+                                                <button type="button" @click="step = 'touchup'" :class="step === 'touchup' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'" class="px-3 py-1.5 rounded-xl font-extrabold text-xs transition flex items-center gap-1.5 cursor-pointer">
                                                     <span>3. Touch-up Filters</span>
                                                 </button>
-                                                <button type="button" @click="step = 'preview'" :class="step === 'preview' ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'" class="px-3.5 py-1.5 rounded-xl font-extrabold text-xs transition flex items-center gap-1.5 cursor-pointer">
+                                                <button type="button" @click="step = 'preview'" :class="step === 'preview' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'" class="px-3 py-1.5 rounded-xl font-extrabold text-xs transition flex items-center gap-1.5 cursor-pointer">
                                                     <span>4. Final Preview</span>
                                                 </button>
                                             </div>
 
                                             <!-- Warning Banner -->
                                             <template x-if="resWarning">
-                                                <div class="bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-300 p-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 shrink-0 my-2">
+                                                <div class="bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-300 p-2 rounded-xl text-xs font-semibold flex items-center gap-2 shrink-0 my-1.5">
                                                     <svg class="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                                                     <span x-text="resWarning"></span>
                                                 </div>
                                             </template>
 
-                                            <!-- Main Studio Stage -->
-                                            <div class="flex-1 overflow-y-auto min-h-0 space-y-3 py-2 pr-1">
+                                            <!-- Main Studio Stage (Fills 100% remaining height) -->
+                                            <div class="flex-1 min-h-0 flex flex-col py-2 overflow-hidden">
                                                 <!-- STEP 1: CROP & ALIGN -->
-                                                <div x-show="step === 'crop'" class="space-y-3">
-                                                    <div class="flex flex-wrap items-center justify-between gap-2.5 bg-gray-50 dark:bg-gray-800/60 p-2.5 rounded-2xl border border-gray-100 dark:border-gray-700/60">
+                                                <div x-show="step === 'crop'" class="flex-1 min-h-0 flex flex-col gap-2">
+                                                    <div class="flex flex-wrap items-center justify-between gap-2 bg-gray-50 dark:bg-gray-800/60 px-3 py-1.5 rounded-xl border border-gray-100 dark:border-gray-700/60 shrink-0">
                                                         <div class="flex items-center gap-2">
-                                                            <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Aspect:</span>
-                                                            <button type="button" @click="setAspectRatio(1)" :class="aspectRatio === 1 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-gray-300'" class="px-3 py-1.5 rounded-lg font-bold text-xs border border-gray-200 dark:border-gray-600 transition cursor-pointer">1:1 Square</button>
-                                                            <button type="button" @click="setAspectRatio(0.75)" :class="aspectRatio === 0.75 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-gray-300'" class="px-3 py-1.5 rounded-lg font-bold text-xs border border-gray-200 dark:border-gray-600 transition cursor-pointer">3:4 Passport</button>
+                                                            <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase">Aspect:</span>
+                                                            <button type="button" @click="setAspectRatio(1)" :class="aspectRatio === 1 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-gray-300'" class="px-2.5 py-1 rounded-lg font-bold text-xs border border-gray-200 dark:border-gray-600 transition cursor-pointer">1:1 Square</button>
+                                                            <button type="button" @click="setAspectRatio(0.75)" :class="aspectRatio === 0.75 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-gray-700 dark:bg-gray-700 dark:text-gray-300'" class="px-2.5 py-1 rounded-lg font-bold text-xs border border-gray-200 dark:border-gray-600 transition cursor-pointer">3:4 Passport</button>
                                                         </div>
 
                                                         <div class="flex items-center gap-1.5">
-                                                            <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mr-1">Controls:</span>
-                                                            <button type="button" @click="zoom(0.1)" class="px-2.5 py-1.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold hover:bg-gray-100 dark:hover:bg-gray-600 transition cursor-pointer flex items-center gap-1" title="Zoom In">
+                                                            <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase mr-1">Controls:</span>
+                                                            <button type="button" @click="zoom(0.1)" class="px-2 py-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold hover:bg-gray-100 dark:hover:bg-gray-600 transition cursor-pointer flex items-center gap-1" title="Zoom In">
                                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"/></svg>
                                                                 <span>Zoom +</span>
                                                             </button>
-                                                            <button type="button" @click="zoom(-0.1)" class="px-2.5 py-1.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold hover:bg-gray-100 dark:hover:bg-gray-600 transition cursor-pointer flex items-center gap-1" title="Zoom Out">
+                                                            <button type="button" @click="zoom(-0.1)" class="px-2 py-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold hover:bg-gray-100 dark:hover:bg-gray-600 transition cursor-pointer flex items-center gap-1" title="Zoom Out">
                                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"/></svg>
                                                                 <span>Zoom -</span>
                                                             </button>
-                                                            <button type="button" @click="rotate(-90)" class="p-1.5 px-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold hover:bg-gray-100 transition cursor-pointer" title="Rotate Left 90°">↺ 90°</button>
-                                                            <button type="button" @click="rotate(90)" class="p-1.5 px-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold hover:bg-gray-100 transition cursor-pointer" title="Rotate Right 90°">↻ 90°</button>
-                                                            <button type="button" @click="flipHorizontal()" class="p-1.5 px-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold hover:bg-gray-100 transition cursor-pointer" title="Flip Horizontal">⇄ Flip</button>
+                                                            <button type="button" @click="rotate(-90)" class="p-1 px-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold hover:bg-gray-100 transition cursor-pointer" title="Rotate Left 90°">↺ 90°</button>
+                                                            <button type="button" @click="rotate(90)" class="p-1 px-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold hover:bg-gray-100 transition cursor-pointer" title="Rotate Right 90°">↻ 90°</button>
+                                                            <button type="button" @click="flipHorizontal()" class="p-1 px-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold hover:bg-gray-100 transition cursor-pointer" title="Flip Horizontal">⇄ Flip</button>
                                                         </div>
                                                     </div>
 
-                                                    <!-- Dynamic Responsive Crop Stage Container -->
-                                                    <div class="relative w-full h-[52vh] min-h-[320px] max-h-[580px] bg-gray-950 rounded-2xl overflow-hidden flex items-center justify-center border border-gray-800 shadow-inner">
-                                                        <img x-ref="cropImage" class="max-w-full block" style="display: block; max-width: 100%; max-height: 100%;" />
+                                                    <!-- Crop Stage Container (100% available flex-1 space) -->
+                                                    <div class="flex-1 min-h-0 w-full bg-gray-950 rounded-2xl overflow-hidden flex items-center justify-center border border-gray-800 shadow-inner relative">
+                                                        <img x-ref="cropImage" class="max-w-full max-h-full block" style="display: block; max-width: 100%; max-height: 100%;" />
                                                     </div>
                                                 </div>
 
                                                 <!-- STEP 2: BACKGROUND -->
-                                                <div x-show="step === 'background'" class="space-y-3">
-                                                    <div class="bg-gray-50 dark:bg-gray-800/60 p-3.5 rounded-2xl border border-gray-100 dark:border-gray-700/60 space-y-3">
-                                                        <div class="flex flex-wrap items-center justify-between gap-3">
+                                                <div x-show="step === 'background'" class="flex-1 min-h-0 flex flex-col gap-2">
+                                                    <div class="bg-gray-50 dark:bg-gray-800/60 p-3 rounded-2xl border border-gray-100 dark:border-gray-700/60 space-y-2 shrink-0">
+                                                        <div class="flex flex-wrap items-center justify-between gap-2">
                                                             <div>
-                                                                <h5 class="text-xs font-extrabold uppercase text-gray-900 dark:text-white">Client-Side AI Background Isolation</h5>
-                                                                <p class="text-[11px] text-gray-500 dark:text-gray-400">Isolate student subject and replace background with solid backdrop color.</p>
+                                                                <h5 class="text-xs font-extrabold uppercase text-gray-900 dark:text-white">AI Background Isolation</h5>
+                                                                <p class="text-[10px] text-gray-500 dark:text-gray-400">Isolate student subject and replace backdrop color.</p>
                                                             </div>
 
-                                                            <button type="button" @click="removeBg()" :disabled="isProcessingBg" class="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-xs uppercase rounded-xl transition shadow flex items-center gap-2 cursor-pointer disabled:opacity-50">
+                                                            <button type="button" @click="removeBg()" :disabled="isProcessingBg" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-xs uppercase rounded-xl transition shadow flex items-center gap-2 cursor-pointer disabled:opacity-50">
                                                                 <template x-if="isProcessingBg">
                                                                     <div class="flex items-center gap-2">
                                                                         <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -2637,22 +2637,22 @@ new class extends Component
                                                         </div>
 
                                                         <template x-if="bgErrorMessage">
-                                                            <p class="text-xs font-semibold text-rose-500 bg-rose-50 dark:bg-rose-950/40 p-2.5 rounded-xl border border-rose-200 dark:border-rose-900/50" x-text="bgErrorMessage"></p>
+                                                            <p class="text-xs font-semibold text-rose-500 bg-rose-50 dark:bg-rose-950/40 p-2 rounded-xl border border-rose-200 dark:border-rose-900/50" x-text="bgErrorMessage"></p>
                                                         </template>
 
                                                         <!-- Background Color Swatches -->
-                                                        <div class="space-y-1.5 pt-2 border-t border-gray-200 dark:border-gray-700">
-                                                            <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Select Backdrop Fill Color:</span>
-                                                            <div class="flex flex-wrap items-center gap-3">
-                                                                <button type="button" @click="bgColor = '#ffffff'; renderCompositedCanvas()" :class="bgColor === '#ffffff' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-8 h-8 rounded-full bg-white border border-gray-300 shadow-sm transition cursor-pointer" title="White"></button>
-                                                                <button type="button" @click="bgColor = '#f1f5f9'; renderCompositedCanvas()" :class="bgColor === '#f1f5f9' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-8 h-8 rounded-full bg-slate-100 border border-gray-300 shadow-sm transition cursor-pointer" title="Light Grey"></button>
-                                                                <button type="button" @click="bgColor = '#38bdf8'; renderCompositedCanvas()" :class="bgColor === '#38bdf8' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-8 h-8 rounded-full bg-sky-400 border border-sky-300 shadow-sm transition cursor-pointer" title="Sky Blue"></button>
-                                                                <button type="button" @click="bgColor = '#1e3a8a'; renderCompositedCanvas()" :class="bgColor === '#1e3a8a' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-8 h-8 rounded-full bg-blue-900 border border-blue-800 shadow-sm transition cursor-pointer" title="Navy Blue"></button>
-                                                                <button type="button" @click="bgColor = '#dc2626'; renderCompositedCanvas()" :class="bgColor === '#dc2626' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-8 h-8 rounded-full bg-red-600 border border-red-500 shadow-sm transition cursor-pointer" title="Red"></button>
+                                                        <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-gray-200 dark:border-gray-700">
+                                                            <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase mr-1">Backdrop Fill:</span>
+                                                            <div class="flex items-center gap-2">
+                                                                <button type="button" @click="bgColor = '#ffffff'; renderCompositedCanvas()" :class="bgColor === '#ffffff' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-7 h-7 rounded-full bg-white border border-gray-300 shadow-sm transition cursor-pointer" title="White"></button>
+                                                                <button type="button" @click="bgColor = '#f1f5f9'; renderCompositedCanvas()" :class="bgColor === '#f1f5f9' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-7 h-7 rounded-full bg-slate-100 border border-gray-300 shadow-sm transition cursor-pointer" title="Light Grey"></button>
+                                                                <button type="button" @click="bgColor = '#38bdf8'; renderCompositedCanvas()" :class="bgColor === '#38bdf8' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-7 h-7 rounded-full bg-sky-400 border border-sky-300 shadow-sm transition cursor-pointer" title="Sky Blue"></button>
+                                                                <button type="button" @click="bgColor = '#1e3a8a'; renderCompositedCanvas()" :class="bgColor === '#1e3a8a' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-7 h-7 rounded-full bg-blue-900 border border-blue-800 shadow-sm transition cursor-pointer" title="Navy Blue"></button>
+                                                                <button type="button" @click="bgColor = '#dc2626'; renderCompositedCanvas()" :class="bgColor === '#dc2626' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-7 h-7 rounded-full bg-red-600 border border-red-500 shadow-sm transition cursor-pointer" title="Red"></button>
                                                                 
                                                                 <!-- Custom Color Picker -->
-                                                                <div class="flex items-center gap-2 ml-2 pl-3 border-l border-gray-300 dark:border-gray-700">
-                                                                    <input type="color" x-model="bgColor" @input="renderCompositedCanvas()" class="w-8 h-8 rounded-lg cursor-pointer border-0 bg-transparent" />
+                                                                <div class="flex items-center gap-1.5 ml-1 pl-2 border-l border-gray-300 dark:border-gray-700">
+                                                                    <input type="color" x-model="bgColor" @input="renderCompositedCanvas()" class="w-7 h-7 rounded-lg cursor-pointer border-0 bg-transparent" />
                                                                     <span class="text-xs font-mono text-gray-500" x-text="bgColor"></span>
                                                                 </div>
                                                             </div>
@@ -2660,92 +2660,85 @@ new class extends Component
                                                     </div>
 
                                                     <!-- Live Preview Stage for Step 2 -->
-                                                    <div class="flex flex-col items-center justify-center p-4 bg-gray-950 rounded-2xl border border-gray-800 h-[40vh] min-h-[260px] max-h-[460px]">
-                                                        <div class="flex items-center gap-2 mb-2">
+                                                    <div class="flex-1 min-h-0 w-full bg-gray-950 rounded-2xl border border-gray-800 flex flex-col items-center justify-center p-3 relative overflow-hidden">
+                                                        <div class="absolute top-2 left-3 flex items-center gap-1.5 z-10">
                                                             <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
-                                                            <h5 class="text-[11px] font-extrabold uppercase text-gray-400 tracking-wider">Live Background Preview</h5>
+                                                            <span class="text-[10px] font-extrabold uppercase text-gray-400 tracking-wider">Live Background Preview</span>
                                                         </div>
                                                         <canvas class="studio-preview-canvas max-h-full max-w-full rounded-2xl shadow-2xl border border-gray-700/80 object-contain"></canvas>
                                                     </div>
                                                 </div>
 
                                                 <!-- STEP 3: TOUCH-UP FILTERS -->
-                                                <div x-show="step === 'touchup'" class="space-y-3">
-                                                    <div class="bg-gray-50 dark:bg-gray-800/60 p-3.5 rounded-2xl border border-gray-100 dark:border-gray-700/60 space-y-3">
-                                                        <div class="flex flex-wrap items-center justify-between gap-3">
-                                                            <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">One-Click Presets:</span>
-                                                            <div class="flex items-center gap-2">
-                                                                <button type="button" @click="applyPreset('enhance')" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg font-bold text-xs shadow-sm hover:bg-indigo-700 transition cursor-pointer">✨ ID Photo Enhance</button>
-                                                                <button type="button" @click="applyPreset('studio')" class="px-3 py-1.5 bg-purple-600 text-white rounded-lg font-bold text-xs shadow-sm hover:bg-purple-700 transition cursor-pointer">💡 Studio Bright</button>
-                                                                <button type="button" @click="applyPreset('reset')" class="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-bold text-xs hover:bg-gray-300 transition cursor-pointer">Reset Filters</button>
+                                                <div x-show="step === 'touchup'" class="flex-1 min-h-0 flex flex-col gap-2">
+                                                    <div class="bg-gray-50 dark:bg-gray-800/60 p-3 rounded-2xl border border-gray-100 dark:border-gray-700/60 space-y-2 shrink-0">
+                                                        <div class="flex flex-wrap items-center justify-between gap-2">
+                                                            <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase">Presets:</span>
+                                                            <div class="flex items-center gap-1.5">
+                                                                <button type="button" @click="applyPreset('enhance')" class="px-2.5 py-1 bg-indigo-600 text-white rounded-lg font-bold text-xs shadow-sm hover:bg-indigo-700 transition cursor-pointer">✨ ID Photo Enhance</button>
+                                                                <button type="button" @click="applyPreset('studio')" class="px-2.5 py-1 bg-purple-600 text-white rounded-lg font-bold text-xs shadow-sm hover:bg-purple-700 transition cursor-pointer">💡 Studio Bright</button>
+                                                                <button type="button" @click="applyPreset('reset')" class="px-2.5 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-bold text-xs hover:bg-gray-300 transition cursor-pointer">Reset</button>
                                                             </div>
                                                         </div>
 
-                                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-2 border-t border-gray-200 dark:border-gray-700">
-                                                            <!-- Brightness -->
-                                                            <div class="space-y-1">
-                                                                <div class="flex justify-between text-xs font-bold">
+                                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 border-t border-gray-200 dark:border-gray-700">
+                                                            <div class="space-y-0.5">
+                                                                <div class="flex justify-between text-[11px] font-bold">
                                                                     <span>Brightness</span>
                                                                     <span x-text="brightness + '%'"></span>
                                                                 </div>
-                                                                <input type="range" min="50" max="150" x-model="brightness" @input="renderCompositedCanvas()" class="w-full accent-indigo-600 cursor-pointer" />
+                                                                <input type="range" min="50" max="150" x-model="brightness" @input="renderCompositedCanvas()" class="w-full accent-indigo-600 cursor-pointer h-1.5" />
                                                             </div>
-
-                                                            <!-- Contrast -->
-                                                            <div class="space-y-1">
-                                                                <div class="flex justify-between text-xs font-bold">
+                                                            <div class="space-y-0.5">
+                                                                <div class="flex justify-between text-[11px] font-bold">
                                                                     <span>Contrast</span>
                                                                     <span x-text="contrast + '%'"></span>
                                                                 </div>
-                                                                <input type="range" min="50" max="150" x-model="contrast" @input="renderCompositedCanvas()" class="w-full accent-indigo-600 cursor-pointer" />
+                                                                <input type="range" min="50" max="150" x-model="contrast" @input="renderCompositedCanvas()" class="w-full accent-indigo-600 cursor-pointer h-1.5" />
                                                             </div>
-
-                                                            <!-- Saturation -->
-                                                            <div class="space-y-1">
-                                                                <div class="flex justify-between text-xs font-bold">
+                                                            <div class="space-y-0.5">
+                                                                <div class="flex justify-between text-[11px] font-bold">
                                                                     <span>Saturation</span>
                                                                     <span x-text="saturation + '%'"></span>
                                                                 </div>
-                                                                <input type="range" min="50" max="150" x-model="saturation" @input="renderCompositedCanvas()" class="w-full accent-indigo-600 cursor-pointer" />
+                                                                <input type="range" min="50" max="150" x-model="saturation" @input="renderCompositedCanvas()" class="w-full accent-indigo-600 cursor-pointer h-1.5" />
                                                             </div>
                                                         </div>
                                                     </div>
 
                                                     <!-- Live Preview Stage for Step 3 -->
-                                                    <div class="flex flex-col items-center justify-center p-4 bg-gray-950 rounded-2xl border border-gray-800 h-[40vh] min-h-[260px] max-h-[460px]">
-                                                        <div class="flex items-center gap-2 mb-2">
+                                                    <div class="flex-1 min-h-0 w-full bg-gray-950 rounded-2xl border border-gray-800 flex flex-col items-center justify-center p-3 relative overflow-hidden">
+                                                        <div class="absolute top-2 left-3 flex items-center gap-1.5 z-10">
                                                             <span class="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
-                                                            <h5 class="text-[11px] font-extrabold uppercase text-gray-400 tracking-wider">Live Filter Preview</h5>
+                                                            <span class="text-[10px] font-extrabold uppercase text-gray-400 tracking-wider">Live Filter Preview</span>
                                                         </div>
                                                         <canvas class="studio-preview-canvas max-h-full max-w-full rounded-2xl shadow-2xl border border-gray-700/80 object-contain"></canvas>
                                                     </div>
                                                 </div>
 
                                                 <!-- STEP 4: FINAL PREVIEW -->
-                                                <div x-show="step === 'preview'" class="space-y-3">
-                                                    <div class="flex flex-col items-center justify-center p-4 bg-gray-950 rounded-2xl border border-gray-800 h-[48vh] min-h-[300px] max-h-[520px]">
-                                                        <div class="flex items-center gap-2 mb-3">
-                                                            <span class="px-3.5 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5">
-                                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                                                <span>Final Student ID Photo Result</span>
-                                                            </span>
-                                                        </div>
-                                                        <canvas class="studio-preview-canvas max-h-full max-w-full rounded-2xl shadow-2xl border border-gray-700/80 object-contain"></canvas>
+                                                <div x-show="step === 'preview'" class="flex-1 min-h-0 flex flex-col items-center justify-center p-3 bg-gray-950 rounded-2xl border border-gray-800 relative overflow-hidden">
+                                                    <div class="absolute top-2 left-3 z-10">
+                                                        <span class="px-3 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1">
+                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                            <span>Ready for Student ID Card</span>
+                                                        </span>
                                                     </div>
+                                                    <canvas class="studio-preview-canvas max-h-full max-w-full rounded-2xl shadow-2xl border border-gray-700/80 object-contain"></canvas>
                                                 </div>
                                             </div>
 
                                             <!-- Modal Footer -->
-                                            <div class="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-800 shrink-0">
-                                                <button type="button" @click="resetState(); initStudio()" class="px-4 py-2 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-bold transition cursor-pointer">
-                                                    ↺ Reset to Original
+                                            <div class="flex items-center justify-between pt-2.5 border-t border-gray-100 dark:border-gray-800 shrink-0">
+                                                <button type="button" @click="resetState(); initStudio()" class="px-3.5 py-1.5 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-bold transition cursor-pointer">
+                                                    ↺ Reset
                                                 </button>
 
-                                                <div class="flex items-center gap-3">
-                                                    <button type="button" @click="closeStudio()" class="px-5 py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold text-xs uppercase tracking-wider transition cursor-pointer">
+                                                <div class="flex items-center gap-2.5">
+                                                    <button type="button" @click="closeStudio()" class="px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold text-xs uppercase tracking-wider transition cursor-pointer">
                                                         Cancel
                                                     </button>
-                                                    <button type="button" @click="savePhoto()" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-emerald-600/20 transition cursor-pointer flex items-center gap-2">
+                                                    <button type="button" @click="savePhoto()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-emerald-600/20 transition cursor-pointer flex items-center gap-2">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                                         <span>Save Photo</span>
                                                     </button>
