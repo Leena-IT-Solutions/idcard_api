@@ -103,21 +103,25 @@
                 @endif
 
                 @if($showPrintGuides)
-                    {{-- Punch / Cut-line guide (86mm x 54mm / 54mm x 86mm): machine punch boundary inset from bleed canvas --}}
+                    {{-- Punch / Cut-line guide (86mm x 54mm / 54mm x 86mm): machine punch boundary with rounded die-cut corners --}}
                     <div
-                        class="absolute border-2 border-dashed border-red-500/90 pointer-events-none z-30 shadow-[0_0_0_1px_rgba(239,68,68,0.3)]"
-                        style="top: {{ $punchInsetYPx }}px; left: {{ $punchInsetXPx }}px; right: {{ $punchInsetXPx }}px; bottom: {{ $punchInsetYPx }}px;"
+                        class="absolute border-2 border-dashed pointer-events-none z-30 transition-all rounded-[14px]"
+                        style="top: {{ $punchInsetYPx }}px; left: {{ $punchInsetXPx }}px; right: {{ $punchInsetXPx }}px; bottom: {{ $punchInsetYPx }}px; border-color: #ef4444; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.5), 0 0 6px rgba(239, 68, 68, 0.5);"
                         title="Cut Line / Punch Size ({{ $punchWidthMm }}mm x {{ $punchHeightMm }}mm)"
                     ></div>
-                    <span class="absolute text-[9px] font-black uppercase tracking-wide text-red-600 bg-white/90 border border-red-200 px-1.5 py-0.5 rounded shadow-sm pointer-events-none z-30" style="top: {{ max(2, $punchInsetYPx + 3) }}px; left: {{ max(2, $punchInsetXPx + 3) }}px;">Cut Line ({{ $punchWidthMm }}×{{ $punchHeightMm }}mm)</span>
+                    <span class="absolute text-[9px] font-black uppercase tracking-wider text-white bg-rose-600 border border-rose-400 px-2 py-0.5 rounded-md shadow-md pointer-events-none z-30 flex items-center gap-1" style="top: {{ max(2, $punchInsetYPx + 3) }}px; left: {{ max(2, $punchInsetXPx + 3) }}px;">
+                        <span>✂ Cut Line ({{ $punchWidthMm }}×{{ $punchHeightMm }}mm)</span>
+                    </span>
 
-                    {{-- Text-safe artwork guide (80mm x 50mm / 50mm x 80mm): safe area inside the punch line --}}
+                    {{-- Text-safe artwork guide (80mm x 50mm / 50mm x 80mm): safe area inside the punch line in distinct Emerald Green --}}
                     <div
-                        class="absolute border-2 border-dashed border-blue-500/90 pointer-events-none z-30 shadow-[0_0_0_1px_rgba(59,130,246,0.3)]"
-                        style="top: {{ $safeInsetYPx }}px; left: {{ $safeInsetXPx }}px; right: {{ $safeInsetXPx }}px; bottom: {{ $safeInsetYPx }}px;"
+                        class="absolute border-2 border-dashed pointer-events-none z-30 transition-all rounded-md"
+                        style="top: {{ $safeInsetYPx }}px; left: {{ $safeInsetXPx }}px; right: {{ $safeInsetXPx }}px; bottom: {{ $safeInsetYPx }}px; border-color: #10b981; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.5), 0 0 6px rgba(16, 185, 129, 0.5);"
                         title="Text Safe Area ({{ $safeWidthMm }}mm x {{ $safeHeightMm }}mm)"
                     ></div>
-                    <span class="absolute text-[9px] font-black uppercase tracking-wide text-blue-600 bg-white/90 border border-blue-200 px-1.5 py-0.5 rounded shadow-sm pointer-events-none z-30" style="top: {{ $safeInsetYPx + 3 }}px; left: {{ $safeInsetXPx + 3 }}px;">Text Safe ({{ $safeWidthMm }}×{{ $safeHeightMm }}mm)</span>
+                    <span class="absolute text-[9px] font-black uppercase tracking-wider text-white bg-emerald-600 border border-emerald-400 px-2 py-0.5 rounded-md shadow-md pointer-events-none z-30 flex items-center gap-1" style="top: {{ $safeInsetYPx + 3 }}px; left: {{ $safeInsetXPx + 3 }}px;">
+                        <span>🛡 Text Safe ({{ $safeWidthMm }}×{{ $safeHeightMm }}mm)</span>
+                    </span>
                 @endif
 
                 <!-- Dynamic Snapping Alignment Guide Lines (Canva / Figma Smart Guides) -->
