@@ -2539,12 +2539,12 @@ new class extends Component
                                     <x-input-error :messages="$errors->get('photo')" class="mt-2" />
 
                                     <!-- PHOTO STUDIO MODAL -->
-                                    <div x-show="isOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 overflow-hidden">
+                                    <div x-show="isOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-3 sm:p-4">
                                         <div class="fixed inset-0 bg-gray-950/80 backdrop-blur-md transition-opacity" @click="closeStudio()"></div>
 
-                                        <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl max-w-4xl w-full h-[90vh] max-h-[780px] p-4 sm:p-5 shadow-2xl relative z-10 text-gray-900 dark:text-white flex flex-col overflow-hidden">
+                                        <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl max-w-3xl w-full p-4 sm:p-5 shadow-2xl relative z-10 text-gray-900 dark:text-white my-auto max-h-[92vh] flex flex-col">
                                             <!-- Modal Header -->
-                                            <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5 shrink-0">
+                                            <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-2 shrink-0">
                                                 <div class="space-y-0.5">
                                                     <h3 class="text-base font-black text-gray-900 dark:text-white flex items-center gap-2">
                                                         <span>🎨 Student Photo Studio</span>
@@ -2575,16 +2575,16 @@ new class extends Component
 
                                             <!-- Warning Banner -->
                                             <template x-if="resWarning">
-                                                <div class="bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-300 p-2 rounded-xl text-xs font-semibold flex items-center gap-2 shrink-0 my-1.5">
+                                                <div class="bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-300 p-2 rounded-xl text-xs font-semibold flex items-center gap-2 shrink-0 my-1">
                                                     <svg class="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                                                     <span x-text="resWarning"></span>
                                                 </div>
                                             </template>
 
-                                            <!-- Main Studio Stage (Fills 100% remaining height) -->
-                                            <div class="flex-1 min-h-0 flex flex-col py-2 overflow-hidden">
+                                            <!-- Main Studio Stage (Scrolls gracefully if window is small) -->
+                                            <div class="flex-1 overflow-y-auto min-h-0 space-y-3 py-2 pr-1">
                                                 <!-- STEP 1: CROP & ALIGN -->
-                                                <div x-show="step === 'crop'" class="flex-1 min-h-0 flex flex-col gap-2">
+                                                <div x-show="step === 'crop'" class="space-y-2">
                                                     <div class="flex flex-wrap items-center justify-between gap-2 bg-gray-50 dark:bg-gray-800/60 px-3 py-1.5 rounded-xl border border-gray-100 dark:border-gray-700/60 shrink-0">
                                                         <div class="flex items-center gap-2">
                                                             <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase">Aspect:</span>
@@ -2608,14 +2608,14 @@ new class extends Component
                                                         </div>
                                                     </div>
 
-                                                    <!-- Crop Stage Container (100% available flex-1 space) -->
-                                                    <div class="flex-1 min-h-0 w-full bg-gray-950 rounded-2xl overflow-hidden flex items-center justify-center border border-gray-800 shadow-inner relative">
-                                                        <img x-ref="cropImage" class="max-w-full max-h-full block" style="display: block; max-width: 100%; max-height: 100%;" />
+                                                    <!-- Crop Stage Container -->
+                                                    <div class="relative w-full h-[320px] sm:h-[360px] bg-gray-950 rounded-2xl overflow-hidden flex items-center justify-center border border-gray-800 shadow-inner">
+                                                        <img x-ref="cropImage" class="max-w-full block" style="display: block; max-width: 100%; max-height: 360px;" />
                                                     </div>
                                                 </div>
 
                                                 <!-- STEP 2: BACKGROUND -->
-                                                <div x-show="step === 'background'" class="flex-1 min-h-0 flex flex-col gap-2">
+                                                <div x-show="step === 'background'" class="space-y-3">
                                                     <div class="bg-gray-50 dark:bg-gray-800/60 p-3 rounded-2xl border border-gray-100 dark:border-gray-700/60 space-y-2 shrink-0">
                                                         <div class="flex flex-wrap items-center justify-between gap-2">
                                                             <div>
@@ -2660,17 +2660,17 @@ new class extends Component
                                                     </div>
 
                                                     <!-- Live Preview Stage for Step 2 -->
-                                                    <div class="flex-1 min-h-0 w-full bg-gray-950 rounded-2xl border border-gray-800 flex flex-col items-center justify-center p-3 relative overflow-hidden">
-                                                        <div class="absolute top-2 left-3 flex items-center gap-1.5 z-10">
+                                                    <div class="flex flex-col items-center justify-center p-3 bg-gray-950 rounded-2xl border border-gray-800 min-h-[260px]">
+                                                        <div class="flex items-center gap-1.5 mb-2">
                                                             <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
                                                             <span class="text-[10px] font-extrabold uppercase text-gray-400 tracking-wider">Live Background Preview</span>
                                                         </div>
-                                                        <canvas class="studio-preview-canvas max-h-full max-w-full rounded-2xl shadow-2xl border border-gray-700/80 object-contain"></canvas>
+                                                        <canvas class="studio-preview-canvas max-h-[260px] max-w-full rounded-2xl shadow-2xl border border-gray-700/80 object-contain"></canvas>
                                                     </div>
                                                 </div>
 
                                                 <!-- STEP 3: TOUCH-UP FILTERS -->
-                                                <div x-show="step === 'touchup'" class="flex-1 min-h-0 flex flex-col gap-2">
+                                                <div x-show="step === 'touchup'" class="space-y-3">
                                                     <div class="bg-gray-50 dark:bg-gray-800/60 p-3 rounded-2xl border border-gray-100 dark:border-gray-700/60 space-y-2 shrink-0">
                                                         <div class="flex flex-wrap items-center justify-between gap-2">
                                                             <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase">Presets:</span>
@@ -2707,28 +2707,30 @@ new class extends Component
                                                     </div>
 
                                                     <!-- Live Preview Stage for Step 3 -->
-                                                    <div class="flex-1 min-h-0 w-full bg-gray-950 rounded-2xl border border-gray-800 flex flex-col items-center justify-center p-3 relative overflow-hidden">
-                                                        <div class="absolute top-2 left-3 flex items-center gap-1.5 z-10">
+                                                    <div class="flex flex-col items-center justify-center p-3 bg-gray-950 rounded-2xl border border-gray-800 min-h-[260px]">
+                                                        <div class="flex items-center gap-1.5 mb-2">
                                                             <span class="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
                                                             <span class="text-[10px] font-extrabold uppercase text-gray-400 tracking-wider">Live Filter Preview</span>
                                                         </div>
-                                                        <canvas class="studio-preview-canvas max-h-full max-w-full rounded-2xl shadow-2xl border border-gray-700/80 object-contain"></canvas>
+                                                        <canvas class="studio-preview-canvas max-h-[260px] max-w-full rounded-2xl shadow-2xl border border-gray-700/80 object-contain"></canvas>
                                                     </div>
                                                 </div>
 
                                                 <!-- STEP 4: FINAL PREVIEW -->
-                                                <div x-show="step === 'preview'" class="flex-1 min-h-0 flex flex-col items-center justify-center p-3 bg-gray-950 rounded-2xl border border-gray-800 relative overflow-hidden">
-                                                    <div class="absolute top-2 left-3 z-10">
-                                                        <span class="px-3 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1">
-                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                                            <span>Ready for Student ID Card</span>
-                                                        </span>
+                                                <div x-show="step === 'preview'" class="space-y-3">
+                                                    <div class="flex flex-col items-center justify-center p-3 bg-gray-950 rounded-2xl border border-gray-800 min-h-[300px]">
+                                                        <div class="flex items-center gap-1.5 mb-2">
+                                                            <span class="px-3 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1">
+                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                                <span>Ready for Student ID Card</span>
+                                                            </span>
+                                                        </div>
+                                                        <canvas class="studio-preview-canvas max-h-[300px] max-w-full rounded-2xl shadow-2xl border border-gray-700/80 object-contain"></canvas>
                                                     </div>
-                                                    <canvas class="studio-preview-canvas max-h-full max-w-full rounded-2xl shadow-2xl border border-gray-700/80 object-contain"></canvas>
                                                 </div>
                                             </div>
 
-                                            <!-- Modal Footer -->
+                                            <!-- Modal Footer (Always visible & docked) -->
                                             <div class="flex items-center justify-between pt-2.5 border-t border-gray-100 dark:border-gray-800 shrink-0">
                                                 <button type="button" @click="resetState(); initStudio()" class="px-3.5 py-1.5 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-bold transition cursor-pointer">
                                                     ↺ Reset
