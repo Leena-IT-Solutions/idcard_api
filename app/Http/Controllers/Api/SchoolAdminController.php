@@ -712,6 +712,16 @@ class SchoolAdminController extends Controller
             }
         }
 
+        $lockedStatuses = [
+            \App\Models\CampaignStudent::STATUS_SENT_FOR_PRINTING,
+            \App\Models\CampaignStudent::STATUS_PRINTED,
+            \App\Models\CampaignStudent::STATUS_DISTRIBUTED,
+        ];
+
+        if (in_array($enrollment->status, $lockedStatuses)) {
+            return response()->json(['message' => 'Status cannot be changed because the ID card has already been sent for printing.'], 422);
+        }
+
         $enrollment->update([
             'verified_at' => null,
             'verified_by' => null,
@@ -745,6 +755,19 @@ class SchoolAdminController extends Controller
             if (!in_array($enrollment->grade_id, $scopes['grades']) || !in_array($enrollment->division_id, $scopes['divisions'])) {
                 return response()->json(['message' => 'You do not have permission to update student status in this grade/division.'], 403);
             }
+        }
+
+        $lockedStatuses = [
+            \App\Models\CampaignStudent::STATUS_SENT_FOR_PRINTING,
+            \App\Models\CampaignStudent::STATUS_PRINTED,
+            \App\Models\CampaignStudent::STATUS_DISTRIBUTED,
+        ];
+
+        if (in_array($enrollment->status, $lockedStatuses) && in_array($request->status, [\App\Models\CampaignStudent::STATUS_DRAFTING, \App\Models\CampaignStudent::STATUS_VERIFIED])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Status cannot be changed because the ID card has already been sent for printing.',
+            ], 422);
         }
 
         $updateData = [
@@ -803,6 +826,14 @@ class SchoolAdminController extends Controller
             if ($request->division_id) {
                 $query->where('division_id', $request->division_id);
             }
+        }
+
+        if (in_array($request->status, [\App\Models\CampaignStudent::STATUS_DRAFTING, \App\Models\CampaignStudent::STATUS_VERIFIED])) {
+            $query->whereNotIn('status', [
+                \App\Models\CampaignStudent::STATUS_SENT_FOR_PRINTING,
+                \App\Models\CampaignStudent::STATUS_PRINTED,
+                \App\Models\CampaignStudent::STATUS_DISTRIBUTED,
+            ]);
         }
 
         $updateData = [
