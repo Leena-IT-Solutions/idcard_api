@@ -245,6 +245,64 @@ new class extends Component {
         session()->flash('message', 'All export history cleared.');
     }
 
+    // Print Preview Modal State
+    public bool $isPreviewModalOpen = false;
+    public string $previewViewMode = 'sheet'; // 'sheet' or 'card'
+    public string $previewSheetSide = 'front'; // 'front' or 'back'
+    public int $previewPageIndex = 0;
+    public int $previewStudentIndex = 0;
+    public bool $previewShowPunchGuide = true;
+
+    public function openPrintPreview()
+    {
+        $this->isPreviewModalOpen = true;
+        $this->previewPageIndex = 0;
+        $this->previewStudentIndex = 0;
+    }
+
+    public function closePrintPreview()
+    {
+        $this->isPreviewModalOpen = false;
+    }
+
+    public function setPreviewSheetSide(string $side)
+    {
+        $this->previewSheetSide = $side;
+    }
+
+    public function setPreviewViewMode(string $mode)
+    {
+        $this->previewViewMode = $mode;
+    }
+
+    public function nextPreviewPage(int $totalPages)
+    {
+        if ($this->previewPageIndex < $totalPages - 1) {
+            $this->previewPageIndex++;
+        }
+    }
+
+    public function prevPreviewPage()
+    {
+        if ($this->previewPageIndex > 0) {
+            $this->previewPageIndex--;
+        }
+    }
+
+    public function nextPreviewStudent(int $totalStudents)
+    {
+        if ($this->previewStudentIndex < $totalStudents - 1) {
+            $this->previewStudentIndex++;
+        }
+    }
+
+    public function prevPreviewStudent()
+    {
+        if ($this->previewStudentIndex > 0) {
+            $this->previewStudentIndex--;
+        }
+    }
+
     public function with(): array
     {
         $activeSchool = $this->schoolId ? School::find($this->schoolId) : null;
@@ -291,6 +349,76 @@ new class extends Component {
 
         $hasActiveExport = $userExports->contains(fn($e) => in_array($e->status, ['pending', 'processing']));
 
+        // Print Preview Data Resolution
+        $layoutService = app(\App\Services\ImpositionLayoutService::class);
+        $templateResolver = app(\App\Services\TemplateResolverService::class);
+
+        $sampleGradeId = !empty($this->selectedGradeIds) ? $this->selectedGradeIds[0] : null;
+        $sampleTemplate = $templateResolver->getEffectiveTemplate($this->schoolId, $sampleGradeId);
+
+        $isPortrait = ($sampleTemplate->orientation ?? 'landscape') === 'portrait';
+        $cardWidthMm = $isPortrait ? 57.0 : 90.0;
+        $cardHeightMm = $isPortrait ? 90.0 : 57.0;
+
+        $impositionParams = [
+            'page_size' => $this->exportPageSize,
+            'custom_width_mm' => $this->exportCustomWidthMm,
+            'custom_height_mm' => $this->exportCustomHeightMm,
+            'gutter_mm' => $this->exportGutterMm,
+            'bleed_mm' => 0.0,
+            'margin_mm' => 0.0,
+        ];
+        $sheetLayout = $layoutService->calculateLayout($impositionParams, $cardWidthMm, $cardHeightMm);
+        $cardsPerPage = max(1, $sheetLayout['cards_per_page']);
+
+        $previewStudentsList = collect();
+        $pageCards = [];
+        $previewTotalSheets = 1;
+
+        if ($this->isPreviewModalOpen) {
+            $previewQuery = Student::whereIn('id', $allMatchingStudentIds)
+                ->with(['campaignStudents' => function($q) {
+                    $q->whereHas('campaign', fn($cq) => $cq->where('school_id', $this->schoolId))
+                      ->with(['grade', 'division', 'verifier', 'campaign']);
+                }]);
+
+            if ($this->exportOnlyVerified && empty($this->preSelectedStudentIds)) {
+                $previewQuery->whereHas('campaignStudents', function($csQ) {
+                    $csQ->where('status', CampaignStudent::STATUS_VERIFIED)
+                       ->whereHas('campaign', fn($cq) => $cq->where('school_id', $this->schoolId));
+                });
+            }
+
+            $previewStudentsList = $previewQuery->take(100)->get();
+            $totalPreviewStudents = $previewStudentsList->count();
+            $previewTotalSheets = max(1, (int) ceil(max(1, $totalPreviewStudents) / $cardsPerPage));
+
+            $clampedPageIndex = min($this->previewPageIndex, $previewTotalSheets - 1);
+            $slice = $previewStudentsList->slice($clampedPageIndex * $cardsPerPage, $cardsPerPage)->values();
+
+            $cols = $sheetLayout['cols'];
+            $rows = $sheetLayout['rows'];
+            $isMirrored = $this->exportMirrorPrint;
+
+            for ($slotIdx = 0; $slotIdx < $cardsPerPage; $slotIdx++) {
+                $row = (int) floor($slotIdx / $cols);
+                $rawCol = $slotIdx % $cols;
+                $col = ($isMirrored || $this->previewSheetSide === 'back') ? ($cols - 1 - $rawCol) : $rawCol;
+                $std = $slice->get($slotIdx);
+
+                $stdEnrollment = $std?->campaignStudents?->first();
+                $stdTemplate = $std ? $templateResolver->getEffectiveTemplate($this->schoolId, $stdEnrollment?->grade_id) : $sampleTemplate;
+
+                $pageCards[] = [
+                    'slot_index' => $slotIdx,
+                    'row' => $row,
+                    'col' => $col,
+                    'student' => $std,
+                    'template' => $stdTemplate,
+                ];
+            }
+        }
+
         return [
             'activeSchool' => $activeSchool,
             'campaigns' => $campaigns,
@@ -302,6 +430,11 @@ new class extends Component {
             'effectiveTargetCount' => $effectiveTargetCount,
             'userExports' => $userExports,
             'hasActiveExport' => $hasActiveExport,
+            'sheetLayout' => $sheetLayout,
+            'previewStudentsList' => $previewStudentsList,
+            'pageCards' => $pageCards,
+            'previewTotalSheets' => $previewTotalSheets,
+            'sampleTemplate' => $sampleTemplate,
         ];
     }
 }; ?>
@@ -779,28 +912,36 @@ new class extends Component {
                     </div>
                 </div>
 
-                @if (($activeSchool->credits_balance ?? 0) < $effectiveTargetCount)
-                    <div class="p-3.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-2xl text-xs text-rose-800 dark:text-rose-300 space-y-2">
-                        <div class="flex items-center gap-1.5 font-bold">
-                            <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                            <span>Insufficient Wallet Balance</span>
-                        </div>
-                        <p class="text-[11px]">
-                            You need {{ $effectiveTargetCount - ($activeSchool->credits_balance ?? 0) }} more credits to start this export.
-                        </p>
-                        <a href="{{ route('billing') }}" wire:navigate class="block w-full text-center py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold uppercase tracking-wider text-[11px] transition shadow">
-                            Recharge Credits Now →
-                        </a>
-                    </div>
-                @else
-                    <button wire:click="triggerExport" wire:loading.attr="disabled" type="button" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-700 hover:to-indigo-900 text-white rounded-2xl font-black text-sm uppercase tracking-wider shadow-lg shadow-indigo-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2">
-                        <span wire:loading.remove>🚀 START EXPORT ({{ $effectiveTargetCount }} CARDS)</span>
-                        <span wire:loading class="flex items-center gap-2">
-                            <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            QUEUING EXPORT...
-                        </span>
+                <div class="space-y-3 pt-2">
+                    <!-- Live Print Preview Trigger Button -->
+                    <button wire:click="openPrintPreview" type="button" class="w-full py-3.5 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 rounded-2xl font-black text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+                        <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <span>{{ __('Live Print Preview') }}</span>
                     </button>
-                @endif
+
+                    @if (($activeSchool->credits_balance ?? 0) < $effectiveTargetCount)
+                        <div class="p-3.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-2xl text-xs text-rose-800 dark:text-rose-300 space-y-2">
+                            <div class="flex items-center gap-1.5 font-bold">
+                                <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                <span>Insufficient Wallet Balance</span>
+                            </div>
+                            <p class="text-[11px]">
+                                You need {{ $effectiveTargetCount - ($activeSchool->credits_balance ?? 0) }} more credits to start this export.
+                            </p>
+                            <a href="{{ route('billing') }}" wire:navigate class="block w-full text-center py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold uppercase tracking-wider text-[11px] transition shadow">
+                                Recharge Credits Now →
+                            </a>
+                        </div>
+                    @else
+                        <button wire:click="triggerExport" wire:loading.attr="disabled" type="button" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-700 hover:to-indigo-900 text-white rounded-2xl font-black text-sm uppercase tracking-wider shadow-lg shadow-indigo-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2">
+                            <span wire:loading.remove>🚀 START EXPORT ({{ $effectiveTargetCount }} CARDS)</span>
+                            <span wire:loading class="flex items-center gap-2">
+                                <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                QUEUING EXPORT...
+                            </span>
+                        </button>
+                    @endif
+                </div>
             </div>
 
             <!-- QUICK HELP / PRINT TIPS CARD -->
@@ -924,4 +1065,255 @@ new class extends Component {
             @endforelse
         </div>
     </div>
+
+    <!-- ========================================================================= -->
+    <!-- LIVE PRINT & IMPOSITION PREVIEW MODAL                                     -->
+    <!-- ========================================================================= -->
+    @if ($isPreviewModalOpen)
+        <div class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen px-3 py-6 text-center sm:p-6">
+                <div class="fixed inset-0 transition-opacity bg-gray-950/80 backdrop-blur-md" wire:click="closePrintPreview"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+
+                <div class="inline-block w-full max-w-7xl max-h-[92vh] flex flex-col text-left align-middle transition-all transform bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden sm:my-4">
+                    
+                    <!-- Modal Top Header -->
+                    <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/50 dark:bg-gray-950/40">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-indigo-600 text-white rounded-2xl shadow-sm">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-extrabold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                                    <span>{{ __('Live Print & Sheet Preview') }}</span>
+                                    @if ($exportMirrorPrint)
+                                        <span class="px-2 py-0.5 bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 rounded-md text-[9px] font-black uppercase">Mirrored</span>
+                                    @endif
+                                </h3>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                    {{ __('Commercial sheet simulation with exact card slots, gutter spacing, and punch alignment.') }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Top Mode Selector + Close Button -->
+                        <div class="flex items-center gap-3 self-end sm:self-auto">
+                            <!-- View Mode Tabs -->
+                            <div class="bg-gray-200 dark:bg-gray-800 p-1 rounded-2xl flex items-center gap-1 text-xs font-bold">
+                                <button type="button" wire:click="setPreviewViewMode('sheet')" class="px-3 py-1.5 rounded-xl transition cursor-pointer {{ $previewViewMode === 'sheet' ? 'bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900' }}">
+                                    📑 {{ __('Imposition Sheet') }}
+                                </button>
+                                <button type="button" wire:click="setPreviewViewMode('card')" class="px-3 py-1.5 rounded-xl transition cursor-pointer {{ $previewViewMode === 'card' ? 'bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900' }}">
+                                    📇 {{ __('Single ID Card') }}
+                                </button>
+                            </div>
+
+                            <button type="button" wire:click="closePrintPreview" class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition cursor-pointer">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Modal Body (Scrollable) -->
+                    <div class="p-6 overflow-y-auto max-h-[calc(92vh-140px)] space-y-6 bg-gray-100/60 dark:bg-gray-950/60">
+
+                        @if ($previewViewMode === 'sheet')
+                            <!-- IMPOSITION SHEET PREVIEW -->
+                            <div class="space-y-4">
+                                <!-- Sheet Controls Bar -->
+                                <div class="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                    <!-- Front / Back Sheet Toggle -->
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" wire:click="setPreviewSheetSide('front')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 {{ $previewSheetSide === 'front' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200' }}">
+                                            <span>🔵 {{ __('Front Sheet') }}</span>
+                                        </button>
+                                        <button type="button" wire:click="setPreviewSheetSide('back')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5 {{ $previewSheetSide === 'back' ? 'bg-purple-600 text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200' }}">
+                                            <span>🟣 {{ __('Back Sheet (Aligned & Mirrored)') }}</span>
+                                        </button>
+                                    </div>
+
+                                    <!-- Sheet Metrics Badges -->
+                                    <div class="flex items-center gap-2 flex-wrap text-[11px] font-mono font-bold text-gray-600 dark:text-gray-300">
+                                        <span class="px-2.5 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                                            📐 {{ $sheetLayout['page_width_mm'] }} × {{ $sheetLayout['page_height_mm'] }} mm
+                                        </span>
+                                        <span class="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 rounded-lg border border-indigo-100 dark:border-indigo-800">
+                                            🔲 {{ $sheetLayout['cols'] }} × {{ $sheetLayout['rows'] }} = {{ $sheetLayout['cards_per_page'] }} cards/sheet
+                                        </span>
+                                        <span class="px-2.5 py-1 bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 rounded-lg border border-purple-100 dark:border-purple-800">
+                                            ↔ Gutter: {{ $sheetLayout['gutter_mm'] }} mm
+                                        </span>
+                                    </div>
+
+                                    <!-- Sheet Page Navigator -->
+                                    <div class="flex items-center gap-2 text-xs font-bold">
+                                        <button type="button" wire:click="prevPreviewPage" @if($previewPageIndex <= 0) disabled @endif class="p-1.5 bg-gray-100 dark:bg-gray-800 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                                        </button>
+                                        <span class="text-gray-700 dark:text-gray-300 font-mono">
+                                            Sheet {{ $previewPageIndex + 1 }} / {{ $previewTotalSheets }}
+                                        </span>
+                                        <button type="button" wire:click="nextPreviewPage({{ $previewTotalSheets }})" @if($previewPageIndex >= $previewTotalSheets - 1) disabled @endif class="p-1.5 bg-gray-100 dark:bg-gray-800 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Sheet Rendering Container -->
+                                <div class="bg-gray-900 p-4 sm:p-8 rounded-3xl overflow-x-auto flex justify-center shadow-inner min-h-[500px]">
+                                    <!-- Scaled Paper Canvas -->
+                                    <div class="bg-white text-gray-900 border-2 border-gray-400/40 shadow-2xl p-6 sm:p-8 rounded-sm relative transition-all"
+                                         style="width: min(100%, 960px); aspect-ratio: {{ $sheetLayout['page_width_mm'] }} / {{ $sheetLayout['page_height_mm'] }}; min-height: 480px;">
+                                        
+                                        <!-- Paper Header Label -->
+                                        <div class="absolute top-2 left-3 text-[9px] font-mono font-bold text-gray-400 uppercase tracking-wider pointer-events-none">
+                                            {{ strtoupper($exportPageSize) }} SHEET ({{ $previewSheetSide === 'front' ? 'FRONT SIDE' : 'BACK SIDE' }}) • SHEET {{ $previewPageIndex + 1 }}
+                                        </div>
+
+                                        <!-- Card Grid -->
+                                        <div class="w-full h-full"
+                                             style="display: grid; grid-template-columns: repeat({{ $sheetLayout['cols'] }}, 1fr); grid-template-rows: repeat({{ $sheetLayout['rows'] }}, 1fr); gap: 10px;">
+                                            @foreach ($pageCards as $cardSlot)
+                                                @php
+                                                    $slotStd = $cardSlot['student'];
+                                                    $slotTpl = $cardSlot['template'];
+                                                @endphp
+                                                <div class="border border-dashed border-gray-300 rounded-lg p-1.5 flex flex-col justify-between bg-gray-50/70 relative overflow-hidden group shadow-sm transition hover:border-indigo-400">
+                                                    @if ($slotStd && $slotTpl)
+                                                        <!-- Card Content Simulation -->
+                                                        <div class="w-full h-full flex flex-col justify-between p-2 bg-gradient-to-br from-white to-gray-50 rounded border border-gray-200 text-[10px] relative {{ $exportMirrorPrint ? 'scale-x-[-1]' : '' }}">
+                                                            <div class="flex items-center justify-between border-b border-gray-100 pb-1">
+                                                                <span class="font-extrabold text-indigo-700 truncate max-w-[120px]">{{ $activeSchool->name ?? 'School' }}</span>
+                                                                <span class="text-[8px] font-mono text-gray-400">#{{ $cardSlot['slot_index'] + 1 }}</span>
+                                                            </div>
+                                                            <div class="flex items-center gap-2 my-1">
+                                                                @if ($slotStd->photo_path)
+                                                                    <img src="{{ route('students.photo', $slotStd) }}" class="w-8 h-10 object-cover rounded border border-gray-300 shadow-xs shrink-0" />
+                                                                @else
+                                                                    <div class="w-8 h-10 bg-indigo-100 text-indigo-700 font-extrabold rounded flex items-center justify-center text-[10px] shrink-0">
+                                                                        {{ substr($slotStd->first_name, 0, 1) }}
+                                                                    </div>
+                                                                @endif
+                                                                <div class="truncate text-[9px]">
+                                                                    <p class="font-black text-gray-900 truncate leading-tight">{{ $slotStd->full_name }}</p>
+                                                                    <p class="text-gray-500 mt-0.5">Gr: {{ $slotStd->campaignStudents->first()?->grade?->name ?? 'N/A' }}</p>
+                                                                    <p class="text-gray-500">Roll: {{ $slotStd->campaignStudents->first()?->roll_no ?? '-' }}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div class="flex items-center justify-between pt-1 border-t border-gray-100 text-[8px] text-gray-400 font-mono">
+                                                                <span>CR80 PVC</span>
+                                                                <span>{{ $previewSheetSide === 'front' ? 'FRONT' : 'BACK' }}</span>
+                                                            </div>
+                                                        </div>
+                                                    @else
+                                                        <!-- Empty Grid Slot -->
+                                                        <div class="w-full h-full flex flex-col items-center justify-center text-gray-300 text-[9px] font-mono">
+                                                            <span>[ EMPTY SLOT ]</span>
+                                                            <span>#{{ $cardSlot['slot_index'] + 1 }}</span>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @else
+                            <!-- SINGLE FINISHED ID CARD VIEW -->
+                            @php
+                                $totalSampleStudents = $previewStudentsList->count();
+                                $currentPreviewStudent = $totalSampleStudents > 0 ? $previewStudentsList->get(min($previewStudentIndex, $totalSampleStudents - 1)) : null;
+                                $studentEnrollment = $currentPreviewStudent?->campaignStudents?->first();
+                                $currentStudentTemplate = $currentPreviewStudent ? app(\App\Services\TemplateResolverService::class)->getEffectiveTemplate($schoolId, $studentEnrollment?->grade_id) : $sampleTemplate;
+                            @endphp
+
+                            <div class="space-y-6">
+                                <!-- Student Navigation & Info Bar -->
+                                <div class="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div class="flex items-center gap-3">
+                                        @if ($currentPreviewStudent)
+                                            <div>
+                                                <h4 class="text-sm font-extrabold text-gray-900 dark:text-gray-100">
+                                                    {{ $currentPreviewStudent->full_name }}
+                                                </h4>
+                                                <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                                                    Grade: {{ $studentEnrollment?->grade?->name ?? 'N/A' }} • Div: {{ $studentEnrollment?->division?->name ?? 'N/A' }} • Roll: {{ $studentEnrollment?->roll_no ?? '-' }}
+                                                </p>
+                                            </div>
+                                        @else
+                                            <p class="text-xs text-gray-400">Sample Template Preview Mode</p>
+                                        @endif
+                                    </div>
+
+                                    @if ($totalSampleStudents > 0)
+                                        <div class="flex items-center gap-2 text-xs font-bold">
+                                            <button type="button" wire:click="prevPreviewStudent" @if($previewStudentIndex <= 0) disabled @endif class="p-1.5 bg-gray-100 dark:bg-gray-800 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                                            </button>
+                                            <span class="text-gray-700 dark:text-gray-300 font-mono">
+                                                Student {{ $previewStudentIndex + 1 }} / {{ $totalSampleStudents }}
+                                            </span>
+                                            <button type="button" wire:click="nextPreviewStudent({{ $totalSampleStudents }})" @if($previewStudentIndex >= $totalSampleStudents - 1) disabled @endif class="p-1.5 bg-gray-100 dark:bg-gray-800 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                            </button>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <!-- Cards Display Container -->
+                                <div class="bg-gray-900 p-8 rounded-3xl flex flex-col md:flex-row items-center justify-center gap-8 shadow-inner overflow-x-auto">
+                                    <!-- Front Card Display -->
+                                    <div class="space-y-2 flex flex-col items-center">
+                                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Front Card</span>
+                                        <div class="relative p-2 bg-gray-800/80 rounded-2xl border border-gray-700 shadow-2xl flex items-center justify-center">
+                                            @if ($currentStudentTemplate)
+                                                <div class="relative overflow-hidden rounded-xl">
+                                                    <x-id-card-renderer 
+                                                        :template="$currentStudentTemplate" 
+                                                        :student="$currentPreviewStudent" 
+                                                        :school="$activeSchool" 
+                                                        :scale="0.5" 
+                                                        :previewMode="!$currentPreviewStudent" 
+                                                        :forExport="true" 
+                                                        :isMirrored="$exportMirrorPrint" />
+                                                </div>
+                                            @else
+                                                <div class="w-64 h-40 bg-gray-800 text-gray-400 rounded-xl flex items-center justify-center text-xs">
+                                                    No Template Assigned
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/50 dark:bg-gray-950/40">
+                        <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                            <span>💳 Required Credits: <strong class="text-indigo-600 dark:text-indigo-400">{{ $effectiveTargetCount }}</strong></span>
+                            <span>•</span>
+                            <span>School Balance: <strong class="text-gray-800 dark:text-gray-200">{{ number_format($activeSchool->credits_balance ?? 0) }}</strong></span>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <button type="button" wire:click="closePrintPreview" class="px-4 py-2 bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-bold transition cursor-pointer">
+                                {{ __('Close Preview') }}
+                            </button>
+
+                            <button wire:click="triggerExport" wire:loading.attr="disabled" type="button" class="px-6 py-2 bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-700 hover:to-indigo-900 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-md transition cursor-pointer flex items-center gap-2">
+                                <span>🚀 {{ __('Start Export Now') }}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    @endif
 </div>
