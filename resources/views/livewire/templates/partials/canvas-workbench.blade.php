@@ -73,21 +73,21 @@
             </div>
 
             <!-- Guideline Show/Hide Quick Toggles -->
-            <div class="flex items-center space-x-1 pl-2 border-l border-slate-800">
+            <div class="flex items-center space-x-1.5 pl-2 border-l border-slate-800">
                 <button type="button" 
                     wire:click="$toggle('showPunchGuide')" 
                     title="Show/Hide Punch Cut Line (86x54mm)"
-                    class="px-2 py-1 rounded-lg text-[11px] font-black transition flex items-center gap-1 border {{ $showPunchGuide ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-sm' : 'bg-slate-900 text-slate-500 border-slate-800 hover:text-slate-300' }}"
+                    class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5 border shadow-sm {{ $showPunchGuide ? 'bg-rose-600 hover:bg-rose-500 text-white border-rose-400 shadow-rose-900/30' : 'bg-slate-900 hover:bg-slate-800 text-slate-400 border-slate-700/60' }}"
                 >
-                    <span class="w-1.5 h-1.5 rounded-full {{ $showPunchGuide ? 'bg-rose-400 animate-pulse' : 'bg-slate-600' }}"></span>
+                    <span class="w-2 h-2 rounded-full {{ $showPunchGuide ? 'bg-white animate-pulse' : 'bg-slate-500' }}"></span>
                     <span>Cut Line</span>
                 </button>
                 <button type="button" 
                     wire:click="$toggle('showSafeGuide')" 
                     title="Show/Hide Text Safe Guideline (80x50mm)"
-                    class="px-2 py-1 rounded-lg text-[11px] font-black transition flex items-center gap-1 border {{ $showSafeGuide ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm' : 'bg-slate-900 text-slate-500 border-slate-800 hover:text-slate-300' }}"
+                    class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5 border shadow-sm {{ $showSafeGuide ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400 shadow-emerald-900/30' : 'bg-slate-900 hover:bg-slate-800 text-slate-400 border-slate-700/60' }}"
                 >
-                    <span class="w-1.5 h-1.5 rounded-full {{ $showSafeGuide ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600' }}"></span>
+                    <span class="w-2 h-2 rounded-full {{ $showSafeGuide ? 'bg-white animate-pulse' : 'bg-slate-500' }}"></span>
                     <span>Text Safe</span>
                 </button>
             </div>
