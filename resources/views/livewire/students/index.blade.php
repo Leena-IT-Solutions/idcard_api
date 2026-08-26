@@ -2616,7 +2616,7 @@ new class extends Component
                                                 <!-- STEP 2: BACKGROUND -->
                                                 <div x-show="step === 'background'" class="space-y-4">
                                                     <div class="bg-gray-50 dark:bg-gray-800/60 p-4 rounded-2xl border border-gray-100 dark:border-gray-700/60 space-y-4">
-                                                        <div class="flex items-center justify-between">
+                                                        <div class="flex flex-wrap items-center justify-between gap-3">
                                                             <div>
                                                                 <h5 class="text-xs font-extrabold uppercase text-gray-900 dark:text-white">Client-Side AI Background Isolation</h5>
                                                                 <p class="text-[11px] text-gray-500 dark:text-gray-400">Isolate student subject and replace background with solid backdrop color.</p>
@@ -2643,11 +2643,11 @@ new class extends Component
                                                         <div class="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-700">
                                                             <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Select Backdrop Fill Color:</span>
                                                             <div class="flex flex-wrap items-center gap-3">
-                                                                <button type="button" @click="bgColor = '#ffffff'; renderCompositedCanvas()" :class="bgColor === '#ffffff' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-8 h-8 rounded-full bg-white border border-gray-300 shadow-sm transition" title="White"></button>
-                                                                <button type="button" @click="bgColor = '#f1f5f9'; renderCompositedCanvas()" :class="bgColor === '#f1f5f9' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-8 h-8 rounded-full bg-slate-100 border border-gray-300 shadow-sm transition" title="Light Grey"></button>
-                                                                <button type="button" @click="bgColor = '#38bdf8'; renderCompositedCanvas()" :class="bgColor === '#38bdf8' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-8 h-8 rounded-full bg-sky-400 border border-sky-300 shadow-sm transition" title="Sky Blue"></button>
-                                                                <button type="button" @click="bgColor = '#1e3a8a'; renderCompositedCanvas()" :class="bgColor === '#1e3a8a' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-8 h-8 rounded-full bg-blue-900 border border-blue-800 shadow-sm transition" title="Navy Blue"></button>
-                                                                <button type="button" @click="bgColor = '#dc2626'; renderCompositedCanvas()" :class="bgColor === '#dc2626' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-8 h-8 rounded-full bg-red-600 border border-red-500 shadow-sm transition" title="Red"></button>
+                                                                <button type="button" @click="bgColor = '#ffffff'; renderCompositedCanvas()" :class="bgColor === '#ffffff' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-8 h-8 rounded-full bg-white border border-gray-300 shadow-sm transition cursor-pointer" title="White"></button>
+                                                                <button type="button" @click="bgColor = '#f1f5f9'; renderCompositedCanvas()" :class="bgColor === '#f1f5f9' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-8 h-8 rounded-full bg-slate-100 border border-gray-300 shadow-sm transition cursor-pointer" title="Light Grey"></button>
+                                                                <button type="button" @click="bgColor = '#38bdf8'; renderCompositedCanvas()" :class="bgColor === '#38bdf8' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-8 h-8 rounded-full bg-sky-400 border border-sky-300 shadow-sm transition cursor-pointer" title="Sky Blue"></button>
+                                                                <button type="button" @click="bgColor = '#1e3a8a'; renderCompositedCanvas()" :class="bgColor === '#1e3a8a' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-8 h-8 rounded-full bg-blue-900 border border-blue-800 shadow-sm transition cursor-pointer" title="Navy Blue"></button>
+                                                                <button type="button" @click="bgColor = '#dc2626'; renderCompositedCanvas()" :class="bgColor === '#dc2626' ? 'ring-2 ring-indigo-500 scale-110' : ''" class="w-8 h-8 rounded-full bg-red-600 border border-red-500 shadow-sm transition cursor-pointer" title="Red"></button>
                                                                 
                                                                 <!-- Custom Color Picker -->
                                                                 <div class="flex items-center gap-2 ml-2 pl-3 border-l border-gray-300 dark:border-gray-700">
@@ -2657,17 +2657,26 @@ new class extends Component
                                                             </div>
                                                         </div>
                                                     </div>
+
+                                                    <!-- Live Preview Stage for Step 2 -->
+                                                    <div class="flex flex-col items-center justify-center p-6 bg-gray-950 rounded-2xl border border-gray-800 min-h-[350px]">
+                                                        <div class="flex items-center gap-2 mb-3">
+                                                            <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+                                                            <h5 class="text-[11px] font-extrabold uppercase text-gray-400 tracking-wider">Live Background Preview</h5>
+                                                        </div>
+                                                        <canvas class="studio-preview-canvas max-h-[350px] max-w-full rounded-2xl shadow-2xl border border-gray-700/80 object-contain"></canvas>
+                                                    </div>
                                                 </div>
 
                                                 <!-- STEP 3: TOUCH-UP FILTERS -->
                                                 <div x-show="step === 'touchup'" class="space-y-4">
                                                     <div class="bg-gray-50 dark:bg-gray-800/60 p-4 rounded-2xl border border-gray-100 dark:border-gray-700/60 space-y-4">
-                                                        <div class="flex items-center justify-between">
+                                                        <div class="flex flex-wrap items-center justify-between gap-3">
                                                             <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">One-Click Presets:</span>
                                                             <div class="flex items-center gap-2">
-                                                                <button type="button" @click="applyPreset('enhance')" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg font-bold text-xs shadow-sm hover:bg-indigo-700 transition">✨ ID Photo Enhance</button>
-                                                                <button type="button" @click="applyPreset('studio')" class="px-3 py-1.5 bg-purple-600 text-white rounded-lg font-bold text-xs shadow-sm hover:bg-purple-700 transition">💡 Studio Bright</button>
-                                                                <button type="button" @click="applyPreset('reset')" class="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-bold text-xs hover:bg-gray-300 transition">Reset Filters</button>
+                                                                <button type="button" @click="applyPreset('enhance')" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg font-bold text-xs shadow-sm hover:bg-indigo-700 transition cursor-pointer">✨ ID Photo Enhance</button>
+                                                                <button type="button" @click="applyPreset('studio')" class="px-3 py-1.5 bg-purple-600 text-white rounded-lg font-bold text-xs shadow-sm hover:bg-purple-700 transition cursor-pointer">💡 Studio Bright</button>
+                                                                <button type="button" @click="applyPreset('reset')" class="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-bold text-xs hover:bg-gray-300 transition cursor-pointer">Reset Filters</button>
                                                             </div>
                                                         </div>
 
@@ -2678,7 +2687,7 @@ new class extends Component
                                                                     <span>Brightness</span>
                                                                     <span x-text="brightness + '%'"></span>
                                                                 </div>
-                                                                <input type="range" min="50" max="150" x-model="brightness" @input="renderCompositedCanvas()" class="w-full accent-indigo-600" />
+                                                                <input type="range" min="50" max="150" x-model="brightness" @input="renderCompositedCanvas()" class="w-full accent-indigo-600 cursor-pointer" />
                                                             </div>
 
                                                             <!-- Contrast -->
@@ -2687,7 +2696,7 @@ new class extends Component
                                                                     <span>Contrast</span>
                                                                     <span x-text="contrast + '%'"></span>
                                                                 </div>
-                                                                <input type="range" min="50" max="150" x-model="contrast" @input="renderCompositedCanvas()" class="w-full accent-indigo-600" />
+                                                                <input type="range" min="50" max="150" x-model="contrast" @input="renderCompositedCanvas()" class="w-full accent-indigo-600 cursor-pointer" />
                                                             </div>
 
                                                             <!-- Saturation -->
@@ -2696,16 +2705,32 @@ new class extends Component
                                                                     <span>Saturation</span>
                                                                     <span x-text="saturation + '%'"></span>
                                                                 </div>
-                                                                <input type="range" min="50" max="150" x-model="saturation" @input="renderCompositedCanvas()" class="w-full accent-indigo-600" />
+                                                                <input type="range" min="50" max="150" x-model="saturation" @input="renderCompositedCanvas()" class="w-full accent-indigo-600 cursor-pointer" />
                                                             </div>
                                                         </div>
+                                                    </div>
+
+                                                    <!-- Live Preview Stage for Step 3 -->
+                                                    <div class="flex flex-col items-center justify-center p-6 bg-gray-950 rounded-2xl border border-gray-800 min-h-[350px]">
+                                                        <div class="flex items-center gap-2 mb-3">
+                                                            <span class="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
+                                                            <h5 class="text-[11px] font-extrabold uppercase text-gray-400 tracking-wider">Live Filter Preview</h5>
+                                                        </div>
+                                                        <canvas class="studio-preview-canvas max-h-[350px] max-w-full rounded-2xl shadow-2xl border border-gray-700/80 object-contain"></canvas>
                                                     </div>
                                                 </div>
 
                                                 <!-- STEP 4: FINAL PREVIEW -->
-                                                <div x-show="step === 'preview'" class="flex flex-col items-center justify-center p-6 bg-gray-950 rounded-2xl border border-gray-800 min-h-[350px]">
-                                                    <h5 class="text-xs font-extrabold uppercase text-gray-400 mb-3 tracking-wider">Final Photo Result</h5>
-                                                    <canvas x-ref="studioCanvas" class="max-h-[380px] max-w-full rounded-2xl shadow-2xl border border-gray-700/80 object-contain"></canvas>
+                                                <div x-show="step === 'preview'" class="space-y-4">
+                                                    <div class="flex flex-col items-center justify-center p-6 bg-gray-950 rounded-2xl border border-gray-800 min-h-[380px]">
+                                                        <div class="flex items-center gap-2 mb-4">
+                                                            <span class="px-3.5 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5">
+                                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                                <span>Final Student ID Photo Result</span>
+                                                            </span>
+                                                        </div>
+                                                        <canvas class="studio-preview-canvas max-h-[380px] max-w-full rounded-2xl shadow-2xl border border-gray-700/80 object-contain"></canvas>
+                                                    </div>
                                                 </div>
                                             </div>
 

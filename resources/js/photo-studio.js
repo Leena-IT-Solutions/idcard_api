@@ -29,8 +29,10 @@ export function photoStudio() {
         initStudio() {
             // Watch step switches to re-draw canvas if needed
             this.$watch('step', (newStep) => {
-                if (newStep === 'touchup' || newStep === 'preview') {
-                    this.renderCompositedCanvas();
+                if (newStep === 'background' || newStep === 'touchup' || newStep === 'preview') {
+                    this.$nextTick(() => {
+                        this.renderCompositedCanvas();
+                    });
                 }
             });
         },
@@ -223,39 +225,42 @@ export function photoStudio() {
                 maxWidth: 1200,
                 maxHeight: 1600,
             });
+            if (!croppedCanvas) return;
 
-            const targetCanvas = this.$refs.studioCanvas;
-            if (!targetCanvas) return;
+            const canvases = document.querySelectorAll('.studio-preview-canvas');
+            if (!canvases || !canvases.length) return;
 
-            const ctx = targetCanvas.getContext('2d');
-            targetCanvas.width = croppedCanvas.width;
-            targetCanvas.height = croppedCanvas.height;
+            canvases.forEach((targetCanvas) => {
+                const ctx = targetCanvas.getContext('2d');
+                targetCanvas.width = croppedCanvas.width;
+                targetCanvas.height = croppedCanvas.height;
 
-            // Clear
-            ctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+                // Clear
+                ctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
 
-            // 1. Draw solid background color
-            if (this.bgColor) {
-                ctx.fillStyle = this.bgColor;
-                ctx.fillRect(0, 0, targetCanvas.width, targetCanvas.height);
-            }
+                // 1. Draw solid background color
+                if (this.bgColor) {
+                    ctx.fillStyle = this.bgColor;
+                    ctx.fillRect(0, 0, targetCanvas.width, targetCanvas.height);
+                }
 
-            // Function to apply filters and draw image
-            const drawSubject = (img) => {
-                ctx.save();
-                ctx.filter = `brightness(${this.brightness}%) contrast(${this.contrast}%) saturate(${this.saturation}%)`;
-                ctx.drawImage(img, 0, 0, targetCanvas.width, targetCanvas.height);
-                ctx.restore();
-            };
+                // Function to apply filters and draw image
+                const drawSubject = (img) => {
+                    ctx.save();
+                    ctx.filter = `brightness(${this.brightness}%) contrast(${this.contrast}%) saturate(${this.saturation}%)`;
+                    ctx.drawImage(img, 0, 0, targetCanvas.width, targetCanvas.height);
+                    ctx.restore();
+                };
 
-            // 2. Draw Subject (either bg-removed or original cropped)
-            if (this.bgRemovedBlob) {
-                const img = new Image();
-                img.onload = () => drawSubject(img);
-                img.src = URL.createObjectURL(this.bgRemovedBlob);
-            } else {
-                drawSubject(croppedCanvas);
-            }
+                // 2. Draw Subject (either bg-removed or original cropped)
+                if (this.bgRemovedBlob) {
+                    const img = new Image();
+                    img.onload = () => drawSubject(img);
+                    img.src = URL.createObjectURL(this.bgRemovedBlob);
+                } else {
+                    drawSubject(croppedCanvas);
+                }
+            });
         },
 
         applyPreset(preset) {
