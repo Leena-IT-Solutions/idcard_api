@@ -102,6 +102,20 @@
                     <img src="{{ $bgUrl }}" class="absolute inset-0 w-full h-full object-fill pointer-events-none z-0" alt="Background Graphic" />
                 @endif
 
+                @if($showPrintGuides)
+                    {{-- Punch / cut-line guide: the canvas already represents the printer's punch size --}}
+                    <div class="absolute inset-0 border-2 border-dashed border-red-500/80 pointer-events-none z-30" title="Cut Line (Punch Size)"></div>
+                    <span class="absolute top-1 left-1 text-[9px] font-black uppercase tracking-wide text-red-500 bg-white/80 px-1.5 py-0.5 rounded pointer-events-none z-30">Cut Line</span>
+
+                    {{-- Text-safe artwork guide: printer-specified safe area, centered inside the punch line --}}
+                    <div
+                        class="absolute border-2 border-dashed border-blue-500/80 pointer-events-none z-30"
+                        style="top: {{ $safeInsetYPx }}px; left: {{ $safeInsetXPx }}px; right: {{ $safeInsetXPx }}px; bottom: {{ $safeInsetYPx }}px;"
+                        title="Text Safe Area ({{ $safeWidthMm }}mm x {{ $safeHeightMm }}mm)"
+                    ></div>
+                    <span class="absolute text-[9px] font-black uppercase tracking-wide text-blue-500 bg-white/80 px-1.5 py-0.5 rounded pointer-events-none z-30" style="top: {{ $safeInsetYPx + 4 }}px; left: {{ $safeInsetXPx + 4 }}px;">Text Safe</span>
+                @endif
+
                 <!-- Dynamic Snapping Alignment Guide Lines (Canva / Figma Smart Guides) -->
                 <template x-if="snapLines.x !== null">
                     <div class="absolute top-0 bottom-0 pointer-events-none z-50 border-r-2 border-dashed border-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]" :style="'left: ' + snapLines.x + 'px; width: 0px;'"></div>

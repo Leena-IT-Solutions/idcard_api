@@ -26,6 +26,7 @@ new class extends Component {
     // Studio Canvas Settings
     public bool $showGrid = true;
     public bool $enableSnapping = true;
+    public bool $showPrintGuides = true;
     public bool $livePreviewMode = true; // Show mock data vs placeholder text
     public ?int $selectedLayerIndex = null;
     public array $selectedLayerIndices = [];
@@ -1003,6 +1004,15 @@ new class extends Component {
     $canvasH = $isPortrait ? 1011 : 638;
     $bgPath = $template->background_image ?? null;
     $bgUrl = $bgPath ? (str_starts_with($bgPath, 'http') ? $bgPath : asset('storage/' . $bgPath)) : null;
+
+    // Printer's text-safe artwork area: 50mm x 80mm (portrait), inset from the
+    // punch-size canvas edge (54mm x 85.6mm), converted via the canvas's own px/mm ratio.
+    $safeWidthMm = $isPortrait ? 50 : 80;
+    $safeHeightMm = $isPortrait ? 80 : 50;
+    $pxPerMmX = $canvasW / $widthMm;
+    $pxPerMmY = $canvasH / $heightMm;
+    $safeInsetXPx = ($canvasW - $safeWidthMm * $pxPerMmX) / 2;
+    $safeInsetYPx = ($canvasH - $safeHeightMm * $pxPerMmY) / 2;
 @endphp
 
 <div class="space-y-6 notranslate" translate="no" x-data="templateStudio({{ $canvasW }}, {{ $canvasH }})">

@@ -48,6 +48,13 @@
             Grid: {{ $showGrid ? 'ON' : 'OFF' }}
         </button>
 
+        <button type="button" wire:click="$toggle('showPrintGuides')" title="Show punch/cut-line and 50mm x 80mm text-safe printing guides" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center border {{ $showPrintGuides ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100' }}">
+            <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h16v16H4z" stroke-dasharray="3 2"/>
+            </svg>
+            Guides: {{ $showPrintGuides ? 'ON' : 'OFF' }}
+        </button>
+
         <button type="button" wire:click="$toggle('enableSnapping')" class="px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center border {{ $enableSnapping ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100' }}">
             <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3v6a6 6 0 0012 0V3M4 3h4m8 0h4M4 8h4m8 0h4"/>
