@@ -72,7 +72,7 @@
                 </button>
             </div>
         </div>
-        <span class="text-xs text-slate-400 font-mono bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-800">85.6mm × 54.0mm</span>
+        <span class="text-xs text-slate-400 font-mono bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-800">Bleed: {{ $bleedWidthMm }}×{{ $bleedHeightMm }}mm | Punch: {{ $punchWidthMm }}×{{ $punchHeightMm }}mm</span>
     </div>
 
     <!-- Canvas Container with Drag & Snap Capabilities -->
@@ -103,17 +103,21 @@
                 @endif
 
                 @if($showPrintGuides)
-                    {{-- Punch / cut-line guide: the canvas already represents the printer's punch size --}}
-                    <div class="absolute inset-0 border-2 border-dashed border-red-500/80 pointer-events-none z-30" title="Cut Line (Punch Size)"></div>
-                    <span class="absolute top-1 left-1 text-[9px] font-black uppercase tracking-wide text-red-500 bg-white/80 px-1.5 py-0.5 rounded pointer-events-none z-30">Cut Line</span>
-
-                    {{-- Text-safe artwork guide: printer-specified safe area, centered inside the punch line --}}
+                    {{-- Punch / Cut-line guide (86mm x 54mm / 54mm x 86mm): machine punch boundary inset from bleed canvas --}}
                     <div
-                        class="absolute border-2 border-dashed border-blue-500/80 pointer-events-none z-30"
+                        class="absolute border-2 border-dashed border-red-500/90 pointer-events-none z-30 shadow-[0_0_0_1px_rgba(239,68,68,0.3)]"
+                        style="top: {{ $punchInsetYPx }}px; left: {{ $punchInsetXPx }}px; right: {{ $punchInsetXPx }}px; bottom: {{ $punchInsetYPx }}px;"
+                        title="Cut Line / Punch Size ({{ $punchWidthMm }}mm x {{ $punchHeightMm }}mm)"
+                    ></div>
+                    <span class="absolute text-[9px] font-black uppercase tracking-wide text-red-600 bg-white/90 border border-red-200 px-1.5 py-0.5 rounded shadow-sm pointer-events-none z-30" style="top: {{ max(2, $punchInsetYPx + 3) }}px; left: {{ max(2, $punchInsetXPx + 3) }}px;">Cut Line ({{ $punchWidthMm }}×{{ $punchHeightMm }}mm)</span>
+
+                    {{-- Text-safe artwork guide (80mm x 50mm / 50mm x 80mm): safe area inside the punch line --}}
+                    <div
+                        class="absolute border-2 border-dashed border-blue-500/90 pointer-events-none z-30 shadow-[0_0_0_1px_rgba(59,130,246,0.3)]"
                         style="top: {{ $safeInsetYPx }}px; left: {{ $safeInsetXPx }}px; right: {{ $safeInsetXPx }}px; bottom: {{ $safeInsetYPx }}px;"
                         title="Text Safe Area ({{ $safeWidthMm }}mm x {{ $safeHeightMm }}mm)"
                     ></div>
-                    <span class="absolute text-[9px] font-black uppercase tracking-wide text-blue-500 bg-white/80 px-1.5 py-0.5 rounded pointer-events-none z-30" style="top: {{ $safeInsetYPx + 4 }}px; left: {{ $safeInsetXPx + 4 }}px;">Text Safe</span>
+                    <span class="absolute text-[9px] font-black uppercase tracking-wide text-blue-600 bg-white/90 border border-blue-200 px-1.5 py-0.5 rounded shadow-sm pointer-events-none z-30" style="top: {{ $safeInsetYPx + 3 }}px; left: {{ $safeInsetXPx + 3 }}px;">Text Safe ({{ $safeWidthMm }}×{{ $safeHeightMm }}mm)</span>
                 @endif
 
                 <!-- Dynamic Snapping Alignment Guide Lines (Canva / Figma Smart Guides) -->
