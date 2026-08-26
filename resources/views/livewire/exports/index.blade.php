@@ -50,7 +50,7 @@ new class extends Component {
 
         // Set default active campaign
         if ($this->schoolId) {
-            $activeCamp = Campaign::where('school_id', $this->schoolId)->where('is_active', true)->first();
+            $activeCamp = Campaign::where('school_id', $this->schoolId)->orderBy('id', 'desc')->first();
             if ($activeCamp) {
                 $this->selectedCampaignId = $activeCamp->id;
             }
