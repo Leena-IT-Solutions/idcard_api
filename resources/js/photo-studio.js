@@ -83,12 +83,7 @@ export function photoStudio() {
         warmupEngine() {
             // Pre-warm WASM background removal engine in background
             try {
-                if (window.crossOriginIsolated || true) {
-                    removeBackground('/models/bg-removal/resources.json', {
-                        publicPath: '/models/bg-removal/',
-                        fetchArgs: { mode: 'no-cors' }
-                    }).catch(() => {});
-                }
+                removeBackground('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=').catch(() => {});
             } catch (e) {
                 // Ignore warmup failure
             }
@@ -196,8 +191,8 @@ export function photoStudio() {
 
             try {
                 const croppedCanvas = this.cropper.getCroppedCanvas({
-                    maxWidth: 1200,
-                    maxHeight: 1600,
+                    maxWidth: 1000,
+                    maxHeight: 1200,
                     fillColor: 'transparent',
                 });
 
@@ -205,9 +200,8 @@ export function photoStudio() {
                 const imageSrc = URL.createObjectURL(blob);
 
                 const resultBlob = await removeBackground(imageSrc, {
-                    publicPath: '/models/bg-removal/',
                     progress: (key, current, total) => {
-                        // Progress callback if needed
+                        // Progress update
                     }
                 });
 
@@ -215,7 +209,7 @@ export function photoStudio() {
                 URL.revokeObjectURL(imageSrc);
             } catch (err) {
                 console.error('Background removal failed:', err);
-                this.bgErrorMessage = 'Background removal is unavailable on this device browser. You can still crop and adjust the photo.';
+                this.bgErrorMessage = 'Background removal failed: ' + (err.message || 'Network error downloading AI model');
             } finally {
                 this.isProcessingBg = false;
                 this.renderCompositedCanvas();
