@@ -4,8 +4,10 @@ import { removeBackground } from '@imgly/background-removal';
 export function photoStudio() {
     return {
         isOpen: false,
+        isLoadingPhoto: false,
         step: 'crop', // 'crop' | 'background' | 'touchup' | 'preview'
         originalFile: null,
+        currentObjectUrl: null,
         cropper: null,
         aspectRatio: 1, // 1 for 1:1, 0.75 for 3:4
         rotation: 0,
@@ -15,6 +17,7 @@ export function photoStudio() {
         isProcessingBg: false,
         bgErrorMessage: null,
         bgRemovedBlob: null,
+        bgRemovedUrl: null,
         bgColor: '#ffffff',
         
         // Touch-up filters
@@ -45,28 +48,30 @@ export function photoStudio() {
             this.originalFile = file;
             this.resetState();
             this.isOpen = true;
+            this.isLoadingPhoto = true;
 
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                this.$nextTick(() => {
-                    const img = this.$refs.cropImage;
-                    if (!img) return;
-                    img.onload = () => {
-                        this.initCropper(img);
-                        this.checkResolution(img);
-                    };
-                    img.src = e.target.result;
-                });
-            };
-            reader.readAsDataURL(file);
+            // Instant Object URL without heavy base64 conversion or memory duplication
+            if (this.currentObjectUrl) {
+                URL.revokeObjectURL(this.currentObjectUrl);
+            }
+            this.currentObjectUrl = URL.createObjectURL(file);
 
-            this.warmupEngine();
+            this.$nextTick(() => {
+                const img = this.$refs.cropImage;
+                if (!img) return;
+                img.onload = () => {
+                    this.initCropper(img);
+                    this.checkResolution(img);
+                };
+                img.src = this.currentObjectUrl;
+            });
         },
 
         openStudioWithUrl(imageUrl) {
             if (!imageUrl) return;
             this.resetState();
             this.isOpen = true;
+            this.isLoadingPhoto = true;
 
             this.$nextTick(() => {
                 const img = this.$refs.cropImage;
@@ -78,23 +83,20 @@ export function photoStudio() {
                 };
                 img.src = imageUrl;
             });
-
-            this.warmupEngine();
-        },
-
-        warmupEngine() {
-            // Pre-warm WASM background removal engine in background
-            try {
-                removeBackground('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=').catch(() => {});
-            } catch (e) {
-                // Ignore warmup failure
-            }
         },
 
         resetState() {
             if (this.cropper) {
                 this.cropper.destroy();
                 this.cropper = null;
+            }
+            if (this.currentObjectUrl) {
+                URL.revokeObjectURL(this.currentObjectUrl);
+                this.currentObjectUrl = null;
+            }
+            if (this.bgRemovedUrl) {
+                URL.revokeObjectURL(this.bgRemovedUrl);
+                this.bgRemovedUrl = null;
             }
             this.step = 'crop';
             this.aspectRatio = 1;
@@ -109,15 +111,13 @@ export function photoStudio() {
             this.saturation = 100;
             this.sharpness = 0;
             this.resWarning = null;
+            this.isLoadingPhoto = false;
         },
 
         closeStudio() {
-            if (this.cropper) {
-                this.cropper.destroy();
-                this.cropper = null;
-            }
+            this.resetState();
             this.isOpen = false;
-            // Clear input
+            // Clear file input
             const input = document.getElementById('photo-studio-input');
             if (input) input.value = '';
         },
@@ -143,6 +143,7 @@ export function photoStudio() {
                 toggleDragModeOnDblclick: false,
                 zoomable: true,
                 ready: () => {
+                    this.isLoadingPhoto = false;
                     this.renderCompositedCanvas();
                 }
             });
@@ -207,7 +208,11 @@ export function photoStudio() {
                     }
                 });
 
+                if (this.bgRemovedUrl) {
+                    URL.revokeObjectURL(this.bgRemovedUrl);
+                }
                 this.bgRemovedBlob = resultBlob;
+                this.bgRemovedUrl = URL.createObjectURL(resultBlob);
                 URL.revokeObjectURL(imageSrc);
             } catch (err) {
                 console.error('Background removal failed:', err);
@@ -253,10 +258,10 @@ export function photoStudio() {
                 };
 
                 // 2. Draw Subject (either bg-removed or original cropped)
-                if (this.bgRemovedBlob) {
+                if (this.bgRemovedUrl) {
                     const img = new Image();
                     img.onload = () => drawSubject(img);
-                    img.src = URL.createObjectURL(this.bgRemovedBlob);
+                    img.src = this.bgRemovedUrl;
                 } else {
                     drawSubject(croppedCanvas);
                 }
