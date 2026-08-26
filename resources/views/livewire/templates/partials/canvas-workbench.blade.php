@@ -71,6 +71,26 @@
                     </svg>
                 </button>
             </div>
+
+            <!-- Guideline Show/Hide Quick Toggles -->
+            <div class="flex items-center space-x-1 pl-2 border-l border-slate-800">
+                <button type="button" 
+                    wire:click="$toggle('showPunchGuide')" 
+                    title="Show/Hide Punch Cut Line (86x54mm)"
+                    class="px-2 py-1 rounded-lg text-[11px] font-black transition flex items-center gap-1 border {{ $showPunchGuide ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-sm' : 'bg-slate-900 text-slate-500 border-slate-800 hover:text-slate-300' }}"
+                >
+                    <span class="w-1.5 h-1.5 rounded-full {{ $showPunchGuide ? 'bg-rose-400 animate-pulse' : 'bg-slate-600' }}"></span>
+                    <span>Cut Line</span>
+                </button>
+                <button type="button" 
+                    wire:click="$toggle('showSafeGuide')" 
+                    title="Show/Hide Text Safe Guideline (80x50mm)"
+                    class="px-2 py-1 rounded-lg text-[11px] font-black transition flex items-center gap-1 border {{ $showSafeGuide ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm' : 'bg-slate-900 text-slate-500 border-slate-800 hover:text-slate-300' }}"
+                >
+                    <span class="w-1.5 h-1.5 rounded-full {{ $showSafeGuide ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600' }}"></span>
+                    <span>Text Safe</span>
+                </button>
+            </div>
         </div>
         <span class="text-xs text-slate-400 font-mono bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-800">Bleed: {{ $bleedWidthMm }}×{{ $bleedHeightMm }}mm | Punch: {{ $punchWidthMm }}×{{ $punchHeightMm }}mm</span>
     </div>
@@ -102,7 +122,7 @@
                     <img src="{{ $bgUrl }}" class="absolute inset-0 w-full h-full object-fill pointer-events-none z-0" alt="Background Graphic" />
                 @endif
 
-                @if($showPrintGuides)
+                @if($showPunchGuide)
                     {{-- Punch / Cut-line guide (86mm x 54mm / 54mm x 86mm): machine punch boundary with rounded die-cut corners --}}
                     <div
                         class="absolute border-2 border-dashed pointer-events-none z-30 transition-all rounded-[14px]"
@@ -112,7 +132,9 @@
                     <span class="absolute text-[9px] font-black uppercase tracking-wider text-white bg-rose-600 border border-rose-400 px-2 py-0.5 rounded-md shadow-md pointer-events-none z-30 flex items-center gap-1" style="top: {{ max(2, $punchInsetYPx + 3) }}px; left: {{ max(2, $punchInsetXPx + 3) }}px;">
                         <span>✂ Cut Line ({{ $punchWidthMm }}×{{ $punchHeightMm }}mm)</span>
                     </span>
+                @endif
 
+                @if($showSafeGuide)
                     {{-- Text-safe artwork guide (80mm x 50mm / 50mm x 80mm): safe area inside the punch line in distinct Emerald Green --}}
                     <div
                         class="absolute border-2 border-dashed pointer-events-none z-30 transition-all rounded-md"

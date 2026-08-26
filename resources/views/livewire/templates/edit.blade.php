@@ -27,6 +27,8 @@ new class extends Component {
     public bool $showGrid = true;
     public bool $enableSnapping = true;
     public bool $showPrintGuides = true;
+    public bool $showPunchGuide = true;
+    public bool $showSafeGuide = true;
     public bool $livePreviewMode = true; // Show mock data vs placeholder text
     public ?int $selectedLayerIndex = null;
     public array $selectedLayerIndices = [];
