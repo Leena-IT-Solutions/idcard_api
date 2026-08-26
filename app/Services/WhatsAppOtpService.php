@@ -181,16 +181,39 @@ class WhatsAppOtpService
     /**
      * Verify OTP code against cached value.
      */
-    public function verifyOtp(string $mobileNumber, string $otp): bool
+    public function verifyOtp(string $mobileNumber, string $otp, bool $consume = true): bool
     {
         $formattedMobile = $this->formatMobileNumber($mobileNumber);
         $cachedOtp = Cache::get("whatsapp_otp:{$formattedMobile}");
 
         if (!empty($cachedOtp) && (string)$cachedOtp === trim($otp)) {
-            Cache::forget("whatsapp_otp:{$formattedMobile}");
+            if ($consume) {
+                Cache::forget("whatsapp_otp:{$formattedMobile}");
+            }
+            // Mark mobile as verified for 15 minutes to allow registration completion
+            Cache::put("whatsapp_otp_verified:{$formattedMobile}", true, now()->addMinutes(15));
             return true;
         }
 
         return false;
+    }
+
+    /**
+     * Check if a mobile number was recently verified via WhatsApp OTP.
+     */
+    public function isMobileVerified(string $mobileNumber): bool
+    {
+        $formattedMobile = $this->formatMobileNumber($mobileNumber);
+        return (bool) Cache::get("whatsapp_otp_verified:{$formattedMobile}", false);
+    }
+
+    /**
+     * Consume/clear verification status after successful registration.
+     */
+    public function clearVerification(string $mobileNumber): void
+    {
+        $formattedMobile = $this->formatMobileNumber($mobileNumber);
+        Cache::forget("whatsapp_otp:{$formattedMobile}");
+        Cache::forget("whatsapp_otp_verified:{$formattedMobile}");
     }
 }

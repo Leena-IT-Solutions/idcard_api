@@ -49,6 +49,17 @@ class AuthController extends Controller
     }
 
     /**
+     * Get registration configuration (e.g. WhatsApp OTP requirement).
+     */
+    public function registrationConfig()
+    {
+        $otpService = new \App\Services\WhatsAppOtpService();
+        return response()->json([
+            'whatsapp_otp_required' => $otpService->isConfigured(),
+        ]);
+    }
+
+    /**
      * Send WhatsApp OTP for registration verification.
      */
     public function sendOtp(Request $request)
@@ -85,7 +96,7 @@ class AuthController extends Controller
         ]);
 
         $otpService = new \App\Services\WhatsAppOtpService();
-        $isValid = $otpService->verifyOtp($request->mobile, $request->otp);
+        $isValid = $otpService->verifyOtp($request->mobile, $request->otp, false);
 
         if (!$isValid) {
             return response()->json([
@@ -112,21 +123,24 @@ class AuthController extends Controller
 
         $otpService = new \App\Services\WhatsAppOtpService();
 
-        // If WhatsApp OTP is enforced and active in Settings, verify OTP
+        // If WhatsApp OTP is enforced and active in Settings, verify OTP or pre-verified flag
         if ($otpService->isConfigured()) {
-            if (empty($request->otp)) {
+            $isVerified = false;
+
+            if (!empty($request->otp)) {
+                $isVerified = $otpService->verifyOtp($request->mobile, $request->otp, true);
+            } elseif ($otpService->isMobileVerified($request->mobile)) {
+                $isVerified = true;
+            }
+
+            if (!$isVerified) {
                 return response()->json([
                     'message' => 'WhatsApp OTP verification is required to complete registration.',
-                    'errors' => ['otp' => ['The WhatsApp OTP field is required.']],
+                    'errors' => ['otp' => ['The WhatsApp OTP is invalid, expired, or missing.']],
                 ], 422);
             }
 
-            if (!$otpService->verifyOtp($request->mobile, $request->otp)) {
-                return response()->json([
-                    'message' => 'The provided WhatsApp OTP is invalid or has expired.',
-                    'errors' => ['otp' => ['Invalid or expired OTP. Please request a new code.']],
-                ], 422);
-            }
+            $otpService->clearVerification($request->mobile);
         }
 
         $user = User::create([
