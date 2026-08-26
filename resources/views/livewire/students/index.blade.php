@@ -102,13 +102,14 @@ new class extends Component
             ->orderBy('id', 'desc')
             ->first();
 
+        $this->exportBleedMm = 0.0;
+        $this->exportMarginMm = 0.0;
+
         if ($lastPdfExport && is_array($lastPdfExport->params)) {
             $p = $lastPdfExport->params;
             if (!empty($p['page_size'])) $this->exportPageSize = $p['page_size'];
             if (isset($p['custom_width_mm'])) $this->exportCustomWidthMm = (float)$p['custom_width_mm'];
             if (isset($p['custom_height_mm'])) $this->exportCustomHeightMm = (float)$p['custom_height_mm'];
-            if (isset($p['bleed_mm'])) $this->exportBleedMm = (float)$p['bleed_mm'];
-            if (isset($p['margin_mm'])) $this->exportMarginMm = (float)$p['margin_mm'];
             if (isset($p['gutter_mm'])) $this->exportGutterMm = (float)$p['gutter_mm'];
         }
 

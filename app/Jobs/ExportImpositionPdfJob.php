@@ -54,7 +54,8 @@ class ExportImpositionPdfJob implements ShouldQueue
             $isPortrait = $orientation === 'portrait';
             $cardWidthMm = $isPortrait ? 57.0 : 90.0;
             $cardHeightMm = $isPortrait ? 90.0 : 57.0;
-
+            $params['bleed_mm'] = 0.0;
+            $params['margin_mm'] = 0.0;
             $layout = $layoutService->calculateLayout($params, $cardWidthMm, $cardHeightMm);
 
             $pages = [];
