@@ -179,6 +179,20 @@ Route::get('students', function () {
     return view('students');
 })->middleware(['auth'])->name('students');
 
+Route::get('exports', function () {
+    $user = auth()->user();
+    $activeSchoolId = session('active_school_id');
+    $hasAccess = $activeSchoolId && \App\Models\SchoolUserRole::where('user_id', $user->id)
+        ->where('school_id', $activeSchoolId)
+        ->whereHas('role', function($q) { $q->whereIn('slug', ['school_admin', 'teacher']); })
+        ->exists();
+
+    if (!$user->hasRole('saas_admin') && !$hasAccess) {
+        abort(403);
+    }
+    return view('exports');
+})->middleware(['auth'])->name('exports.index');
+
 Route::view('profile', 'profile')
     ->middleware(['auth'])
     ->name('profile');
