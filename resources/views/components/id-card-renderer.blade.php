@@ -204,18 +204,30 @@
     $photoUrl = $resolveImageUrl($photoPath);
     $schoolLogoUrl = $resolveImageUrl($schoolLogo);
 
-    $scaledW = round($widthPx * $scale);
-    $scaledH = round($heightPx * $scale);
+    // Punch size (86mm x 54mm) and bleed offsets
+    $punchW = $isPortrait ? 604.4 : 966.0;
+    $punchH = $isPortrait ? 966.0 : 604.4;
+    $bleedX = $isPortrait ? 16.8 : 22.5;
+    $bleedY = $isPortrait ? 22.5 : 16.8;
 
-    $cardStyle = $forExport 
-        ? "position: relative; overflow: hidden; width: {$widthPx}px; height: {$heightPx}px; transform: scale({$scale}); transform-origin: top left; background-color: #ffffff;" 
-        : "position: relative; overflow: hidden; border-radius: 12px; width: {$widthPx}px; height: {$heightPx}px; transform: scale({$scale}); transform-origin: top left; background-color: #ffffff;";
+    $scaledW = $forExport ? round($widthPx * $scale) : round($punchW * $scale);
+    $scaledH = $forExport ? round($heightPx * $scale) : round($punchH * $scale);
+
+    $cardRadius = $forExport ? 0 : max(4, round(12 * ($scaledW / 340)));
+    $innerLeft = $forExport ? 0 : -round($bleedX * $scale);
+    $innerTop = $forExport ? 0 : -round($bleedY * $scale);
+
+    $containerStyle = $forExport 
+        ? "position: relative; overflow: hidden; flex-shrink: 0; display: inline-block; vertical-align: top; user-select: none; width: {$scaledW}px; height: {$scaledH}px;"
+        : "position: relative; overflow: hidden; flex-shrink: 0; display: inline-block; vertical-align: top; user-select: none; width: {$scaledW}px; height: {$scaledH}px; border-radius: {$cardRadius}px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08); border: 1px solid rgba(0,0,0,0.06);";
+
+    $cardStyle = "position: absolute; left: {$innerLeft}px; top: {$innerTop}px; width: {$widthPx}px; height: {$heightPx}px; transform: scale({$scale}); transform-origin: top left; background-color: #ffffff;";
 
     $bgStyle = "position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; pointer-events: none; z-index: 0; display: block;";
 @endphp
 
 <!-- Responsive Container Wrapper -->
-<div style="position: relative; overflow: hidden; flex-shrink: 0; display: inline-block; vertical-align: top; user-select: none; width: {{ $scaledW }}px; height: {{ $scaledH }}px;">
+<div style="{{ $containerStyle }}">
     <!-- Actual Native Scale Inner Card -->
     <div style="{{ $cardStyle }}">
         <div style="width: 100%; height: 100%; position: relative; {{ $isMirrored ? 'transform: scaleX(-1); transform-origin: 50% 50%;' : '' }}">
