@@ -118,15 +118,17 @@
                 @endphp
 
                 <div class="card-cell" style="left: {{ $leftMm }}mm; top: {{ $topMm }}mm;">
-                    <!-- Hairline Crop Marks -->
-                    <div class="crop-mark cm-tl-v"></div>
-                    <div class="crop-mark cm-tl-h"></div>
-                    <div class="crop-mark cm-tr-v"></div>
-                    <div class="crop-mark cm-tr-h"></div>
-                    <div class="crop-mark cm-bl-v"></div>
-                    <div class="crop-mark cm-bl-h"></div>
-                    <div class="crop-mark cm-br-v"></div>
-                    <div class="crop-mark cm-br-h"></div>
+                    @if(($layout['bleed_mm'] ?? 0) > 0)
+                        <!-- Hairline Crop Marks -->
+                        <div class="crop-mark cm-tl-v"></div>
+                        <div class="crop-mark cm-tl-h"></div>
+                        <div class="crop-mark cm-tr-v"></div>
+                        <div class="crop-mark cm-tr-h"></div>
+                        <div class="crop-mark cm-bl-v"></div>
+                        <div class="crop-mark cm-bl-h"></div>
+                        <div class="crop-mark cm-br-v"></div>
+                        <div class="crop-mark cm-br-h"></div>
+                    @endif
 
                     <!-- Trim Area with Exact Card Content -->
                     <div class="trim-area">

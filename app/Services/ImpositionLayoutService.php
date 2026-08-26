@@ -4,12 +4,12 @@ namespace App\Services;
 
 class ImpositionLayoutService
 {
-    public function calculateLayout(array $params, float $cardWidthMm = 85.6, float $cardHeightMm = 54.0): array
+    public function calculateLayout(array $params, float $cardWidthMm = 90.0, float $cardHeightMm = 57.0): array
     {
         $pageSize = $params['page_size'] ?? 'A4';
-        $bleedMm = (float) ($params['bleed_mm'] ?? 3.0);
-        $marginMm = (float) ($params['margin_mm'] ?? 3.0); // Safety margin
-        $gutterMm = (float) ($params['gutter_mm'] ?? 6.0);
+        $bleedMm = (float) ($params['bleed_mm'] ?? 0.0);
+        $marginMm = (float) ($params['margin_mm'] ?? 0.0);
+        $gutterMm = (float) ($params['gutter_mm'] ?? 4.0);
         $trimMarkLen = (float) ($params['trim_mark_len'] ?? 4.0);
 
         [$pageWidthMm, $pageHeightMm] = match (strtoupper($pageSize)) {

@@ -41,8 +41,8 @@ class ExportSingleCardPdfJob implements ShouldQueue
 
             $orientation = $sampleTemplate->orientation ?? 'landscape';
             $isPortrait = $orientation === 'portrait';
-            $cardWidthMm = $isPortrait ? 54.0 : 85.6;
-            $cardHeightMm = $isPortrait ? 85.6 : 54.0;
+            $cardWidthMm = $isPortrait ? 57.0 : 90.0;
+            $cardHeightMm = $isPortrait ? 90.0 : 57.0;
 
             $studentsById = Student::whereIn('id', $studentIds)
                 ->with(['campaignStudents' => function($q) use ($campaignId) {
