@@ -135,15 +135,21 @@
                         @php
                             $orientation = $template->orientation ?? 'landscape';
                             $isPortrait = $orientation === 'portrait';
-                            $targetWidthPx = $isPortrait ? 638 : 1011;
-                            $targetHeightPx = $isPortrait ? 1011 : 638;
+                            $isPunch = ($cardSize ?? 'bleed') === 'punch';
+                            if ($isPunch) {
+                                $targetWidthPx = $isPortrait ? 604.4 : 966.0;
+                                $targetHeightPx = $isPortrait ? 966.0 : 604.4;
+                            } else {
+                                $targetWidthPx = $isPortrait ? 638 : 1011;
+                                $targetHeightPx = $isPortrait ? 1011 : 638;
+                            }
                             
                             // Calculate scale factor from rendered PX to MM trim box
                             $targetWidthMm = $layout['card_width_mm'];
                             $scaleRatio = $targetWidthMm / ($targetWidthPx / 3.7795275591); 
                         @endphp
-                        <div class="card-inner-scale" style="transform: scale({{ round($scaleRatio, 4) }}); width: {{ $targetWidthPx }}px; height: {{ $targetHeightPx }}px;">
-                            <x-id-card-renderer :template="$template" :student="$student" :school="$school" :scale="1.0" :forExport="true" :isMirrored="$isMirrored ?? false" />
+                        <div class="card-inner-scale" style="transform: scale({{ round($scaleRatio, 4) }}); width: {{ round($targetWidthPx) }}px; height: {{ round($targetHeightPx) }}px;">
+                            <x-id-card-renderer :template="$template" :student="$student" :school="$school" :scale="1.0" :forExport="true" :isMirrored="$isMirrored ?? false" :cardSize="$cardSize ?? 'bleed'" />
                         </div>
                     </div>
                 </div>

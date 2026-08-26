@@ -43,17 +43,23 @@
             $template = $item['template'];
             $student = $item['student'];
             $school = $item['school'];
+            $isPunch = ($cardSize ?? 'bleed') === 'punch';
             
             $orientation = $template->orientation ?? 'landscape';
             $isPortrait = $orientation === 'portrait';
-            $targetWidthPx = $isPortrait ? 638 : 1011;
-            $targetHeightPx = $isPortrait ? 1011 : 638;
+            if ($isPunch) {
+                $targetWidthPx = $isPortrait ? 604.4 : 966.0;
+                $targetHeightPx = $isPortrait ? 966.0 : 604.4;
+            } else {
+                $targetWidthPx = $isPortrait ? 638 : 1011;
+                $targetHeightPx = $isPortrait ? 1011 : 638;
+            }
             
             $scaleRatio = $cardWidthMm / ($targetWidthPx / 3.7795275591);
         @endphp
         <div class="card-page">
-            <div class="card-inner-scale" style="transform: scale({{ round($scaleRatio, 4) }}); width: {{ $targetWidthPx }}px; height: {{ $targetHeightPx }}px;">
-                <x-id-card-renderer :template="$template" :student="$student" :school="$school" :scale="1.0" :forExport="true" :isMirrored="$isMirrored ?? false" />
+            <div class="card-inner-scale" style="transform: scale({{ round($scaleRatio, 4) }}); width: {{ round($targetWidthPx) }}px; height: {{ round($targetHeightPx) }}px;">
+                <x-id-card-renderer :template="$template" :student="$student" :school="$school" :scale="1.0" :forExport="true" :isMirrored="$isMirrored ?? false" :cardSize="$cardSize ?? 'bleed'" />
             </div>
         </div>
     @endforeach

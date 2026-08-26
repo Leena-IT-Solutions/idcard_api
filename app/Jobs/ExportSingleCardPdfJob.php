@@ -39,10 +39,18 @@ class ExportSingleCardPdfJob implements ShouldQueue
             $firstEnrollment = $firstStudent ? CampaignStudent::where('student_id', $firstStudent->id)->first() : null;
             $sampleTemplate = $templateResolver->getEffectiveTemplate($export->school_id, $firstEnrollment?->grade_id);
 
+            $cardSize = $export->params['card_size'] ?? 'bleed';
+            $isPunch = ($cardSize === 'punch');
+
             $orientation = $sampleTemplate->orientation ?? 'landscape';
             $isPortrait = $orientation === 'portrait';
-            $cardWidthMm = $isPortrait ? 57.0 : 90.0;
-            $cardHeightMm = $isPortrait ? 90.0 : 57.0;
+            if ($isPunch) {
+                $cardWidthMm = $isPortrait ? 54.0 : 86.0;
+                $cardHeightMm = $isPortrait ? 86.0 : 54.0;
+            } else {
+                $cardWidthMm = $isPortrait ? 57.0 : 90.0;
+                $cardHeightMm = $isPortrait ? 90.0 : 57.0;
+            }
 
             $studentsById = Student::whereIn('id', $studentIds)
                 ->with(['campaignStudents' => function($q) use ($campaignId) {
@@ -88,6 +96,7 @@ class ExportSingleCardPdfJob implements ShouldQueue
                     'cardHeightMm' => $cardHeightMm,
                     'items' => $chunkItems,
                     'isMirrored' => $isMirrored,
+                    'cardSize' => $cardSize,
                 ])->render();
 
                 $chunkPdf = $renderer->toPdf($html, $cardWidthMm, $cardHeightMm);

@@ -50,10 +50,18 @@ class ExportImpositionPdfJob implements ShouldQueue
             $firstEnrollment = $firstStudent?->campaignStudents?->first();
             $sampleTemplate = $templateResolver->getEffectiveTemplate($export->school_id, $firstEnrollment?->grade_id);
 
+            $cardSize = $export->params['card_size'] ?? 'bleed';
+            $isPunch = ($cardSize === 'punch');
+
             $orientation = $sampleTemplate->orientation ?? 'landscape';
             $isPortrait = $orientation === 'portrait';
-            $cardWidthMm = $isPortrait ? 57.0 : 90.0;
-            $cardHeightMm = $isPortrait ? 90.0 : 57.0;
+            if ($isPunch) {
+                $cardWidthMm = $isPortrait ? 54.0 : 86.0;
+                $cardHeightMm = $isPortrait ? 86.0 : 54.0;
+            } else {
+                $cardWidthMm = $isPortrait ? 57.0 : 90.0;
+                $cardHeightMm = $isPortrait ? 90.0 : 57.0;
+            }
             $params['bleed_mm'] = 0.0;
             $params['margin_mm'] = 0.0;
             $layout = $layoutService->calculateLayout($params, $cardWidthMm, $cardHeightMm);
@@ -120,6 +128,7 @@ class ExportImpositionPdfJob implements ShouldQueue
                     'layout' => $layout,
                     'pages' => $pageChunk,
                     'isMirrored' => $isMirrored,
+                    'cardSize' => $cardSize,
                 ])->render();
 
                 $chunkPdf = $renderer->toPdf($html, $layout['page_width_mm'], $layout['page_height_mm']);

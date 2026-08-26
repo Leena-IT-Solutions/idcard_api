@@ -18,6 +18,7 @@ new class extends Component {
     public bool $exportOnlyVerified = true;
     public string $exportType = 'imposition_pdf'; // 'imposition_pdf', 'jpg_zip', 'single_card_pdf', 'excel_photo_zip'
     public string $exportPageSize = '297x210';
+    public string $exportCardSize = 'punch'; // 'punch' (86x54mm CR80) or 'bleed' (90x57mm canvas)
     public float $exportBleedMm = 0.0;
     public float $exportMarginMm = 0.0;
     public float $exportGutterMm = 4.0;
@@ -163,6 +164,7 @@ new class extends Component {
             'division_ids' => $this->selectedDivisionIds,
             'student_ids' => $targetStudentIds,
             'page_size' => $this->exportPageSize,
+            'card_size' => $this->exportCardSize,
             'custom_width_mm' => $this->exportCustomWidthMm,
             'custom_height_mm' => $this->exportCustomHeightMm,
             'bleed_mm' => 0.0,
@@ -357,11 +359,18 @@ new class extends Component {
         $sampleTemplate = $templateResolver->getEffectiveTemplate($this->schoolId, $sampleGradeId);
 
         $isPortrait = ($sampleTemplate->orientation ?? 'landscape') === 'portrait';
-        $cardWidthMm = $isPortrait ? 57.0 : 90.0;
-        $cardHeightMm = $isPortrait ? 90.0 : 57.0;
+        $isPunch = ($this->exportCardSize === 'punch');
+        if ($isPunch) {
+            $cardWidthMm = $isPortrait ? 54.0 : 86.0;
+            $cardHeightMm = $isPortrait ? 86.0 : 54.0;
+        } else {
+            $cardWidthMm = $isPortrait ? 57.0 : 90.0;
+            $cardHeightMm = $isPortrait ? 90.0 : 57.0;
+        }
 
         $impositionParams = [
             'page_size' => $this->exportPageSize,
+            'card_size' => $this->exportCardSize,
             'custom_width_mm' => $this->exportCustomWidthMm,
             'custom_height_mm' => $this->exportCustomHeightMm,
             'gutter_mm' => $this->exportGutterMm,
@@ -825,6 +834,29 @@ new class extends Component {
             <!-- ADVANCED TOGGLES -->
             <div class="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 space-y-4">
                 <h4 class="text-xs font-extrabold uppercase tracking-wider text-gray-400">Automation & Advanced Options</h4>
+
+                <!-- Card Cut / Bleed Dimension Selector -->
+                <div class="p-4 border border-gray-100 dark:border-gray-700 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                    <div>
+                        <span class="font-bold text-xs text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                            <span>{{ __('Card Output Dimensions') }}</span>
+                            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 rounded text-[9px] font-black uppercase">
+                                {{ $exportCardSize === 'punch' ? 'Punch Size (86×54mm)' : 'Bleed Canvas (90×57mm)' }}
+                            </span>
+                        </span>
+                        <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+                            {{ __('Choose standard finished punch size (86×54mm trimmed) or full artwork with 2mm bleed allowance (90×57mm).') }}
+                        </p>
+                    </div>
+                    <div class="inline-flex p-1 bg-gray-200 dark:bg-gray-700/80 rounded-xl shrink-0 text-xs font-bold">
+                        <button type="button" wire:click="$set('exportCardSize', 'punch')" class="px-3.5 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 {{ $exportCardSize === 'punch' ? 'bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200' }}">
+                            <span>✂️ {{ __('Punch Size (86×54mm)') }}</span>
+                        </button>
+                        <button type="button" wire:click="$set('exportCardSize', 'bleed')" class="px-3.5 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 {{ $exportCardSize === 'bleed' ? 'bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200' }}">
+                            <span>📐 {{ __('Bleed Canvas (90×57mm)') }}</span>
+                        </button>
+                    </div>
+                </div>
                 
                 <!-- Mirror Print Toggle -->
                 <div class="p-4 border border-gray-100 dark:border-gray-700 rounded-2xl flex items-start justify-between gap-4 transition hover:bg-gray-50 dark:hover:bg-gray-700/30">
@@ -1137,6 +1169,9 @@ new class extends Component {
 
                                     <!-- Sheet Metrics Badges -->
                                     <div class="flex items-center gap-2 flex-wrap text-[11px] font-mono font-bold text-gray-600 dark:text-gray-300">
+                                        <span class="px-2.5 py-1 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 rounded-lg border border-amber-200 dark:border-amber-800">
+                                            🪪 {{ $exportCardSize === 'punch' ? 'Punch: 86×54mm' : 'Bleed: 90×57mm' }}
+                                        </span>
                                         <span class="px-2.5 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                                             📐 {{ $sheetLayout['page_width_mm'] }} × {{ $sheetLayout['page_height_mm'] }} mm
                                         </span>
@@ -1278,7 +1313,8 @@ new class extends Component {
                                                         :scale="0.5" 
                                                         :previewMode="!$currentPreviewStudent" 
                                                         :forExport="true" 
-                                                        :isMirrored="$exportMirrorPrint" />
+                                                        :isMirrored="$exportMirrorPrint" 
+                                                        :cardSize="$exportCardSize" />
                                                 </div>
                                             @else
                                                 <div class="w-64 h-40 bg-gray-800 text-gray-400 rounded-xl flex items-center justify-center text-xs">

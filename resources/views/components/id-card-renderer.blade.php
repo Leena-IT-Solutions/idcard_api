@@ -6,6 +6,7 @@
     'previewMode' => false,
     'forExport' => false,
     'isMirrored' => false,
+    'cardSize' => 'bleed', // 'bleed' (90x57mm) or 'punch' (86x54mm)
 ])
 
 @php
@@ -210,12 +211,17 @@
     $bleedX = $isPortrait ? 16.8 : 22.5;
     $bleedY = $isPortrait ? 22.5 : 16.8;
 
-    $scaledW = $forExport ? round($widthPx * $scale) : round($punchW * $scale);
-    $scaledH = $forExport ? round($heightPx * $scale) : round($punchH * $scale);
+    $isPunchMode = ($cardSize === 'punch' || (!$forExport && $cardSize !== 'bleed'));
+
+    $targetW = $isPunchMode ? $punchW : $widthPx;
+    $targetH = $isPunchMode ? $punchH : $heightPx;
+
+    $scaledW = round($targetW * $scale);
+    $scaledH = round($targetH * $scale);
 
     $cardRadius = $forExport ? 0 : max(4, round(12 * ($scaledW / 340)));
-    $innerLeft = $forExport ? 0 : -round($bleedX * $scale);
-    $innerTop = $forExport ? 0 : -round($bleedY * $scale);
+    $innerLeft = $isPunchMode ? -round($bleedX * $scale) : 0;
+    $innerTop = $isPunchMode ? -round($bleedY * $scale) : 0;
 
     $containerStyle = $forExport 
         ? "position: relative; overflow: hidden; flex-shrink: 0; display: inline-block; vertical-align: top; user-select: none; width: {$scaledW}px; height: {$scaledH}px;"

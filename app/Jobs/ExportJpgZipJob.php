@@ -49,6 +49,7 @@ class ExportJpgZipJob implements ShouldQueue
                 ->keyBy('id');
 
             $isMirrored = (bool) ($export->params['mirror_print'] ?? false);
+            $cardSize = $export->params['card_size'] ?? 'bleed';
             $schoolCode = preg_replace('/[^A-Za-z0-9_-]/', '', $export->school->school_code ?? $export->school->name ?? 'SCHOOL');
 
             foreach ($studentIds as $i => $studentId) {
@@ -66,10 +67,17 @@ class ExportJpgZipJob implements ShouldQueue
 
                 $orientation = $template->orientation ?? 'landscape';
                 $isPortrait = $orientation === 'portrait';
-                $widthPx = $isPortrait ? 638 : 1011;
-                $heightPx = $isPortrait ? 1011 : 638;
+                
+                $isPunch = ($cardSize === 'punch');
+                if ($isPunch) {
+                    $widthPx = $isPortrait ? 604 : 966;
+                    $heightPx = $isPortrait ? 966 : 604;
+                } else {
+                    $widthPx = $isPortrait ? 638 : 1011;
+                    $heightPx = $isPortrait ? 1011 : 638;
+                }
 
-                $html = $renderer->renderFrontHtml($template, $student, $export->school, $isMirrored);
+                $html = $renderer->renderFrontHtml($template, $student, $export->school, $isMirrored, $cardSize);
                 $jpg = $renderer->toJpg($html, $widthPx, $heightPx, 95);
 
                 $gradeName = preg_replace('/[^A-Za-z0-9_-]/', '', $enrollment?->grade?->name ?? 'Grade');
