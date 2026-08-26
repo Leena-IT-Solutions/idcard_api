@@ -12,8 +12,8 @@ use App\Models\Export;
 new class extends Component {
     public ?int $schoolId = null;
     public ?int $selectedCampaignId = null;
-    public ?int $selectedGradeId = null;
-    public ?int $selectedDivisionId = null;
+    public array $selectedGradeIds = [];
+    public array $selectedDivisionIds = [];
 
     public bool $exportOnlyVerified = true;
     public string $exportType = 'imposition_pdf'; // 'imposition_pdf', 'jpg_zip', 'single_card_pdf', 'excel_photo_zip'
@@ -57,6 +57,56 @@ new class extends Component {
         }
     }
 
+    public function toggleGrade(int $gradeId)
+    {
+        if (in_array($gradeId, $this->selectedGradeIds)) {
+            $this->selectedGradeIds = array_values(array_diff($this->selectedGradeIds, [$gradeId]));
+            // Remove divisions belonging to this grade
+            $gradeDivIds = Division::where('grade_id', $gradeId)->pluck('id')->all();
+            $this->selectedDivisionIds = array_values(array_diff($this->selectedDivisionIds, $gradeDivIds));
+        } else {
+            $this->selectedGradeIds[] = $gradeId;
+        }
+    }
+
+    public function selectAllGrades()
+    {
+        if (!$this->schoolId) return;
+        $this->selectedGradeIds = Grade::where('school_id', $this->schoolId)->pluck('id')->map(fn($id) => (int)$id)->all();
+    }
+
+    public function clearAllGrades()
+    {
+        $this->selectedGradeIds = [];
+        $this->selectedDivisionIds = [];
+    }
+
+    public function toggleDivision(int $divisionId)
+    {
+        if (in_array($divisionId, $this->selectedDivisionIds)) {
+            $this->selectedDivisionIds = array_values(array_diff($this->selectedDivisionIds, [$divisionId]));
+        } else {
+            $this->selectedDivisionIds[] = $divisionId;
+        }
+    }
+
+    public function selectAllDivisions()
+    {
+        if (!$this->schoolId) return;
+        $query = Division::query();
+        if (!empty($this->selectedGradeIds)) {
+            $query->whereIn('grade_id', $this->selectedGradeIds);
+        } else {
+            $query->whereHas('grade', fn($q) => $q->where('school_id', $this->schoolId));
+        }
+        $this->selectedDivisionIds = $query->pluck('id')->map(fn($id) => (int)$id)->all();
+    }
+
+    public function clearAllDivisions()
+    {
+        $this->selectedDivisionIds = [];
+    }
+
     public function clearPreselected()
     {
         $this->preSelectedStudentIds = [];
@@ -81,11 +131,11 @@ new class extends Component {
             if ($this->selectedCampaignId) {
                 $query->where('campaign_id', $this->selectedCampaignId);
             }
-            if ($this->selectedGradeId) {
-                $query->where('grade_id', $this->selectedGradeId);
+            if (!empty($this->selectedGradeIds)) {
+                $query->whereIn('grade_id', $this->selectedGradeIds);
             }
-            if ($this->selectedDivisionId) {
-                $query->where('division_id', $this->selectedDivisionId);
+            if (!empty($this->selectedDivisionIds)) {
+                $query->whereIn('division_id', $this->selectedDivisionIds);
             }
             if ($this->exportOnlyVerified) {
                 $query->where('status', CampaignStudent::STATUS_VERIFIED);
@@ -109,8 +159,8 @@ new class extends Component {
 
         $params = [
             'campaign_id' => $this->selectedCampaignId,
-            'grade_id' => $this->selectedGradeId,
-            'division_id' => $this->selectedDivisionId,
+            'grade_ids' => $this->selectedGradeIds,
+            'division_ids' => $this->selectedDivisionIds,
             'student_ids' => $targetStudentIds,
             'page_size' => $this->exportPageSize,
             'custom_width_mm' => $this->exportCustomWidthMm,
@@ -199,8 +249,15 @@ new class extends Component {
     {
         $activeSchool = $this->schoolId ? School::find($this->schoolId) : null;
         $campaigns = $this->schoolId ? Campaign::where('school_id', $this->schoolId)->orderBy('id', 'desc')->get() : collect();
-        $grades = $this->schoolId ? Grade::where('school_id', $this->schoolId)->orderBy('name')->get() : collect();
-        $divisions = $this->selectedGradeId ? Division::where('grade_id', $this->selectedGradeId)->orderBy('name')->get() : collect();
+        $grades = $this->schoolId ? Grade::where('school_id', $this->schoolId)->withCount('divisions')->orderBy('name')->get() : collect();
+
+        $divisionsQuery = Division::query();
+        if (!empty($this->selectedGradeIds)) {
+            $divisionsQuery->whereIn('grade_id', $this->selectedGradeIds);
+        } else {
+            $divisionsQuery->whereHas('grade', fn($q) => $q->where('school_id', $this->schoolId));
+        }
+        $divisions = $this->schoolId ? $divisionsQuery->with('grade')->orderBy('name')->get() : collect();
 
         // Calculate student counts
         $baseQuery = CampaignStudent::whereHas('campaign', fn($q) => $q->where('school_id', $this->schoolId));
@@ -211,11 +268,11 @@ new class extends Component {
             if ($this->selectedCampaignId) {
                 $baseQuery->where('campaign_id', $this->selectedCampaignId);
             }
-            if ($this->selectedGradeId) {
-                $baseQuery->where('grade_id', $this->selectedGradeId);
+            if (!empty($this->selectedGradeIds)) {
+                $baseQuery->whereIn('grade_id', $this->selectedGradeIds);
             }
-            if ($this->selectedDivisionId) {
-                $baseQuery->where('division_id', $this->selectedDivisionId);
+            if (!empty($this->selectedDivisionIds)) {
+                $baseQuery->whereIn('division_id', $this->selectedDivisionIds);
             }
         }
 
@@ -337,11 +394,11 @@ new class extends Component {
                 </div>
 
                 @if(empty($preSelectedStudentIds))
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="space-y-5">
                         <!-- Campaign Filter -->
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">{{ __('Campaign') }}</label>
-                            <select wire:model.live="selectedCampaignId" class="w-full text-xs rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-900 font-medium focus:ring-indigo-500">
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">{{ __('Active Campaign') }}</label>
+                            <select wire:model.live="selectedCampaignId" class="w-full text-xs rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-900 font-semibold focus:ring-indigo-500 py-2.5">
                                 <option value="">{{ __('All Campaigns') }}</option>
                                 @foreach($campaigns as $camp)
                                     <option value="{{ $camp->id }}">{{ $camp->name }}</option>
@@ -349,47 +406,119 @@ new class extends Component {
                             </select>
                         </div>
 
-                        <!-- Grade Filter -->
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">{{ __('Grade / Class') }}</label>
-                            <select wire:model.live="selectedGradeId" class="w-full text-xs rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-900 font-medium focus:ring-indigo-500">
-                                <option value="">{{ __('All Grades') }}</option>
-                                @foreach($grades as $gr)
-                                    <option value="{{ $gr->id }}">{{ $gr->name }}</option>
-                                @endforeach
-                            </select>
+                        <!-- Multi-Select Grades -->
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-bold text-gray-800 dark:text-gray-200">{{ __('Grades / Classes') }}</span>
+                                    @if(empty($selectedGradeIds))
+                                        <span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-md text-[10px] font-bold">All Grades (Default)</span>
+                                    @else
+                                        <span class="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 rounded-md text-[10px] font-extrabold">
+                                            {{ count($selectedGradeIds) }} / {{ count($grades) }} Selected
+                                        </span>
+                                    @endif
+                                </div>
+                                <div class="flex items-center gap-2 text-xs">
+                                    <button type="button" wire:click="selectAllGrades" class="text-indigo-600 dark:text-indigo-400 hover:underline font-bold text-[11px] cursor-pointer">
+                                        {{ __('Select All') }}
+                                    </button>
+                                    <span class="text-gray-300 dark:text-gray-600">•</span>
+                                    <button type="button" wire:click="clearAllGrades" class="text-gray-500 hover:text-rose-500 dark:text-gray-400 font-medium text-[11px] cursor-pointer">
+                                        {{ __('Clear') }}
+                                    </button>
+                                </div>
+                            </div>
+
+                            @if($grades->count() > 0)
+                                <div class="flex flex-wrap gap-2 p-3.5 bg-gray-50/80 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-700/60 rounded-2xl">
+                                    @foreach($grades as $gr)
+                                        @php $isGradeSelected = in_array($gr->id, $selectedGradeIds); @endphp
+                                        <button type="button" wire:click="toggleGrade({{ $gr->id }})" class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-sm {{ $isGradeSelected ? 'bg-indigo-600 text-white shadow-indigo-500/20 scale-100 ring-2 ring-indigo-500/30' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50/20' }}">
+                                            <span class="w-4 h-4 rounded flex items-center justify-center text-[10px] {{ $isGradeSelected ? 'bg-white/20 text-white font-black' : 'border border-gray-300 dark:border-gray-600' }}">
+                                                @if($isGradeSelected) ✓ @endif
+                                            </span>
+                                            <span>{{ $gr->name }}</span>
+                                            @if($gr->divisions_count > 0)
+                                                <span class="px-1.5 py-0.5 rounded text-[9px] {{ $isGradeSelected ? 'bg-indigo-700/80 text-indigo-100' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400' }}">
+                                                    {{ $gr->divisions_count }} div
+                                                </span>
+                                            @endif
+                                        </button>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="p-3 text-xs text-gray-400 italic bg-gray-50 dark:bg-gray-900/30 rounded-xl border border-gray-100 dark:border-gray-800">
+                                    {{ __('No grades found for this school.') }}
+                                </div>
+                            @endif
                         </div>
 
-                        <!-- Division Filter -->
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">{{ __('Division / Section') }}</label>
-                            <select wire:model.live="selectedDivisionId" class="w-full text-xs rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-900 font-medium focus:ring-indigo-500" {{ !$selectedGradeId ? 'disabled' : '' }}>
-                                <option value="">{{ __('All Divisions') }}</option>
-                                @foreach($divisions as $div)
-                                    <option value="{{ $div->id }}">{{ $div->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
+                        <!-- Multi-Select Divisions -->
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-bold text-gray-800 dark:text-gray-200">{{ __('Divisions / Sections') }}</span>
+                                    @if(empty($selectedDivisionIds))
+                                        <span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-md text-[10px] font-bold">All Divisions in Scope (Default)</span>
+                                    @else
+                                        <span class="px-2 py-0.5 bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 rounded-md text-[10px] font-extrabold">
+                                            {{ count($selectedDivisionIds) }} / {{ count($divisions) }} Selected
+                                        </span>
+                                    @endif
+                                </div>
+                                <div class="flex items-center gap-2 text-xs">
+                                    <button type="button" wire:click="selectAllDivisions" class="text-purple-600 dark:text-purple-400 hover:underline font-bold text-[11px] cursor-pointer">
+                                        {{ __('Select All') }}
+                                    </button>
+                                    <span class="text-gray-300 dark:text-gray-600">•</span>
+                                    <button type="button" wire:click="clearAllDivisions" class="text-gray-500 hover:text-rose-500 dark:text-gray-400 font-medium text-[11px] cursor-pointer">
+                                        {{ __('Clear') }}
+                                    </button>
+                                </div>
+                            </div>
 
-                    <!-- Verified Students Only Toggle -->
-                    <div class="p-4 border rounded-2xl flex items-start justify-between gap-4 transition {{ $exportOnlyVerified ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20' : 'border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/40' }}">
-                        <div>
-                            <span class="font-bold text-xs text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                                <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                {{ __('Export Only Verified Students') }}
-                                @if ($exportOnlyVerified)
-                                    <span class="px-2 py-0.5 bg-emerald-600 text-white rounded-md text-[9px] font-extrabold uppercase tracking-wider">{{ __('Active (:count)', ['count' => $verifiedCount]) }}</span>
-                                @endif
-                            </span>
-                            <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
-                                {{ __('If enabled, exports only students with "Verified" status (:verifiedCount). Excludes :unverifiedCount drafting and pending profiles to save wallet credits.', ['verifiedCount' => $verifiedCount, 'unverifiedCount' => $unverifiedCount]) }}
-                            </p>
+                            @if($divisions->count() > 0)
+                                <div class="flex flex-wrap gap-2 p-3.5 bg-gray-50/80 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-700/60 rounded-2xl max-h-56 overflow-y-auto">
+                                    @foreach($divisions as $div)
+                                        @php $isDivSelected = in_array($div->id, $selectedDivisionIds); @endphp
+                                        <button type="button" wire:click="toggleDivision({{ $div->id }})" class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-sm {{ $isDivSelected ? 'bg-purple-600 text-white shadow-purple-500/20 ring-2 ring-purple-500/30' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50/20' }}">
+                                            <span class="w-3.5 h-3.5 rounded flex items-center justify-center text-[9px] {{ $isDivSelected ? 'bg-white/20 text-white font-black' : 'border border-gray-300 dark:border-gray-600' }}">
+                                                @if($isDivSelected) ✓ @endif
+                                            </span>
+                                            <span>{{ $div->name }}</span>
+                                            @if($div->grade)
+                                                <span class="text-[10px] {{ $isDivSelected ? 'text-purple-200' : 'text-gray-400' }}">({{ $div->grade->name }})</span>
+                                            @endif
+                                        </button>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="p-3 text-xs text-gray-400 italic bg-gray-50 dark:bg-gray-900/30 rounded-xl border border-gray-100 dark:border-gray-800">
+                                    {{ __('No divisions found.') }}
+                                </div>
+                            @endif
                         </div>
-                        <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
-                            <input type="checkbox" wire:model.live="exportOnlyVerified" class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-600"></div>
-                        </label>
+
+                        <!-- Verified Students Only Toggle -->
+                        <div class="p-4 border rounded-2xl flex items-start justify-between gap-4 transition {{ $exportOnlyVerified ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20' : 'border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/40' }}">
+                            <div>
+                                <span class="font-bold text-xs text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    {{ __('Export Only Verified Students') }}
+                                    @if ($exportOnlyVerified)
+                                        <span class="px-2 py-0.5 bg-emerald-600 text-white rounded-md text-[9px] font-extrabold uppercase tracking-wider">{{ __('Active (:count)', ['count' => $verifiedCount]) }}</span>
+                                    @endif
+                                </span>
+                                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+                                    {{ __('If enabled, exports only students with "Verified" status (:verifiedCount). Excludes :unverifiedCount drafting and pending profiles to save wallet credits.', ['verifiedCount' => $verifiedCount, 'unverifiedCount' => $unverifiedCount]) }}
+                                </p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                                <input type="checkbox" wire:model.live="exportOnlyVerified" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-600"></div>
+                            </label>
+                        </div>
                     </div>
                 @else
                     <div class="p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-2xl flex items-center justify-between">
