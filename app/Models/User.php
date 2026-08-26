@@ -80,9 +80,9 @@ class User extends Authenticatable
                 if ($parentRoleId) {
                     if (is_null($ids)) {
                         // If detaching all roles, keep parent role if they have it
-                        $hasParent = $this->parent->roles()->where('slug', 'parent')->exists();
+                        $hasParent = $this->parent->roles()->where('roles.slug', 'parent')->exists();
                         if ($hasParent) {
-                            $ids = $this->parent->roles()->where('slug', '!=', 'parent')->pluck('id')->toArray();
+                            $ids = $this->parent->roles()->where('roles.slug', '!=', 'parent')->pluck('roles.id')->toArray();
                         }
                     } else {
                         // Remove parent role from the IDs to detach
@@ -97,7 +97,7 @@ class User extends Authenticatable
             {
                 $parentRoleId = \App\Models\Role::where('slug', 'parent')->value('id');
                 if ($parentRoleId) {
-                    $hasParent = $this->parent->roles()->where('slug', 'parent')->exists();
+                    $hasParent = $this->parent->roles()->where('roles.slug', 'parent')->exists();
                     if ($hasParent) {
                         $parsed = $this->parseIds($ids);
                         if (!isset($parsed[$parentRoleId])) {
@@ -113,12 +113,12 @@ class User extends Authenticatable
 
     public function hasRole(string $role): bool
     {
-        return $this->roles()->where('slug', $role)->exists();
+        return $this->roles()->where('roles.slug', $role)->exists();
     }
 
     public function hasAnyRole(array $roles): bool
     {
-        return $this->roles()->whereIn('slug', $roles)->exists();
+        return $this->roles()->whereIn('roles.slug', $roles)->exists();
     }
 
     public function assignRole(string $role): void

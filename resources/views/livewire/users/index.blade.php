@@ -210,7 +210,12 @@ new class extends Component
             }
 
             $user = User::findOrFail($this->userToDeleteId);
-            $user->roles()->detach();
+            
+            // Unlink any students associated with this user
+            \App\Models\Student::where('user_id', $user->id)->update(['user_id' => null]);
+            
+            // Clean up role relationships and delete user
+            \Illuminate\Support\Facades\DB::table('role_user')->where('user_id', $user->id)->delete();
             $user->delete();
             
             $this->loadUsers();
