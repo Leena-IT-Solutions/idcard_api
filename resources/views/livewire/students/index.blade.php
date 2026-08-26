@@ -85,8 +85,8 @@ new class extends Component
 
     public string $exportType = 'excel_photo_zip'; // 'excel_photo_zip', 'png_zip', 'imposition_pdf'
     public string $exportPageSize = '297x210';
-    public float $exportBleedMm = 3.0;
-    public float $exportMarginMm = 3.0;
+    public float $exportBleedMm = 0.0;
+    public float $exportMarginMm = 0.0;
     public float $exportGutterMm = 4.0;
     public float $exportCustomWidthMm = 297.0;
     public float $exportCustomHeightMm = 210.0;
@@ -3098,7 +3098,7 @@ new class extends Component
 
                         @if ($exportType === 'imposition_pdf')
                             <div class="p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-2xl space-y-3 text-xs">
-                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 {{ $exportPageSize === 'Custom' ? 'lg:grid-cols-4' : '' }} gap-3">
                                     <div>
                                         <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">{{ __('Page Size') }}</label>
                                         <select wire:model.live="exportPageSize" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl text-xs font-semibold">
@@ -3120,16 +3120,8 @@ new class extends Component
                                         </div>
                                     @endif
                                     <div>
-                                        <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">{{ __('Bleed (mm)') }}</label>
-                                        <input type="number" step="0.5" wire:model="exportBleedMm" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl text-xs" />
-                                    </div>
-                                    <div>
-                                        <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">{{ __('Safety Margin (mm)') }}</label>
-                                        <input type="number" step="0.5" wire:model="exportMarginMm" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl text-xs" />
-                                    </div>
-                                    <div>
-                                        <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">{{ __('Gutter (mm)') }}</label>
-                                        <input type="number" step="0.5" wire:model="exportGutterMm" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl text-xs" />
+                                        <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1">{{ __('Gutter / Spacing (mm)') }}</label>
+                                        <input type="number" step="0.5" min="0" wire:model="exportGutterMm" class="w-full border-gray-200 dark:border-gray-700 dark:bg-gray-800 rounded-xl text-xs font-semibold" placeholder="e.g. 4.0" />
                                     </div>
                                 </div>
                                 @if ($exportPageSize === 'Custom')
