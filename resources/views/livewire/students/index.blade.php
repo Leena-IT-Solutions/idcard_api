@@ -277,8 +277,9 @@ new class extends Component
         $this->selectAll = !empty($loadedIds) && count(array_intersect($loadedIds, $this->selectedStudentIds)) === count($loadedIds);
     }
 
-    public function bulkUpdateStatusBySelection($status)
+    public function bulkUpdateStatusBySelection(?string $status = null)
     {
+        $status = $status ?? $this->bulkTargetStatus ?? 'verified';
         if (empty($this->selectedStudentIds)) {
             session()->flash('error', 'No students selected.');
             return;
@@ -1913,15 +1914,15 @@ new class extends Component
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                         <span>{{ __('Export Selected') }}</span>
                     </button>
-                    <select wire:model="bulkTargetStatus" class="bg-gray-800 border-gray-700 text-white text-xs rounded-xl px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 font-medium">
+                    <select wire:model.live="bulkTargetStatus" class="bg-gray-800 border-gray-700 text-white text-xs rounded-xl px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 font-medium">
                         @foreach (\App\Models\CampaignStudent::STATUSES as $k => $s)
                             <option value="{{ $k }}">{{ $s['label'] }}</option>
                         @endforeach
                     </select>
-                    <button type="button" wire:click="bulkUpdateStatusBySelection(bulkTargetStatus)" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-sm">
+                    <button type="button" wire:click="bulkUpdateStatusBySelection" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-sm">
                         {{ __('Apply Status') }}
                     </button>
-                    <button type="button" wire:click="$set('selectedStudentIds', [])" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium rounded-xl transition cursor-pointer">
+                    <button type="button" wire:click="clearSelection" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium rounded-xl transition cursor-pointer">
                         {{ __('Clear') }}
                     </button>
                 </div>
