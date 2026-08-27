@@ -26,6 +26,8 @@ new class extends Component {
     public float $exportGutterMm = 4.0;
     public float $exportCustomWidthMm = 297.0;
     public float $exportCustomHeightMm = 210.0;
+    public bool $exportShowCuttingMarks = true;
+    public bool $exportShowCenterMarks = true;
     public bool $exportMirrorPrint = false;
     public bool $exportSendForPrinting = false;
 
@@ -174,6 +176,8 @@ new class extends Component {
             'horizontal_gutter_mm' => $this->exportHorizontalGutterMm,
             'vertical_gutter_mm' => $this->exportVerticalGutterMm,
             'gutter_mm' => $this->exportHorizontalGutterMm,
+            'show_cutting_marks' => $this->exportShowCuttingMarks,
+            'show_center_marks' => $this->exportShowCenterMarks,
             'mirror_print' => $this->exportMirrorPrint,
             'send_for_printing' => $this->exportSendForPrinting,
         ];
@@ -380,6 +384,8 @@ new class extends Component {
             'horizontal_gutter_mm' => $this->exportHorizontalGutterMm,
             'vertical_gutter_mm' => $this->exportVerticalGutterMm,
             'gutter_mm' => $this->exportHorizontalGutterMm,
+            'show_cutting_marks' => $this->exportShowCuttingMarks,
+            'show_center_marks' => $this->exportShowCenterMarks,
             'bleed_mm' => 0.0,
             'margin_mm' => 0.0,
         ];
@@ -883,10 +889,45 @@ new class extends Component {
                         </div>
                     @endif
 
+                    <!-- Cutting Marks & Center Registration Marks Toggles -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-gray-100 dark:border-gray-700/60">
+                        <div class="flex items-center justify-between p-3.5 bg-gray-50 dark:bg-gray-900/40 rounded-2xl border border-gray-100 dark:border-gray-700/60">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-sm">
+                                    ✂️
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold text-gray-900 dark:text-gray-100">{{ __('Cutting Marks') }}</p>
+                                    <p class="text-[10px] text-gray-500 dark:text-gray-400">{{ __('Hairline corner crop guides') }}</p>
+                                </div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" wire:model.live="exportShowCuttingMarks" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between p-3.5 bg-gray-50 dark:bg-gray-900/40 rounded-2xl border border-gray-100 dark:border-gray-700/60">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center text-sm">
+                                    🎯
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold text-gray-900 dark:text-gray-100">{{ __('Center Marks') }}</p>
+                                    <p class="text-[10px] text-gray-500 dark:text-gray-400">{{ __('Circular crosshairs alignment targets') }}</p>
+                                </div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" wire:model.live="exportShowCenterMarks" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-sky-600"></div>
+                            </label>
+                        </div>
+                    </div>
+
                     <div class="p-3 bg-indigo-50/50 dark:bg-indigo-950/20 rounded-2xl border border-indigo-100 dark:border-indigo-900/40 flex items-center justify-between text-xs text-indigo-900 dark:text-indigo-300">
                         <div class="flex items-center gap-2">
                             <span class="text-base">📐</span>
-                            <span class="font-bold">Cards are automatically positioned with hairline crop marks, {{ $exportHorizontalGutterMm }}mm horizontal gap, and {{ $exportVerticalGutterMm }}mm vertical gap.</span>
+                            <span class="font-bold">Cards are automatically positioned with {{ $exportShowCuttingMarks ? 'corner cutting marks' : 'no cutting marks' }}, {{ $exportShowCenterMarks ? 'center registration crosshairs' : 'no center marks' }}, {{ $exportHorizontalGutterMm }}mm horizontal gap, and {{ $exportVerticalGutterMm }}mm vertical gap.</span>
                         </div>
                     </div>
                 </div>
@@ -979,6 +1020,22 @@ new class extends Component {
                             {{ $exportCardSize === 'punch' ? '✂️ Punch Size (86×54mm)' : '📐 Bleed Canvas (90×57mm)' }}
                         </span>
                     </div>
+
+                    @if ($exportType === 'imposition_pdf')
+                        <div class="flex items-center justify-between text-gray-600 dark:text-gray-400">
+                            <span>Cutting Marks</span>
+                            <span class="font-bold text-[11px] {{ $exportShowCuttingMarks ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400' }}">
+                                {{ $exportShowCuttingMarks ? '✂️ Enabled' : 'Disabled' }}
+                            </span>
+                        </div>
+
+                        <div class="flex items-center justify-between text-gray-600 dark:text-gray-400">
+                            <span>Center Marks</span>
+                            <span class="font-bold text-[11px] {{ $exportShowCenterMarks ? 'text-sky-600 dark:text-sky-400' : 'text-gray-400' }}">
+                                {{ $exportShowCenterMarks ? '🎯 Enabled' : 'Disabled' }}
+                            </span>
+                        </div>
+                    @endif
 
                     <div class="flex items-center justify-between text-gray-600 dark:text-gray-400">
                         <span>Total Target Cards</span>
@@ -1276,8 +1333,25 @@ new class extends Component {
                                             {{ strtoupper($exportPageSize) }} SHEET ({{ $previewSheetSide === 'front' ? 'FRONT SIDE' : 'BACK SIDE' }}) • SHEET {{ $previewPageIndex + 1 }}
                                         </div>
 
+                                        <!-- Center Registration Targets in Preview -->
+                                        @if($exportShowCenterMarks && !empty($sheetLayout['center_marks']))
+                                            @foreach ($sheetLayout['center_marks'] as $cm)
+                                                <div class="absolute w-4 h-4 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-30 opacity-90"
+                                                     style="left: {{ round(($cm['x'] / $sheetLayout['page_width_mm']) * 100, 2) }}%; top: {{ round(($cm['y'] / $sheetLayout['page_height_mm']) * 100, 2) }}%;">
+                                                    <svg viewBox="0 0 24 24" class="w-full h-full">
+                                                        <circle cx="12" cy="12" r="9.5" fill="#ffffff" stroke="#000000" stroke-width="1.2" />
+                                                        <path d="M12,12 L2.5,12 A9.5,9.5 0 0,1 12,2.5 Z" fill="#93c5fd" />
+                                                        <path d="M12,12 L21.5,12 A9.5,9.5 0 0,1 12,21.5 Z" fill="#93c5fd" />
+                                                        <circle cx="12" cy="12" r="9.5" fill="none" stroke="#000000" stroke-width="1.2" />
+                                                        <line x1="12" y1="0" x2="12" y2="24" stroke="#000000" stroke-width="1.2" />
+                                                        <line x1="0" y1="12" x2="24" y2="12" stroke="#000000" stroke-width="1.2" />
+                                                    </svg>
+                                                </div>
+                                            @endforeach
+                                        @endif
+
                                         <!-- Card Grid -->
-                                        <div class="w-full h-full"
+                                        <div class="w-full h-full relative z-10"
                                              style="display: grid; grid-template-columns: repeat({{ $sheetLayout['cols'] }}, 1fr); grid-template-rows: repeat({{ $sheetLayout['rows'] }}, 1fr); column-gap: {{ max(4, round($sheetLayout['horizontal_gutter_mm'] * 2)) }}px; row-gap: {{ max(4, round($sheetLayout['vertical_gutter_mm'] * 2)) }}px;">
                                             @foreach ($pageCards as $cardSlot)
                                                 @php

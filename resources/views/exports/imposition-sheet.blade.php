@@ -40,7 +40,8 @@
             height: {{ $layout['card_height_mm'] }}mm;
             overflow: hidden;
         }
-        /* Crop / Trim Marks */
+
+        /* Cutting / Crop Guides (Corner Marks) */
         .crop-mark {
             position: absolute;
             background-color: #000000;
@@ -48,56 +49,67 @@
         }
         /* Top-Left */
         .cm-tl-v {
-            top: 0;
-            left: {{ $layout['bleed_mm'] }}mm;
-            width: 0.2mm;
-            height: {{ $layout['bleed_mm'] - 1 }}mm;
+            top: -3.5mm;
+            left: 0;
+            width: 0.25mm;
+            height: 3.0mm;
         }
         .cm-tl-h {
-            top: {{ $layout['bleed_mm'] }}mm;
-            left: 0;
-            width: {{ $layout['bleed_mm'] - 1 }}mm;
-            height: 0.2mm;
+            top: 0;
+            left: -3.5mm;
+            width: 3.0mm;
+            height: 0.25mm;
         }
         /* Top-Right */
         .cm-tr-v {
-            top: 0;
-            right: {{ $layout['bleed_mm'] }}mm;
-            width: 0.2mm;
-            height: {{ $layout['bleed_mm'] - 1 }}mm;
+            top: -3.5mm;
+            right: 0;
+            width: 0.25mm;
+            height: 3.0mm;
         }
         .cm-tr-h {
-            top: {{ $layout['bleed_mm'] }}mm;
-            right: 0;
-            width: {{ $layout['bleed_mm'] - 1 }}mm;
-            height: 0.2mm;
+            top: 0;
+            right: -3.5mm;
+            width: 3.0mm;
+            height: 0.25mm;
         }
         /* Bottom-Left */
         .cm-bl-v {
-            bottom: 0;
-            left: {{ $layout['bleed_mm'] }}mm;
-            width: 0.2mm;
-            height: {{ $layout['bleed_mm'] - 1 }}mm;
+            bottom: -3.5mm;
+            left: 0;
+            width: 0.25mm;
+            height: 3.0mm;
         }
         .cm-bl-h {
-            bottom: {{ $layout['bleed_mm'] }}mm;
-            left: 0;
-            width: {{ $layout['bleed_mm'] - 1 }}mm;
-            height: 0.2mm;
+            bottom: 0;
+            left: -3.5mm;
+            width: 3.0mm;
+            height: 0.25mm;
         }
         /* Bottom-Right */
         .cm-br-v {
-            bottom: 0;
-            right: {{ $layout['bleed_mm'] }}mm;
-            width: 0.2mm;
-            height: {{ $layout['bleed_mm'] - 1 }}mm;
+            bottom: -3.5mm;
+            right: 0;
+            width: 0.25mm;
+            height: 3.0mm;
         }
         .cm-br-h {
-            bottom: {{ $layout['bleed_mm'] }}mm;
-            right: 0;
-            width: {{ $layout['bleed_mm'] - 1 }}mm;
-            height: 0.2mm;
+            bottom: 0;
+            right: -3.5mm;
+            width: 3.0mm;
+            height: 0.25mm;
         }
+
+        /* Registration Center Mark */
+        .center-reg-mark {
+            position: absolute;
+            width: 5.5mm;
+            height: 5.5mm;
+            transform: translate(-50%, -50%);
+            z-index: 150;
+            pointer-events: none;
+        }
+
         .card-inner-scale {
             transform-origin: top left;
         }
@@ -106,6 +118,23 @@
 <body>
     @foreach ($pages as $pageCards)
         <div class="page">
+            <!-- Center Registration Targets (Marks) -->
+            @if(!empty($layout['show_center_marks']) && !empty($layout['center_marks']))
+                @foreach ($layout['center_marks'] as $cm)
+                    <div class="center-reg-mark" style="left: {{ $cm['x'] }}mm; top: {{ $cm['y'] }}mm;">
+                        <svg width="5.5mm" height="5.5mm" viewBox="0 0 24 24" style="display: block;">
+                            <circle cx="12" cy="12" r="9.5" fill="#ffffff" stroke="#000000" stroke-width="1.2" />
+                            <path d="M12,12 L2.5,12 A9.5,9.5 0 0,1 12,2.5 Z" fill="#93c5fd" />
+                            <path d="M12,12 L21.5,12 A9.5,9.5 0 0,1 12,21.5 Z" fill="#93c5fd" />
+                            <circle cx="12" cy="12" r="9.5" fill="none" stroke="#000000" stroke-width="1.2" />
+                            <line x1="12" y1="0" x2="12" y2="24" stroke="#000000" stroke-width="1.2" />
+                            <line x1="0" y1="12" x2="24" y2="12" stroke="#000000" stroke-width="1.2" />
+                        </svg>
+                    </div>
+                @endforeach
+            @endif
+
+            <!-- Cards & Cutting Guides -->
             @foreach ($pageCards as $cell)
                 @php
                     $col = $cell['col'];
@@ -120,8 +149,8 @@
                 @endphp
 
                 <div class="card-cell" style="left: {{ $leftMm }}mm; top: {{ $topMm }}mm;">
-                    @if(($layout['bleed_mm'] ?? 0) > 0)
-                        <!-- Hairline Crop Marks -->
+                    @if(!empty($layout['show_cutting_marks']))
+                        <!-- Hairline Corner Cutting Marks -->
                         <div class="crop-mark cm-tl-v"></div>
                         <div class="crop-mark cm-tl-h"></div>
                         <div class="crop-mark cm-tr-v"></div>

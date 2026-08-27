@@ -38,12 +38,60 @@ class ImpositionLayoutService
         $rows = max(1, $rows);
         $cardsPerPage = max(1, $cols * $rows);
 
-        // Center grid on page
-        $totalGridWidth = ($cols * $cardOuterWidth) + (($cols - 1) * $horizontalGutterMm);
-        $totalGridHeight = ($rows * $cardOuterHeight) + (($rows - 1) * $verticalGutterMm);
+        $showCuttingMarks = (bool) ($params['show_cutting_marks'] ?? true);
+        $showCenterMarks = (bool) ($params['show_center_marks'] ?? true);
 
-        $startLeftMm = max(0, ($pageWidthMm - $totalGridWidth) / 2);
-        $startTopMm = max(0, ($pageHeightMm - $totalGridHeight) / 2);
+        $centerMarks = [];
+        if ($showCenterMarks) {
+            // 1. Top and Bottom margin registration center marks
+            for ($c = 0; $c <= $cols; $c++) {
+                if ($c === 0) {
+                    $x = $startLeftMm;
+                } elseif ($c === $cols) {
+                    $x = $startLeftMm + ($cols * $cardOuterWidth) + (($cols - 1) * $horizontalGutterMm);
+                } else {
+                    $x = $startLeftMm + ($c * $cardOuterWidth) + (($c - 0.5) * $horizontalGutterMm);
+                }
+
+                // Top margin center mark
+                $topY = max(3.0, $startTopMm / 2);
+                $centerMarks[] = ['x' => round($x, 2), 'y' => round($topY, 2), 'type' => 'col_top'];
+
+                // Bottom margin center mark
+                $botY = $pageHeightMm - max(3.0, $startTopMm / 2);
+                $centerMarks[] = ['x' => round($x, 2), 'y' => round($botY, 2), 'type' => 'col_bottom'];
+            }
+
+            // 2. Left and Right margin registration center marks
+            for ($r = 0; $r <= $rows; $r++) {
+                if ($r === 0) {
+                    $y = $startTopMm;
+                } elseif ($r === $rows) {
+                    $y = $startTopMm + ($rows * $cardOuterHeight) + (($rows - 1) * $verticalGutterMm);
+                } else {
+                    $y = $startTopMm + ($r * $cardOuterHeight) + (($r - 0.5) * $verticalGutterMm);
+                }
+
+                // Left margin center mark
+                $leftX = max(3.0, $startLeftMm / 2);
+                $centerMarks[] = ['x' => round($leftX, 2), 'y' => round($y, 2), 'type' => 'row_left'];
+
+                // Right margin center mark
+                $rightX = $pageWidthMm - max(3.0, $startLeftMm / 2);
+                $centerMarks[] = ['x' => round($rightX, 2), 'y' => round($y, 2), 'type' => 'row_right'];
+            }
+
+            // 3. Internal gutter intersection center marks (if gutters allow space)
+            if ($horizontalGutterMm >= 4.0 || $verticalGutterMm >= 4.0) {
+                for ($c = 1; $c < $cols; $c++) {
+                    for ($r = 1; $r < $rows; $r++) {
+                        $cx = $startLeftMm + ($c * $cardOuterWidth) + (($c - 0.5) * $horizontalGutterMm);
+                        $cy = $startTopMm + ($r * $cardOuterHeight) + (($r - 0.5) * $verticalGutterMm);
+                        $centerMarks[] = ['x' => round($cx, 2), 'y' => round($cy, 2), 'type' => 'internal_intersection'];
+                    }
+                }
+            }
+        }
 
         return [
             'page_width_mm' => $pageWidthMm,
@@ -54,6 +102,9 @@ class ImpositionLayoutService
             'vertical_gutter_mm' => $verticalGutterMm,
             'gutter_mm' => $horizontalGutterMm,
             'trim_mark_len' => $trimMarkLen,
+            'show_cutting_marks' => $showCuttingMarks,
+            'show_center_marks' => $showCenterMarks,
+            'center_marks' => $centerMarks,
             'card_width_mm' => $cardWidthMm,
             'card_height_mm' => $cardHeightMm,
             'card_outer_width' => $cardOuterWidth,
