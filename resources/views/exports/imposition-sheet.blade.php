@@ -44,75 +44,75 @@
         /* Cutting / Crop Guides (Corner Marks) */
         .crop-mark {
             position: absolute;
-            background-color: #000000;
-            z-index: 100;
+            background-color: #000000 !important;
+            z-index: 500;
         }
         /* Top-Left */
         .cm-tl-v {
-            top: -3.5mm;
+            top: -4.0mm;
             left: 0;
-            width: 0.25mm;
-            height: 3.0mm;
+            width: 0.35mm;
+            height: 3.5mm;
         }
         .cm-tl-h {
             top: 0;
-            left: -3.5mm;
-            width: 3.0mm;
-            height: 0.25mm;
+            left: -4.0mm;
+            width: 3.5mm;
+            height: 0.35mm;
         }
         /* Top-Right */
         .cm-tr-v {
-            top: -3.5mm;
+            top: -4.0mm;
             right: 0;
-            width: 0.25mm;
-            height: 3.0mm;
+            width: 0.35mm;
+            height: 3.5mm;
         }
         .cm-tr-h {
             top: 0;
-            right: -3.5mm;
-            width: 3.0mm;
-            height: 0.25mm;
+            right: -4.0mm;
+            width: 3.5mm;
+            height: 0.35mm;
         }
         /* Bottom-Left */
         .cm-bl-v {
-            bottom: -3.5mm;
+            bottom: -4.0mm;
             left: 0;
-            width: 0.25mm;
-            height: 3.0mm;
+            width: 0.35mm;
+            height: 3.5mm;
         }
         .cm-bl-h {
             bottom: 0;
-            left: -3.5mm;
-            width: 3.0mm;
-            height: 0.25mm;
+            left: -4.0mm;
+            width: 3.5mm;
+            height: 0.35mm;
         }
         /* Bottom-Right */
         .cm-br-v {
-            bottom: -3.5mm;
+            bottom: -4.0mm;
             right: 0;
-            width: 0.25mm;
-            height: 3.0mm;
+            width: 0.35mm;
+            height: 3.5mm;
         }
         .cm-br-h {
             bottom: 0;
-            right: -3.5mm;
-            width: 3.0mm;
-            height: 0.25mm;
+            right: -4.0mm;
+            width: 3.5mm;
+            height: 0.35mm;
         }
 
         /* Registration Center Mark */
         .center-reg-mark {
             position: absolute;
-            width: 5mm;
-            height: 5mm;
-            margin-left: -2.5mm;
-            margin-top: -2.5mm;
-            z-index: 500;
+            width: 6mm;
+            height: 6mm;
+            margin-left: -3mm;
+            margin-top: -3mm;
+            z-index: 600;
             pointer-events: none;
         }
         .center-reg-mark svg {
-            width: 5mm;
-            height: 5mm;
+            width: 6mm;
+            height: 6mm;
             display: block;
         }
 
@@ -128,7 +128,7 @@
             @if(!empty($layout['show_center_marks']) && !empty($layout['center_marks']))
                 @foreach ($layout['center_marks'] as $cm)
                     <div class="center-reg-mark" style="left: {{ $cm['x'] }}mm; top: {{ $cm['y'] }}mm;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="5mm" height="5mm" viewBox="0 0 24 24" style="display: block;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="6mm" height="6mm" viewBox="0 0 24 24" style="display: block;">
                             <circle cx="12" cy="12" r="9.5" fill="#ffffff" stroke="#000000" stroke-width="1.2" />
                             <path d="M12,12 L2.5,12 A9.5,9.5 0 0,1 12,2.5 Z" fill="#93c5fd" />
                             <path d="M12,12 L21.5,12 A9.5,9.5 0 0,1 12,21.5 Z" fill="#93c5fd" />

@@ -45,8 +45,13 @@ class ImpositionLayoutService
         $startLeftMm = max(0, ($pageWidthMm - $totalGridWidth) / 2);
         $startTopMm = max(0, ($pageHeightMm - $totalGridHeight) / 2);
 
-        $showCuttingMarks = (bool) ($params['show_cutting_marks'] ?? true);
-        $showCenterMarks = (bool) ($params['show_center_marks'] ?? true);
+        $showCuttingMarks = isset($params['show_cutting_marks']) 
+            ? filter_var($params['show_cutting_marks'], FILTER_VALIDATE_BOOLEAN) 
+            : true;
+
+        $showCenterMarks = isset($params['show_center_marks']) 
+            ? filter_var($params['show_center_marks'], FILTER_VALIDATE_BOOLEAN) 
+            : true;
 
         $centerMarks = [];
         if ($showCenterMarks) {
