@@ -50,51 +50,44 @@ class ImpositionLayoutService
 
         $centerMarks = [];
         if ($showCenterMarks) {
-            // 1. Top and Bottom margin registration center marks
-            for ($c = 0; $c <= $cols; $c++) {
-                if ($c === 0) {
-                    $x = $startLeftMm;
-                } elseif ($c === $cols) {
-                    $x = $startLeftMm + ($cols * $cardOuterWidth) + (($cols - 1) * $horizontalGutterMm);
-                } else {
-                    $x = $startLeftMm + ($c * $cardOuterWidth) + (($c - 0.5) * $horizontalGutterMm);
-                }
+            // 1. Top and Bottom margin registration center marks (aligned at horizontal center of each card column)
+            for ($c = 0; $c < $cols; $c++) {
+                $colCenterX = $startLeftMm + ($c * ($cardOuterWidth + $horizontalGutterMm)) + ($cardOuterWidth / 2);
 
-                // Top margin center mark
-                $topY = max(3.0, $startTopMm / 2);
-                $centerMarks[] = ['x' => round($x, 2), 'y' => round($topY, 2), 'type' => 'col_top'];
+                // Top margin mark
+                $topY = max(3.0, $startTopMm > 6.0 ? ($startTopMm / 2) : ($startTopMm - 2.8));
+                $centerMarks[] = ['x' => round($colCenterX, 2), 'y' => round($topY, 2), 'type' => 'col_top'];
 
-                // Bottom margin center mark
-                $botY = $pageHeightMm - max(3.0, $startTopMm / 2);
-                $centerMarks[] = ['x' => round($x, 2), 'y' => round($botY, 2), 'type' => 'col_bottom'];
-            }
+                // Bottom margin mark
+                $botY = $pageHeightMm - max(3.0, $startTopMm > 6.0 ? ($startTopMm / 2) : ($startTopMm - 2.8));
+                $centerMarks[] = ['x' => round($colCenterX, 2), 'y' => round($botY, 2), 'type' => 'col_bottom'];
 
-            // 2. Left and Right margin registration center marks
-            for ($r = 0; $r <= $rows; $r++) {
-                if ($r === 0) {
-                    $y = $startTopMm;
-                } elseif ($r === $rows) {
-                    $y = $startTopMm + ($rows * $cardOuterHeight) + (($rows - 1) * $verticalGutterMm);
-                } else {
-                    $y = $startTopMm + ($r * $cardOuterHeight) + (($r - 0.5) * $verticalGutterMm);
-                }
-
-                // Left margin center mark
-                $leftX = max(3.0, $startLeftMm / 2);
-                $centerMarks[] = ['x' => round($leftX, 2), 'y' => round($y, 2), 'type' => 'row_left'];
-
-                // Right margin center mark
-                $rightX = $pageWidthMm - max(3.0, $startLeftMm / 2);
-                $centerMarks[] = ['x' => round($rightX, 2), 'y' => round($y, 2), 'type' => 'row_right'];
-            }
-
-            // 3. Internal gutter intersection center marks (if gutters allow space)
-            if ($horizontalGutterMm >= 4.0 || $verticalGutterMm >= 4.0) {
-                for ($c = 1; $c < $cols; $c++) {
+                // Internal row gutters at column centers (if vertical gutter has room)
+                if ($verticalGutterMm >= 4.0) {
                     for ($r = 1; $r < $rows; $r++) {
-                        $cx = $startLeftMm + ($c * $cardOuterWidth) + (($c - 0.5) * $horizontalGutterMm);
-                        $cy = $startTopMm + ($r * $cardOuterHeight) + (($r - 0.5) * $verticalGutterMm);
-                        $centerMarks[] = ['x' => round($cx, 2), 'y' => round($cy, 2), 'type' => 'internal_intersection'];
+                        $gutterY = $startTopMm + ($r * $cardOuterHeight) + (($r - 0.5) * $verticalGutterMm);
+                        $centerMarks[] = ['x' => round($colCenterX, 2), 'y' => round($gutterY, 2), 'type' => 'internal_v_gutter'];
+                    }
+                }
+            }
+
+            // 2. Left and Right margin registration center marks (aligned at vertical center of each card row)
+            for ($r = 0; $r < $rows; $r++) {
+                $rowCenterY = $startTopMm + ($r * ($cardOuterHeight + $verticalGutterMm)) + ($cardOuterHeight / 2);
+
+                // Left margin mark
+                $leftX = max(3.0, $startLeftMm > 6.0 ? ($startLeftMm / 2) : ($startLeftMm - 2.8));
+                $centerMarks[] = ['x' => round($leftX, 2), 'y' => round($rowCenterY, 2), 'type' => 'row_left'];
+
+                // Right margin mark
+                $rightX = $pageWidthMm - max(3.0, $startLeftMm > 6.0 ? ($startLeftMm / 2) : ($startLeftMm - 2.8));
+                $centerMarks[] = ['x' => round($rightX, 2), 'y' => round($rowCenterY, 2), 'type' => 'row_right'];
+
+                // Internal column gutters at row centers (if horizontal gutter has room)
+                if ($horizontalGutterMm >= 4.0) {
+                    for ($c = 1; $c < $cols; $c++) {
+                        $gutterX = $startLeftMm + ($c * $cardOuterWidth) + (($c - 0.5) * $horizontalGutterMm);
+                        $centerMarks[] = ['x' => round($gutterX, 2), 'y' => round($rowCenterY, 2), 'type' => 'internal_h_gutter'];
                     }
                 }
             }

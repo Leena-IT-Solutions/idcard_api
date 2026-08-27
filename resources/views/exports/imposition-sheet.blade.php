@@ -103,11 +103,17 @@
         /* Registration Center Mark */
         .center-reg-mark {
             position: absolute;
-            width: 5.5mm;
-            height: 5.5mm;
-            transform: translate(-50%, -50%);
-            z-index: 150;
+            width: 5mm;
+            height: 5mm;
+            margin-left: -2.5mm;
+            margin-top: -2.5mm;
+            z-index: 500;
             pointer-events: none;
+        }
+        .center-reg-mark svg {
+            width: 5mm;
+            height: 5mm;
+            display: block;
         }
 
         .card-inner-scale {
@@ -122,7 +128,7 @@
             @if(!empty($layout['show_center_marks']) && !empty($layout['center_marks']))
                 @foreach ($layout['center_marks'] as $cm)
                     <div class="center-reg-mark" style="left: {{ $cm['x'] }}mm; top: {{ $cm['y'] }}mm;">
-                        <svg width="5.5mm" height="5.5mm" viewBox="0 0 24 24" style="display: block;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="5mm" height="5mm" viewBox="0 0 24 24" style="display: block;">
                             <circle cx="12" cy="12" r="9.5" fill="#ffffff" stroke="#000000" stroke-width="1.2" />
                             <path d="M12,12 L2.5,12 A9.5,9.5 0 0,1 12,2.5 Z" fill="#93c5fd" />
                             <path d="M12,12 L21.5,12 A9.5,9.5 0 0,1 12,21.5 Z" fill="#93c5fd" />
