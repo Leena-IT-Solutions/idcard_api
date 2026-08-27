@@ -259,6 +259,24 @@ new class extends Component
         }
     }
 
+    public function selectAllLoaded()
+    {
+        $this->selectedStudentIds = collect($this->loadStudents())->pluck('id')->map(fn($id) => (string)$id)->all();
+        $this->selectAll = true;
+    }
+
+    public function clearSelection()
+    {
+        $this->selectedStudentIds = [];
+        $this->selectAll = false;
+    }
+
+    public function updatedSelectedStudentIds()
+    {
+        $loadedIds = collect($this->loadStudents())->pluck('id')->map(fn($id) => (string)$id)->all();
+        $this->selectAll = !empty($loadedIds) && count(array_intersect($loadedIds, $this->selectedStudentIds)) === count($loadedIds);
+    }
+
     public function bulkUpdateStatusBySelection($status)
     {
         if (empty($this->selectedStudentIds)) {
@@ -1547,8 +1565,19 @@ new class extends Component
 
     <!-- View Switcher & Template Status Bar -->
     <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-gray-800 p-4 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none">
-        <div class="flex items-center gap-3">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-gray-500 dark:text-gray-400">View Layout:</span>
+        <div class="flex items-center gap-3 flex-wrap">
+            <!-- Select All Control -->
+            <label class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-700/60 rounded-2xl border border-gray-200 dark:border-gray-700 cursor-pointer select-none transition group shadow-sm">
+                <input type="checkbox" wire:model.live="selectAll" class="w-4 h-4 text-indigo-600 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-800 focus:ring-indigo-500 cursor-pointer shrink-0" />
+                <span class="text-xs font-extrabold text-gray-700 dark:text-gray-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors flex items-center gap-1">
+                    <span>{{ __('Select All') }}</span>
+                    <span class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-1.5 py-0.2 rounded-md">({{ count($studentsList) }})</span>
+                </span>
+            </label>
+
+            <span class="text-xs font-extrabold uppercase tracking-wider text-gray-300 dark:text-gray-600 hidden md:inline">|</span>
+
+            <span class="text-xs font-extrabold uppercase tracking-wider text-gray-500 dark:text-gray-400">{{ __('View Layout:') }}</span>
             <div class="flex items-center bg-gray-100 dark:bg-gray-900 p-1 rounded-2xl border border-gray-200 dark:border-gray-700">
                 <button 
                     type="button" 
@@ -1660,10 +1689,13 @@ new class extends Component
                     <div class="w-full flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-700 relative z-30">
                         <div class="space-y-1">
                             <div class="flex items-center gap-2 flex-wrap">
-                                <input type="checkbox" wire:model.live="selectedStudentIds" value="{{ (string)$student->id }}" class="w-4 h-4 text-indigo-600 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-indigo-500 cursor-pointer shrink-0" />
-                                <h4 class="font-extrabold text-gray-900 dark:text-gray-100 text-base leading-tight">
-                                    {{ $student->first_name }} {{ $student->last_name }}
-                                </h4>
+                                <!-- Clickable Checkbox & Student Name Label -->
+                                <label class="flex items-center gap-2 cursor-pointer select-none group/lbl">
+                                    <input type="checkbox" wire:model.live="selectedStudentIds" value="{{ (string)$student->id }}" class="w-4 h-4 text-indigo-600 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-indigo-500 cursor-pointer shrink-0" />
+                                    <h4 class="font-extrabold text-gray-900 dark:text-gray-100 text-base leading-tight group-hover/lbl:text-indigo-600 dark:group-hover/lbl:text-indigo-400 transition-colors">
+                                        {{ $student->first_name }} {{ $student->last_name }}
+                                    </h4>
+                                </label>
                                 <!-- Interactive Status Dropdown Badge -->
                                 <div x-data="{ open: false, curOrder: {{ $activeStatusData['order'] }} }" x-init="$watch('open', val => cardDropdownOpen = val)" class="relative inline-block text-left" @click.outside="open = false">
                                     <button type="button" @click.stop="open = !open" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold {{ $activeStatusData['bg'] }} border inline-flex items-center gap-1.5 shadow-sm transition hover:opacity-80 cursor-pointer" title="Click to change status">
@@ -1757,10 +1789,13 @@ new class extends Component
                         <div>
                             <div class="flex flex-wrap items-center justify-between gap-2 mb-2 relative z-30">
                                 <div class="flex items-center gap-2 flex-wrap">
-                                    <input type="checkbox" wire:model.live="selectedStudentIds" value="{{ (string)$student->id }}" class="w-4 h-4 text-indigo-600 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-indigo-500 cursor-pointer shrink-0" />
-                                    <h4 class="text-xl font-extrabold text-gray-900 dark:text-gray-100">
-                                        {{ $student->first_name }} {{ $student->middle_name ? $student->middle_name . ' ' : '' }}{{ $student->last_name }}
-                                    </h4>
+                                    <!-- Clickable Checkbox & Student Name Label -->
+                                    <label class="flex items-center gap-2 cursor-pointer select-none group/lbl">
+                                        <input type="checkbox" wire:model.live="selectedStudentIds" value="{{ (string)$student->id }}" class="w-4 h-4 text-indigo-600 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-indigo-500 cursor-pointer shrink-0" />
+                                        <h4 class="text-xl font-extrabold text-gray-900 dark:text-gray-100 group-hover/lbl:text-indigo-600 dark:group-hover/lbl:text-indigo-400 transition-colors">
+                                            {{ $student->first_name }} {{ $student->middle_name ? $student->middle_name . ' ' : '' }}{{ $student->last_name }}
+                                        </h4>
+                                    </label>
                                     <!-- Interactive Status Dropdown Badge -->
                                     <div x-data="{ open: false, curOrder: {{ $activeStatusData['order'] }} }" x-init="$watch('open', val => cardDropdownOpen = val)" class="relative inline-block text-left" @click.outside="open = false">
                                         <button type="button" @click.stop="open = !open" class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold {{ $activeStatusData['bg'] }} border inline-flex items-center gap-1.5 shadow-sm transition hover:opacity-80 cursor-pointer" title="Click to change status">
