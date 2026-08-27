@@ -38,6 +38,13 @@ class ImpositionLayoutService
         $rows = max(1, $rows);
         $cardsPerPage = max(1, $cols * $rows);
 
+        // Center grid on page
+        $totalGridWidth = ($cols * $cardOuterWidth) + (($cols - 1) * $horizontalGutterMm);
+        $totalGridHeight = ($rows * $cardOuterHeight) + (($rows - 1) * $verticalGutterMm);
+
+        $startLeftMm = max(0, ($pageWidthMm - $totalGridWidth) / 2);
+        $startTopMm = max(0, ($pageHeightMm - $totalGridHeight) / 2);
+
         $showCuttingMarks = (bool) ($params['show_cutting_marks'] ?? true);
         $showCenterMarks = (bool) ($params['show_center_marks'] ?? true);
 
