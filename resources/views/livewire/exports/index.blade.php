@@ -1106,9 +1106,9 @@ new class extends Component {
                             </a>
                         </div>
                     @else
-                        <button wire:click="triggerExport" wire:loading.attr="disabled" type="button" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-700 hover:to-indigo-900 text-white rounded-2xl font-black text-sm uppercase tracking-wider shadow-lg shadow-indigo-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2">
-                            <span wire:loading.remove>🚀 START EXPORT ({{ $effectiveTargetCount }} CARDS)</span>
-                            <span wire:loading class="flex items-center gap-2">
+                        <button wire:click="triggerExport" wire:loading.attr="disabled" wire:target="triggerExport" type="button" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-700 hover:to-indigo-900 text-white rounded-2xl font-black text-sm uppercase tracking-wider shadow-lg shadow-indigo-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2">
+                            <span wire:loading.remove wire:target="triggerExport">🚀 START EXPORT ({{ $effectiveTargetCount }} CARDS)</span>
+                            <span wire:loading wire:target="triggerExport" class="flex items-center gap-2">
                                 <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                 QUEUING EXPORT...
                             </span>
@@ -1500,8 +1500,12 @@ new class extends Component {
                                 {{ __('Close Preview') }}
                             </button>
 
-                            <button wire:click="triggerExport" wire:loading.attr="disabled" type="button" class="px-6 py-2 bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-700 hover:to-indigo-900 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-md transition cursor-pointer flex items-center gap-2">
-                                <span>🚀 {{ __('Start Export Now') }}</span>
+                            <button wire:click="triggerExport" wire:loading.attr="disabled" wire:target="triggerExport" type="button" class="px-6 py-2 bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-700 hover:to-indigo-900 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-md transition cursor-pointer flex items-center gap-2">
+                                <span wire:loading.remove wire:target="triggerExport">🚀 {{ __('Start Export Now') }}</span>
+                                <span wire:loading wire:target="triggerExport" class="flex items-center gap-2">
+                                    <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    {{ __('Queuing...') }}
+                                </span>
                             </button>
                         </div>
                     </div>
