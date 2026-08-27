@@ -31,6 +31,7 @@
             position: absolute;
             width: {{ $layout['card_outer_width'] }}mm;
             height: {{ $layout['card_outer_height'] }}mm;
+            z-index: 10;
         }
         .trim-area {
             position: absolute;
@@ -40,134 +41,51 @@
             height: {{ $layout['card_height_mm'] }}mm;
             overflow: hidden;
         }
-
-        /* Cutting / Crop Guides (Corner Marks) */
-        .crop-mark {
-            position: absolute;
-            background-color: #000000 !important;
-            z-index: 500;
-        }
-        /* Top-Left */
-        .cm-tl-v {
-            top: -4.0mm;
-            left: 0;
-            width: 0.35mm;
-            height: 3.5mm;
-        }
-        .cm-tl-h {
-            top: 0;
-            left: -4.0mm;
-            width: 3.5mm;
-            height: 0.35mm;
-        }
-        /* Top-Right */
-        .cm-tr-v {
-            top: -4.0mm;
-            right: 0;
-            width: 0.35mm;
-            height: 3.5mm;
-        }
-        .cm-tr-h {
-            top: 0;
-            right: -4.0mm;
-            width: 3.5mm;
-            height: 0.35mm;
-        }
-        /* Bottom-Left */
-        .cm-bl-v {
-            bottom: -4.0mm;
-            left: 0;
-            width: 0.35mm;
-            height: 3.5mm;
-        }
-        .cm-bl-h {
-            bottom: 0;
-            left: -4.0mm;
-            width: 3.5mm;
-            height: 0.35mm;
-        }
-        /* Bottom-Right */
-        .cm-br-v {
-            bottom: -4.0mm;
-            right: 0;
-            width: 0.35mm;
-            height: 3.5mm;
-        }
-        .cm-br-h {
-            bottom: 0;
-            right: -4.0mm;
-            width: 3.5mm;
-            height: 0.35mm;
-        }
-
-        /* Registration Center Mark */
-        .center-reg-mark {
-            position: absolute;
-            width: 6mm;
-            height: 6mm;
-            margin-left: -3mm;
-            margin-top: -3mm;
-            z-index: 600;
-            pointer-events: none;
-        }
-        .center-reg-mark svg {
-            width: 6mm;
-            height: 6mm;
-            display: block;
-        }
-
         .card-inner-scale {
             transform-origin: top left;
+        }
+        .marks-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: {{ $layout['page_width_mm'] }}mm;
+            height: {{ $layout['page_height_mm'] }}mm;
+            pointer-events: none;
+            z-index: 1000;
         }
     </style>
 </head>
 <body>
+    @php
+        $showCuttingMarks = !empty($layout['show_cutting_marks']);
+        $showCenterMarks = !empty($layout['show_center_marks']);
+        $hGutter = $layout['horizontal_gutter_mm'] ?? $layout['gutter_mm'] ?? 4.0;
+        $vGutter = $layout['vertical_gutter_mm'] ?? $layout['gutter_mm'] ?? 4.0;
+        $cols = $layout['cols'];
+        $rows = $layout['rows'];
+        $cardW = $layout['card_outer_width'];
+        $cardH = $layout['card_outer_height'];
+        $startLeft = $layout['start_left_mm'];
+        $startTop = $layout['start_top_mm'];
+        $pageW = $layout['page_width_mm'];
+        $pageH = $layout['page_height_mm'];
+    @endphp
+
     @foreach ($pages as $pageCards)
         <div class="page">
-            <!-- Center Registration Targets (Marks) -->
-            @if(!empty($layout['show_center_marks']) && !empty($layout['center_marks']))
-                @foreach ($layout['center_marks'] as $cm)
-                    <div class="center-reg-mark" style="left: {{ $cm['x'] }}mm; top: {{ $cm['y'] }}mm;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="6mm" height="6mm" viewBox="0 0 24 24" style="display: block;">
-                            <circle cx="12" cy="12" r="9.5" fill="#ffffff" stroke="#000000" stroke-width="1.2" />
-                            <path d="M12,12 L2.5,12 A9.5,9.5 0 0,1 12,2.5 Z" fill="#93c5fd" />
-                            <path d="M12,12 L21.5,12 A9.5,9.5 0 0,1 12,21.5 Z" fill="#93c5fd" />
-                            <circle cx="12" cy="12" r="9.5" fill="none" stroke="#000000" stroke-width="1.2" />
-                            <line x1="12" y1="0" x2="12" y2="24" stroke="#000000" stroke-width="1.2" />
-                            <line x1="0" y1="12" x2="24" y2="12" stroke="#000000" stroke-width="1.2" />
-                        </svg>
-                    </div>
-                @endforeach
-            @endif
-
-            <!-- Cards & Cutting Guides -->
+            <!-- Cards Layer -->
             @foreach ($pageCards as $cell)
                 @php
                     $col = $cell['col'];
                     $row = $cell['row'];
-                    $hGutter = $layout['horizontal_gutter_mm'] ?? $layout['gutter_mm'] ?? 4.0;
-                    $vGutter = $layout['vertical_gutter_mm'] ?? $layout['gutter_mm'] ?? 4.0;
-                    $leftMm = $layout['start_left_mm'] + ($col * ($layout['card_outer_width'] + $hGutter));
-                    $topMm = $layout['start_top_mm'] + ($row * ($layout['card_outer_height'] + $vGutter));
+                    $leftMm = $startLeft + ($col * ($cardW + $hGutter));
+                    $topMm = $startTop + ($row * ($cardH + $vGutter));
                     $student = $cell['student'];
                     $template = $cell['template'];
                     $school = $cell['school'];
                 @endphp
 
                 <div class="card-cell" style="left: {{ $leftMm }}mm; top: {{ $topMm }}mm;">
-                    @if(!empty($layout['show_cutting_marks']))
-                        <!-- Hairline Corner Cutting Marks -->
-                        <div class="crop-mark cm-tl-v"></div>
-                        <div class="crop-mark cm-tl-h"></div>
-                        <div class="crop-mark cm-tr-v"></div>
-                        <div class="crop-mark cm-tr-h"></div>
-                        <div class="crop-mark cm-bl-v"></div>
-                        <div class="crop-mark cm-bl-h"></div>
-                        <div class="crop-mark cm-br-v"></div>
-                        <div class="crop-mark cm-br-h"></div>
-                    @endif
-
-                    <!-- Trim Area with Exact Card Content -->
                     <div class="trim-area">
                         @php
                             $orientation = $template->orientation ?? 'landscape';
@@ -181,7 +99,6 @@
                                 $targetHeightPx = $isPortrait ? 1011 : 638;
                             }
                             
-                            // Calculate scale factor from rendered PX to MM trim box
                             $targetWidthMm = $layout['card_width_mm'];
                             $scaleRatio = $targetWidthMm / ($targetWidthPx / 3.7795275591); 
                         @endphp
@@ -191,6 +108,58 @@
                     </div>
                 </div>
             @endforeach
+
+            <!-- Vector Marks Overlay Layer (Rendered on top of all cards) -->
+            @if ($showCuttingMarks || $showCenterMarks)
+                <svg class="marks-overlay" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ $pageW }} {{ $pageH }}" width="{{ $pageW }}mm" height="{{ $pageH }}mm">
+                    @if ($showCuttingMarks)
+                        <!-- Cutting / Crop Marks -->
+                        <g stroke="#000000" stroke-width="0.3" stroke-linecap="square">
+                            @foreach ($pageCards as $cell)
+                                @php
+                                    $col = $cell['col'];
+                                    $row = $cell['row'];
+                                    $x1 = $startLeft + ($col * ($cardW + $hGutter));
+                                    $x2 = $x1 + $cardW;
+                                    $y1 = $startTop + ($row * ($cardH + $vGutter));
+                                    $y2 = $y1 + $cardH;
+                                    $markLen = 3.5;
+                                    $gap = 0.5;
+                                @endphp
+                                <!-- Top-Left Corner -->
+                                <line x1="{{ $x1 }}" y1="{{ $y1 - $gap }}" x2="{{ $x1 }}" y2="{{ $y1 - $markLen }}" />
+                                <line x1="{{ $x1 - $gap }}" y1="{{ $y1 }}" x2="{{ $x1 - $markLen }}" y2="{{ $y1 }}" />
+
+                                <!-- Top-Right Corner -->
+                                <line x1="{{ $x2 }}" y1="{{ $y1 - $gap }}" x2="{{ $x2 }}" y2="{{ $y1 - $markLen }}" />
+                                <line x1="{{ $x2 + $gap }}" y1="{{ $y1 }}" x2="{{ $x2 + $markLen }}" y2="{{ $y1 }}" />
+
+                                <!-- Bottom-Left Corner -->
+                                <line x1="{{ $x1 }}" y1="{{ $y2 + $gap }}" x2="{{ $x1 }}" y2="{{ $y2 + $markLen }}" />
+                                <line x1="{{ $x1 - $gap }}" y1="{{ $y2 }}" x2="{{ $x1 - $markLen }}" y2="{{ $y2 }}" />
+
+                                <!-- Bottom-Right Corner -->
+                                <line x1="{{ $x2 }}" y1="{{ $y2 + $gap }}" x2="{{ $x2 }}" y2="{{ $y2 + $markLen }}" />
+                                <line x1="{{ $x2 + $gap }}" y1="{{ $y2 }}" x2="{{ $x2 + $markLen }}" y2="{{ $y2 }}" />
+                            @endforeach
+                        </g>
+                    @endif
+
+                    @if ($showCenterMarks && !empty($layout['center_marks']))
+                        <!-- Registration Center Marks -->
+                        @foreach ($layout['center_marks'] as $cm)
+                            <g transform="translate({{ $cm['x'] }}, {{ $cm['y'] }}) scale(0.25)">
+                                <circle cx="0" cy="0" r="10" fill="#ffffff" stroke="#000000" stroke-width="1.2" />
+                                <path d="M0,0 L-10,0 A10,10 0 0,1 0,-10 Z" fill="#93c5fd" />
+                                <path d="M0,0 L10,0 A10,10 0 0,1 0,10 Z" fill="#93c5fd" />
+                                <circle cx="0" cy="0" r="10" fill="none" stroke="#000000" stroke-width="1.2" />
+                                <line x1="0" y1="-12" x2="0" y2="12" stroke="#000000" stroke-width="1.2" />
+                                <line x1="-12" y1="0" x2="12" y2="0" stroke="#000000" stroke-width="1.2" />
+                            </g>
+                        @endforeach
+                    @endif
+                </svg>
+            @endif
         </div>
     @endforeach
 </body>
