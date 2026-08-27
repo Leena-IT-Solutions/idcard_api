@@ -110,8 +110,10 @@
                 @php
                     $col = $cell['col'];
                     $row = $cell['row'];
-                    $leftMm = $layout['start_left_mm'] + ($col * ($layout['card_outer_width'] + $layout['gutter_mm']));
-                    $topMm = $layout['start_top_mm'] + ($row * ($layout['card_outer_height'] + $layout['gutter_mm']));
+                    $hGutter = $layout['horizontal_gutter_mm'] ?? $layout['gutter_mm'] ?? 4.0;
+                    $vGutter = $layout['vertical_gutter_mm'] ?? $layout['gutter_mm'] ?? 4.0;
+                    $leftMm = $layout['start_left_mm'] + ($col * ($layout['card_outer_width'] + $hGutter));
+                    $topMm = $layout['start_top_mm'] + ($row * ($layout['card_outer_height'] + $vGutter));
                     $student = $cell['student'];
                     $template = $cell['template'];
                     $school = $cell['school'];

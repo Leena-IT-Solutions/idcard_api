@@ -9,7 +9,9 @@ class ImpositionLayoutService
         $pageSize = $params['page_size'] ?? 'A4';
         $bleedMm = (float) ($params['bleed_mm'] ?? 0.0);
         $marginMm = (float) ($params['margin_mm'] ?? 0.0);
-        $gutterMm = (float) ($params['gutter_mm'] ?? 4.0);
+        
+        $horizontalGutterMm = (float) ($params['horizontal_gutter_mm'] ?? $params['gutter_x_mm'] ?? $params['gutter_mm'] ?? 4.0);
+        $verticalGutterMm = (float) ($params['vertical_gutter_mm'] ?? $params['gutter_y_mm'] ?? $params['gutter_mm'] ?? 4.0);
         $trimMarkLen = (float) ($params['trim_mark_len'] ?? 4.0);
 
         [$pageWidthMm, $pageHeightMm] = match (strtoupper($pageSize)) {
@@ -18,6 +20,8 @@ class ImpositionLayoutService
             'LETTER_LANDSCAPE' => [279.4, 215.9],
             'A3' => [297.0, 420.0],
             'A3_LANDSCAPE' => [420.0, 297.0],
+            '304.8X457.2', '12X18' => [304.8, 457.2],
+            '330.2X482.6', '13X19' => [330.2, 482.6],
             'CUSTOM' => [
                 (float) ($params['custom_width_mm'] ?? 297.0),
                 (float) ($params['custom_height_mm'] ?? 210.0),
@@ -28,13 +32,15 @@ class ImpositionLayoutService
         $cardOuterWidth = $cardWidthMm + (2 * $bleedMm);
         $cardOuterHeight = $cardHeightMm + (2 * $bleedMm);
 
-        $cols = (int) floor(($pageWidthMm - $gutterMm) / ($cardOuterWidth + $gutterMm));
-        $rows = (int) floor(($pageHeightMm - $gutterMm) / ($cardOuterHeight + $gutterMm));
+        $cols = (int) floor(($pageWidthMm - $horizontalGutterMm) / ($cardOuterWidth + $horizontalGutterMm));
+        $rows = (int) floor(($pageHeightMm - $verticalGutterMm) / ($cardOuterHeight + $verticalGutterMm));
+        $cols = max(1, $cols);
+        $rows = max(1, $rows);
         $cardsPerPage = max(1, $cols * $rows);
 
         // Center grid on page
-        $totalGridWidth = ($cols * $cardOuterWidth) + (($cols - 1) * $gutterMm);
-        $totalGridHeight = ($rows * $cardOuterHeight) + (($rows - 1) * $gutterMm);
+        $totalGridWidth = ($cols * $cardOuterWidth) + (($cols - 1) * $horizontalGutterMm);
+        $totalGridHeight = ($rows * $cardOuterHeight) + (($rows - 1) * $verticalGutterMm);
 
         $startLeftMm = max(0, ($pageWidthMm - $totalGridWidth) / 2);
         $startTopMm = max(0, ($pageHeightMm - $totalGridHeight) / 2);
@@ -44,7 +50,9 @@ class ImpositionLayoutService
             'page_height_mm' => $pageHeightMm,
             'bleed_mm' => $bleedMm,
             'margin_mm' => $marginMm,
-            'gutter_mm' => $gutterMm,
+            'horizontal_gutter_mm' => $horizontalGutterMm,
+            'vertical_gutter_mm' => $verticalGutterMm,
+            'gutter_mm' => $horizontalGutterMm,
             'trim_mark_len' => $trimMarkLen,
             'card_width_mm' => $cardWidthMm,
             'card_height_mm' => $cardHeightMm,
@@ -58,3 +66,4 @@ class ImpositionLayoutService
         ];
     }
 }
+

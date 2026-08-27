@@ -21,6 +21,8 @@ new class extends Component {
     public string $exportCardSize = 'punch'; // 'punch' (86x54mm CR80) or 'bleed' (90x57mm canvas)
     public float $exportBleedMm = 0.0;
     public float $exportMarginMm = 0.0;
+    public float $exportHorizontalGutterMm = 4.0;
+    public float $exportVerticalGutterMm = 4.0;
     public float $exportGutterMm = 4.0;
     public float $exportCustomWidthMm = 297.0;
     public float $exportCustomHeightMm = 210.0;
@@ -169,7 +171,9 @@ new class extends Component {
             'custom_height_mm' => $this->exportCustomHeightMm,
             'bleed_mm' => 0.0,
             'margin_mm' => 0.0,
-            'gutter_mm' => $this->exportGutterMm,
+            'horizontal_gutter_mm' => $this->exportHorizontalGutterMm,
+            'vertical_gutter_mm' => $this->exportVerticalGutterMm,
+            'gutter_mm' => $this->exportHorizontalGutterMm,
             'mirror_print' => $this->exportMirrorPrint,
             'send_for_printing' => $this->exportSendForPrinting,
         ];
@@ -373,7 +377,9 @@ new class extends Component {
             'card_size' => $this->exportCardSize,
             'custom_width_mm' => $this->exportCustomWidthMm,
             'custom_height_mm' => $this->exportCustomHeightMm,
-            'gutter_mm' => $this->exportGutterMm,
+            'horizontal_gutter_mm' => $this->exportHorizontalGutterMm,
+            'vertical_gutter_mm' => $this->exportVerticalGutterMm,
+            'gutter_mm' => $this->exportHorizontalGutterMm,
             'bleed_mm' => 0.0,
             'margin_mm' => 0.0,
         ];
@@ -829,10 +835,10 @@ new class extends Component {
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">{{ __('Sheet Size Preset') }}</label>
-                            <select wire:model.live="exportPageSize" class="w-full text-xs rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-900 font-medium focus:ring-indigo-500">
+                            <select wire:model.live="exportPageSize" class="w-full text-xs rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-900 font-medium focus:ring-indigo-500 py-2.5">
                                 <option value="297x210">A4 Landscape (297 × 210 mm) [4–8 Cards/Sheet]</option>
                                 <option value="210x297">A4 Portrait (210 × 297 mm)</option>
                                 <option value="304.8x457.2">12 × 18 Inches (304.8 × 457.2 mm) [Commercial Press]</option>
@@ -842,10 +848,24 @@ new class extends Component {
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">{{ __('Gutter Spacing (Gap Between Cards)') }}</label>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5 flex items-center justify-between">
+                                <span>{{ __('Horizontal Gutter (X-Gap)') }}</span>
+                                <span class="text-[10px] text-gray-400 font-normal">Columns</span>
+                            </label>
                             <div class="relative">
-                                <input type="number" step="0.5" wire:model.live="exportGutterMm" class="w-full text-xs rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-900 font-medium focus:ring-indigo-500 pr-12" placeholder="4.0" />
-                                <span class="absolute right-3 top-2 text-xs font-bold text-gray-400">mm</span>
+                                <input type="number" step="0.5" min="0" wire:model.live="exportHorizontalGutterMm" class="w-full text-xs rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-900 font-medium focus:ring-indigo-500 pr-12 py-2.5" placeholder="4.0" />
+                                <span class="absolute right-3 top-2.5 text-xs font-bold text-gray-400">mm</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5 flex items-center justify-between">
+                                <span>{{ __('Vertical Gutter (Y-Gap)') }}</span>
+                                <span class="text-[10px] text-gray-400 font-normal">Rows</span>
+                            </label>
+                            <div class="relative">
+                                <input type="number" step="0.5" min="0" wire:model.live="exportVerticalGutterMm" class="w-full text-xs rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-900 font-medium focus:ring-indigo-500 pr-12 py-2.5" placeholder="4.0" />
+                                <span class="absolute right-3 top-2.5 text-xs font-bold text-gray-400">mm</span>
                             </div>
                         </div>
                     </div>
@@ -854,11 +874,11 @@ new class extends Component {
                         <div class="grid grid-cols-2 gap-4 p-4 bg-gray-50 dark:bg-gray-900/40 rounded-2xl border border-gray-100 dark:border-gray-700/60">
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">{{ __('Width (mm)') }}</label>
-                                <input type="number" step="1" wire:model.live="exportCustomWidthMm" class="w-full text-xs rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-900 font-medium" />
+                                <input type="number" step="1" wire:model.live="exportCustomWidthMm" class="w-full text-xs rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-900 font-medium py-2.5" />
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">{{ __('Height (mm)') }}</label>
-                                <input type="number" step="1" wire:model.live="exportCustomHeightMm" class="w-full text-xs rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-900 font-medium" />
+                                <input type="number" step="1" wire:model.live="exportCustomHeightMm" class="w-full text-xs rounded-xl border-gray-200 dark:border-gray-700 dark:bg-gray-900 font-medium py-2.5" />
                             </div>
                         </div>
                     @endif
@@ -866,7 +886,7 @@ new class extends Component {
                     <div class="p-3 bg-indigo-50/50 dark:bg-indigo-950/20 rounded-2xl border border-indigo-100 dark:border-indigo-900/40 flex items-center justify-between text-xs text-indigo-900 dark:text-indigo-300">
                         <div class="flex items-center gap-2">
                             <span class="text-base">📐</span>
-                            <span class="font-bold">Cards are automatically fitted with crop marks and exact {{ $exportGutterMm }}mm separation.</span>
+                            <span class="font-bold">Cards are automatically positioned with hairline crop marks, {{ $exportHorizontalGutterMm }}mm horizontal gap, and {{ $exportVerticalGutterMm }}mm vertical gap.</span>
                         </div>
                     </div>
                 </div>
@@ -1227,7 +1247,7 @@ new class extends Component {
                                             🔲 {{ $sheetLayout['cols'] }} × {{ $sheetLayout['rows'] }} = {{ $sheetLayout['cards_per_page'] }} cards/sheet
                                         </span>
                                         <span class="px-2.5 py-1 bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 rounded-lg border border-purple-100 dark:border-purple-800">
-                                            ↔ Gutter: {{ $sheetLayout['gutter_mm'] }} mm
+                                            ↔ H-Gap: {{ $sheetLayout['horizontal_gutter_mm'] }} mm • ↕ V-Gap: {{ $sheetLayout['vertical_gutter_mm'] }} mm
                                         </span>
                                     </div>
 
@@ -1258,7 +1278,7 @@ new class extends Component {
 
                                         <!-- Card Grid -->
                                         <div class="w-full h-full"
-                                             style="display: grid; grid-template-columns: repeat({{ $sheetLayout['cols'] }}, 1fr); grid-template-rows: repeat({{ $sheetLayout['rows'] }}, 1fr); gap: 10px;">
+                                             style="display: grid; grid-template-columns: repeat({{ $sheetLayout['cols'] }}, 1fr); grid-template-rows: repeat({{ $sheetLayout['rows'] }}, 1fr); column-gap: {{ max(4, round($sheetLayout['horizontal_gutter_mm'] * 2)) }}px; row-gap: {{ max(4, round($sheetLayout['vertical_gutter_mm'] * 2)) }}px;">
                                             @foreach ($pageCards as $cardSlot)
                                                 @php
                                                     $slotStd = $cardSlot['student'];
