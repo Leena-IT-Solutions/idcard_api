@@ -33,6 +33,22 @@ new class extends Component {
 
     public array $preSelectedStudentIds = [];
 
+    public function hydrate()
+    {
+        if (!isset($this->exportHorizontalGutterMm)) {
+            $this->exportHorizontalGutterMm = $this->exportGutterMm ?? 4.0;
+        }
+        if (!isset($this->exportVerticalGutterMm)) {
+            $this->exportVerticalGutterMm = $this->exportGutterMm ?? 4.0;
+        }
+        if (!isset($this->exportShowCuttingMarks)) {
+            $this->exportShowCuttingMarks = true;
+        }
+        if (!isset($this->exportShowCenterMarks)) {
+            $this->exportShowCenterMarks = true;
+        }
+    }
+
     public function mount()
     {
         $this->schoolId = session('active_school_id');
@@ -377,15 +393,15 @@ new class extends Component {
         }
 
         $impositionParams = [
-            'page_size' => $this->exportPageSize,
-            'card_size' => $this->exportCardSize,
-            'custom_width_mm' => $this->exportCustomWidthMm,
-            'custom_height_mm' => $this->exportCustomHeightMm,
-            'horizontal_gutter_mm' => $this->exportHorizontalGutterMm,
-            'vertical_gutter_mm' => $this->exportVerticalGutterMm,
-            'gutter_mm' => $this->exportHorizontalGutterMm,
-            'show_cutting_marks' => $this->exportShowCuttingMarks,
-            'show_center_marks' => $this->exportShowCenterMarks,
+            'page_size' => $this->exportPageSize ?? '297x210',
+            'card_size' => $this->exportCardSize ?? 'punch',
+            'custom_width_mm' => $this->exportCustomWidthMm ?? 297.0,
+            'custom_height_mm' => $this->exportCustomHeightMm ?? 210.0,
+            'horizontal_gutter_mm' => $this->exportHorizontalGutterMm ?? 4.0,
+            'vertical_gutter_mm' => $this->exportVerticalGutterMm ?? 4.0,
+            'gutter_mm' => $this->exportHorizontalGutterMm ?? 4.0,
+            'show_cutting_marks' => $this->exportShowCuttingMarks ?? true,
+            'show_center_marks' => $this->exportShowCenterMarks ?? true,
             'bleed_mm' => 0.0,
             'margin_mm' => 0.0,
         ];
